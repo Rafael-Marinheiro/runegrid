@@ -20,6 +20,7 @@ import type { StageDie } from '@features/dice/dice-3d/dice-stage';
 import { DiceStore } from '@state/dice.store';
 import { EncounterStore } from '@state/encounter.store';
 import { getItem } from '@core/rules/inventory/catalog';
+import { RoomService } from '@net/room.service';
 import { PartyStore } from '@state/party.store';
 import { UiPrefs } from '@state/ui-prefs';
 import { AreaPreview, MapView, TokenView } from './map-view';
@@ -44,6 +45,7 @@ export class CombatPage {
   protected readonly party = inject(PartyStore);
   protected readonly diceStore = inject(DiceStore);
   protected readonly ui = inject(UiPrefs);
+  protected readonly room = inject(RoomService);
 
   /** Régua: mede a distância entre dois pontos arrastando no mapa. */
   protected readonly rulerOn = signal(false);

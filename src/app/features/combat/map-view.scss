@@ -317,6 +317,35 @@
   pointer-events: none;
 }
 
+@keyframes ping {
+  from {
+    r: 6;
+    opacity: 1;
+  }
+  to {
+    r: 26;
+    opacity: 0;
+  }
+}
+.ping circle {
+  fill: none;
+  stroke: var(--accent, #e0a030);
+  stroke-width: 3;
+  animation: ping 1s ease-out 4;
+}
+.ping text {
+  fill: var(--accent, #e0a030);
+  font-size: 11px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: #000;
+  stroke-width: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ping circle {
+    animation: none;
+  }
+}
 .ruler {
   stroke: var(--gold);
   stroke-width: 3;

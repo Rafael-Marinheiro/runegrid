@@ -28,7 +28,8 @@ export interface PeerInfo {
 export type ClientMsg =
   | { t: 'hello'; name: string }
   | { t: 'cmd'; id: number; cmd: Command }
-  | { t: 'chat'; text: string; to?: string };
+  | { t: 'chat'; text: string; to?: string }
+  | { t: 'ping'; pos: { x: number; y: number } };
 
 /** Mestre → jogador. */
 export type HostMsg =
@@ -39,6 +40,7 @@ export type HostMsg =
   | { t: 'peers'; peers: PeerInfo[] }
   | { t: 'role'; owns: string[] }
   | { t: 'chat'; from: string; text: string; whisper?: boolean }
+  | { t: 'ping'; from: string; pos: { x: number; y: number } }
   | { t: 'mute' }
   | { t: 'kick'; reason: string };
 
@@ -70,6 +72,11 @@ export function parseClientMsg(raw: unknown): ClientMsg | null {
         text: m['text'].trim().slice(0, MAX_TEXT),
         to: typeof m['to'] === 'string' ? m['to'] : undefined,
       };
+    }
+    case 'ping': {
+      const pos = m['pos'] as { x?: unknown; y?: unknown } | null;
+      if (!pos || !Number.isInteger(pos.x) || !Number.isInteger(pos.y)) return null;
+      return { t: 'ping', pos: { x: pos.x as number, y: pos.y as number } };
     }
     default:
       return null;

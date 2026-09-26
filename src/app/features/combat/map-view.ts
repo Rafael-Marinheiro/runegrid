@@ -95,6 +95,9 @@ export class MapView {
   readonly ruler = input<{ a: Pos; b: Pos; label: string } | null>(null);
 
   readonly cellClick = output<Pos>();
+  /** Shift+clique: marcar a célula para todos. */
+  readonly cellPing = output<Pos>();
+  readonly pings = input<{ id: number; from: string; pos: Pos }[]>([]);
   readonly tokenClick = output<string>();
   readonly tokenMove = output<{ id: string; pos: Pos }>();
   readonly tokenNudge = output<{ id: string; dx: number; dy: number }>();
@@ -331,7 +334,8 @@ export class MapView {
       const p = this.toSvg(e);
       const pos = { x: Math.floor(p.x / CELL), y: Math.floor(p.y / CELL) };
       const m = this.map();
-      if (pos.x >= 0 && pos.y >= 0 && pos.x < m.width && pos.y < m.height) this.cellClick.emit(pos);
+      if (pos.x >= 0 && pos.y >= 0 && pos.x < m.width && pos.y < m.height)
+        (e.shiftKey ? this.cellPing : this.cellClick).emit(pos);
     }
   }
 

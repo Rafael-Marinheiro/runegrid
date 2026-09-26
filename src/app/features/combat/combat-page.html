@@ -166,6 +166,8 @@
         [reach]="reach()"
         [preview]="preview()"
         [path]="path()"
+        [pings]="room.pings()"
+        (cellPing)="room.ping($event)"
         [ruler]="ruler()"
         [highContrast]="ui.highContrast()"
         [paintMode]="rulerOn()"
@@ -322,7 +324,10 @@
           } @else if (mode().kind === 'cast') {
             <p class="hint">Destaque em laranja mostra quem a magia atinge.</p>
           } @else if (!spellsOpen()) {
-            <p class="hint">Clique numa célula azul (ou arraste o token) para se mover.</p>
+            <p class="hint">
+              Clique numa célula azul (ou arraste o token) para se mover. Shift+clique marca um
+              ponto para todos.
+            </p>
           }
         } @else {
           <p class="hint">Aguardando a vez de {{ a.name }}.</p>

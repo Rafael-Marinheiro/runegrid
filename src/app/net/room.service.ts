@@ -1,3 +1,4 @@
+import { Pos } from '@core/models/grid';
 import { computed, effect, inject, Injectable, signal, untracked } from '@angular/core';
 import { EncounterState } from '@core/models/encounter';
 import { GridMap } from '@core/models/grid';
@@ -65,6 +66,9 @@ export class RoomService {
   readonly name = signal('');
   readonly peers = this.shared.peers;
   readonly chat = signal<ChatLine[]>([]);
+  /** Marcações no mapa (somem sozinhas). */
+  readonly pings = signal<{ id: number; from: string; pos: Pos }[]>([]);
+  private pingSeq = 0;
   /** Incrementa quando o Mestre pede para silenciar o microfone deste jogador. */
   readonly muteRequests = signal(0);
   readonly isHost = computed(() => this.status() === 'hosting');
@@ -145,6 +149,9 @@ export class RoomService {
     } else if (msg.t === 'chat') {
       const p = me();
       if (p) this.relayChat(p.name, msg.text, msg.to);
+    } else if (msg.t === 'ping') {
+      const p = me();
+      if (p) this.relayPing(p.name, msg.pos);
     }
   }
 
@@ -210,6 +217,24 @@ export class RoomService {
     }
     for (const conn of this.conns.values()) this.send(conn, { t: 'chat', from, text });
     this.chat.update((l) => [...l, line]);
+  }
+
+  private relayPing(from: string, pos: Pos): void {
+    for (const conn of this.conns.values()) this.send(conn, { t: 'ping', from, pos });
+    this.addPing(from, pos);
+  }
+
+  private addPing(from: string, pos: Pos): void {
+    const id = ++this.pingSeq;
+    this.pings.update((l) => [...l.slice(-9), { id, from, pos }]);
+    setTimeout(() => this.pings.update((l) => l.filter((p) => p.id !== id)), 4000);
+  }
+
+  /** Marca uma célula no mapa para todos (localmente, se não houver sala). */
+  ping(pos: Pos): void {
+    if (this.isHost()) this.relayPing('Mestre', pos);
+    else if (this.hostConn) this.hostConn.send({ t: 'ping', pos } satisfies ClientMsg);
+    else this.addPing('Você', pos);
   }
 
   /** Mensagem de chat enviada por este navegador (Mestre ou jogador). */
@@ -287,6 +312,9 @@ export class RoomService {
           ...l,
           { from: m.from, text: m.text, whisper: !!m.whisper, at: Date.now() },
         ]);
+        break;
+      case 'ping':
+        this.addPing(m.from, m.pos);
         break;
       case 'mute':
         this.muteRequests.update((n) => n + 1);

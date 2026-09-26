@@ -94,3 +94,15 @@ describe('Outbox', () => {
     expect(msg.t === 'state' && 'map' in msg.state).toBe(false);
   });
 });
+
+describe('ping', () => {
+  it('aceita coordenadas inteiras e rejeita o resto', () => {
+    expect(parseClientMsg({ t: 'ping', pos: { x: 2, y: 3 } })).toEqual({
+      t: 'ping',
+      pos: { x: 2, y: 3 },
+    });
+    expect(parseClientMsg({ t: 'ping', pos: { x: 'a', y: 3 } })).toBeNull();
+    expect(parseClientMsg({ t: 'ping', pos: { x: 1.5, y: 3 } })).toBeNull();
+    expect(parseClientMsg({ t: 'ping' })).toBeNull();
+  });
+});

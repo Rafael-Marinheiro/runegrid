@@ -214,6 +214,15 @@
       </g>
     }
 
+    @for (pg of pings(); track pg.id) {
+      <g class="ping" aria-hidden="true">
+        <circle [attr.cx]="pg.pos.x * C + C / 2" [attr.cy]="pg.pos.y * C + C / 2" r="6" />
+        <text [attr.x]="pg.pos.x * C + C / 2" [attr.y]="pg.pos.y * C - 4" text-anchor="middle">
+          {{ pg.from }}
+        </text>
+      </g>
+    }
+
     @for (t of tokens(); track t.id) {
       @let p = place(t);
       @let d = t.size * C;

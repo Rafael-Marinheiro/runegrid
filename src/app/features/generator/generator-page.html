@@ -1,0 +1,203 @@
+<h1>Gerador de desafios</h1>
+<p class="sub">
+  Escolha o tema, o tamanho e a dificuldade: o Runegrid monta o mapa, os encontros, as armadilhas e
+  o tesouro.
+</p>
+
+<div class="layout">
+  <section class="panel form" aria-label="Parâmetros">
+    <h2>Parâmetros</h2>
+
+    <fieldset>
+      <legend>Tema</legend>
+      <div class="chips">
+        @for (t of themes; track t) {
+          <button
+            type="button"
+            class="pill"
+            [class.on]="params().theme === t"
+            [attr.aria-pressed]="params().theme === t"
+            (click)="set('theme', t)"
+          >
+            {{ themeLabel(t) }}
+          </button>
+        }
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Tamanho</legend>
+      <div class="chips">
+        @for (s of sizes; track s) {
+          <button
+            type="button"
+            class="pill"
+            [class.on]="params().size === s"
+            [attr.aria-pressed]="params().size === s"
+            (click)="set('size', s)"
+          >
+            {{ sizeLabel[s] }}
+          </button>
+        }
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Dificuldade</legend>
+      <div class="chips">
+        @for (d of difficulties; track d) {
+          <button
+            type="button"
+            class="pill"
+            [class.on]="params().difficulty === d"
+            [attr.aria-pressed]="params().difficulty === d"
+            (click)="set('difficulty', d)"
+          >
+            {{ difficultyLabel[d] }}
+          </button>
+        }
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Ênfase</legend>
+      <div class="chips">
+        @for (e of emphases; track e) {
+          <button
+            type="button"
+            class="pill"
+            [class.on]="params().emphasis === e"
+            [attr.aria-pressed]="params().emphasis === e"
+            (click)="set('emphasis', e)"
+          >
+            {{ emphasisLabel[e] }}
+          </button>
+        }
+      </div>
+    </fieldset>
+
+    <div class="two">
+      <label class="field">
+        Nível médio
+        <input
+          #lv
+          type="number"
+          min="1"
+          max="20"
+          [value]="params().partyLevel"
+          (change)="setNumber('partyLevel', lv.value, 1, 20)"
+        />
+      </label>
+      <label class="field">
+        Jogadores
+        <input
+          #pc
+          type="number"
+          min="1"
+          max="8"
+          [value]="params().partySize"
+          (change)="setNumber('partySize', pc.value, 1, 8)"
+        />
+      </label>
+    </div>
+
+    <label class="field">
+      Semente
+      <span class="seed">
+        <input #sd [value]="params().seed" (change)="set('seed', sd.value.trim() || 'semente')" />
+        <button type="button" (click)="randomSeed()">Aleatória</button>
+      </span>
+    </label>
+
+    <button type="button" class="primary big" [disabled]="!ready()" (click)="generate()">
+      {{ ready() ? 'Gerar dungeon' : 'Carregando bestiário…' }}
+    </button>
+    <p class="msg" role="status" aria-live="polite">{{ message() }}</p>
+  </section>
+
+  <section class="result" aria-label="Resultado">
+    @if (adventure(); as a) {
+      <div class="panel">
+        <div class="title">
+          <h2>{{ a.name }}</h2>
+          <span class="muted">semente {{ a.params.seed }}</span>
+        </div>
+        <app-map-view
+          [map]="previewMap()!"
+          [tokens]="markers()"
+          [dm]="true"
+          [rooms]="mapRooms()"
+          [traps]="a.map.traps ?? []"
+        />
+        <p class="legend">
+          <span><i class="sw trap"></i> armadilha</span>
+          <span><i class="sw room"></i> sala</span>
+          <span><i class="sw foe"></i> encontro (número de monstros; C = chefe)</span>
+        </p>
+      </div>
+
+      <div class="panel">
+        @let s = stats()!;
+        <dl class="stats">
+          <div>
+            <dt>Salas</dt>
+            <dd>{{ a.rooms.length }}</dd>
+          </div>
+          <div>
+            <dt>Monstros</dt>
+            <dd>{{ s.monsters }}</dd>
+          </div>
+          <div>
+            <dt>XP total</dt>
+            <dd>{{ s.xp }}</dd>
+          </div>
+          <div>
+            <dt>Armadilhas</dt>
+            <dd>{{ a.traps.length }}</dd>
+          </div>
+          <div>
+            <dt>Tesouro</dt>
+            <dd>{{ s.gp }} po</dd>
+          </div>
+        </dl>
+        <p class="hook"><span class="hook-label">Gancho</span><br />{{ a.hook }}</p>
+        <div class="actions">
+          <button type="button" (click)="reroll()">Regenerar sem as travadas</button>
+          <button type="button" (click)="copyLink()">Copiar link</button>
+          <button type="button" class="primary" (click)="toCombat()">Levar ao combate</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Salas <small class="muted">cadeado = manter ao regenerar</small></h2>
+        <ul class="rooms">
+          @for (r of a.rooms; track r.id) {
+            <li>
+              <span class="role" [attr.data-role]="r.role">{{ roleLabel[r.role] }}</span>
+              <span class="rn"
+                ><b>{{ r.name }}</b> <span class="muted">· {{ summary(r) }}</span></span
+              >
+              <button
+                type="button"
+                class="lock"
+                [class.on]="locked().has(r.id)"
+                [attr.aria-pressed]="locked().has(r.id)"
+                [attr.aria-label]="(locked().has(r.id) ? 'Destravar ' : 'Travar ') + r.name"
+                (click)="toggleLock(r.id)"
+              >
+                {{ locked().has(r.id) ? '🔒' : '🔓' }}
+              </button>
+            </li>
+          }
+        </ul>
+      </div>
+    } @else {
+      <div class="panel empty">
+        <p>Configure ao lado e clique em <b>Gerar dungeon</b>.</p>
+        <p class="muted">
+          A mesma semente, com os mesmos parâmetros, gera sempre a mesma aventura.
+        </p>
+      </div>
+    }
+  </section>
+</div>

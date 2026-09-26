@@ -155,6 +155,14 @@ export class EncounterStore {
     return false;
   }
 
+  /** Carrega um encontro pronto (por exemplo, o de uma aventura gerada) e zera o histórico. */
+  load(state: EncounterState): void {
+    this.past.set([]);
+    this.future.set([]);
+    this.state.set(state);
+    this.message.set('');
+  }
+
   reset(): void {
     this.past.set([]);
     this.future.set([]);

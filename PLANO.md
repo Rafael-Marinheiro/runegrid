@@ -4,8 +4,9 @@ Tático de combate em grid para D&D 5e, feito em Angular. Projeto de portfólio:
 
 ## Status
 
-- **Fase 0:** F0-1, F0-2 (lint + Prettier; sem hook de commit, o CI cobre), F0-3, F0-4 (tokens em `styles.scss`), F0-5, F0-7 concluídos. F0-6 em andamento (projeto na Vercel, time Hobby). Pendente: F0-8 (tipos base de criatura).
-- **Fase 1:** F1-1 a F1-5 concluídos (parser, RNG com semente, vantagem/crítico, rolador, histórico). F1-6 concluído (dados animados que pousam no resultado do motor, com movimento reduzido respeitado). F1-6d (dados 3D com física) e F1-6e (cor por dado) concluídos. Próximo: F1-6b (bandeja reutilizável), F1-7 (macros).
+- **Fase 0:** F0-1 a F0-5, F0-7 e F0-8 concluídos (lint + Prettier sem hook de commit, o CI cobre; tokens em `styles.scss`; modelo de criatura em `core/models`). Pendente: F0-6 (deploy no ar em runegrid-nine.vercel.app; falta o CI do GitHub, bloqueado por pagamento da conta).
+- **Fase 1:** F1-1 a F1-6e concluídos (parser, RNG com semente, vantagem/crítico, rolador, histórico, dados 3D com física e cor por tipo). Próximo: F1-6b (bandeja reutilizável), F1-7 (macros).
+- **Fase 2:** F2-1, F2-2, F2-3, F2-4, F2-5, F2-6 e F2-7 concluídos: ficha completa (atributos, salvaguardas, perícias, CA, PV com dano/cura/temporários, morte, espaços de magia, recursos, descansos, resistências), lista de criaturas com persistência local e rolagem de testes pela ficha.
 
 ## 1. Visão e escopo
 

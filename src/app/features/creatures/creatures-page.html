@@ -1,0 +1,61 @@
+<h1>Criaturas</h1>
+<p class="message" role="status" aria-live="polite">{{ store.message() }}</p>
+
+<div class="layout">
+  <aside class="list panel" aria-label="Lista de criaturas">
+    <div class="add">
+      <button type="button" (click)="store.add('pc')">+ Personagem</button>
+      <button type="button" (click)="store.add('monster')">+ Monstro</button>
+    </div>
+    <ul>
+      @for (c of store.creatures(); track c.id) {
+        <li>
+          <button
+            type="button"
+            class="item"
+            [class.active]="c.id === store.selectedId()"
+            [attr.aria-current]="c.id === store.selectedId() ? 'true' : null"
+            (click)="store.select(c.id); confirming.set(false)"
+          >
+            <span class="top">
+              <span class="name">{{ c.name }}</span>
+              <span class="chip" [class.monster]="c.kind === 'monster'">{{
+                kindLabel[c.kind]
+              }}</span>
+            </span>
+            <span class="sub">
+              CA {{ c.ac }} · {{ c.hp.current }}/{{ c.hp.max }} PV
+              @if (c.status === 'dying') {
+                · morrendo
+              }
+              @if (c.status === 'dead') {
+                · morto
+              }
+            </span>
+            <span class="mini" aria-hidden="true">
+              <span class="fill" [class.low]="pct(c.hp) <= 25" [style.width.%]="pct(c.hp)"></span>
+            </span>
+          </button>
+        </li>
+      }
+    </ul>
+  </aside>
+
+  <div class="detail">
+    @if (store.selected(); as c) {
+      <div class="toolbar">
+        <h2 class="who">{{ c.name }}</h2>
+        <button type="button" (click)="store.duplicate(c.id)">Duplicar</button>
+        <button type="button" class="danger" (click)="remove(c.id)">
+          {{ confirming() ? 'Confirmar exclusão' : 'Excluir' }}
+        </button>
+        @if (confirming()) {
+          <button type="button" (click)="confirming.set(false)">Cancelar</button>
+        }
+      </div>
+      <app-creature-sheet [creature]="c" />
+    } @else {
+      <p class="empty">Nenhuma criatura. Crie um personagem ou monstro para começar.</p>
+    }
+  </div>
+</div>

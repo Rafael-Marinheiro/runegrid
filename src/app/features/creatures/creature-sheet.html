@@ -1,0 +1,199 @@
+@let c = creature();
+<p class="check" role="status" aria-live="polite">{{ check() }}</p>
+
+<div class="sheet">
+  <div class="col">
+    <section class="panel" aria-labelledby="id-title">
+      <h2 id="id-title">Identidade</h2>
+      <div class="grid">
+        <label class="field wide">
+          Nome
+          <input #name [value]="c.name" (change)="patch({ name: name.value })" />
+        </label>
+        <label class="field">
+          Tipo
+          <select #kind (change)="setKind(kind.value)">
+            <option value="pc" [selected]="c.kind === 'pc'">Personagem</option>
+            <option value="npc" [selected]="c.kind === 'npc'">PNJ</option>
+            <option value="monster" [selected]="c.kind === 'monster'">Monstro</option>
+          </select>
+        </label>
+        @if (c.kind === 'monster') {
+          <label class="field">
+            Nível de desafio
+            <input
+              #cr
+              type="number"
+              min="0"
+              max="30"
+              step="0.125"
+              [value]="c.cr ?? 0"
+              (change)="patch({ cr: cr.valueAsNumber })"
+            />
+          </label>
+        } @else {
+          <label class="field">
+            Nível
+            <input
+              #lvl
+              type="number"
+              min="1"
+              max="20"
+              [value]="c.level"
+              (change)="patch({ level: num(lvl.valueAsNumber, 1, 20) })"
+            />
+          </label>
+        }
+        <label class="field">
+          Tamanho
+          <select #size (change)="setSize(size.value)">
+            @for (s of sizes; track s) {
+              <option [value]="s" [selected]="c.size === s">{{ sizeLabel[s] }}</option>
+            }
+          </select>
+        </label>
+        <label class="field">
+          Deslocamento (ft)
+          <input
+            #spd
+            type="number"
+            min="0"
+            step="5"
+            [value]="c.speed"
+            (change)="patch({ speed: num(spd.valueAsNumber, 0, 400) })"
+          />
+        </label>
+        <label class="field">
+          Classe de armadura
+          <input
+            #ac
+            type="number"
+            min="1"
+            [value]="c.ac"
+            (change)="patch({ ac: num(ac.valueAsNumber, 1, 40) })"
+          />
+        </label>
+      </div>
+      <dl class="derived">
+        <div>
+          <dt>Proficiência</dt>
+          <dd>{{ bonus(prof(c)) }}</dd>
+        </div>
+        <div>
+          <dt>Iniciativa</dt>
+          <dd>
+            {{ bonus(init(c)) }}
+            <button
+              type="button"
+              class="roll"
+              [attr.aria-label]="'Rolar iniciativa de ' + c.name"
+              (click)="roll('Iniciativa', init(c))"
+            >
+              d20
+            </button>
+          </dd>
+        </div>
+        <div>
+          <dt>Percepção passiva</dt>
+          <dd>{{ passive(c) }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="panel" aria-labelledby="ab-title">
+      <h2 id="ab-title">Atributos e salvaguardas</h2>
+      <div class="abilities">
+        @for (a of abilities; track a) {
+          <div class="ability">
+            <label [for]="'ab-' + a" class="ab-name">{{ abilityLabel[a] }}</label>
+            <input
+              #score
+              [id]="'ab-' + a"
+              type="number"
+              min="1"
+              max="30"
+              [value]="c.abilities[a]"
+              (change)="setAbility(a, score.valueAsNumber)"
+            />
+            <span class="mod" aria-label="modificador">{{ bonus(mod(c.abilities[a])) }}</span>
+            <label class="save">
+              <input
+                #sv
+                type="checkbox"
+                [checked]="c.saveProficiencies.includes(a)"
+                (change)="toggleSave(a, sv.checked)"
+              />
+              Salv. {{ bonus(save(c, a)) }}
+            </label>
+            <button
+              type="button"
+              class="roll"
+              [attr.aria-label]="'Rolar salvaguarda de ' + abilityLabel[a]"
+              (click)="roll('Salv. ' + abilityLabel[a], save(c, a))"
+            >
+              d20
+            </button>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="sk-title">
+      <h2 id="sk-title">Perícias</h2>
+      <ul class="skills">
+        @for (k of skillKeys; track k) {
+          <li>
+            <span class="sk-name"
+              >{{ skills[k].label }} <small>({{ skills[k].ability }})</small></span
+            >
+            <select
+              #sel
+              [attr.aria-label]="'Proficiência em ' + skills[k].label"
+              (change)="setSkill(k, sel.value)"
+            >
+              <option value="" [selected]="!c.skills[k]">—</option>
+              <option value="proficient" [selected]="c.skills[k] === 'proficient'">Prof.</option>
+              <option value="expertise" [selected]="c.skills[k] === 'expertise'">Espec.</option>
+            </select>
+            <span class="sk-bonus">{{ bonus(skill(c, k)) }}</span>
+            <button
+              type="button"
+              class="roll"
+              [attr.aria-label]="'Rolar ' + skills[k].label"
+              (click)="roll(skills[k].label, skill(c, k))"
+            >
+              d20
+            </button>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <section class="panel" aria-labelledby="tr-title">
+      <h2 id="tr-title">Resistências e vulnerabilidades</h2>
+      @for (t of traits; track t.key) {
+        <details>
+          <summary>{{ t.label }} ({{ c[t.key].length }})</summary>
+          <div class="types">
+            @for (d of damageTypes; track d) {
+              <label class="type">
+                <input
+                  #tr
+                  type="checkbox"
+                  [checked]="c[t.key].includes(d)"
+                  (change)="toggleTrait(t.key, d, tr.checked)"
+                />
+                {{ damageLabel[d] }}
+              </label>
+            }
+          </div>
+        </details>
+      }
+    </section>
+  </div>
+
+  <div class="col">
+    <app-hp-panel [creature]="c" />
+    <app-slots-panel [creature]="c" />
+  </div>
+</div>

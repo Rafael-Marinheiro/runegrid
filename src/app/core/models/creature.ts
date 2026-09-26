@@ -88,6 +88,17 @@ export interface Resource {
   recharge: 'short' | 'long';
 }
 
+export interface Attack {
+  name: string;
+  /** Bônus de ataque (já inclui atributo e proficiência). */
+  bonus: number;
+  /** Dado de dano, ex.: "1d8+4". */
+  damage: string;
+  type: DamageType;
+  /** Alcance em pés: 5 corpo a corpo, mais para ataques à distância. */
+  range: number;
+}
+
 export interface Creature {
   id: string;
   name: string;
@@ -108,6 +119,9 @@ export interface Creature {
   /** Espaços de magia por nível de magia (1–9). */
   spellSlots: Record<number, { max: number; used: number }>;
   resources: Resource[];
+  attacks: Attack[];
+  /** Ataques por ação Atacar (Ataque Extra). */
+  attacksPerAction: number;
   resistances: DamageType[];
   immunities: DamageType[];
   vulnerabilities: DamageType[];

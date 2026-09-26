@@ -1,0 +1,119 @@
+<div class="wrap">
+  <svg
+    #svg
+    class="map"
+    role="group"
+    aria-label="Mapa de combate"
+    [attr.viewBox]="viewBox()"
+    preserveAspectRatio="xMidYMid meet"
+    (wheel)="onWheel($event)"
+    (pointerdown)="onPointerDown($event)"
+    (pointermove)="onPointerMove($event)"
+    (pointerup)="onPointerUp($event)"
+    (pointercancel)="drag.set(null)"
+  >
+    <rect [attr.width]="width()" [attr.height]="height()" class="bg" />
+
+    @for (c of cells(); track c.i) {
+      <rect
+        [attr.x]="c.x * C"
+        [attr.y]="c.y * C"
+        [attr.width]="C"
+        [attr.height]="C"
+        [class]="'tile ' + c.t"
+        [class.alt]="(c.x + c.y) % 2 === 1"
+      />
+      @if (c.t === 'difficult') {
+        <g class="rubble" aria-hidden="true">
+          <circle [attr.cx]="c.x * C + 12" [attr.cy]="c.y * C + 14" r="2.2" />
+          <circle [attr.cx]="c.x * C + 30" [attr.cy]="c.y * C + 12" r="2.2" />
+          <circle [attr.cx]="c.x * C + 22" [attr.cy]="c.y * C + 26" r="2.2" />
+          <circle [attr.cx]="c.x * C + 36" [attr.cy]="c.y * C + 34" r="2.2" />
+          <circle [attr.cx]="c.x * C + 13" [attr.cy]="c.y * C + 38" r="2.2" />
+        </g>
+      }
+      @if (c.t === 'door') {
+        <rect
+          class="door-leaf"
+          [attr.x]="c.x * C + 7"
+          [attr.y]="c.y * C + 7"
+          [attr.width]="C - 14"
+          [attr.height]="C - 14"
+          rx="3"
+        />
+      }
+    }
+
+    @for (r of reach(); track r.x + ',' + r.y) {
+      <rect
+        class="reach"
+        [attr.x]="r.x * C + 2"
+        [attr.y]="r.y * C + 2"
+        [attr.width]="C - 4"
+        [attr.height]="C - 4"
+        rx="4"
+      />
+    }
+
+    @for (t of tokens(); track t.id) {
+      @let p = place(t);
+      @let d = t.size * C;
+      <g
+        class="token"
+        [class.foe]="t.team === 'foes'"
+        [class.hidden]="t.hidden"
+        [class.dead]="t.dead"
+        [class.dragging]="drag()?.id === t.id && drag()?.moved"
+        [attr.transform]="'translate(' + p.x + ' ' + p.y + ')'"
+        [attr.data-token]="t.id"
+        tabindex="0"
+        role="button"
+        [attr.aria-label]="label(t)"
+        [attr.aria-pressed]="t.selected"
+        (keydown)="onKey($event, t)"
+      >
+        @if (t.active) {
+          <circle class="turn" [attr.cx]="d / 2" [attr.cy]="d / 2" [attr.r]="d / 2 + 1" />
+        }
+        @if (t.targetable) {
+          <circle class="target" [attr.cx]="d / 2" [attr.cy]="d / 2" [attr.r]="d / 2" />
+        }
+        @if (t.selected) {
+          <circle class="sel" [attr.cx]="d / 2" [attr.cy]="d / 2" [attr.r]="d / 2 - 1" />
+        }
+        <circle class="body" [attr.cx]="d / 2" [attr.cy]="d / 2" [attr.r]="d / 2 - 5" />
+        <text
+          [attr.x]="d / 2"
+          [attr.y]="d / 2 + d * 0.13"
+          [attr.font-size]="d * 0.42"
+          text-anchor="middle"
+        >
+          {{ t.dead ? '✕' : t.letter }}
+        </text>
+        <rect
+          class="hp-bg"
+          [attr.x]="d * 0.2"
+          [attr.y]="d - 8"
+          [attr.width]="d * 0.6"
+          height="5"
+          rx="2"
+        />
+        <rect
+          class="hp"
+          [class.low]="t.hpPct <= 25"
+          [attr.x]="d * 0.2"
+          [attr.y]="d - 8"
+          [attr.width]="(d * 0.6 * t.hpPct) / 100"
+          height="5"
+          rx="2"
+        />
+      </g>
+    }
+  </svg>
+
+  <div class="zoom" role="group" aria-label="Zoom do mapa">
+    <button type="button" aria-label="Aproximar" (click)="zoomBy(1.25)">+</button>
+    <button type="button" aria-label="Afastar" (click)="zoomBy(0.8)">−</button>
+    <button type="button" aria-label="Ajustar ao mapa" (click)="reset()">⌂</button>
+  </div>
+</div>

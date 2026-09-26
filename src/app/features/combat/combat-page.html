@@ -1,0 +1,294 @@
+@let st = s();
+@let cb = combat();
+<div class="head">
+  <h1>
+    Combate <small>{{ st.name }}</small>
+  </h1>
+  <div class="tools">
+    <label class="role">
+      Ver como
+      <select #role (change)="setRole(role.value)">
+        <option value="dm" [selected]="roleValue() === 'dm'">Mestre</option>
+        @for (c of playable(); track c.id) {
+          <option [value]="c.id" [selected]="roleValue() === c.id">Jogador: {{ c.name }}</option>
+        }
+      </select>
+    </label>
+    @if (isDm()) {
+      <button type="button" [disabled]="!store.canUndo()" (click)="store.undo()">Desfazer</button>
+      <button type="button" [disabled]="!store.canRedo()" (click)="store.redo()">Refazer</button>
+    }
+  </div>
+</div>
+
+<p class="message" role="status" aria-live="polite">{{ store.message() }}</p>
+
+<div class="layout">
+  <aside class="panel side" aria-label="Iniciativa">
+    <div class="side-head">
+      <h2>{{ running() ? 'Iniciativa' : cb.phase === 'ended' ? 'Fim do combate' : 'Montagem' }}</h2>
+      @if (running()) {
+        <span class="chip">Rodada {{ cb.round }}</span>
+      }
+    </div>
+
+    @if (cb.phase === 'ended') {
+      <p class="outcome">
+        {{ cb.outcome === 'party' ? 'O grupo venceu.' : 'O grupo foi derrotado.' }}
+      </p>
+    }
+
+    <ol class="order">
+      @for (c of order(); track c.id) {
+        <li [class.turn]="c.id === cb.turn?.actorId" [class.dead]="c.status === 'dead'">
+          <button type="button" class="row" (click)="selectedId.set(c.id)">
+            <span class="dot" [class.foe]="c.kind === 'monster'" aria-hidden="true">{{
+              c.name.charAt(0)
+            }}</span>
+            <span class="who">
+              <span class="name">{{ c.name }}</span>
+              <span class="sub">
+                {{ hpLabel(c) }} PV
+                @if (c.status === 'dying') {
+                  · morrendo
+                }
+                @if (c.status === 'dead') {
+                  · morto
+                }
+                @if (isHidden(c.id)) {
+                  · oculto
+                }
+              </span>
+              <span class="bar" aria-hidden="true"
+                ><span [class.low]="hpPct(c) <= 25" [style.width.%]="hpPct(c)"></span
+              ></span>
+            </span>
+            @if (cb.initiative[c.id] !== undefined && cb.phase !== 'setup') {
+              <span class="init">{{ cb.initiative[c.id] }}</span>
+            }
+          </button>
+          @if (cb.phase === 'setup' && isDm()) {
+            <label class="init-in">
+              Iniciativa
+              <input
+                #ini
+                type="number"
+                [value]="cb.initiative[c.id] ?? ''"
+                (change)="setInitiative(c.id, ini.value)"
+              />
+            </label>
+          }
+        </li>
+      } @empty {
+        <li class="empty">Nenhuma criatura no mapa.</li>
+      }
+    </ol>
+
+    @if (isDm()) {
+      <div class="stack">
+        @if (cb.phase === 'setup') {
+          <button type="button" (click)="store.send({ type: 'rollInitiative' })">
+            Rolar iniciativa
+          </button>
+          <button type="button" class="primary" (click)="store.send({ type: 'startCombat' })">
+            Iniciar combate
+          </button>
+        } @else {
+          <button type="button" (click)="store.send({ type: 'endCombat' })">
+            Encerrar combate
+          </button>
+        }
+      </div>
+    }
+  </aside>
+
+  <section class="center">
+    <app-map-view
+      [map]="st.map"
+      [tokens]="tokens()"
+      [reach]="reach()"
+      (cellClick)="onCell($event)"
+      (tokenClick)="onToken($event)"
+      (tokenMove)="onTokenMove($event)"
+      (tokenNudge)="onNudge($event)"
+    />
+
+    @let a = active();
+    <div class="panel actions" aria-label="Ações do turno">
+      @if (running() && a) {
+        @let t = cb.turn!;
+        @let b = budget();
+        <div class="turn-head">
+          <span class="turn-name">Turno de {{ a.name }}</span>
+          <span class="res" aria-label="Ação">Ação <i class="pip" [class.on]="t.action"></i></span>
+          <span class="res" aria-label="Ação bônus"
+            >Bônus <i class="pip" [class.on]="t.bonus"></i
+          ></span>
+          <span class="res" aria-label="Reação"
+            >Reação <i class="pip" [class.on]="t.reaction"></i
+          ></span>
+          <span class="res move">
+            Movimento
+            <span
+              class="mbar"
+              role="meter"
+              aria-label="Movimento gasto"
+              aria-valuemin="0"
+              [attr.aria-valuemax]="b.max"
+              [attr.aria-valuenow]="b.moved"
+            >
+              <span [style.width.%]="b.max ? ((b.max - b.moved) / b.max) * 100 : 0"></span>
+            </span>
+            {{ b.max - b.moved }} / {{ b.max }} ft
+          </span>
+        </div>
+
+        @if (canAct()) {
+          <div class="buttons">
+            @if (a.status === 'dying') {
+              <button type="button" class="primary" (click)="act('deathSave')">
+                Rolar salvaguarda contra a morte
+              </button>
+            }
+            @for (w of a.attacks; track $index) {
+              <button
+                type="button"
+                [class.active]="attackIndex() === $index"
+                [disabled]="a.status !== 'alive'"
+                (click)="chooseAttack($index)"
+              >
+                {{ w.name }} {{ fmt(w.bonus) }} · {{ w.damage }}
+              </button>
+            }
+            <button
+              type="button"
+              [disabled]="!t.action || a.status !== 'alive'"
+              (click)="act('dash')"
+            >
+              Correr
+            </button>
+            <button
+              type="button"
+              [disabled]="!t.action || a.status !== 'alive'"
+              (click)="act('dodge')"
+            >
+              Esquivar
+            </button>
+            <button
+              type="button"
+              [disabled]="!t.action || a.status !== 'alive'"
+              (click)="act('disengage')"
+            >
+              Desengajar
+            </button>
+            <span class="grow"></span>
+            <button type="button" class="primary" (click)="act('endTurn')">Encerrar turno</button>
+          </div>
+          @if (mode().kind === 'attack') {
+            <p class="hint">Clique num inimigo com o anel laranja para atacar.</p>
+          } @else {
+            <p class="hint">Clique numa célula azul (ou arraste o token) para se mover.</p>
+          }
+        } @else {
+          <p class="hint">Aguardando a vez de {{ a.name }}.</p>
+        }
+      } @else if (cb.phase === 'setup') {
+        <p class="hint">
+          Montagem:
+          {{
+            isDm()
+              ? 'clique numa célula para posicionar o personagem selecionado ou arraste os tokens.'
+              : 'o Mestre está preparando o encontro.'
+          }}
+        </p>
+      } @else {
+        <p class="hint">O combate terminou.</p>
+      }
+    </div>
+  </section>
+
+  <aside class="side right">
+    @if (selected(); as c) {
+      <section class="panel card" aria-label="Criatura selecionada">
+        <div class="card-head">
+          <h2>{{ c.name }}</h2>
+          <span class="chip" [class.foe]="c.kind === 'monster'">{{ teamLabel(c) }}</span>
+        </div>
+        <dl class="stats">
+          <div>
+            <dt>PV</dt>
+            <dd>{{ hpLabel(c) }}</dd>
+          </div>
+          @if (c.ac > 0) {
+            <div>
+              <dt>CA</dt>
+              <dd>{{ c.ac }}</dd>
+            </div>
+          }
+          <div>
+            <dt>Desl.</dt>
+            <dd>{{ c.speed }} ft</dd>
+          </div>
+        </dl>
+        @if (c.status !== 'alive') {
+          <p class="status">
+            {{ c.status === 'dying' ? 'Morrendo' : c.status === 'stable' ? 'Estável' : 'Morto' }}
+          </p>
+        }
+        @if (isDm()) {
+          <div class="dm">
+            <label class="field">
+              Valor
+              <input #amt type="number" min="0" value="5" />
+            </label>
+            <button type="button" (click)="damage(c.id, amt.value)">Dano</button>
+            <button type="button" (click)="heal(c.id, amt.value)">Cura</button>
+          </div>
+          <div class="dm">
+            @if (hasToken(c.id)) {
+              <button
+                type="button"
+                (click)="store.send({ type: 'setHidden', id: c.id, hidden: !isHidden(c.id) })"
+              >
+                {{ isHidden(c.id) ? 'Revelar' : 'Ocultar' }}
+              </button>
+            }
+            <button
+              type="button"
+              class="danger"
+              (click)="store.send({ type: 'removeCreature', id: c.id })"
+            >
+              Remover
+            </button>
+          </div>
+        }
+      </section>
+    }
+
+    @if (isDm() && cb.phase === 'setup') {
+      <section class="panel roster" aria-label="Adicionar ao encontro">
+        <h2>Adicionar ao encontro</h2>
+        <ul>
+          @for (c of party.creatures(); track c.id) {
+            <li>
+              <button type="button" (click)="store.addFromRoster(c)">+ {{ c.name }}</button>
+            </li>
+          }
+        </ul>
+        <p class="hint">Depois de adicionar, selecione e clique numa célula para posicionar.</p>
+        <button type="button" (click)="store.reset()">Restaurar exemplo</button>
+      </section>
+    }
+
+    <section class="panel log" aria-label="Registro do combate">
+      <h2>Registro</h2>
+      <ol role="log">
+        @for (e of logView(); track e.id) {
+          <li [class.secret]="e.secret">{{ e.text }}</li>
+        } @empty {
+          <li class="empty">Nada aconteceu ainda.</li>
+        }
+      </ol>
+    </section>
+  </aside>
+</div>

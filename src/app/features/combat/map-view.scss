@@ -1,0 +1,148 @@
+:host {
+  display: block;
+}
+
+.wrap {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--tile-wall);
+  overflow: hidden;
+}
+
+.map {
+  display: block;
+  width: 100%;
+  height: min(62vh, 560px);
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+}
+
+.bg {
+  fill: var(--tile-wall);
+}
+
+.tile {
+  stroke: var(--tile-line);
+  stroke-width: 1;
+
+  &.wall {
+    fill: var(--tile-wall);
+    stroke: var(--tile-wall-edge);
+  }
+  &.floor,
+  &.difficult,
+  &.door {
+    fill: var(--tile-floor);
+    &.alt {
+      fill: var(--tile-floor-alt);
+    }
+  }
+}
+
+.rubble circle {
+  fill: #6b5a3f;
+}
+
+.door-leaf {
+  fill: var(--tile-door);
+  stroke: var(--gold);
+  stroke-width: 1.5;
+}
+
+.reach {
+  fill: rgb(91 147 201 / 0.22);
+  stroke: rgb(143 189 230 / 0.55);
+  pointer-events: none;
+}
+
+.token {
+  cursor: pointer;
+  outline: none;
+
+  .body {
+    fill: var(--token-party);
+    stroke: var(--gold);
+    stroke-width: 3;
+  }
+  &.foe .body {
+    fill: var(--token-foe);
+    stroke: var(--danger);
+    stroke-dasharray: 6 3; // inimigo = anel tracejado (não depende só da cor)
+  }
+  text {
+    fill: var(--text);
+    font-family: var(--font-display);
+    font-weight: 700;
+    pointer-events: none;
+  }
+  &.hidden {
+    opacity: 0.45;
+  }
+  &.dead {
+    opacity: 0.55;
+    filter: grayscale(1);
+  }
+  &.dragging {
+    opacity: 0.8;
+    cursor: grabbing;
+  }
+  &:focus-visible .body {
+    stroke: var(--text);
+    stroke-width: 4;
+  }
+}
+
+.hp-bg {
+  fill: #0d0906;
+}
+.hp {
+  fill: var(--success);
+  &.low {
+    fill: var(--danger);
+  }
+}
+
+.turn {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+  animation: spin-dash 1.2s linear infinite;
+}
+
+@keyframes spin-dash {
+  to {
+    stroke-dashoffset: -14;
+  }
+}
+
+.target {
+  fill: none;
+  stroke: var(--warning);
+  stroke-width: 4;
+}
+
+.sel {
+  fill: none;
+  stroke: var(--info-text);
+  stroke-width: 2;
+}
+
+.zoom {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  button {
+    min-height: 36px;
+    min-width: 36px;
+    padding: 0;
+    background: var(--panel);
+    font-size: 1.1rem;
+  }
+}

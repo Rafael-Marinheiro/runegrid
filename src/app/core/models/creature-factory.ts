@@ -21,6 +21,8 @@ export function newCreature(kind: CreatureKind, over: Partial<Creature> = {}): C
     deathSaves: { successes: 0, failures: 0 },
     spellSlots: {},
     resources: [],
+    attacks: [],
+    attacksPerAction: 1,
     resistances: [],
     immunities: [],
     vulnerabilities: [],
@@ -42,6 +44,8 @@ export function sampleCreatures(): Creature[] {
       saveProficiencies: ['str', 'con'],
       skills: { athletics: 'proficient', perception: 'proficient', intimidation: 'proficient' },
       hp: { max: 52, current: 38, temp: 0 },
+      attacksPerAction: 2,
+      attacks: [{ name: 'Espada longa', bonus: 6, damage: '1d8+3', type: 'slashing', range: 5 }],
       resources: [
         { name: 'Retomar o Fôlego', max: 1, used: 0, recharge: 'short' },
         { name: 'Surto de Ação', max: 1, used: 0, recharge: 'short' },
@@ -55,6 +59,10 @@ export function sampleCreatures(): Creature[] {
       saveProficiencies: ['int', 'wis'],
       skills: { arcana: 'proficient', history: 'proficient', investigation: 'proficient' },
       hp: { max: 29, current: 24, temp: 0 },
+      attacks: [
+        { name: 'Raio de Fogo', bonus: 7, damage: '2d10', type: 'fire', range: 120 },
+        { name: 'Bordão', bonus: 1, damage: '1d6-1', type: 'bludgeoning', range: 5 },
+      ],
       spellSlots: {
         ...fullCasterSlots(5),
         1: { max: 4, used: 1 },
@@ -70,6 +78,7 @@ export function sampleCreatures(): Creature[] {
       saveProficiencies: ['wis', 'cha'],
       skills: { medicine: 'proficient', religion: 'proficient', insight: 'proficient' },
       hp: { max: 40, current: 36, temp: 0 },
+      attacks: [{ name: 'Maça', bonus: 4, damage: '1d6+2', type: 'bludgeoning', range: 5 }],
       spellSlots: fullCasterSlots(5),
       resources: [{ name: 'Canalizar Divindade', max: 1, used: 0, recharge: 'short' }],
     }),
@@ -79,6 +88,7 @@ export function sampleCreatures(): Creature[] {
       ac: 13,
       abilities: scores(10, 14, 15, 6, 8, 5),
       hp: { max: 13, current: 13, temp: 0 },
+      attacks: [{ name: 'Espada curta', bonus: 4, damage: '1d6+2', type: 'piercing', range: 5 }],
       immunities: ['poison'],
       vulnerabilities: ['bludgeoning'],
     }),
@@ -89,6 +99,7 @@ export function sampleCreatures(): Creature[] {
       ac: 11,
       abilities: scores(19, 8, 16, 5, 7, 7),
       hp: { max: 59, current: 59, temp: 0 },
+      attacks: [{ name: 'Clava grande', bonus: 6, damage: '2d8+4', type: 'bludgeoning', range: 5 }],
     }),
   ];
 }

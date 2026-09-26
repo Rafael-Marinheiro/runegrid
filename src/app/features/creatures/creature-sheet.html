@@ -95,7 +95,7 @@
             <button
               type="button"
               class="roll"
-              [attr.aria-label]="'Rolar iniciativa de ' + c.name"
+              [attr.aria-label]="'d20: rolar iniciativa de ' + c.name"
               (click)="roll('Iniciativa', init(c))"
             >
               d20
@@ -137,7 +137,7 @@
             <button
               type="button"
               class="roll"
-              [attr.aria-label]="'Rolar salvaguarda de ' + abilityLabel[a]"
+              [attr.aria-label]="'d20: rolar salvaguarda de ' + abilityLabel[a]"
               (click)="roll('Salv. ' + abilityLabel[a], save(c, a))"
             >
               d20
@@ -168,7 +168,7 @@
             <button
               type="button"
               class="roll"
-              [attr.aria-label]="'Rolar ' + skills[k].label"
+              [attr.aria-label]="'d20: rolar ' + skills[k].label"
               (click)="roll(skills[k].label, skill(c, k))"
             >
               d20

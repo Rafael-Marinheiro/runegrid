@@ -444,13 +444,15 @@
 
     <section class="panel log" aria-label="Registro do combate">
       <h2>Registro</h2>
-      <ol role="log">
-        @for (e of logView(); track e.id) {
-          <li [class.secret]="e.secret">{{ e.text }}</li>
-        } @empty {
-          <li class="empty">Nada aconteceu ainda.</li>
-        }
-      </ol>
+      <div role="log">
+        <ol>
+          @for (e of logView(); track e.id) {
+            <li [class.secret]="e.secret">{{ e.text }}</li>
+          } @empty {
+            <li class="empty">Nada aconteceu ainda.</li>
+          }
+        </ol>
+      </div>
     </section>
   </aside>
 </div>

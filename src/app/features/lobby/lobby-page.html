@@ -131,17 +131,19 @@
 
     <section class="panel chat" aria-label="Chat">
       <h2>Chat</h2>
-      <ol class="lines" role="log">
-        @for (l of room.chat(); track $index) {
-          <li [class.whisper]="l.whisper">
-            <span class="at">{{ time(l.at) }}</span>
-            <b>{{ l.from }}</b
-            >{{ l.whisper ? ' (sussurro)' : '' }}: {{ l.text }}
-          </li>
-        } @empty {
-          <li class="muted">Nenhuma mensagem.</li>
-        }
-      </ol>
+      <div role="log">
+        <ol class="lines">
+          @for (l of room.chat(); track $index) {
+            <li [class.whisper]="l.whisper">
+              <span class="at">{{ time(l.at) }}</span>
+              <b>{{ l.from }}</b
+              >{{ l.whisper ? ' (sussurro)' : '' }}: {{ l.text }}
+            </li>
+          } @empty {
+            <li class="muted">Nenhuma mensagem.</li>
+          }
+        </ol>
+      </div>
       <form class="say" (submit)="$event.preventDefault(); send(msg, to)">
         <label class="sr" for="msg">Mensagem</label>
         <input #msg id="msg" maxlength="500" autocomplete="off" placeholder="Escreva algo…" />

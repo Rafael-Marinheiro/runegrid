@@ -9,7 +9,8 @@
     "test": "ng test",
     "lint": "ng lint",
     "format:check": "prettier --check \"src/**/*.{ts,html,scss}\"",
-    "test:ci": "ng test --watch=false"
+    "test:ci": "ng test --watch=false",
+    "e2e": "playwright test"
   },
   "private": true,
   "packageManager": "npm@11.17.0",
@@ -32,6 +33,7 @@
     "@angular/cli": "^22.2.0",
     "@angular/compiler-cli": "^22.2.0",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
     "@types/node": "^26.6.3",
     "@types/three": "^0.186.0",
     "angular-eslint": "22.5.0",

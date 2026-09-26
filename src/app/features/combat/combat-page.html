@@ -290,6 +290,15 @@
             >
               Desengajar
             </button>
+            @for (i of consumables(); track i.id) {
+              <button
+                type="button"
+                [disabled]="!t.action || a.status !== 'alive'"
+                (click)="useItem(i.id)"
+              >
+                {{ i.name }}
+              </button>
+            }
             <span class="grow"></span>
             <button type="button" class="primary" (click)="act('endTurn')">Encerrar turno</button>
           </div>

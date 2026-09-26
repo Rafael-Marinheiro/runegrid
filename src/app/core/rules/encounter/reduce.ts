@@ -23,6 +23,7 @@ import {
 } from '../creature';
 import { AdvMode, criticalExpr, parseDice, roll, rollD20, Rng } from '../dice';
 import { canStand, distanceFt, findPath, key, MoveQuery } from '../grid/movement';
+import { consume, itemDef } from '../inventory/inventory';
 import { cast } from './cast';
 import {
   firstTrapOnPath,
@@ -234,6 +235,27 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
         `${actor.name} se desengajou.`,
         [actor.id],
       );
+    }
+    case 'useItem': {
+      const { actor, turn } = actorTurn(state, cmd.actorId);
+      const item = (actor.inventory ?? []).find((i) => i.id === cmd.itemId);
+      const d = item && itemDef(item);
+      if (!d?.consume) throw new RuleError('Esse item não pode ser usado.');
+      spendAction(turn);
+      let c = consume(actor, cmd.itemId);
+      let msg = `${actor.name} usou ${d.name}`;
+      if (d.consume.heal) {
+        const n = Math.max(0, roll(d.consume.heal, ctx.rng).total);
+        c = heal(c, n);
+        msg += ` e recuperou ${n} PV`;
+      }
+      if (d.consume.cures) {
+        c = removeCondition(c, d.consume.cures);
+        msg += ` e removeu ${CONDITION_LABEL[d.consume.cures]}`;
+      }
+      return addLog(withCreature(setTurn(state, { ...turn, action: false }), c), `${msg}.`, [
+        actor.id,
+      ]);
     }
     case 'deathSave': {
       const { actor } = actorTurn(state, cmd.actorId, 'dying');

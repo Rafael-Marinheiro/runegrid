@@ -46,6 +46,8 @@ export type Command =
   | { type: 'dash'; actorId: string }
   | { type: 'dodge'; actorId: string }
   | { type: 'disengage'; actorId: string }
+  /** Usa um consumível do próprio inventário (gasta a ação). */
+  | { type: 'useItem'; actorId: string; itemId: string }
   | { type: 'deathSave'; actorId: string }
   /** Usa (ou recusa) a reação pendente do personagem: o ataque de oportunidade. */
   | { type: 'reaction'; actorId: string; use: boolean }
@@ -63,6 +65,7 @@ export const PLAYER_COMMANDS: readonly CommandType[] = [
   'dash',
   'dodge',
   'disengage',
+  'useItem',
   'deathSave',
   'reaction',
   'endTurn',

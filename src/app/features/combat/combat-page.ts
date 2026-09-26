@@ -19,6 +19,7 @@ import { DiceTray3d } from '@features/dice/dice-3d/dice-tray-3d';
 import type { StageDie } from '@features/dice/dice-3d/dice-stage';
 import { DiceStore } from '@state/dice.store';
 import { EncounterStore } from '@state/encounter.store';
+import { getItem } from '@core/rules/inventory/catalog';
 import { PartyStore } from '@state/party.store';
 import { UiPrefs } from '@state/ui-prefs';
 import { AreaPreview, MapView, TokenView } from './map-view';
@@ -444,6 +445,19 @@ export class CombatPage {
     if (!a) return;
     this.store.send({ type, actorId: a.id });
     this.resetMode();
+  }
+
+  /** Consumíveis do personagem ativo (poções etc.). */
+  protected readonly consumables = computed(() =>
+    (this.active()?.inventory ?? []).flatMap((i) => {
+      const d = getItem(i.ref);
+      return d?.consume ? [{ id: i.id, name: `${d.name}${i.qty > 1 ? ' ×' + i.qty : ''}` }] : [];
+    }),
+  );
+
+  protected useItem(itemId: string): void {
+    const a = this.active();
+    if (a) this.store.send({ type: 'useItem', actorId: a.id, itemId });
   }
 
   protected setInitiative(id: string, value: string): void {

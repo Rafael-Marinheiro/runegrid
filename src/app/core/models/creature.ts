@@ -1,3 +1,4 @@
+import { InventoryItem } from './item';
 export const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
 export type Ability = (typeof ABILITIES)[number];
 
@@ -171,6 +172,8 @@ export interface Creature {
   conditions: ActiveCondition[];
   /** Ícone do token (ver `token-icons`); se ausente, deduzido do nome. */
   icon?: string;
+  /** Itens carregados (ver `models/item`). */
+  inventory?: InventoryItem[];
   /** Magia mantida em concentração. */
   concentration?: string;
 }

@@ -29,13 +29,14 @@ import { ICON_IDS, ICON_LABEL } from '@features/combat/token-icons';
 import { DiceStore } from '@state/dice.store';
 import { PartyStore } from '@state/party.store';
 import { HpPanel } from './hp-panel';
+import { InventoryPanel } from './inventory-panel';
 import { SlotsPanel } from './slots-panel';
 
 type Trait = 'resistances' | 'immunities' | 'vulnerabilities';
 
 @Component({
   selector: 'app-creature-sheet',
-  imports: [HpPanel, SlotsPanel],
+  imports: [HpPanel, InventoryPanel, SlotsPanel],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './creature-sheet.html',
   styleUrl: './creature-sheet.scss',

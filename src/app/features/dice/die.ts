@@ -70,7 +70,7 @@ const TICK_MS = 70;
     }
     text {
       fill: var(--text);
-      font: 700 34px var(--font-display);
+      font: 700 36px var(--font-num);
     }
     .crit polygon {
       stroke: var(--success);

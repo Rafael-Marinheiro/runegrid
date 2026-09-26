@@ -25,7 +25,7 @@ h1 {
 
 .die {
   min-width: 56px;
-  font-family: var(--font-display);
+  font-family: var(--font-num);
 }
 
 .expr,
@@ -39,7 +39,7 @@ h1 {
 
 .expr input {
   flex: 1 1 160px;
-  font-family: var(--font-display);
+  font-family: var(--font-num);
 }
 
 .d20 input[type='number'] {
@@ -82,7 +82,7 @@ h1 {
 }
 
 .total {
-  font-family: var(--font-display);
+  font-family: var(--font-num);
   font-size: 4rem;
   font-weight: 700;
   line-height: 1.1;
@@ -155,7 +155,7 @@ h1 {
 }
 
 .hist-total {
-  font-family: var(--font-display);
+  font-family: var(--font-num);
   font-weight: 700;
   color: var(--gold);
 }

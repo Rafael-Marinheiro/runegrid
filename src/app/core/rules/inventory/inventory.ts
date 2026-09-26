@@ -36,11 +36,13 @@ export function weaponAttack(c: Creature, d: ItemDef): Attack {
   const w = d.weapon!;
   const str = abilityMod(c.abilities.str);
   const dex = abilityMod(c.abilities.dex);
+  const twoHanded = !(c.inventory ?? []).some((i) => i.equipped && def(i).kind === 'shield');
+  const dice = w.versatile && twoHanded ? w.versatile : w.damage;
   const mod = w.ranged ? dex : w.finesse ? Math.max(str, dex) : str;
   return {
     name: d.name,
     bonus: proficiencyBonus(c) + mod,
-    damage: mod === 0 ? w.damage : `${w.damage}${mod > 0 ? '+' : ''}${mod}`,
+    damage: mod === 0 ? dice : `${dice}${mod > 0 ? '+' : ''}${mod}`,
     type: w.type,
     range: w.range,
   };

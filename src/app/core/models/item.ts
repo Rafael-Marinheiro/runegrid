@@ -15,6 +15,8 @@ export interface ItemDef {
     /** Alcance em pés (5 = corpo a corpo). */
     range: number;
     finesse?: boolean;
+    /** Dano empunhada com as duas mãos (sem escudo equipado). */
+    versatile?: string;
     ranged?: boolean;
   };
   armor?: {

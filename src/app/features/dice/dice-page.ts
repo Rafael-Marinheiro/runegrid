@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { AdvMode, DiceError, formatDice } from '@core/rules/dice';
 import { DiceStore } from '@state/dice.store';
+import { MacroStore } from '@state/macros.store';
 import { DiceTray3d } from './dice-3d/dice-tray-3d';
 import { Die, ROLL_MS } from './die';
 
@@ -22,6 +23,7 @@ import { Die, ROLL_MS } from './die';
 })
 export class DicePage {
   protected readonly store = inject(DiceStore);
+  protected readonly macroStore = inject(MacroStore);
   protected readonly format = formatDice;
 
   protected readonly quickDice = [4, 6, 8, 10, 12, 20, 100];
@@ -94,6 +96,16 @@ export class DicePage {
   protected rollNotation(notation: string): void {
     try {
       this.store.roll(notation);
+      this.error.set('');
+    } catch (e) {
+      if (!(e instanceof DiceError)) throw e;
+      this.error.set(e.message);
+    }
+  }
+
+  protected saveMacro(name: string, expr: string): void {
+    try {
+      this.macroStore.save(name, expr);
       this.error.set('');
     } catch (e) {
       if (!(e instanceof DiceError)) throw e;

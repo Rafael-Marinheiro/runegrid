@@ -20,6 +20,31 @@
     <input id="expr" #expr value="2d6+3" autocomplete="off" aria-describedby="expr-help" />
     <button type="submit" class="primary">Rolar</button>
   </form>
+  <div class="macros">
+    <label class="field">
+      Nome do macro
+      <input #mname maxlength="40" autocomplete="off" placeholder="Ex.: Espada longa" />
+    </label>
+    <button type="button" (click)="saveMacro(mname.value, expr.value)">Salvar expressão</button>
+  </div>
+  @if (macroStore.macros().length) {
+    <ul class="macro-list" aria-label="Macros salvos">
+      @for (m of macroStore.macros(); track m.name) {
+        <li>
+          <button type="button" (click)="rollNotation(m.expr)">
+            {{ m.name }} <code>{{ m.expr }}</code>
+          </button>
+          <button
+            type="button"
+            [attr.aria-label]="'Remover macro ' + m.name"
+            (click)="macroStore.remove(m.name)"
+          >
+            ×
+          </button>
+        </li>
+      }
+    </ul>
+  }
   <p id="expr-help" class="help">
     Ex.: <code>2d6+3</code>, <code>4d6kh3</code> (mantém os 3 maiores), <code>d%</code>.
   </p>

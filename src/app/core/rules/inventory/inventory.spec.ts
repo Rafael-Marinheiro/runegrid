@@ -34,9 +34,17 @@ describe('inventário', () => {
     c = toggleEquip(toggleEquip(c, idOf(c, 'rapier')), idOf(c, 'longsword'));
     const atk = (n: string) => c.attacks.find((a) => a.name === n)!;
     expect(atk('Espada longa').bonus).toBe(5); // prof 2 + For 3
-    expect(atk('Espada longa').damage).toBe('1d8+3');
+    expect(atk('Espada longa').damage).toBe('1d10+3'); // versátil, sem escudo
     c = toggleEquip(c, idOf(c, 'longsword'));
     expect(c.attacks.map((a) => a.name)).toEqual(['Rapieira']);
+  });
+
+  it('arma versátil usa o dano maior sem escudo', () => {
+    let c = addItem(addItem(hero(), 'longsword'), 'shield');
+    c = toggleEquip(c, idOf(c, 'longsword'));
+    expect(c.attacks[0].damage).toBe('1d10+3');
+    c = toggleEquip(c, idOf(c, 'shield'));
+    expect(c.attacks[0].damage).toBe('1d8+3');
   });
 
   it('consumíveis empilham, gastam e somem; peso soma', () => {

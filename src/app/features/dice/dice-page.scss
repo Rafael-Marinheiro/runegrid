@@ -192,3 +192,22 @@ h1 {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+.macros {
+  display: flex;
+  gap: var(--space-2);
+  align-items: end;
+  margin-top: var(--space-3);
+}
+.macro-list {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-3) 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  li {
+    display: flex;
+    gap: 2px;
+  }
+}

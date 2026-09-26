@@ -28,7 +28,7 @@ export const CATALOG: ItemDef[] = [
     name: 'Espada longa',
     kind: 'weapon',
     weight: 3,
-    weapon: { damage: '1d8', type: 'slashing', range: 5 },
+    weapon: { damage: '1d8', type: 'slashing', range: 5, versatile: '1d10' },
   },
   {
     id: 'greataxe',
@@ -49,7 +49,7 @@ export const CATALOG: ItemDef[] = [
     name: 'Cajado',
     kind: 'weapon',
     weight: 4,
-    weapon: { damage: '1d6', type: 'bludgeoning', range: 5 },
+    weapon: { damage: '1d6', type: 'bludgeoning', range: 5, versatile: '1d8' },
   },
   {
     id: 'handaxe',

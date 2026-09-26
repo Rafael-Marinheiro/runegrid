@@ -29,6 +29,7 @@ import { SpellPanel } from './spell-panel';
 type Mode =
   | { kind: 'move' }
   | { kind: 'attack'; index: number }
+  | { kind: 'help' }
   | { kind: 'cast'; spell: Spell; slot: number };
 
 @Component({
@@ -263,14 +264,13 @@ export class CombatPage {
     const from = tokenOf(st, a.id);
     if (!from) return out;
 
-    if (m.kind === 'attack') {
-      const weapon = a.attacks[m.index];
-      if (!weapon) return out;
+    if (m.kind === 'attack' || m.kind === 'help') {
+      const reach = m.kind === 'help' ? 5 : a.attacks[m.index]?.range;
+      if (!reach) return out;
       for (const t of st.tokens) {
         const o = this.creature(t.creatureId);
         if (!o || o.id === a.id || teamOf(o) === teamOf(a) || o.status === 'dead') continue;
-        if (distanceFt(from.pos, sizeOf(a), t.pos, sizeOf(o), st.rule) <= weapon.range)
-          out.add(o.id);
+        if (distanceFt(from.pos, sizeOf(a), t.pos, sizeOf(o), st.rule) <= reach) out.add(o.id);
       }
       return out;
     }
@@ -374,6 +374,12 @@ export class CombatPage {
       }
       return;
     }
+    if (m.kind === 'help' && a && id !== a.id) {
+      if (this.store.send({ type: 'help', actorId: a.id, targetId: id })) {
+        this.mode.set({ kind: 'move' });
+      }
+      return;
+    }
     if (m.kind === 'cast' && a) {
       const ok =
         m.spell.target.kind === 'creature'
@@ -438,6 +444,10 @@ export class CombatPage {
   /** O painel de magias escolheu uma magia e um espaço (ou limpou a escolha). */
   protected onSpell(pick: { spell: Spell; slot: number } | null): void {
     this.mode.set(pick ? { kind: 'cast', spell: pick.spell, slot: pick.slot } : { kind: 'move' });
+  }
+
+  protected toggleHelp(): void {
+    this.mode.update((m) => (m.kind === 'help' ? { kind: 'move' } : { kind: 'help' }));
   }
 
   protected act(type: 'dash' | 'dodge' | 'disengage' | 'deathSave' | 'endTurn' | 'standUp'): void {

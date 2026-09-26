@@ -290,6 +290,14 @@
             >
               Desengajar
             </button>
+            <button
+              type="button"
+              [class.active]="mode().kind === 'help'"
+              [disabled]="!t.action || a.status !== 'alive'"
+              (click)="toggleHelp()"
+            >
+              Ajudar
+            </button>
             @for (i of consumables(); track i.id) {
               <button
                 type="button"
@@ -307,6 +315,10 @@
           }
           @if (mode().kind === 'attack') {
             <p class="hint">Clique num inimigo com o anel laranja para atacar.</p>
+          } @else if (mode().kind === 'help') {
+            <p class="hint">
+              Clique num inimigo adjacente: o próximo ataque de um aliado contra ele tem vantagem.
+            </p>
           } @else if (mode().kind === 'cast') {
             <p class="hint">Destaque em laranja mostra quem a magia atinge.</p>
           } @else if (!spellsOpen()) {

@@ -25,6 +25,7 @@ import { AdvMode, criticalExpr, parseDice, roll, rollD20, Rng } from '../dice';
 import { canStand, distanceFt, findPath, key, MoveQuery } from '../grid/movement';
 import { consume, itemDef } from '../inventory/inventory';
 import { cast } from './cast';
+import { consumeHelp, coverBonus } from './cover';
 import {
   firstTrapOnPath,
   openDoor,
@@ -257,6 +258,29 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
         actor.id,
       ]);
     }
+    case 'help': {
+      const { actor, turn } = actorTurn(state, cmd.actorId);
+      const target = creatureOf(state, cmd.targetId);
+      const from = tokenOf(state, actor.id);
+      const at = tokenOf(state, target.id);
+      if (!from || !at) throw new RuleError('Criatura fora do mapa.');
+      if (teamOf(target) === teamOf(actor)) throw new RuleError('Ajude contra um inimigo.');
+      if (distanceFt(from.pos, sizeOf(actor), at.pos, sizeOf(target), state.rule) > 5)
+        throw new RuleError('O inimigo precisa estar adjacente.');
+      spendAction(turn);
+      const s = setTurn(state, { ...turn, action: false });
+      return addLog(
+        {
+          ...s,
+          combat: {
+            ...s.combat,
+            helped: [...(s.combat.helped ?? []), { targetId: target.id, by: actor.id }],
+          },
+        },
+        `${actor.name} ajuda contra ${target.name}.`,
+        [actor.id, target.id],
+      );
+    }
     case 'deathSave': {
       const { actor } = actorTurn(state, cmd.actorId, 'dying');
       const r = rollDeathSave(actor, ctx.rng);
@@ -453,6 +477,7 @@ function beginTurn(state: EncounterState): EncounterState {
       ...state.combat,
       turn: newTurn(actor.id),
       dodging: state.combat.dodging.filter((id) => id !== actor.id),
+      helped: (state.combat.helped ?? []).filter((h) => h.by !== actor.id),
       reactionUsed: (state.combat.reactionUsed ?? []).filter((id) => id !== actor.id),
     },
   };
@@ -664,13 +689,18 @@ function strike(
     if (meleeFoe) modes.push('disadvantage'); // atirar com inimigo adjacente
   }
   const cond = attackModifiers(actor, target, dist, weapon.range > 5);
-  const mode = combineModes([...modes, ...cond.modes]);
+  const helped = consumeHelp(state, target.id);
+  state = helped.state;
+  const mode = combineModes([...modes, ...helped.modes, ...cond.modes]);
+  const at = tokenOf(state, target.id)!;
+  const cover = coverBonus(state, from.pos, at.pos);
+  const ac = target.ac + cover;
 
   const d20 = rollD20(weapon.bonus, mode, rng);
-  const hit = d20.crit || (!d20.fumble && d20.roll.total >= target.ac);
+  const hit = d20.crit || (!d20.fumble && d20.roll.total >= ac);
   const crit = hit && (d20.crit || cond.autoCrit);
   const head =
-    `${actor.name} atacou ${target.name} com ${weapon.name}: d20 ${d20.natural} ${fmt(weapon.bonus)} = ${d20.roll.total} vs CA ${target.ac}` +
+    `${actor.name} atacou ${target.name} com ${weapon.name}: d20 ${d20.natural} ${fmt(weapon.bonus)} = ${d20.roll.total} vs CA ${ac}${cover ? ` (cobertura +${cover})` : ''}` +
     (mode === 'normal' ? '' : mode === 'advantage' ? ' (vantagem)' : ' (desvantagem)');
   if (!hit) return addLog(state, `${head} — erro.`, [actor.id, target.id]);
 

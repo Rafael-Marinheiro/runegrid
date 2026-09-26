@@ -45,6 +45,8 @@ export interface Combat {
   turn: TurnState | null;
   /** Quem está em Esquiva (vale até o início do próprio turno). */
   dodging: string[];
+  /** Ajuda ativa: o próximo ataque contra `targetId` tem vantagem; vale até o início do turno de `by`. */
+  helped?: { targetId: string; by: string }[];
   /** Reações à espera de decisão; bloqueiam o fim do turno de quem se moveu. */
   pending?: PendingReaction[];
   /** Quem já usou a reação nesta rodada (volta ao começo do turno de cada um). */

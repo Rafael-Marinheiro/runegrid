@@ -21,6 +21,7 @@ import { distanceFt } from '../grid/movement';
 import { getSpell } from '../spells/data';
 import { damageExpression, healExpression } from '../spells/scaling';
 import { Command } from './commands';
+import { consumeHelp, coverBonus } from './cover';
 import {
   actorTurn,
   aftermath,
@@ -171,12 +172,16 @@ function spellAttack(
   const from = tokenOf(state, caster.id)!;
   if (spell.range > 5 && adjacentFoe(state, caster, from.pos)) modes.push('disadvantage');
   const cond = attackModifiers(caster, target, dist, spell.range > 5);
-  const mode = combineModes([...modes, ...cond.modes]);
+  const helped = consumeHelp(state, target.id);
+  state = helped.state;
+  const mode = combineModes([...modes, ...helped.modes, ...cond.modes]);
+  const cover = coverBonus(state, from.pos, tokenOf(state, target.id)!.pos);
+  const ac = target.ac + cover;
 
   const d20 = rollD20(bonus, mode, rng);
-  const hit = d20.crit || (!d20.fumble && d20.roll.total >= target.ac);
+  const hit = d20.crit || (!d20.fumble && d20.roll.total >= ac);
   const crit = hit && (d20.crit || cond.autoCrit);
-  const head = `${spell.name}: d20 ${d20.natural} ${fmt(bonus)} = ${d20.roll.total} vs CA ${target.ac}${mode === 'normal' ? '' : mode === 'advantage' ? ' (vantagem)' : ' (desvantagem)'}`;
+  const head = `${spell.name}: d20 ${d20.natural} ${fmt(bonus)} = ${d20.roll.total} vs CA ${ac}${cover ? ` (cobertura +${cover})` : ''}${mode === 'normal' ? '' : mode === 'advantage' ? ' (vantagem)' : ' (desvantagem)'}`;
   if (!hit) return addLog(state, `${head} — erro.`, [caster.id, target.id]);
 
   let s = state;

@@ -23,6 +23,8 @@ export type Command =
   | { type: 'removeTrap'; id: string }
   | { type: 'rollInitiative' }
   | { type: 'setInitiative'; id: string; value: number }
+  /** Rolagem do Mestre que os jogadores não veem (só o Mestre pode enviar). */
+  | { type: 'secretRoll'; expr: string }
   | { type: 'joinCombat'; id: string }
   | { type: 'startCombat' }
   | { type: 'endCombat' }

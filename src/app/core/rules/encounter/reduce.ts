@@ -140,6 +140,11 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       return openDoor(state, cmd.actorId, cmd.pos);
     case 'rollInitiative':
       return rollInitiative(state, ctx.rng);
+    case 'secretRoll': {
+      const r = roll(cmd.expr, ctx.rng);
+      const s = addLog(state, `Rolagem secreta ${cmd.expr}: ${r.total}`);
+      return { ...s, log: s.log.map((e) => (e.id === s.seq - 1 ? { ...e, secret: true } : e)) };
+    }
     case 'setInitiative': {
       creatureOf(state, cmd.id);
       if (state.combat.phase === 'running') throw new RuleError('O combate já começou.');

@@ -1,7 +1,8 @@
 import { newCreature } from '../../models/creature-factory';
+import { Role } from '../../models/encounter';
 import { mapFromAscii } from '../../models/grid';
 import { RuleError } from '../creature';
-import { dispatch, newEncounter } from './index';
+import { dispatch, newEncounter, project } from './index';
 import { coverBonus } from './cover';
 
 const DM = { kind: 'dm' } as const;
@@ -72,5 +73,18 @@ describe('Ajudar', () => {
     expect(() =>
       dispatch(s, { type: 'help', actorId: 'a', targetId: 'foe' }, { rng: rng(10), role: DM }),
     ).toThrow(RuleError);
+  });
+});
+
+describe('rolagem secreta', () => {
+  it('só o Mestre rola; o jogador não vê o registro', () => {
+    let s = newEncounter(mapFromAscii(['....']));
+    s = dispatch(s, { type: 'secretRoll', expr: '1d20+2' }, { rng: rng(10), role: DM });
+    expect(s.log.at(-1)).toMatchObject({ text: 'Rolagem secreta 1d20+2: 12', secret: true });
+    const player: Role = { kind: 'player', owns: [] };
+    expect(project(s, player).log).toHaveLength(0);
+    expect(() =>
+      dispatch(s, { type: 'secretRoll', expr: '1d6' }, { rng: rng(10), role: player }),
+    ).toThrow();
   });
 });

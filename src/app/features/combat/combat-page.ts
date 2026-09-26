@@ -303,6 +303,10 @@ export class CombatPage {
 
   protected readonly logView = computed(() => [...this.s().log].reverse().slice(0, 60));
 
+  protected secretRoll(expr: string): void {
+    if (expr.trim()) this.store.send({ type: 'secretRoll', expr: expr.trim() });
+  }
+
   protected creature(id?: string | null): Creature | undefined {
     return id ? this.s().creatures.find((c) => c.id === id) : undefined;
   }

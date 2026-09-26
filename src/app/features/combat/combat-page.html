@@ -461,6 +461,15 @@
 
     <section class="panel log" aria-label="Registro do combate">
       <h2>Registro</h2>
+      @if (isDm()) {
+        <form class="secret-roll" (submit)="$event.preventDefault(); secretRoll(sr.value)">
+          <label class="field">
+            Rolagem secreta
+            <input #sr placeholder="1d20+5" autocomplete="off" />
+          </label>
+          <button type="submit">Rolar</button>
+        </form>
+      }
       <div role="log">
         <ol>
           @for (e of logView(); track e.id) {

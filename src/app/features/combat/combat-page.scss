@@ -473,3 +473,10 @@ button.active {
   display: flex;
   gap: var(--space-2);
 }
+
+.secret-roll {
+  display: flex;
+  gap: var(--space-2);
+  align-items: end;
+  margin-bottom: var(--space-2);
+}

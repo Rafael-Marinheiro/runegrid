@@ -54,7 +54,7 @@ export class DicePage {
   /** O total só aparece depois que o último dado pousa. */
   protected readonly settleMs = computed(() => Math.min(this.dice().length * 90, 900) + ROLL_MS);
 
-  protected readonly use3d = signal(true);
+  protected readonly use3d = this.store.use3d;
   private readonly webgl = signal(true);
   private readonly still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
   /** 3D só com WebGL, sem "reduzir movimento" e se o usuário não desligou. */

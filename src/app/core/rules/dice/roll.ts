@@ -1,5 +1,15 @@
 import { parseDice } from './parse';
-import { AdvMode, D20Result, DiceExpr, DiceTerm, Rng, RollResult, Term, TermResult } from './types';
+import {
+  AdvMode,
+  D20Result,
+  DiceExpr,
+  DiceTerm,
+  Rng,
+  RollResult,
+  Term,
+  TermResult,
+  DiceRecorder,
+} from './types';
 
 export function roll(input: string | DiceExpr, rng: Rng = Math.random): RollResult {
   const expr = typeof input === 'string' ? parseDice(input) : input;
@@ -15,6 +25,7 @@ function rollTerm(term: Term, rng: Rng): TermResult {
     dropped: false,
   }));
   if (term.keep) markDropped(dice, term.keep);
+  (rng as Partial<DiceRecorder>).record?.(term.sides, dice);
   const sum = dice.reduce((acc, d) => acc + (d.dropped ? 0 : d.value), 0);
   return { term, dice, subtotal: term.sign * sum };
 }

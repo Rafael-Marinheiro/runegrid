@@ -37,12 +37,21 @@ export interface Combat {
   outcome?: 'party' | 'foes';
 }
 
+/** Um dado rolado durante o comando (para animar nas telas de todos). */
+export interface RolledDie {
+  sides: number;
+  value: number;
+  dropped: boolean;
+}
+
 export interface LogEntry {
   id: number;
   round: number;
   text: string;
   /** Envolve criatura oculta: só o Mestre vê. */
   secret?: boolean;
+  /** Dados rolados pelo comando que gerou esta entrada. */
+  dice?: RolledDie[];
 }
 
 export interface EncounterState {

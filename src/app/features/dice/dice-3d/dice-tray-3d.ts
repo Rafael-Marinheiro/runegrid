@@ -19,7 +19,7 @@ import type { DiceStage, StageDie } from './dice-stage';
  */
 @Component({
   selector: 'app-dice-tray-3d',
-  template: `<canvas #cv aria-hidden="true"></canvas>`,
+  template: `<canvas #cv aria-hidden="true" [style.height.px]="height()"></canvas>`,
   styles: `
     :host {
       display: block;
@@ -35,6 +35,7 @@ import type { DiceStage, StageDie } from './dice-stage';
 export class DiceTray3d {
   readonly dice = input.required<StageDie[]>();
   readonly seed = input.required<number>();
+  readonly height = input(300);
   readonly settled = output<void>();
   readonly failed = output<void>();
 

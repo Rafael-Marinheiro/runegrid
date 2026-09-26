@@ -1,5 +1,5 @@
 import { CONDITION_LABEL, Creature } from '../../models/creature';
-import { EncounterState, Role, TurnState } from '../../models/encounter';
+import { EncounterState, Role, RolledDie, TurnState } from '../../models/encounter';
 import { inBounds } from '../../models/grid';
 import {
   applyDamage,
@@ -68,6 +68,20 @@ export function authorize(cmd: Command, role: Role): void {
 
 /** Aplica um comando e devolve o novo estado (o original nunca é alterado). Lança `RuleError` se for ilegal. */
 export function dispatch(state: EncounterState, cmd: Command, ctx: Context): EncounterState {
+  const dice: RolledDie[] = [];
+  const rng = Object.assign(() => ctx.rng(), {
+    record: (sides: number, rolled: { value: number; dropped: boolean }[]) =>
+      dice.push(...rolled.map((d) => ({ sides, value: d.value, dropped: d.dropped }))),
+  });
+  const next = apply(state, cmd, { ...ctx, rng });
+  if (!dice.length) return next;
+  // os dados vão na primeira linha nova do registro (a tela junta os de todas as linhas novas)
+  const i = next.log.findIndex((e) => e.id >= state.seq);
+  if (i < 0) return next;
+  return { ...next, log: next.log.map((e, k) => (k === i ? { ...e, dice } : e)) };
+}
+
+function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterState {
   authorize(cmd, ctx.role);
   switch (cmd.type) {
     case 'addCreature':

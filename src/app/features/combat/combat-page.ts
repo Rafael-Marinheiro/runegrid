@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
 import { CONDITION_LABEL, CONDITIONS, ConditionName, Creature } from '@core/models/creature';
 import { Pos } from '@core/models/grid';
 import { Spell } from '@core/models/spell';
@@ -6,6 +15,9 @@ import { fmtBonus } from '@core/rules/creature';
 import { moveQuery, occupiedCells, sizeOf, teamOf, tokenOf } from '@core/rules/encounter';
 import { inCone, inSphere } from '@core/rules/grid/area';
 import { canStand, distanceFt, reachable } from '@core/rules/grid/movement';
+import { DiceTray3d } from '@features/dice/dice-3d/dice-tray-3d';
+import type { StageDie } from '@features/dice/dice-3d/dice-stage';
+import { DiceStore } from '@state/dice.store';
 import { EncounterStore } from '@state/encounter.store';
 import { PartyStore } from '@state/party.store';
 import { AreaPreview, MapView, TokenView } from './map-view';
@@ -18,7 +30,7 @@ type Mode =
 
 @Component({
   selector: 'app-combat-page',
-  imports: [MapView, SpellPanel],
+  imports: [MapView, SpellPanel, DiceTray3d],
   templateUrl: './combat-page.html',
   styleUrl: './combat-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,9 +38,64 @@ type Mode =
 export class CombatPage {
   protected readonly store = inject(EncounterStore);
   protected readonly party = inject(PartyStore);
+  protected readonly diceStore = inject(DiceStore);
+
+  /** Rolagem em exibição sobre o mapa (a mesma para todos da mesa: vem do registro). */
+  protected readonly roll = signal<{ dice: StageDie[]; seed: number; label: string } | null>(null);
+  private lastSeq = this.store.state().seq;
+  private hideTimer: ReturnType<typeof setTimeout> | undefined;
+  private readonly still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
   protected readonly fmt = fmtBonus;
   protected readonly conditions = CONDITIONS;
   protected readonly condLabel = CONDITION_LABEL;
+
+  constructor() {
+    // entradas novas do registro com dados → animação 3D (igual em todos os navegadores)
+    effect(() => {
+      const st = this.store.view();
+      const from = this.lastSeq;
+      this.lastSeq = st.seq;
+      if (!this.diceStore.use3d() || this.still) return;
+      const fresh = st.log.filter((e) => e.id >= from && e.dice?.length);
+      if (fresh.length)
+        untracked(() =>
+          this.showRoll(
+            fresh.flatMap((e) => e.dice ?? []),
+            fresh,
+          ),
+        );
+    });
+    inject(DestroyRef).onDestroy(() => clearTimeout(this.hideTimer));
+  }
+
+  private showRoll(
+    dice: { sides: number; value: number; dropped: boolean }[],
+    entries: { id: number; text: string }[],
+  ): void {
+    clearTimeout(this.hideTimer);
+    const stage: StageDie[] = dice.slice(0, 12).map((d) => ({
+      ...d,
+      highlight:
+        d.sides === 20 && !d.dropped
+          ? d.value === 20
+            ? 'crit'
+            : d.value === 1
+              ? 'fumble'
+              : null
+          : null,
+    }));
+    this.roll.set({
+      dice: stage,
+      seed: (entries[entries.length - 1].id * 2654435761) >>> 0,
+      label: entries[0].text,
+    });
+  }
+
+  /** Os dados pararam: some depois de um instante. */
+  protected onRollSettled(): void {
+    clearTimeout(this.hideTimer);
+    this.hideTimer = setTimeout(() => this.roll.set(null), 2600);
+  }
 
   /** O que este papel enxerga do encontro. */
   protected readonly s = this.store.view;

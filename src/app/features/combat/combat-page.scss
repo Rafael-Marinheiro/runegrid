@@ -419,3 +419,42 @@ button.active {
     min-height: 36px;
   }
 }
+
+.stage {
+  position: relative;
+}
+
+.roll-overlay {
+  position: absolute;
+  right: var(--space-2);
+  bottom: var(--space-2);
+  width: min(480px, 72%);
+  pointer-events: none;
+  border-radius: var(--radius);
+  background: rgb(20 16 12 / 0.6);
+  overflow: hidden;
+  animation: roll-in 200ms ease-out;
+}
+
+.roll-label {
+  margin: 0;
+  padding: 4px var(--space-2) var(--space-2);
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+@keyframes roll-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.toggle3d {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}

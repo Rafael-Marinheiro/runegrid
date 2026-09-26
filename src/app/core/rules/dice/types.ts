@@ -1,4 +1,12 @@
 export type Rng = () => number;
+
+/**
+ * Um `Rng` pode ter um gravador ligado: cada rolagem informa os dados (lados e valores). O reducer usa
+ * isso para mostrar os mesmos dados na tela de todos, sem tocar em cada ponto de rolagem.
+ */
+export interface DiceRecorder {
+  record(sides: number, dice: { value: number; dropped: boolean }[]): void;
+}
 export type Sign = 1 | -1;
 export type AdvMode = 'normal' | 'advantage' | 'disadvantage';
 

@@ -483,5 +483,6 @@ export class DiceStage {
     this.token++;
     this.clear();
     this.renderer.dispose();
+    this.renderer.forceContextLoss();
   }
 }

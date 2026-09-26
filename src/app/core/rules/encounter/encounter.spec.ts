@@ -605,3 +605,61 @@ describe('entrar num combate em andamento', () => {
     );
   });
 });
+
+describe('dados rolados anexados ao registro (animação para todos)', () => {
+  const adjacent = { foePos: { x: 1, y: 0 } };
+
+  it('o ataque leva o d20 e os dados de dano, na ordem em que foram rolados', () => {
+    const s = started(adjacent);
+    const r = run(
+      s,
+      { type: 'attack', actorId: 'hero', targetId: 'foe', attackIndex: 0 },
+      dice([20, 15], [8, 4]),
+    );
+    const entry = r.log.find((e) => e.id >= s.seq)!;
+    expect(entry.dice).toEqual([
+      { sides: 20, value: 15, dropped: false },
+      { sides: 8, value: 4, dropped: false },
+    ]);
+  });
+
+  it('vantagem grava os dois d20 com o descartado marcado', () => {
+    const s = started({ ...adjacent, foe: { conditions: [{ name: 'prone' }] } });
+    const r = run(
+      s,
+      { type: 'attack', actorId: 'hero', targetId: 'foe', attackIndex: 0 },
+      dice([20, 3], [20, 19], [8, 1]),
+    );
+    const d20 = r.log.find((e) => e.id >= s.seq)!.dice!.filter((d) => d.sides === 20);
+    expect(d20).toEqual([
+      { sides: 20, value: 3, dropped: true },
+      { sides: 20, value: 19, dropped: false },
+    ]);
+  });
+
+  it('iniciativa grava um d20 por criatura; comandos sem rolagem não gravam nada', () => {
+    let s = newEncounter(map);
+    s = run(s, { type: 'addCreature', creature: hero(), pos: { x: 0, y: 0 } });
+    s = run(s, { type: 'addCreature', creature: foe(), pos: { x: 5, y: 0 } });
+    const rolled = run(s, { type: 'rollInitiative' }, dice([20, 11], [20, 7]));
+    expect(rolled.log.at(-1)!.dice).toHaveLength(2);
+    const moved = run(started(), { type: 'move', actorId: 'hero', to: { x: 1, y: 0 } });
+    expect(moved.log.every((e) => e.dice === undefined)).toBe(true);
+  });
+
+  it('os dados de rolagens de criatura oculta ficam na entrada secreta (o jogador não recebe)', () => {
+    let s = started(adjacent);
+    s = run(s, { type: 'setHidden', id: 'foe', hidden: true });
+    s = run(s, { type: 'endTurn', actorId: 'hero' });
+    s = run(
+      s,
+      { type: 'attack', actorId: 'foe', targetId: 'hero', attackIndex: 0 },
+      dice([20, 15], [4, 2]),
+    );
+    const last = s.log.at(-1)!;
+    expect(last.secret).toBe(true);
+    expect(last.dice?.length).toBeGreaterThan(0);
+    const view = project(s, { kind: 'player', owns: ['hero'] });
+    expect(view.log.some((e) => e.dice)).toBe(false);
+  });
+});

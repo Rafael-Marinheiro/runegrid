@@ -16,6 +16,15 @@
         </select>
       </label>
     }
+    <label class="toggle3d">
+      <input
+        #t3
+        type="checkbox"
+        [checked]="diceStore.use3d()"
+        (change)="diceStore.use3d.set(t3.checked)"
+      />
+      Dados 3D
+    </label>
     @if (isDm()) {
       <button type="button" [disabled]="!store.canUndo()" (click)="store.undo()">Desfazer</button>
       <button type="button" [disabled]="!store.canRedo()" (click)="store.redo()">Refazer</button>
@@ -133,21 +142,35 @@
   </aside>
 
   <section class="center">
-    <app-map-view
-      [map]="st.map"
-      [tokens]="tokens()"
-      [reach]="reach()"
-      [preview]="preview()"
-      [dm]="isDm()"
-      [fogCells]="st.map.fog"
-      [rooms]="st.map.rooms ?? []"
-      [traps]="st.map.traps ?? []"
-      (cellHover)="hover.set($event)"
-      (cellClick)="onCell($event)"
-      (tokenClick)="onToken($event)"
-      (tokenMove)="onTokenMove($event)"
-      (tokenNudge)="onNudge($event)"
-    />
+    <div class="stage">
+      <app-map-view
+        [map]="st.map"
+        [tokens]="tokens()"
+        [reach]="reach()"
+        [preview]="preview()"
+        [dm]="isDm()"
+        [fogCells]="st.map.fog"
+        [rooms]="st.map.rooms ?? []"
+        [traps]="st.map.traps ?? []"
+        (cellHover)="hover.set($event)"
+        (cellClick)="onCell($event)"
+        (tokenClick)="onToken($event)"
+        (tokenMove)="onTokenMove($event)"
+        (tokenNudge)="onNudge($event)"
+      />
+      @if (roll(); as r) {
+        <div class="roll-overlay" aria-hidden="true">
+          <app-dice-tray-3d
+            [dice]="r.dice"
+            [seed]="r.seed"
+            [height]="230"
+            (settled)="onRollSettled()"
+            (failed)="roll.set(null)"
+          />
+          <p class="roll-label">{{ r.label }}</p>
+        </div>
+      }
+    </div>
 
     @let a = active();
     <div class="panel actions" aria-label="Ações do turno">

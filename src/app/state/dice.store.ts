@@ -17,6 +17,8 @@ export class DiceStore {
   private readonly rng = inject(RNG);
   private nextId = 1;
 
+  /** Dados 3D ligados (vale para a tela de dados e para o combate). */
+  readonly use3d = signal(true);
   readonly history = signal<RollEntry[]>([]);
   readonly last = computed(() => this.history()[0]);
 

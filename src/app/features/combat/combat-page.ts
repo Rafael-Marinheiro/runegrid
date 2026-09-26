@@ -96,6 +96,18 @@ export class CombatPage {
     return null;
   });
 
+  /** Criaturas do encontro que ainda não estão no mapa (só o Mestre vê). */
+  protected readonly unplaced = computed(() =>
+    this.store.state().creatures.filter((c) => !tokenOf(this.store.state(), c.id)),
+  );
+
+  /** Com o combate em andamento: criaturas no mapa que ainda não estão na iniciativa. */
+  protected readonly outside = computed(() => {
+    const st = this.store.state();
+    if (st.combat.phase !== 'running') return [];
+    return st.creatures.filter((c) => tokenOf(st, c.id) && !st.combat.order.includes(c.id));
+  });
+
   protected readonly tokens = computed<TokenView[]>(() => {
     const st = this.s();
     const active = this.combat().turn?.actorId;

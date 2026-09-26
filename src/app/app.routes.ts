@@ -13,6 +13,16 @@ export const routes: Routes = [
     loadComponent: () => import('@features/combat/combat-page').then((m) => m.CombatPage),
   },
   {
+    path: 'bestiario',
+    title: 'Bestiário · Runegrid',
+    loadComponent: () => import('@features/bestiary/bestiary-page').then((m) => m.BestiaryPage),
+  },
+  {
+    path: 'magias',
+    title: 'Magias · Runegrid',
+    loadComponent: () => import('@features/spells/spells-page').then((m) => m.SpellsPage),
+  },
+  {
     path: 'dados',
     title: 'Dados · Runegrid',
     loadComponent: () => import('@features/dice/dice-page').then((m) => m.DicePage),

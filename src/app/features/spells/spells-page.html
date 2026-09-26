@@ -1,0 +1,110 @@
+<h1>Magias</h1>
+<p class="sub">
+  SRD 5.1 · {{ filtered().length }} de {{ srd.spells().length }} magias (textos em inglês)
+</p>
+
+<div class="layout">
+  <section class="panel" aria-label="Lista de magias">
+    <div class="filters">
+      <label class="field grow">
+        Buscar
+        <input
+          #q
+          type="search"
+          placeholder="Fireball, cure…"
+          (input)="query.set(q.value); reset()"
+        />
+      </label>
+      <label class="field">
+        Nível
+        <select #lv (change)="setLevel(lv.value)">
+          <option value="">Todos</option>
+          @for (l of levels; track l) {
+            <option [value]="l">{{ l === 0 ? 'Truque' : l + 'º' }}</option>
+          }
+        </select>
+      </label>
+      <label class="field">
+        Escola
+        <select #sc (change)="school.set(sc.value); reset()">
+          <option value="">Todas</option>
+          @for (s of schools(); track s) {
+            <option [value]="s">{{ s }}</option>
+          }
+        </select>
+      </label>
+      <label class="field">
+        Classe
+        <select #cl (change)="klass.set(cl.value); reset()">
+          <option value="">Todas</option>
+          @for (c of classes(); track c) {
+            <option [value]="c">{{ c }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    @if (srd.spellsStatus() === 'loading') {
+      <p class="muted">Carregando o SRD…</p>
+    } @else if (srd.spellsStatus() === 'error') {
+      <p class="error" role="alert">Não foi possível carregar as magias.</p>
+    }
+
+    <ul class="rows">
+      @for (s of visible(); track s.id) {
+        <li [class.active]="s.id === selectedId()">
+          <button type="button" class="pick" (click)="selectedId.set(s.id)">
+            <span class="nm">{{ s.name }}</span>
+            <span class="meta">
+              {{ levelLabel(s) }} · {{ s.school }}
+              @if (inCombat(s)) {
+                · <span class="live">resolvida no combate</span>
+              }
+            </span>
+          </button>
+        </li>
+      }
+    </ul>
+    @if (filtered().length > visible().length) {
+      <button type="button" class="more" (click)="shown.set(shown() + 60)">Mostrar mais</button>
+    }
+  </section>
+
+  <section class="panel detail" aria-label="Detalhes da magia">
+    @if (selected(); as s) {
+      <h2>{{ s.name }}</h2>
+      <p class="muted">{{ levelLabel(s) }} · {{ s.school }}{{ s.ritual ? ' · ritual' : '' }}</p>
+      <dl>
+        <div>
+          <dt>Execução</dt>
+          <dd>{{ s.castingTime }}</dd>
+        </div>
+        <div>
+          <dt>Alcance</dt>
+          <dd>{{ s.range }}</dd>
+        </div>
+        <div>
+          <dt>Componentes</dt>
+          <dd>{{ s.components }}</dd>
+        </div>
+        <div>
+          <dt>Duração</dt>
+          <dd>{{ s.concentration ? 'Concentração, ' : '' }}{{ s.duration }}</dd>
+        </div>
+        <div>
+          <dt>Classes</dt>
+          <dd>{{ s.classes.join(', ') }}</dd>
+        </div>
+      </dl>
+      <p class="desc">{{ s.desc }}</p>
+      @if (s.higher) {
+        <p class="desc"><b>Em níveis superiores.</b> {{ s.higher }}</p>
+      }
+      @if (inCombat(s)) {
+        <p class="live">Esta magia já é resolvida pelo motor de combate.</p>
+      }
+    } @else {
+      <p class="muted">Escolha uma magia na lista.</p>
+    }
+  </section>
+</div>

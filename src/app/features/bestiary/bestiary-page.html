@@ -1,0 +1,213 @@
+<h1>Bestiário</h1>
+<p class="sub">
+  SRD 5.1 · {{ filtered().length }} de {{ srd.monsters().length }} criaturas (nomes em inglês)
+</p>
+
+<div class="layout">
+  <section class="panel list" aria-label="Lista de monstros">
+    <div class="filters">
+      <label class="field grow">
+        Buscar
+        <input
+          #q
+          type="search"
+          placeholder="Goblin, dragon…"
+          (input)="query.set(q.value); resetPage()"
+        />
+      </label>
+      <label class="field">
+        Tipo
+        <select #tp (change)="type.set(tp.value); resetPage()">
+          <option value="">Todos</option>
+          @for (t of types(); track t) {
+            <option [value]="t">{{ t }}</option>
+          }
+        </select>
+      </label>
+      <label class="field">
+        ND mín.
+        <select #lo (change)="setNumber(minCr, lo.value)">
+          @for (c of crs; track c) {
+            <option [value]="c" [selected]="c === minCr()">{{ cr(c) }}</option>
+          }
+        </select>
+      </label>
+      <label class="field">
+        ND máx.
+        <select #hi (change)="setNumber(maxCr, hi.value)">
+          @for (c of crs; track c) {
+            <option [value]="c" [selected]="c === maxCr()">{{ cr(c) }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    @if (srd.monstersStatus() === 'loading') {
+      <p class="muted">Carregando o SRD…</p>
+    } @else if (srd.monstersStatus() === 'error') {
+      <p class="error" role="alert">Não foi possível carregar o bestiário.</p>
+    }
+
+    <ul class="rows">
+      @for (m of visible(); track m.id) {
+        <li [class.active]="m.id === selectedId()">
+          <button type="button" class="pick" (click)="selectedId.set(m.id)">
+            <span class="nm">{{ m.name }}</span>
+            <span class="meta"
+              >{{ m.type }} · ND {{ cr(m.cr) }} · CA {{ m.ac }} · {{ m.hp }} PV</span
+            >
+          </button>
+          <button
+            type="button"
+            class="plus"
+            [attr.aria-label]="'Adicionar ' + m.name + ' ao encontro'"
+            (click)="add(m)"
+          >
+            +
+          </button>
+        </li>
+      } @empty {
+        @if (srd.monstersStatus() === 'ready') {
+          <li class="muted">Nenhum monstro com esses filtros.</li>
+        }
+      }
+    </ul>
+    @if (filtered().length > visible().length) {
+      <button type="button" class="more" (click)="shown.set(shown() + 60)">Mostrar mais</button>
+    }
+  </section>
+
+  <section class="panel block" aria-label="Ficha do monstro">
+    @if (selected(); as m) {
+      <div class="bhead">
+        <h2>{{ m.name }}</h2>
+        <span class="muted">{{ m.size }} · {{ m.type }}</span>
+      </div>
+      <dl class="core">
+        <div>
+          <dt>CA</dt>
+          <dd>{{ m.ac }}</dd>
+        </div>
+        <div>
+          <dt>PV</dt>
+          <dd>
+            {{ m.hp }} <small>({{ m.hitDice }})</small>
+          </dd>
+        </div>
+        <div>
+          <dt>Desl.</dt>
+          <dd>{{ m.speed }} ft</dd>
+        </div>
+        <div>
+          <dt>ND</dt>
+          <dd>
+            {{ cr(m.cr) }} <small>({{ xp(m.cr) }} XP)</small>
+          </dd>
+        </div>
+      </dl>
+      <table class="abil" aria-label="Atributos">
+        <thead>
+          <tr>
+            @for (a of abilities; track a) {
+              <th scope="col">{{ a.toUpperCase() }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            @for (s of m.abilities; track $index) {
+              <td>{{ modLabel(s) }}</td>
+            }
+          </tr>
+        </tbody>
+      </table>
+      @if (saves(m)) {
+        <p><b>Salvaguardas</b> {{ saves(m) }}</p>
+      }
+      @if (skills(m)) {
+        <p><b>Perícias</b> {{ skills(m) }}</p>
+      }
+      @if (m.notes) {
+        <p><b>Defesas</b> {{ m.notes }}</p>
+      }
+      <p><b>Sentidos</b> {{ m.senses }}</p>
+      <p><b>Idiomas</b> {{ m.languages || '—' }}</p>
+
+      @if (m.traits.length) {
+        <h3>Características</h3>
+        @for (t of m.traits; track t.name) {
+          <p>
+            <b>{{ t.name }}.</b> {{ t.desc }}
+          </p>
+        }
+      }
+      <h3>Ações</h3>
+      @for (a of m.actions; track a.name) {
+        <p>
+          <b>{{ a.name }}.</b> {{ a.desc }}
+        </p>
+      }
+      <p class="engine">
+        No combate:
+        {{
+          m.attacks.length
+            ? m.attacks.length + ' ataque(s) reconhecido(s)'
+            : 'sem ataque automático'
+        }}
+        @if (m.attacksPerAction > 1) {
+          · {{ m.attacksPerAction }} por ação
+        }
+      </p>
+      <div class="acts">
+        <button type="button" class="primary" (click)="add(m)">Adicionar ao encontro</button>
+        <button type="button" (click)="toParty(m)">Guardar em Criaturas</button>
+      </div>
+    } @else {
+      <p class="muted">Escolha um monstro na lista.</p>
+    }
+  </section>
+
+  <aside class="panel build" aria-label="Encontro em preparo">
+    <h2>Encontro em preparo</h2>
+    @for (p of pickedList(); track p.m.id) {
+      <div class="line">
+        <span
+          >{{ p.n }}× {{ p.m.name }} <small class="muted">ND {{ cr(p.m.cr) }}</small></span
+        >
+        <span class="steps">
+          <button type="button" [attr.aria-label]="'Menos um ' + p.m.name" (click)="add(p.m, -1)">
+            −
+          </button>
+          <button type="button" [attr.aria-label]="'Mais um ' + p.m.name" (click)="add(p.m)">
+            +
+          </button>
+        </span>
+      </div>
+    } @empty {
+      <p class="muted">Use o + na lista para escolher monstros.</p>
+    }
+
+    @let e = estimate();
+    <dl class="est">
+      <div>
+        <dt>Grupo</dt>
+        <dd>{{ partyLevels().length }} PJ(s)</dd>
+      </div>
+      <div>
+        <dt>XP</dt>
+        <dd>{{ e.baseXp }} → {{ e.adjustedXp }}</dd>
+      </div>
+      <div>
+        <dt>Dificuldade</dt>
+        <dd class="diff" [attr.data-level]="e.difficulty">{{ difficultyLabel[e.difficulty] }}</dd>
+      </div>
+    </dl>
+    <p class="muted thr">
+      Limiares: fácil {{ e.thresholds.easy }} · médio {{ e.thresholds.medium }} · difícil
+      {{ e.thresholds.hard }} · mortal {{ e.thresholds.deadly }}
+    </p>
+    <button type="button" class="primary" [disabled]="!pickedList().length" (click)="toEncounter()">
+      Levar ao mapa
+    </button>
+  </aside>
+</div>

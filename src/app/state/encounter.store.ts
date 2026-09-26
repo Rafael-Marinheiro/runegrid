@@ -4,7 +4,16 @@ import { sampleCreatures } from '@core/models/creature-factory';
 import { EncounterState, Role } from '@core/models/encounter';
 import { mapFromAscii } from '@core/models/grid';
 import { RuleError } from '@core/rules/creature';
-import { Command, dispatch, newEncounter, project } from '@core/rules/encounter';
+import {
+  Command,
+  dispatch,
+  newEncounter,
+  occupiedCells,
+  project,
+  sizeOf,
+  teamOf,
+} from '@core/rules/encounter';
+import { canStand } from '@core/rules/grid/movement';
 import { RNG } from './rng.token';
 
 const KEY = 'runegrid.encounter.v2';
@@ -116,18 +125,34 @@ export class EncounterStore {
   }
 
   /** Coloca uma cópia da criatura do grupo no encontro (monstros repetidos ganham numeração). */
-  addFromRoster(source: Creature): void {
-    const same = this.state().creatures.filter(
-      (c) => c.name.replace(/ \d+$/, '') === source.name.replace(/ \d+$/, ''),
-    );
+  addFromRoster(source: Creature): string {
+    const base = source.name.replace(/ \d+$/, '');
+    const same = this.state().creatures.filter((c) => c.name.replace(/ \d+$/, '') === base);
     const name =
-      source.kind === 'monster' && same.length
-        ? `${source.name.replace(/ \d+$/, '')} ${same.length + 1}`
-        : source.name;
-    this.send({
-      type: 'addCreature',
-      creature: { ...structuredClone(source), id: crypto.randomUUID(), name },
-    });
+      source.kind === 'monster' && same.length ? `${base} ${same.length + 1}` : source.name;
+    const id = crypto.randomUUID();
+    this.send({ type: 'addCreature', creature: { ...structuredClone(source), id, name } });
+    return id;
+  }
+
+  /** Coloca a criatura na primeira célula livre: monstros a partir da direita, o grupo a partir da esquerda. */
+  autoPlace(id: string): boolean {
+    const s = this.state();
+    const c = s.creatures.find((x) => x.id === id);
+    if (!c) return false;
+    const { width, height } = s.map;
+    const occupied = occupiedCells(s, (o) => o.id !== id);
+    const xs = Array.from({ length: width }, (_, i) => i);
+    if (teamOf(c) === 'foes') xs.reverse();
+    for (const x of xs) {
+      for (let y = 0; y < height; y++) {
+        if (canStand(s.map, { x, y }, sizeOf(c), occupied)) {
+          return this.send({ type: 'placeToken', id, pos: { x, y } });
+        }
+      }
+    }
+    this.message.set('Não há espaço livre no mapa.');
+    return false;
   }
 
   reset(): void {

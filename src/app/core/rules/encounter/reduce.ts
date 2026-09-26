@@ -97,6 +97,8 @@ export function dispatch(state: EncounterState, cmd: Command, ctx: Context): Enc
     }
     case 'startCombat':
       return startCombat(state);
+    case 'joinCombat':
+      return joinCombat(state, cmd.id, ctx.rng);
     case 'endCombat':
       return addLog({ ...state, combat: emptyCombat() }, 'Combate encerrado.');
     case 'damage': {
@@ -314,6 +316,35 @@ function startCombat(state: EncounterState): EncounterState {
   s = addLog(s, 'O combate começou.');
   // se o primeiro da ordem já está morto, pula para o próximo vivo
   return creatureOf(s, order[0]).status === 'dead' ? advanceTurn(s) : beginTurn(s);
+}
+
+/** Entra num combate em andamento: rola iniciativa e se encaixa na ordem sem mudar de quem é a vez. */
+function joinCombat(state: EncounterState, id: string, rng: Rng): EncounterState {
+  const c = creatureOf(state, id);
+  const { combat } = state;
+  if (combat.phase !== 'running' || !combat.turn)
+    throw new RuleError('O combate não está em andamento.');
+  if (combat.order.includes(id)) throw new RuleError(`${c.name} já está na iniciativa.`);
+  if (!tokenOf(state, id)) throw new RuleError(`Coloque ${c.name} no mapa primeiro.`);
+
+  const r = rollD20(initiativeBonus(c), 'normal', rng);
+  const initiative = { ...combat.initiative, [id]: r.roll.total };
+  const current = combat.turn.actorId;
+  const order = [...combat.order, id]
+    .map((cid, i) => ({ cid, i }))
+    .sort(
+      (a, b) =>
+        initiative[b.cid] - initiative[a.cid] ||
+        abilityMod(creatureOf(state, b.cid).abilities.dex) -
+          abilityMod(creatureOf(state, a.cid).abilities.dex) ||
+        a.i - b.i,
+    )
+    .map((x) => x.cid);
+  const next = {
+    ...state,
+    combat: { ...combat, initiative, order, turnIndex: order.indexOf(current) },
+  };
+  return addLog(next, `${c.name} entra no combate com iniciativa ${r.roll.total}.`, [id]);
 }
 
 function newTurn(actorId: string): TurnState {

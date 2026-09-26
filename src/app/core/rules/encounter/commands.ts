@@ -12,6 +12,7 @@ export type Command =
   | { type: 'setTerrain'; pos: Pos; terrain: Terrain }
   | { type: 'rollInitiative' }
   | { type: 'setInitiative'; id: string; value: number }
+  | { type: 'joinCombat'; id: string }
   | { type: 'startCombat' }
   | { type: 'endCombat' }
   | { type: 'damage'; targetId: string; amount: number; damageType?: DamageType }

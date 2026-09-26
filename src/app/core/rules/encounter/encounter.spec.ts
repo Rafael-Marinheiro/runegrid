@@ -557,3 +557,51 @@ describe('concentração no combate', () => {
     expect(s.log.at(-1)?.text).toContain('perde a concentração');
   });
 });
+
+describe('entrar num combate em andamento', () => {
+  it('rola iniciativa, encaixa na ordem e mantém a vez de quem está jogando', () => {
+    let s = started(); // herói 18 (na vez), goblin 10
+    s = run(s, {
+      type: 'addCreature',
+      creature: foe({ id: 'late', name: 'Retardatário' }),
+      pos: { x: 7, y: 4 },
+    });
+    expect(s.combat.order).toEqual(['hero', 'foe']);
+    s = run(s, { type: 'joinCombat', id: 'late' }, dice([20, 14])); // d20 14 + Des 0
+    expect(s.combat.initiative['late']).toBe(14);
+    expect(s.combat.order).toEqual(['hero', 'late', 'foe']);
+    expect(s.combat.turn?.actorId).toBe('hero');
+    expect(s.combat.turnIndex).toBe(0);
+  });
+
+  it('entrar antes de quem está na vez não troca o turno atual', () => {
+    let s = started();
+    s = run(s, { type: 'endTurn', actorId: 'hero' }); // vez do goblin (índice 1)
+    s = run(s, { type: 'addCreature', creature: foe({ id: 'quick' }), pos: { x: 7, y: 4 } });
+    s = run(s, { type: 'joinCombat', id: 'quick' }, dice([20, 20]));
+    expect(s.combat.order).toEqual(['quick', 'hero', 'foe']);
+    expect(s.combat.turn?.actorId).toBe('foe');
+    expect(s.combat.order[s.combat.turnIndex]).toBe('foe');
+  });
+
+  it('exige combate em andamento, criatura no mapa e que ainda não esteja na ordem', () => {
+    const s = started();
+    expect(() => run(s, { type: 'joinCombat', id: 'foe' })).toThrow(/já está/);
+    const noToken = run(s, { type: 'addCreature', creature: foe({ id: 'x' }) });
+    expect(() => run(noToken, { type: 'joinCombat', id: 'x' })).toThrow(/mapa/);
+    const setup = run(newEncounter(map), {
+      type: 'addCreature',
+      creature: hero(),
+      pos: { x: 0, y: 0 },
+    });
+    expect(() => run(setup, { type: 'joinCombat', id: 'hero' })).toThrow(/não está em andamento/);
+  });
+
+  it('só o Mestre', () => {
+    const s = started();
+    const player: Role = { kind: 'player', owns: ['hero'] };
+    expect(() => run(s, { type: 'joinCombat', id: 'hero' }, dice(), player)).toThrow(
+      ForbiddenError,
+    );
+  });
+});

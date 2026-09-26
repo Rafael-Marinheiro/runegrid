@@ -13,6 +13,6 @@ describe('App', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.brand')?.textContent).toContain('Runegrid');
     const links = [...el.querySelectorAll('nav a')].map((a) => a.textContent?.trim());
-    expect(links).toEqual(['Criaturas', 'Combate', 'Dados']);
+    expect(links).toEqual(['Criaturas', 'Combate', 'Bestiário', 'Magias', 'Dados']);
   });
 });

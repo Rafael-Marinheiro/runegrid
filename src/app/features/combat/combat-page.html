@@ -84,6 +84,34 @@
       }
     </ol>
 
+    @if (isDm() && outside().length) {
+      <div class="unplaced">
+        <h3>Fora da iniciativa</h3>
+        @for (c of outside(); track c.id) {
+          <div class="up-row">
+            <span>{{ c.name }}</span>
+            <button type="button" (click)="store.send({ type: 'joinCombat', id: c.id })">
+              Entrar
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+    @if (isDm() && cb.phase === 'setup' && unplaced().length) {
+      <div class="unplaced">
+        <h3>Fora do mapa</h3>
+        @for (c of unplaced(); track c.id) {
+          <div class="up-row">
+            <span>{{ c.name }}</span>
+            <button type="button" (click)="store.autoPlace(c.id); selectedId.set(c.id)">
+              Posicionar
+            </button>
+          </div>
+        }
+      </div>
+    }
+
     @if (isDm()) {
       <div class="stack">
         @if (cb.phase === 'setup') {

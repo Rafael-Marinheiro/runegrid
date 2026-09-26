@@ -395,3 +395,27 @@ button.active {
 .cond-form .rounds {
   max-width: 84px;
 }
+
+.unplaced {
+  margin-top: var(--space-2);
+
+  h3 {
+    margin: 0 0 var(--space-1);
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+}
+
+.up-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 2px 0;
+
+  button {
+    min-height: 36px;
+  }
+}

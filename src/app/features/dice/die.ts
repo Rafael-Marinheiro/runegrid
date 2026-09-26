@@ -41,6 +41,7 @@ const TICK_MS = 70;
       [class.crit]="highlight() === 'crit'"
       [class.fumble]="highlight() === 'fumble'"
       [style.animation-delay.ms]="delay()"
+      [style.--die]="'var(--die-d' + sides() + ', var(--panel-2))'"
     >
       <polygon [attr.points]="points()" />
       @if (sides() === 20) {
@@ -58,8 +59,8 @@ const TICK_MS = 70;
       overflow: visible;
     }
     polygon {
-      fill: var(--panel-2);
-      stroke: var(--gold);
+      fill: var(--die);
+      stroke: color-mix(in srgb, var(--die), white 40%);
       stroke-width: 3;
       stroke-linejoin: round;
     }
@@ -69,14 +70,16 @@ const TICK_MS = 70;
       opacity: 0.55;
     }
     text {
-      fill: var(--text);
+      fill: var(--die-text);
       font: 700 36px var(--font-num);
     }
     .crit polygon {
       stroke: var(--success);
+      stroke-width: 6;
     }
     .fumble polygon {
       stroke: var(--danger-text);
+      stroke-width: 6;
     }
     .dropped {
       opacity: 0.4;

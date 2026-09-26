@@ -4,7 +4,14 @@
   <h2 id="quick-title">Rolagem rápida</h2>
   <div class="quick">
     @for (sides of quickDice; track sides) {
-      <button type="button" class="die" (click)="rollNotation('1d' + sides)">d{{ sides }}</button>
+      <button
+        type="button"
+        class="die"
+        [style.--die]="'var(--die-d' + sides + ')'"
+        (click)="rollNotation('1d' + sides)"
+      >
+        d{{ sides }}
+      </button>
     }
   </div>
 
@@ -46,31 +53,49 @@
 </section>
 
 <section class="panel result" aria-labelledby="result-title" aria-live="polite">
-  <h2 id="result-title">Resultado</h2>
+  <div class="result-head">
+    <h2 id="result-title">Resultado</h2>
+    <label class="toggle">
+      <input type="checkbox" #t3d [checked]="use3d()" (change)="use3d.set(t3d.checked)" />
+      Dados 3D
+    </label>
+  </div>
   @if (store.last(); as last) {
-    <ul class="dice-list" aria-label="Dados rolados">
-      @for (d of dice(); track d.key) {
-        <li>
-          <app-die
-            [sides]="d.sides"
-            [value]="d.value"
-            [dropped]="d.dropped"
-            [delay]="d.delay"
-            [highlight]="d.highlight"
-          />
-        </li>
-      }
-    </ul>
-    @for (r of [last.id]; track r) {
-      <div
-        class="total"
-        [class.crit]="last.d20?.crit"
-        [class.fumble]="last.d20?.fumble"
-        [style.animation-delay.ms]="settleMs()"
-      >
-        {{ last.result.total }}
-      </div>
+    @if (show3d()) {
+      <app-dice-tray-3d
+        [dice]="dice()"
+        [seed]="seed()"
+        (settled)="onSettled()"
+        (failed)="onFailed()"
+      />
+      <ul class="sr-only" aria-label="Dados rolados">
+        @for (d of dice(); track d.key) {
+          <li>d{{ d.sides }}: {{ d.value }}{{ d.dropped ? ' (descartado)' : '' }}</li>
+        }
+      </ul>
+    } @else {
+      <ul class="dice-list" aria-label="Dados rolados">
+        @for (d of dice(); track d.key) {
+          <li>
+            <app-die
+              [sides]="d.sides"
+              [value]="d.value"
+              [dropped]="d.dropped"
+              [delay]="d.delay"
+              [highlight]="d.highlight"
+            />
+          </li>
+        }
+      </ul>
     }
+    <div
+      class="total"
+      [class.pending]="!revealed()"
+      [class.crit]="last.d20?.crit"
+      [class.fumble]="last.d20?.fumble"
+    >
+      {{ last.result.total }}
+    </div>
     <p class="detail">
       {{ format(last.result.expr) }}
       @if (last.d20?.crit) {

@@ -5,7 +5,7 @@ Tático de combate em grid para D&D 5e, feito em Angular. Projeto de portfólio:
 ## Status
 
 - **Fase 0:** F0-1, F0-2 (lint + Prettier; sem hook de commit, o CI cobre), F0-3, F0-4 (tokens em `styles.scss`), F0-5, F0-7 concluídos. F0-6 em andamento (projeto na Vercel, time Hobby). Pendente: F0-8 (tipos base de criatura).
-- **Fase 1:** F1-1 a F1-5 concluídos (parser, RNG com semente, vantagem/crítico, rolador, histórico). F1-6 concluído (dados animados que pousam no resultado do motor, com movimento reduzido respeitado). Próximo: F1-6b (bandeja reutilizável), F1-7 (macros).
+- **Fase 1:** F1-1 a F1-5 concluídos (parser, RNG com semente, vantagem/crítico, rolador, histórico). F1-6 concluído (dados animados que pousam no resultado do motor, com movimento reduzido respeitado). F1-6d (dados 3D com física) e F1-6e (cor por dado) concluídos. Próximo: F1-6b (bandeja reutilizável), F1-7 (macros).
 
 ## 1. Visão e escopo
 
@@ -114,7 +114,8 @@ Legenda: **P0** essencial (MVP) · **P1** importante · **P2** desejável. Estim
 | F1-6 | **Lançamento visual de dados**: d4/d6/d8/d10/d12/d20/d100 animados (SVG/CSS 3D), rolando e **pousando no resultado já decidido** pelo motor | P1 | L | Face final = valor do RNG (teste); vários dados na mesma rolagem; `prefers-reduced-motion` mostra só o resultado |
 | F1-6b | Componente `<app-dice-tray>` reutilizável (bandeja no mapa/painel), destaque de crítico (20) e falha crítica (1), vantagem mostra os 2 d20 e descarta um | P1 | M | Usado por ataque, dano e salvaguarda |
 | F1-6c | Som de dados opcional + volume/mudo | P2 | S | Desligado por padrão |
-| F1-6d | Modo "dados físicos 3D" (Three.js + física, carregado sob demanda) | P2 | L | Lazy chunk; não afeta o bundle inicial |
+| F1-6d | ✅ **Dados 3D com física** (Three.js + cannon-es, chunk sob demanda): caem, quicam e param; o motor decide o valor e as faces são rotuladas para a de cima mostrar exatamente ele; se um dado termina inclinado/sobreposto, é endireitado e afastado (resultado nunca fica escondido) | P2 | L | Teste: 10 sementes × 10 dados, face do resultado para cima e sem sobreposição; fallback 2D sem WebGL/movimento reduzido |
+| F1-6e | ✅ **Cor própria por tipo de dado** (tokens `--die-dN`): botão, dado 3D e dado 2D compartilham a cor, para o jogador identificar o dado na bandeja | P1 | S | Texto claro ≥ 4.5:1 sobre cada cor |
 | F1-7 | Macros salvas (`Ataque espada: 1d20+5`) | P2 | S | CRUD local |
 
 ### Fase 2 — Criaturas e ficha

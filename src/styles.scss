@@ -16,6 +16,16 @@
   --success: #6fae6a;
   --warning: #e08a3c;
 
+  // Uma cor por tipo de dado: botão, dado 3D e dado 2D usam a mesma (texto claro ≥ 4.5:1).
+  --die-text: #f6ecd6;
+  --die-d4: #3f7a3c;
+  --die-d6: #a63a32;
+  --die-d8: #3a6ea5;
+  --die-d10: #7a4fa0;
+  --die-d12: #a4521a;
+  --die-d20: #8f6d1e;
+  --die-d100: #24706c;
+
   --font-display: 'Cinzel', 'Times New Roman', serif;
   --font-body: 'Alegreya Sans', 'Segoe UI', sans-serif;
   // Cinzel desenha o "1" como "I": números de jogo usam a fonte de texto.

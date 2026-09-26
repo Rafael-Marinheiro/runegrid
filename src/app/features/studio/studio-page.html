@@ -5,6 +5,15 @@
   </h1>
   <div class="tools-right">
     <label class="toggle">
+      <input
+        #hc
+        type="checkbox"
+        [checked]="ui.highContrast()"
+        (change)="ui.highContrast.set(hc.checked)"
+      />
+      Alto contraste
+    </label>
+    <label class="toggle">
       <input #ap type="checkbox" [checked]="asPlayer()" (change)="asPlayer.set(ap.checked)" />
       Ver como jogador
     </label>
@@ -51,6 +60,7 @@
       [tokens]="tokens()"
       [reach]="stroke()"
       [paintMode]="editable() && !asPlayer()"
+      [highContrast]="ui.highContrast()"
       [dm]="!asPlayer()"
       [fogCells]="st.map.fog"
       [rooms]="st.map.rooms ?? []"
@@ -197,6 +207,16 @@
 
     <section class="panel" aria-label="Mapa">
       <h2>Mapa</h2>
+      <label class="field">
+        Textura do piso
+        <select #tx [disabled]="!editable()" (change)="setTexture(tx.value)">
+          @for (t of textures; track t) {
+            <option [value]="t" [selected]="(state().map.texture ?? 'none') === t">
+              {{ textureLabel[t] }}
+            </option>
+          }
+        </select>
+      </label>
       <div class="two">
         <label class="field">
           Largura

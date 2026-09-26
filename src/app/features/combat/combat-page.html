@@ -16,6 +16,23 @@
         </select>
       </label>
     }
+    <button
+      type="button"
+      [class.active]="rulerOn()"
+      [attr.aria-pressed]="rulerOn()"
+      (click)="toggleRuler()"
+    >
+      Régua
+    </button>
+    <label class="toggle3d">
+      <input
+        #hc
+        type="checkbox"
+        [checked]="ui.highContrast()"
+        (change)="ui.highContrast.set(hc.checked)"
+      />
+      Alto contraste
+    </label>
     <label class="toggle3d">
       <input
         #t3
@@ -148,6 +165,12 @@
         [tokens]="tokens()"
         [reach]="reach()"
         [preview]="preview()"
+        [path]="path()"
+        [ruler]="ruler()"
+        [highContrast]="ui.highContrast()"
+        [paintMode]="rulerOn()"
+        (strokeStart)="rulerStart($event)"
+        (strokeMove)="rulerB.set($event)"
         [dm]="isDm()"
         [fogCells]="st.map.fog"
         [rooms]="st.map.rooms ?? []"

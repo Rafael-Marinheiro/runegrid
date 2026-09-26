@@ -268,3 +268,77 @@
 .trap.spent text {
   fill: var(--muted);
 }
+
+.texture {
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.tx-line {
+  fill: none;
+  stroke: rgb(0 0 0 / 0.28);
+  stroke-width: 1.2;
+}
+
+.tx-dot {
+  fill: rgb(255 255 255 / 0.1);
+}
+
+.tx-blob {
+  fill: rgb(0 0 0 / 0.14);
+}
+
+.tx-grass {
+  fill: none;
+  stroke: rgb(120 170 90 / 0.28);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.tx-mud {
+  fill: rgb(20 10 0 / 0.22);
+}
+
+.icon path {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.path {
+  fill: none;
+  stroke: var(--info-text);
+  stroke-width: 4;
+  stroke-dasharray: 2 8;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+.ruler {
+  stroke: var(--gold);
+  stroke-width: 3;
+  stroke-dasharray: 8 5;
+  pointer-events: none;
+}
+
+.path-label {
+  pointer-events: none;
+
+  rect {
+    fill: #0d0906;
+    stroke: var(--border);
+  }
+  text {
+    fill: var(--text);
+    font-family: var(--font-num);
+    font-size: 13px;
+    font-weight: 700;
+  }
+}
+
+.hc .token .body {
+  stroke-width: 6;
+}

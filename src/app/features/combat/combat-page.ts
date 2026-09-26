@@ -14,13 +14,15 @@ import { Spell } from '@core/models/spell';
 import { fmtBonus } from '@core/rules/creature';
 import { moveQuery, occupiedCells, sizeOf, teamOf, tokenOf } from '@core/rules/encounter';
 import { inCone, inSphere } from '@core/rules/grid/area';
-import { canStand, distanceFt, reachable } from '@core/rules/grid/movement';
+import { canStand, distanceFt, findPath, reachable } from '@core/rules/grid/movement';
 import { DiceTray3d } from '@features/dice/dice-3d/dice-tray-3d';
 import type { StageDie } from '@features/dice/dice-3d/dice-stage';
 import { DiceStore } from '@state/dice.store';
 import { EncounterStore } from '@state/encounter.store';
 import { PartyStore } from '@state/party.store';
+import { UiPrefs } from '@state/ui-prefs';
 import { AreaPreview, MapView, TokenView } from './map-view';
+import { iconFor } from './token-icons';
 import { SpellPanel } from './spell-panel';
 
 type Mode =
@@ -39,6 +41,12 @@ export class CombatPage {
   protected readonly store = inject(EncounterStore);
   protected readonly party = inject(PartyStore);
   protected readonly diceStore = inject(DiceStore);
+  protected readonly ui = inject(UiPrefs);
+
+  /** Régua: mede a distância entre dois pontos arrastando no mapa. */
+  protected readonly rulerOn = signal(false);
+  protected readonly rulerA = signal<Pos | null>(null);
+  protected readonly rulerB = signal<Pos | null>(null);
 
   /** Rolagem em exibição sobre o mapa (a mesma para todos da mesa: vem do registro). */
   protected readonly roll = signal<{ dice: StageDie[]; seed: number; label: string } | null>(null);
@@ -198,6 +206,7 @@ export class CombatPage {
           active: c.id === active,
           selected: c.id === sel,
           targetable: targets.has(c.id),
+          icon: iconFor(c),
           conditions: c.conditions.length,
           concentrating: !!c.concentration,
         },
@@ -219,6 +228,28 @@ export class CombatPage {
     } catch {
       return []; // sem deslocamento restante
     }
+  });
+
+  /** Caminho até a célula sob o cursor (custo em pés), só no modo de movimento. */
+  protected readonly path = computed(() => {
+    const a = this.active();
+    const h = this.hover();
+    if (!a || !h || !this.canAct() || this.mode().kind !== 'move' || this.rulerOn()) return null;
+    if (!this.reach().some((c) => c.x === h.x && c.y === h.y)) return null;
+    try {
+      const found = findPath(moveQuery(this.s(), a.id), h);
+      const start = tokenOf(this.s(), a.id)?.pos;
+      return found && start ? { cells: [start, ...found.path], label: `${found.costFt} ft` } : null;
+    } catch {
+      return null;
+    }
+  });
+
+  protected readonly ruler = computed(() => {
+    const a = this.rulerA();
+    const b = this.rulerB();
+    if (!a || !b) return null;
+    return { a, b, label: `${distanceFt(a, 1, b, 1, this.s().rule)} ft` };
   });
 
   /** Criaturas destacadas: alvos válidos do ataque/magia ou atingidas pela área em prévia. */
@@ -300,6 +331,17 @@ export class CombatPage {
   }
 
   // ---------- interação com o mapa ----------
+
+  protected toggleRuler(): void {
+    this.rulerOn.update((v) => !v);
+    this.rulerA.set(null);
+    this.rulerB.set(null);
+  }
+
+  protected rulerStart(pos: Pos): void {
+    this.rulerA.set(pos);
+    this.rulerB.set(pos);
+  }
 
   protected onCell(pos: Pos): void {
     const m = this.mode();

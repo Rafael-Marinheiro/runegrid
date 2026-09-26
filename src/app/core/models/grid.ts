@@ -50,6 +50,9 @@ export interface Pos {
   y: number;
 }
 
+export const TEXTURES = ['none', 'stone', 'cave', 'grass', 'mud'] as const;
+export type Texture = (typeof TEXTURES)[number];
+
 export interface GridMap {
   width: number;
   height: number;
@@ -59,6 +62,8 @@ export interface GridMap {
   fog?: boolean[];
   rooms?: Room[];
   traps?: Trap[];
+  /** Textura do piso (só aparência; nunca muda regras). */
+  texture?: Texture;
 }
 
 /** Regra de diagonal: simples (5 ft) ou alternada 5-10-5 (variante do DMG). */

@@ -30,6 +30,8 @@ import {
 } from '@core/rules/generator';
 import { DIFFICULTY_LABEL } from '@core/rules/srd/xp';
 import { MapView, TokenView } from '@features/combat/map-view';
+import { iconFor } from '@features/combat/token-icons';
+import { UiPrefs } from '@state/ui-prefs';
 import { EncounterStore } from '@state/encounter.store';
 import { PartyStore } from '@state/party.store';
 import { SrdStore } from '@state/srd.store';
@@ -65,6 +67,7 @@ const rnd = () => Math.random().toString(36).slice(2, 8);
 })
 export class GeneratorPage implements OnInit {
   private readonly srd = inject(SrdStore);
+  protected readonly ui = inject(UiPrefs);
   private readonly encounter = inject(EncounterStore);
   private readonly party = inject(PartyStore);
   private readonly router = inject(Router);
@@ -119,6 +122,7 @@ export class GeneratorPage implements OnInit {
           active: boss,
           selected: false,
           targetable: false,
+          icon: iconFor({ name: e.groups[0]?.name ?? '', kind: 'monster' }),
           conditions: 0,
           concentrating: false,
         },

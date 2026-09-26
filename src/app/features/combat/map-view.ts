@@ -9,6 +9,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { GridMap, Pos, Room, Trap } from '@core/models/grid';
+import { ICON_PATH, IconId } from './token-icons';
 
 export const CELL = 48;
 
@@ -28,6 +29,8 @@ export interface TokenView {
   selected: boolean;
   /** Alvo válido do ataque em preparo. */
   targetable: boolean;
+  /** Ícone do token; sem ele, aparece a inicial. */
+  icon: IconId | null;
   /** Quantidade de condições ativas. */
   conditions: number;
   concentrating: boolean;
@@ -84,6 +87,12 @@ export class MapView {
   readonly selectedRoom = input<string | null>(null);
   /** Retângulo sendo desenhado (sala). */
   readonly draft = input<{ a: Pos; b: Pos } | null>(null);
+  /** Alto contraste: sem texturas e com anéis mais grossos. */
+  readonly highContrast = input(false);
+  /** Caminho em prévia (células, na ordem) e o custo. */
+  readonly path = input<{ cells: Pos[]; label: string } | null>(null);
+  /** Régua: dois pontos e o texto da distância. */
+  readonly ruler = input<{ a: Pos; b: Pos; label: string } | null>(null);
 
   readonly cellClick = output<Pos>();
   readonly tokenClick = output<string>();
@@ -96,6 +105,27 @@ export class MapView {
   readonly strokeEnd = output<void>();
 
   protected readonly C = CELL;
+  protected readonly iconPath = ICON_PATH;
+  protected readonly texture = computed(() =>
+    this.highContrast() ? 'none' : (this.map().texture ?? 'none'),
+  );
+
+  protected readonly pathPoints = computed(() =>
+    (this.path()?.cells ?? []).map((c) => `${(c.x + 0.5) * CELL},${(c.y + 0.5) * CELL}`).join(' '),
+  );
+  protected readonly pathEnd = computed(() => {
+    const last = this.path()?.cells.at(-1);
+    return last ? { x: (last.x + 0.5) * CELL, y: last.y * CELL - 6 } : null;
+  });
+  protected readonly rulerShape = computed(() => {
+    const r = this.ruler();
+    if (!r) return null;
+    const x1 = (r.a.x + 0.5) * CELL;
+    const y1 = (r.a.y + 0.5) * CELL;
+    const x2 = (r.b.x + 0.5) * CELL;
+    const y2 = (r.b.y + 0.5) * CELL;
+    return { x1, y1, x2, y2, mx: (x1 + x2) / 2, my: (y1 + y2) / 2 - 10, label: r.label };
+  });
   protected readonly zoom = signal(1);
   protected readonly pan = signal<Pos>({ x: 0, y: 0 });
   protected readonly drag = signal<Drag | null>(null);

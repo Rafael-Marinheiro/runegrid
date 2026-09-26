@@ -169,6 +169,8 @@ export interface Creature {
   immunities: DamageType[];
   vulnerabilities: DamageType[];
   conditions: ActiveCondition[];
+  /** Ícone do token (ver `token-icons`); se ausente, deduzido do nome. */
+  icon?: string;
   /** Magia mantida em concentração. */
   concentration?: string;
 }

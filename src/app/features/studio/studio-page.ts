@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DAMAGE_LABEL, DAMAGE_TYPES, DamageType } from '@core/models/creature';
-import { blankMap, Pos, Room, Terrain, Trap } from '@core/models/grid';
+import { blankMap, Pos, Room, Terrain, Texture, TEXTURES, Trap } from '@core/models/grid';
 import { project, sizeOf, teamOf } from '@core/rules/encounter';
 import { MapView, TokenView } from '@features/combat/map-view';
+import { iconFor } from '@features/combat/token-icons';
+import { UiPrefs } from '@state/ui-prefs';
 import { DungeonLibrary, SavedDungeon } from '@state/dungeon-library';
 import { EncounterStore } from '@state/encounter.store';
 
@@ -44,6 +46,15 @@ const TOOLS: ToolButton[] = [
 export class StudioPage {
   protected readonly store = inject(EncounterStore);
   protected readonly library = inject(DungeonLibrary);
+  protected readonly ui = inject(UiPrefs);
+  protected readonly textures = TEXTURES;
+  protected readonly textureLabel: Record<Texture, string> = {
+    none: 'Sem textura',
+    stone: 'Pedra',
+    cave: 'Caverna',
+    grass: 'Grama',
+    mud: 'Lama',
+  };
 
   protected readonly tools = TOOLS;
   protected readonly damageTypes = DAMAGE_TYPES;
@@ -102,6 +113,7 @@ export class StudioPage {
           active: false,
           selected: false,
           targetable: false,
+          icon: iconFor(c),
           conditions: 0,
           concentrating: false,
         },
@@ -223,6 +235,10 @@ export class StudioPage {
 
   protected damageType(value: string): DamageType {
     return value as DamageType;
+  }
+
+  protected setTexture(value: string): void {
+    this.send({ type: 'setTexture', texture: value as Texture });
   }
 
   // ---------- mapa e biblioteca ----------

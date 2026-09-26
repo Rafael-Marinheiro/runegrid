@@ -39,6 +39,7 @@ export function sampleCreatures(): Creature[] {
   return [
     newCreature('pc', {
       name: 'Thordak',
+      icon: 'sword',
       level: 5,
       ac: 18,
       abilities: scores(17, 12, 16, 8, 12, 10),
@@ -54,6 +55,7 @@ export function sampleCreatures(): Creature[] {
     }),
     newCreature('pc', {
       name: 'Lyra Valen',
+      icon: 'staff',
       level: 5,
       ac: 12,
       abilities: scores(8, 14, 12, 18, 13, 10),
@@ -82,6 +84,7 @@ export function sampleCreatures(): Creature[] {
     }),
     newCreature('pc', {
       name: 'Brann',
+      icon: 'holy',
       level: 5,
       ac: 16,
       abilities: scores(14, 10, 14, 10, 17, 12),

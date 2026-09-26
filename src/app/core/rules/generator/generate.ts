@@ -9,7 +9,7 @@ import {
   SizeId,
   Treasure,
 } from '../../models/adventure';
-import { GridMap, Pos, Room, Trap } from '../../models/grid';
+import { GridMap, Pos, Room, Texture, Trap } from '../../models/grid';
 import { SrdMonster } from '../../models/srd';
 import { mulberry32, seedFromString } from '../dice';
 import { caveLayout, center, dungeonLayout, flood, Layout, openLayout, Rect } from './layout';
@@ -28,6 +28,16 @@ const SIZE: Record<SizeId, SizeSpec> = {
   small: { width: 36, height: 26, rooms: 5, room: { minW: 4, maxW: 8, minH: 4, maxH: 6 } },
   medium: { width: 56, height: 40, rooms: 10, room: { minW: 4, maxW: 9, minH: 4, maxH: 7 } },
   large: { width: 80, height: 56, rooms: 20, room: { minW: 4, maxW: 10, minH: 4, maxH: 8 } },
+};
+
+const TEXTURE_BY_THEME: Record<GeneratorParams['theme'], Texture> = {
+  crypt: 'stone',
+  fortress: 'stone',
+  sewer: 'stone',
+  ruins: 'stone',
+  cave: 'cave',
+  forest: 'grass',
+  swamp: 'mud',
 };
 
 export const DEFAULT_PARAMS: GeneratorParams = {
@@ -260,6 +270,7 @@ function fill(
     );
   });
   const map: GridMap = {
+    texture: TEXTURE_BY_THEME[params.theme],
     width: layout.width,
     height: layout.height,
     cells: layout.cells,

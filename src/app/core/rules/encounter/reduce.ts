@@ -122,6 +122,8 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       return setFog(state, cmd.cells, cmd.hidden);
     case 'setMap':
       return setMap(state, cmd.map);
+    case 'setTexture':
+      return { ...state, map: { ...state.map, texture: cmd.texture } };
     case 'upsertRoom':
       return upsertRoom(state, cmd.room);
     case 'removeRoom':

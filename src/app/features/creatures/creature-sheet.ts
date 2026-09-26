@@ -25,6 +25,7 @@ import {
   saveBonus,
   skillBonus,
 } from '@core/rules/creature';
+import { ICON_IDS, ICON_LABEL } from '@features/combat/token-icons';
 import { DiceStore } from '@state/dice.store';
 import { PartyStore } from '@state/party.store';
 import { HpPanel } from './hp-panel';
@@ -45,6 +46,8 @@ export class CreatureSheet {
   private readonly store = inject(PartyStore);
   private readonly dice = inject(DiceStore);
 
+  protected readonly icons = ICON_IDS;
+  protected readonly iconLabel = ICON_LABEL;
   protected readonly abilities = ABILITIES;
   protected readonly abilityLabel = ABILITY_LABEL;
   protected readonly skillKeys = SKILL_KEYS;

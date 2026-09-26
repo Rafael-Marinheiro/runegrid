@@ -2,6 +2,7 @@
   <svg
     #svg
     class="map"
+    [class.hc]="highContrast()"
     role="group"
     aria-label="Mapa de combate"
     [attr.viewBox]="viewBox()"
@@ -13,6 +14,37 @@
     (pointercancel)="drag.set(null)"
     (pointerleave)="onLeave()"
   >
+    <defs>
+      <pattern id="tex-stone" width="96" height="96" patternUnits="userSpaceOnUse">
+        <path
+          d="M0 24h34l6 8h30M20 60h28l8 10h40M60 0l-6 24l10 14M12 90l16-14l30 4"
+          class="tx-line"
+        />
+        <circle cx="18" cy="10" r="1.5" class="tx-dot" />
+        <circle cx="72" cy="52" r="1.5" class="tx-dot" />
+        <circle cx="40" cy="80" r="1.5" class="tx-dot" />
+      </pattern>
+      <pattern id="tex-cave" width="96" height="96" patternUnits="userSpaceOnUse">
+        <ellipse cx="20" cy="22" rx="14" ry="9" class="tx-blob" />
+        <ellipse cx="68" cy="14" rx="9" ry="6" class="tx-blob" />
+        <ellipse cx="54" cy="62" rx="18" ry="10" class="tx-blob" />
+        <ellipse cx="14" cy="76" rx="8" ry="6" class="tx-blob" />
+        <ellipse cx="82" cy="82" rx="10" ry="7" class="tx-blob" />
+      </pattern>
+      <pattern id="tex-grass" width="96" height="96" patternUnits="userSpaceOnUse">
+        <path
+          d="M10 30l-2-10M14 30l2-12M20 74l-3-11M25 74l2-13M60 40l-2-10M64 40l3-12M78 88l-2-9M82 88l3-10M46 12l-2-8M50 12l2-9"
+          class="tx-grass"
+        />
+      </pattern>
+      <pattern id="tex-mud" width="96" height="96" patternUnits="userSpaceOnUse">
+        <ellipse cx="24" cy="28" rx="12" ry="5" class="tx-mud" />
+        <ellipse cx="70" cy="60" rx="16" ry="6" class="tx-mud" />
+        <ellipse cx="36" cy="80" rx="9" ry="4" class="tx-mud" />
+        <circle cx="80" cy="18" r="2.5" class="tx-dot" />
+        <circle cx="12" cy="58" r="2" class="tx-dot" />
+      </pattern>
+    </defs>
     <rect [attr.width]="width()" [attr.height]="height()" class="bg" />
 
     @for (c of cells(); track c.i) {
@@ -91,6 +123,15 @@
       }
     }
 
+    @if (texture() !== 'none') {
+      <rect
+        class="texture"
+        [attr.width]="width()"
+        [attr.height]="height()"
+        [attr.fill]="'url(#tex-' + texture() + ')'"
+      />
+    }
+
     @for (r of reach(); track r.x + ',' + r.y) {
       <rect
         class="reach"
@@ -156,6 +197,23 @@
       <polygon class="aoe" [attr.points]="pts" />
     }
 
+    @if (path(); as pth) {
+      <polyline class="path" [attr.points]="pathPoints()" />
+      @if (pathEnd(); as e) {
+        <g class="path-label" aria-hidden="true">
+          <rect [attr.x]="e.x - 26" [attr.y]="e.y - 16" width="52" height="20" rx="4" />
+          <text [attr.x]="e.x" [attr.y]="e.y" text-anchor="middle">{{ pth.label }}</text>
+        </g>
+      }
+    }
+    @if (rulerShape(); as r) {
+      <line class="ruler" [attr.x1]="r.x1" [attr.y1]="r.y1" [attr.x2]="r.x2" [attr.y2]="r.y2" />
+      <g class="path-label" aria-hidden="true">
+        <rect [attr.x]="r.mx - 30" [attr.y]="r.my - 15" width="60" height="20" rx="4" />
+        <text [attr.x]="r.mx" [attr.y]="r.my" text-anchor="middle">{{ r.label }}</text>
+      </g>
+    }
+
     @for (t of tokens(); track t.id) {
       @let p = place(t);
       @let d = t.size * C;
@@ -183,14 +241,32 @@
           <circle class="sel" [attr.cx]="d / 2" [attr.cy]="d / 2" [attr.r]="d / 2 - 1" />
         }
         <circle class="body" [attr.cx]="d / 2" [attr.cy]="d / 2" [attr.r]="d / 2 - 5" />
-        <text
-          [attr.x]="d / 2"
-          [attr.y]="d / 2 + d * 0.13"
-          [attr.font-size]="d * 0.42"
-          text-anchor="middle"
-        >
-          {{ t.dead ? '✕' : t.letter }}
-        </text>
+        @if (t.icon && !t.dead) {
+          <g
+            class="icon"
+            aria-hidden="true"
+            [attr.transform]="
+              'translate(' +
+              d / 2 +
+              ' ' +
+              (d / 2 - 3) +
+              ') scale(' +
+              d / 34 +
+              ') translate(-12 -12)'
+            "
+          >
+            <path [attr.d]="iconPath[t.icon]" />
+          </g>
+        } @else {
+          <text
+            [attr.x]="d / 2"
+            [attr.y]="d / 2 + d * 0.13"
+            [attr.font-size]="d * 0.42"
+            text-anchor="middle"
+          >
+            {{ t.dead ? '✕' : t.letter }}
+          </text>
+        }
         <rect
           class="hp-bg"
           [attr.x]="d * 0.2"

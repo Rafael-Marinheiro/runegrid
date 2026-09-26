@@ -208,6 +208,16 @@ describe('névoa e textos', () => {
     expect(fog[(boss.y + 1) * adv.map.width + boss.x + 1]).toBe(true);
   });
 
+  it('a textura do piso acompanha o tema', () => {
+    const tex = (theme: (typeof THEMES)[number]) => gen({ theme, seed: 'tex' }).map.texture;
+    expect([tex('crypt'), tex('cave'), tex('forest'), tex('swamp')]).toEqual([
+      'stone',
+      'cave',
+      'grass',
+      'mud',
+    ]);
+  });
+
   it('nome, gancho e descrições em português e sem revelar armadilhas', () => {
     const adv = gen({ seed: 'texto' });
     expect(adv.name.length).toBeGreaterThan(4);

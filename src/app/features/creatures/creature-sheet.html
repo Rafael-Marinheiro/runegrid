@@ -45,6 +45,15 @@
           </label>
         }
         <label class="field">
+          Ícone do token
+          <select #ic (change)="patch({ icon: ic.value || undefined })">
+            <option value="" [selected]="!c.icon">Automático</option>
+            @for (i of icons; track i) {
+              <option [value]="i" [selected]="c.icon === i">{{ iconLabel[i] }}</option>
+            }
+          </select>
+        </label>
+        <label class="field">
           Tamanho
           <select #size (change)="setSize(size.value)">
             @for (s of sizes; track s) {

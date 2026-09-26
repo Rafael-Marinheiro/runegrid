@@ -1,4 +1,13 @@
-import { CELL_FT, DiagonalRule, GridMap, inBounds, Pos, terrainAt } from '../../models/grid';
+import {
+  CELL_FT,
+  DIFFICULT,
+  DiagonalRule,
+  GridMap,
+  IMPASSABLE,
+  inBounds,
+  Pos,
+  terrainAt,
+} from '../../models/grid';
 
 export const key = (p: Pos): string => `${p.x},${p.y}`;
 
@@ -57,15 +66,15 @@ export function canStand(
   blocked: ReadonlySet<string>,
 ): boolean {
   return footprint(p, size).every(
-    (c) => inBounds(map, c) && terrainAt(map, c) !== 'wall' && !blocked.has(key(c)),
+    (c) => inBounds(map, c) && !IMPASSABLE.includes(terrainAt(map, c)) && !blocked.has(key(c)),
   );
 }
 
 const noWalls = (map: GridMap, p: Pos, size: number): boolean =>
-  footprint(p, size).every((c) => inBounds(map, c) && terrainAt(map, c) !== 'wall');
+  footprint(p, size).every((c) => inBounds(map, c) && !IMPASSABLE.includes(terrainAt(map, c)));
 
 const isDifficult = (map: GridMap, p: Pos, size: number): boolean =>
-  footprint(p, size).some((c) => terrainAt(map, c) === 'difficult');
+  footprint(p, size).some((c) => DIFFICULT.includes(terrainAt(map, c)));
 
 interface Node {
   pos: Pos;

@@ -13,6 +13,11 @@ export const routes: Routes = [
     loadComponent: () => import('@features/combat/combat-page').then((m) => m.CombatPage),
   },
   {
+    path: 'estudio',
+    title: 'Estúdio · Runegrid',
+    loadComponent: () => import('@features/studio/studio-page').then((m) => m.StudioPage),
+  },
+  {
     path: 'bestiario',
     title: 'Bestiário · Runegrid',
     loadComponent: () => import('@features/bestiary/bestiary-page').then((m) => m.BestiaryPage),

@@ -1,6 +1,49 @@
-import { Size } from './creature';
+import { DamageType, Size } from './creature';
 
-export type Terrain = 'floor' | 'wall' | 'difficult' | 'door';
+export type Terrain =
+  | 'floor'
+  | 'wall'
+  | 'difficult'
+  | 'water'
+  /** Porta aberta: passável. */
+  | 'door'
+  | 'door-closed'
+  | 'door-locked'
+  /** Célula que o jogador ainda não descobriu (névoa): só existe na visão do jogador. */
+  | 'unknown';
+
+/** Terrenos em que não se pode estar nem passar. */
+export const IMPASSABLE: readonly Terrain[] = ['wall', 'door-closed', 'door-locked', 'unknown'];
+
+/** Terrenos que custam o dobro de deslocamento. */
+export const DIFFICULT: readonly Terrain[] = ['difficult', 'water'];
+
+export interface Room {
+  id: string;
+  name: string;
+  /** Texto para ler aos jogadores quando a sala é revelada. */
+  description: string;
+  /** Anotações secretas do Mestre. */
+  notes: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export interface Trap {
+  id: string;
+  name: string;
+  pos: Pos;
+  ability: 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
+  dc: number;
+  /** Dado de dano, ex.: "2d10". */
+  damage: string;
+  damageType: DamageType;
+  /** Escondida dos jogadores até disparar (ou o Mestre revelar). */
+  hidden: boolean;
+  triggered: boolean;
+}
 
 export interface Pos {
   x: number;
@@ -12,6 +55,10 @@ export interface GridMap {
   height: number;
   /** Terreno por célula, linha a linha. Cada célula mede 5 ft. */
   cells: Terrain[];
+  /** `true` = célula sob névoa (oculta aos jogadores). Ausente = tudo visível. */
+  fog?: boolean[];
+  rooms?: Room[];
+  traps?: Trap[];
 }
 
 /** Regra de diagonal: simples (5 ft) ou alternada 5-10-5 (variante do DMG). */
@@ -29,9 +76,17 @@ export const SIZE_CELLS: Record<Size, number> = {
   gargantuan: 4,
 };
 
-const CHAR: Record<string, Terrain> = { '.': 'floor', '#': 'wall', ',': 'difficult', D: 'door' };
+const CHAR: Record<string, Terrain> = {
+  '.': 'floor',
+  '#': 'wall',
+  ',': 'difficult',
+  '~': 'water',
+  D: 'door',
+  d: 'door-closed',
+  L: 'door-locked',
+};
 
-/** Cria um mapa a partir de linhas de texto: `.` piso, `#` parede, `,` terreno difícil, `D` porta. */
+/** Cria um mapa a partir de linhas de texto: `.` piso, `#` parede, `,` difícil, `~` água, `D` porta aberta, `d` fechada, `L` trancada. */
 export function mapFromAscii(rows: string[]): GridMap {
   const width = rows[0]?.length ?? 0;
   if (!rows.every((r) => r.length === width))
@@ -49,3 +104,33 @@ export function mapFromAscii(rows: string[]): GridMap {
 export const inBounds = (m: GridMap, p: Pos): boolean =>
   p.x >= 0 && p.y >= 0 && p.x < m.width && p.y < m.height;
 export const terrainAt = (m: GridMap, p: Pos): Terrain => m.cells[p.y * m.width + p.x];
+
+/** Mapa novo: piso com borda de parede. */
+export function blankMap(width: number, height: number): GridMap {
+  const w = Math.max(3, Math.min(60, Math.floor(width)));
+  const h = Math.max(3, Math.min(60, Math.floor(height)));
+  const cells: Terrain[] = [];
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++)
+      cells.push(x === 0 || y === 0 || x === w - 1 || y === h - 1 ? 'wall' : 'floor');
+  }
+  return { width: w, height: h, cells };
+}
+
+/** Confere se um valor (por exemplo, um JSON importado) tem a forma de um mapa. */
+export function isGridMap(v: unknown): v is GridMap {
+  const m = v as GridMap | null;
+  return (
+    !!m &&
+    Number.isInteger(m.width) &&
+    Number.isInteger(m.height) &&
+    m.width > 0 &&
+    m.height > 0 &&
+    m.width <= 100 &&
+    m.height <= 100 &&
+    Array.isArray(m.cells) &&
+    m.cells.length === m.width * m.height &&
+    m.cells.every((c) => typeof c === 'string') &&
+    (m.fog === undefined || (Array.isArray(m.fog) && m.fog.length === m.cells.length))
+  );
+}

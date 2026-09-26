@@ -1,6 +1,7 @@
 import { Creature } from '../../models/creature';
 import { EncounterState, Role } from '../../models/encounter';
-import { teamOf } from './state';
+import { footprint } from '../grid/movement';
+import { sizeOf, teamOf } from './state';
 
 /** Esconde de um inimigo o que o jogador não deve saber: PV exatos, ataques, magias. */
 function mask(c: Creature): Creature {
@@ -22,7 +23,21 @@ function mask(c: Creature): Creature {
  */
 export function project(state: EncounterState, role: Role): EncounterState {
   if (role.kind === 'dm') return state;
-  const visible = new Set(state.tokens.filter((t) => !t.hidden).map((t) => t.creatureId));
+  const { map } = state;
+  const fog = map.fog;
+  const fogged = (x: number, y: number) => !!fog && fog[y * map.width + x] === true;
+
+  // criatura na névoa não é vista (a menos que seja do próprio jogador)
+  const visible = new Set(
+    state.tokens
+      .filter((t) => {
+        if (t.hidden) return false;
+        const c = state.creatures.find((x) => x.id === t.creatureId);
+        const size = c ? sizeOf(c) : 1;
+        return !footprint(t.pos, size).some((p) => fogged(p.x, p.y));
+      })
+      .map((t) => t.creatureId),
+  );
   const known = (id: string) => visible.has(id) || role.owns.includes(id);
 
   const creatures = state.creatures
@@ -32,11 +47,27 @@ export function project(state: EncounterState, role: Role): EncounterState {
   const initiative = Object.fromEntries(
     Object.entries(state.combat.initiative).filter(([id]) => known(id)),
   );
+
+  const openRooms = (map.rooms ?? [])
+    .filter((r) => {
+      for (let y = r.y; y < r.y + r.h; y++)
+        for (let x = r.x; x < r.x + r.w; x++) if (fogged(x, y)) return false;
+      return true;
+    })
+    .map((r) => ({ ...r, notes: '' }));
+
   return {
     ...state,
     creatures,
-    tokens: state.tokens.filter((t) => !t.hidden),
+    tokens: state.tokens.filter((t) => known(t.creatureId)),
     log: state.log.filter((e) => !e.secret),
+    map: {
+      ...map,
+      cells: map.cells.map((t, i) => (fog?.[i] ? 'unknown' : t)),
+      fog: undefined,
+      rooms: openRooms,
+      traps: (map.traps ?? []).filter((t) => !t.hidden || t.triggered),
+    },
     combat: { ...state.combat, order, initiative },
   };
 }

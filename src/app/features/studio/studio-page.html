@@ -1,0 +1,259 @@
+@let st = shown();
+<div class="head">
+  <h1>
+    Estúdio do Mestre <small>{{ state().name }}</small>
+  </h1>
+  <div class="tools-right">
+    <label class="toggle">
+      <input #ap type="checkbox" [checked]="asPlayer()" (change)="asPlayer.set(ap.checked)" />
+      Ver como jogador
+    </label>
+    <button type="button" [disabled]="!store.canUndo()" (click)="store.undo()">Desfazer</button>
+    <button type="button" [disabled]="!store.canRedo()" (click)="store.redo()">Refazer</button>
+  </div>
+</div>
+
+<p class="message" role="status" aria-live="polite">{{ message() || store.message() }}</p>
+@if (!editable()) {
+  <p class="banner">
+    {{
+      store.role().kind !== 'dm'
+        ? 'Só o Mestre edita o mapa.'
+        : 'O combate está em andamento: encerre-o na tela de Combate para editar.'
+    }}
+  </p>
+}
+
+<div class="layout">
+  <aside class="panel palette" aria-label="Ferramentas">
+    <h2>Ferramentas</h2>
+    <div class="grid">
+      @for (t of tools; track t.id) {
+        <button
+          type="button"
+          [class.active]="toolId() === t.id"
+          [attr.aria-pressed]="toolId() === t.id"
+          [disabled]="!editable() && t.id !== 'select'"
+          (click)="pick(t.id)"
+        >
+          {{ t.label }}
+        </button>
+      }
+    </div>
+    <p class="hint">
+      Arraste no mapa para pintar. Shift + arrastar move a vista; a roda do mouse dá zoom.
+    </p>
+  </aside>
+
+  <section class="canvas">
+    <app-map-view
+      [map]="st.map"
+      [tokens]="tokens()"
+      [reach]="stroke()"
+      [paintMode]="editable() && !asPlayer()"
+      [dm]="!asPlayer()"
+      [fogCells]="st.map.fog"
+      [rooms]="st.map.rooms ?? []"
+      [traps]="st.map.traps ?? []"
+      [selectedRoom]="selectedRoomId()"
+      [draft]="draft()"
+      (strokeStart)="onStart($event)"
+      (strokeMove)="onMove($event)"
+      (strokeEnd)="onEnd()"
+      (cellClick)="onStart($event)"
+    />
+    <p class="legend">
+      <span><i class="sw fog"></i> névoa (só o Mestre vê)</span>
+      <span><i class="sw trap"></i> armadilha</span>
+      <span><i class="sw room"></i> sala</span>
+    </p>
+  </section>
+
+  <aside class="side">
+    @if (selectedRoom(); as r) {
+      <section class="panel" aria-label="Sala selecionada">
+        <h2>Sala</h2>
+        <label class="field">
+          Nome
+          <input
+            #rn
+            [value]="r.name"
+            [disabled]="!editable()"
+            (change)="editRoom({ name: rn.value })"
+          />
+        </label>
+        <label class="field">
+          Texto para ler aos jogadores
+          <textarea
+            #rd
+            rows="3"
+            [value]="r.description"
+            [disabled]="!editable()"
+            (change)="editRoom({ description: rd.value })"
+          ></textarea>
+        </label>
+        <label class="field">
+          Notas secretas (só o Mestre)
+          <textarea
+            #rt
+            rows="2"
+            [value]="r.notes"
+            [disabled]="!editable()"
+            (change)="editRoom({ notes: rt.value })"
+          ></textarea>
+        </label>
+        <div class="row">
+          <button type="button" class="primary" [disabled]="!editable()" (click)="reveal(false)">
+            Revelar aos jogadores
+          </button>
+          <button type="button" [disabled]="!editable()" (click)="reveal(true)">Ocultar</button>
+          <button type="button" class="danger" [disabled]="!editable()" (click)="removeRoom()">
+            Remover
+          </button>
+        </div>
+      </section>
+    }
+
+    @if (selectedTrap(); as t) {
+      <section class="panel" aria-label="Armadilha selecionada">
+        <h2>Armadilha</h2>
+        <label class="field">
+          Nome
+          <input
+            #tn
+            [value]="t.name"
+            [disabled]="!editable()"
+            (change)="editTrap({ name: tn.value })"
+          />
+        </label>
+        <div class="two">
+          <label class="field">
+            Salvaguarda
+            <select #ta [disabled]="!editable()" (change)="editTrap({ ability: $any(ta.value) })">
+              @for (a of abilities; track a) {
+                <option [value]="a" [selected]="a === t.ability">{{ a.toUpperCase() }}</option>
+              }
+            </select>
+          </label>
+          <label class="field">
+            CD
+            <input
+              #tc
+              type="number"
+              min="1"
+              max="30"
+              [value]="t.dc"
+              [disabled]="!editable()"
+              (change)="editTrap({ dc: tc.valueAsNumber })"
+            />
+          </label>
+          <label class="field">
+            Dano
+            <input
+              #td
+              [value]="t.damage"
+              [disabled]="!editable()"
+              (change)="editTrap({ damage: td.value })"
+            />
+          </label>
+          <label class="field">
+            Tipo
+            <select
+              #tt
+              [disabled]="!editable()"
+              (change)="editTrap({ damageType: damageType(tt.value) })"
+            >
+              @for (d of damageTypes; track d) {
+                <option [value]="d" [selected]="d === t.damageType">{{ damageLabel[d] }}</option>
+              }
+            </select>
+          </label>
+        </div>
+        <label class="check">
+          <input
+            #th
+            type="checkbox"
+            [checked]="t.hidden"
+            [disabled]="!editable()"
+            (change)="editTrap({ hidden: th.checked })"
+          />
+          Escondida dos jogadores
+        </label>
+        @if (t.triggered) {
+          <p class="hint">Já disparou. Reative desmarcando/remarcando pelo botão abaixo.</p>
+          <button
+            type="button"
+            [disabled]="!editable()"
+            (click)="editTrap({ triggered: false, hidden: true })"
+          >
+            Rearmar
+          </button>
+        }
+        <button type="button" class="danger" [disabled]="!editable()" (click)="removeTrap()">
+          Remover
+        </button>
+      </section>
+    }
+
+    <section class="panel" aria-label="Mapa">
+      <h2>Mapa</h2>
+      <div class="two">
+        <label class="field">
+          Largura
+          <input #nw type="number" min="3" max="60" value="20" />
+        </label>
+        <label class="field">
+          Altura
+          <input #nh type="number" min="3" max="60" value="14" />
+        </label>
+      </div>
+      <button type="button" [disabled]="!editable()" (click)="newMap(nw.value, nh.value)">
+        Novo mapa em branco
+      </button>
+    </section>
+
+    <section class="panel" aria-label="Biblioteca de dungeons">
+      <h2>Biblioteca</h2>
+      <label class="field">
+        Nome
+        <input #ln [value]="state().name" />
+      </label>
+      <div class="row">
+        <button type="button" class="primary" (click)="saveToLibrary(ln.value)">Salvar</button>
+        <button type="button" (click)="exportMap(ln.value)">Exportar</button>
+        <label class="file">
+          Importar
+          <input
+            #fi
+            type="file"
+            accept="application/json,.json"
+            [disabled]="!editable()"
+            (change)="importMap(fi)"
+          />
+        </label>
+      </div>
+      <ul class="lib">
+        @for (d of library.items(); track d.id) {
+          <li>
+            <span
+              >{{ d.name }} <small class="muted">{{ d.map.width }}×{{ d.map.height }}</small></span
+            >
+            <span class="row">
+              <button type="button" [disabled]="!editable()" (click)="load(d)">Carregar</button>
+              <button
+                type="button"
+                class="danger"
+                [attr.aria-label]="'Excluir ' + d.name"
+                (click)="library.remove(d.id)"
+              >
+                ×
+              </button>
+            </span>
+          </li>
+        } @empty {
+          <li class="muted">Nenhum dungeon salvo.</li>
+        }
+      </ul>
+    </section>
+  </aside>
+</div>

@@ -17,6 +17,19 @@ import {
 import { AdvMode, criticalExpr, parseDice, roll, rollD20, Rng } from '../dice';
 import { canStand, distanceFt, findPath, key, MoveQuery } from '../grid/movement';
 import { cast } from './cast';
+import {
+  firstTrapOnPath,
+  openDoor,
+  paint,
+  removeRoom,
+  removeTrap,
+  revealRoom,
+  setFog,
+  setMap,
+  triggerTrap,
+  upsertRoom,
+  upsertTrap,
+} from './mapedit';
 import { Command, PLAYER_COMMANDS } from './commands';
 import {
   actorTurn,
@@ -82,6 +95,24 @@ export function dispatch(state: EncounterState, cmd: Command, ctx: Context): Enc
       cells[cmd.pos.y * state.map.width + cmd.pos.x] = cmd.terrain;
       return { ...state, map: { ...state.map, cells } };
     }
+    case 'paint':
+      return paint(state, cmd.cells, cmd.terrain);
+    case 'setFog':
+      return setFog(state, cmd.cells, cmd.hidden);
+    case 'setMap':
+      return setMap(state, cmd.map);
+    case 'upsertRoom':
+      return upsertRoom(state, cmd.room);
+    case 'removeRoom':
+      return removeRoom(state, cmd.id);
+    case 'revealRoom':
+      return revealRoom(state, cmd.id, cmd.hidden);
+    case 'upsertTrap':
+      return upsertTrap(state, cmd.trap);
+    case 'removeTrap':
+      return removeTrap(state, cmd.id);
+    case 'openDoor':
+      return openDoor(state, cmd.actorId, cmd.pos);
     case 'rollInitiative':
       return rollInitiative(state, ctx.rng);
     case 'setInitiative': {
@@ -150,7 +181,7 @@ export function dispatch(state: EncounterState, cmd: Command, ctx: Context): Enc
       ]);
     }
     case 'move':
-      return move(state, cmd.actorId, cmd.to);
+      return move(state, cmd.actorId, cmd.to, ctx.rng);
     case 'attack':
       return attack(state, cmd, ctx);
     case 'dash': {
@@ -415,6 +446,7 @@ function move(
   state: EncounterState,
   actorId: string,
   to: { x: number; y: number },
+  rng: Rng,
 ): EncounterState {
   const { actor, turn } = actorTurn(state, actorId);
   const q = moveQuery(state, actorId);
@@ -425,15 +457,21 @@ function move(
   const found = findPath(q, to);
   if (!found) throw new RuleError('Fora do alcance de deslocamento.');
 
+  // uma armadilha armada no caminho interrompe o movimento nela
+  const hit = firstTrapOnPath(state, found.path, q.size);
+  const stop = hit ? found.path[hit.index] : to;
+  const cost = hit ? (findPath(q, stop)?.costFt ?? found.costFt) : found.costFt;
+
   const moved = {
     ...state,
-    tokens: state.tokens.map((t) => (t.creatureId === actorId ? { ...t, pos: to } : t)),
+    tokens: state.tokens.map((t) => (t.creatureId === actorId ? { ...t, pos: stop } : t)),
   };
-  return addLog(
-    setTurn(moved, { ...turn, movedFt: turn.movedFt + found.costFt }),
-    `${actor.name} se moveu ${found.costFt} ft.`,
+  const s = addLog(
+    setTurn(moved, { ...turn, movedFt: turn.movedFt + cost }),
+    `${actor.name} se moveu ${cost} ft.`,
     [actorId],
   );
+  return hit ? triggerTrap(s, actorId, hit.trap.id, rng) : s;
 }
 
 function attack(

@@ -33,7 +33,9 @@
   }
   &.floor,
   &.difficult,
-  &.door {
+  &.door,
+  &.door-closed,
+  &.door-locked {
     fill: var(--tile-floor);
     &.alt {
       fill: var(--tile-floor-alt);
@@ -173,4 +175,96 @@
   stroke-width: 1.5;
   stroke-dasharray: 2 4;
   pointer-events: none;
+}
+
+.tile.water {
+  fill: #2a4a63;
+  stroke: rgb(143 189 230 / 0.25);
+}
+
+.tile.unknown {
+  fill: #0a0705;
+  stroke: #0a0705;
+}
+
+.wave {
+  fill: none;
+  stroke: #5f93b8;
+  stroke-width: 1.4;
+  pointer-events: none;
+}
+
+.door-leaf.closed {
+  fill: #5c3a1e;
+}
+
+.door-bars {
+  fill: none;
+  stroke: var(--gold-dim);
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+.lock {
+  fill: var(--gold);
+  stroke: #1a130b;
+  stroke-width: 1.5;
+}
+
+.fog {
+  fill: rgb(60 30 90 / 0.5);
+  stroke: rgb(138 108 192 / 0.4);
+  pointer-events: none;
+}
+
+.room rect {
+  fill: none;
+  stroke: var(--gold-dim);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  pointer-events: none;
+}
+
+.room.sel rect {
+  stroke: var(--gold);
+  stroke-width: 3;
+}
+
+.room text {
+  fill: var(--gold);
+  font-family: var(--font-display);
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.draft {
+  fill: rgb(212 169 79 / 0.15);
+  stroke: var(--gold);
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+.trap path {
+  fill: #0d0906;
+  stroke: var(--warning);
+  stroke-width: 2;
+}
+
+.trap text {
+  fill: var(--warning);
+  font-family: var(--font-display);
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.trap.hid {
+  opacity: 0.55;
+}
+
+.trap.spent path {
+  stroke: var(--muted);
+}
+
+.trap.spent text {
+  fill: var(--muted);
 }

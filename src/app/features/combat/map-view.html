@@ -43,6 +43,52 @@
           rx="3"
         />
       }
+      @if (c.t === 'door-closed' || c.t === 'door-locked') {
+        <rect
+          class="door-leaf closed"
+          [attr.x]="c.x * C + 7"
+          [attr.y]="c.y * C + 7"
+          [attr.width]="C - 14"
+          [attr.height]="C - 14"
+          rx="3"
+        />
+        <path
+          class="door-bars"
+          [attr.d]="
+            'M' +
+            (c.x * C + 24) +
+            ' ' +
+            (c.y * C + 8) +
+            'v' +
+            (C - 16) +
+            'M' +
+            (c.x * C + 10) +
+            ' ' +
+            (c.y * C + 24) +
+            'h' +
+            (C - 20)
+          "
+        />
+        @if (c.t === 'door-locked') {
+          <circle class="lock" [attr.cx]="c.x * C + 24" [attr.cy]="c.y * C + 24" r="5" />
+        }
+      }
+      @if (c.t === 'water') {
+        <path
+          class="wave"
+          [attr.d]="
+            'M' +
+            (c.x * C + 8) +
+            ' ' +
+            (c.y * C + 18) +
+            'q6 -6 12 0t12 0 M' +
+            (c.x * C + 8) +
+            ' ' +
+            (c.y * C + 32) +
+            'q6 -6 12 0t12 0'
+          "
+        />
+      }
     }
 
     @for (r of reach(); track r.x + ',' + r.y) {
@@ -54,6 +100,53 @@
         [attr.height]="C - 4"
         rx="4"
       />
+    }
+
+    @for (f of fogList(); track f.i) {
+      <rect class="fog" [attr.x]="f.x * C" [attr.y]="f.y * C" [attr.width]="C" [attr.height]="C" />
+    }
+
+    @for (r of rooms(); track r.id) {
+      <g class="room" [class.sel]="r.id === selectedRoom()" aria-hidden="true">
+        <rect
+          [attr.x]="r.x * C + 2"
+          [attr.y]="r.y * C + 2"
+          [attr.width]="r.w * C - 4"
+          [attr.height]="r.h * C - 4"
+          rx="4"
+        />
+        <text [attr.x]="r.x * C + 8" [attr.y]="r.y * C + 18" font-size="13">{{ r.name }}</text>
+      </g>
+    }
+
+    @if (draftRect(); as d) {
+      <rect
+        class="draft"
+        [attr.x]="d.x * C + 2"
+        [attr.y]="d.y * C + 2"
+        [attr.width]="d.w * C - 4"
+        [attr.height]="d.h * C - 4"
+        rx="4"
+      />
+    }
+
+    @for (t of visibleTraps(); track t.id) {
+      <g
+        class="trap"
+        [class.hid]="t.hidden && !t.triggered"
+        [class.spent]="t.triggered"
+        aria-hidden="true"
+      >
+        <path [attr.d]="'M' + (t.pos.x * C + 24) + ' ' + (t.pos.y * C + 9) + 'l14 26h-28z'" />
+        <text
+          [attr.x]="t.pos.x * C + 24"
+          [attr.y]="t.pos.y * C + 32"
+          text-anchor="middle"
+          font-size="14"
+        >
+          !
+        </text>
+      </g>
     }
 
     @if (sphere(); as sp) {

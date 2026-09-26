@@ -1,5 +1,5 @@
 import { ConditionName, Creature, DamageType } from '../../models/creature';
-import { Pos, Terrain } from '../../models/grid';
+import { GridMap, Pos, Room, Terrain, Trap } from '../../models/grid';
 import { AdvMode } from '../dice';
 
 /** Tudo que muda o encontro passa por um destes comandos. */
@@ -10,6 +10,16 @@ export type Command =
   | { type: 'placeToken'; id: string; pos: Pos }
   | { type: 'setHidden'; id: string; hidden: boolean }
   | { type: 'setTerrain'; pos: Pos; terrain: Terrain }
+  /** Pintura em lote (um traço do pincel = um comando = um "desfazer"). */
+  | { type: 'paint'; cells: Pos[]; terrain: Terrain }
+  | { type: 'setFog'; cells: Pos[]; hidden: boolean }
+  | { type: 'setMap'; map: GridMap }
+  | { type: 'upsertRoom'; room: Room }
+  | { type: 'removeRoom'; id: string }
+  /** Revela (ou oculta) toda a sala e publica o texto de leitura. */
+  | { type: 'revealRoom'; id: string; hidden?: boolean }
+  | { type: 'upsertTrap'; trap: Trap }
+  | { type: 'removeTrap'; id: string }
   | { type: 'rollInitiative' }
   | { type: 'setInitiative'; id: string; value: number }
   | { type: 'joinCombat'; id: string }
@@ -30,6 +40,7 @@ export type Command =
       targetId?: string;
       point?: Pos;
     }
+  | { type: 'openDoor'; actorId: string; pos: Pos }
   | { type: 'standUp'; actorId: string }
   | { type: 'dash'; actorId: string }
   | { type: 'dodge'; actorId: string }
@@ -43,6 +54,7 @@ export type CommandType = Command['type'];
 export const PLAYER_COMMANDS: readonly CommandType[] = [
   'move',
   'standUp',
+  'openDoor',
   'cast',
   'attack',
   'dash',

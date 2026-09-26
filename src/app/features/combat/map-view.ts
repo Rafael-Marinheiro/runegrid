@@ -8,7 +8,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { GridMap, Pos } from '@core/models/grid';
+import { GridMap, Pos, Room, Trap } from '@core/models/grid';
 
 export const CELL = 48;
 
@@ -74,6 +74,16 @@ export class MapView {
   readonly reach = input<Pos[]>([]);
   /** Área de magia em preparo, desenhada sobre o mapa. */
   readonly preview = input<AreaPreview | null>(null);
+  /** Modo pincel (Estúdio): arrastar no fundo desenha em vez de mover o mapa (Shift ou botão do meio move). */
+  readonly paintMode = input(false);
+  /** Visão do Mestre: mostra a névoa e as armadilhas escondidas. */
+  readonly dm = input(false);
+  readonly fogCells = input<boolean[] | undefined>(undefined);
+  readonly rooms = input<Room[]>([]);
+  readonly traps = input<Trap[]>([]);
+  readonly selectedRoom = input<string | null>(null);
+  /** Retângulo sendo desenhado (sala). */
+  readonly draft = input<{ a: Pos; b: Pos } | null>(null);
 
   readonly cellClick = output<Pos>();
   readonly tokenClick = output<string>();
@@ -81,6 +91,9 @@ export class MapView {
   readonly tokenNudge = output<{ id: string; dx: number; dy: number }>();
   /** Célula sob o cursor (null ao sair do mapa). */
   readonly cellHover = output<Pos | null>();
+  readonly strokeStart = output<Pos>();
+  readonly strokeMove = output<Pos>();
+  readonly strokeEnd = output<void>();
 
   protected readonly C = CELL;
   protected readonly zoom = signal(1);
@@ -88,6 +101,8 @@ export class MapView {
   protected readonly drag = signal<Drag | null>(null);
   private panning: Pan | null = null;
   private lastHover = '';
+  private stroking = false;
+  private lastStroke = '';
   private readonly svg = viewChild.required<ElementRef<SVGSVGElement>>('svg');
 
   protected readonly cells = computed(() => {
@@ -115,6 +130,26 @@ export class MapView {
     const pt = (a: number) => `${ox + len * Math.cos(a)},${oy + len * Math.sin(a)}`;
     return `${ox},${oy} ${pt(ang - half)} ${pt(ang + half)}`;
   });
+
+  /** Células sob névoa (só desenhadas na visão do Mestre). */
+  protected readonly fogList = computed(() => {
+    const fog = this.fogCells();
+    const m = this.map();
+    if (!this.dm() || !fog) return [];
+    return fog.flatMap((f, i) => (f ? [{ i, x: i % m.width, y: Math.floor(i / m.width) }] : []));
+  });
+
+  protected readonly draftRect = computed(() => {
+    const d = this.draft();
+    if (!d) return null;
+    const x = Math.min(d.a.x, d.b.x);
+    const y = Math.min(d.a.y, d.b.y);
+    return { x, y, w: Math.abs(d.a.x - d.b.x) + 1, h: Math.abs(d.a.y - d.b.y) + 1 };
+  });
+
+  protected readonly visibleTraps = computed(() =>
+    this.traps().filter((t) => this.dm() || !t.hidden || t.triggered),
+  );
 
   protected readonly width = computed(() => this.map().width * CELL);
   protected readonly height = computed(() => this.map().height * CELL);
@@ -174,7 +209,7 @@ export class MapView {
   // ---------- ponteiro: arrastar token ou mapa ----------
 
   protected onPointerDown(e: PointerEvent): void {
-    if (e.button !== 0) return;
+    if (e.button !== 0 && !(e.button === 1 && this.paintMode())) return;
     const p = this.toSvg(e);
     const el = (e.target as Element).closest<SVGGElement>('[data-token]');
     this.svg().nativeElement.setPointerCapture(e.pointerId);
@@ -194,6 +229,13 @@ export class MapView {
         startY: e.clientY,
         moved: false,
       });
+    } else if (this.paintMode() && !e.shiftKey) {
+      const c = this.cellAt(e);
+      if (c) {
+        this.stroking = true;
+        this.lastStroke = `${c.x},${c.y}`;
+        this.strokeStart.emit(c);
+      }
     } else {
       this.panning = {
         startX: e.clientX,
@@ -212,6 +254,15 @@ export class MapView {
       const moved = d.moved || Math.hypot(e.clientX - d.startX, e.clientY - d.startY) > 5;
       this.drag.set({ ...d, cx: p.x - d.offX, cy: p.y - d.offY, moved });
       return;
+    }
+    if (this.stroking) {
+      const c = this.cellAt(e);
+      const k = c ? `${c.x},${c.y}` : '';
+      if (c && k !== this.lastStroke) {
+        this.lastStroke = k;
+        this.strokeMove.emit(c);
+      }
+      return this.hoverAt(e);
     }
     const pn = this.panning;
     if (!pn) return this.hoverAt(e);
@@ -239,6 +290,11 @@ export class MapView {
       });
       return;
     }
+    if (this.stroking) {
+      this.stroking = false;
+      this.strokeEnd.emit();
+      return;
+    }
     const pn = this.panning;
     this.panning = null;
     if (pn && !pn.moved) {
@@ -247,6 +303,14 @@ export class MapView {
       const m = this.map();
       if (pos.x >= 0 && pos.y >= 0 && pos.x < m.width && pos.y < m.height) this.cellClick.emit(pos);
     }
+  }
+
+  private cellAt(e: PointerEvent): Pos | null {
+    const p = this.toSvg(e);
+    const m = this.map();
+    const x = Math.floor(p.x / CELL);
+    const y = Math.floor(p.y / CELL);
+    return x >= 0 && y >= 0 && x < m.width && y < m.height ? { x, y } : null;
   }
 
   private hoverAt(e: PointerEvent): void {

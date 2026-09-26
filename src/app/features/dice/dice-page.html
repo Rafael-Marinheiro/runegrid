@@ -1,0 +1,105 @@
+<h1>Dados</h1>
+
+<section class="panel" aria-labelledby="quick-title">
+  <h2 id="quick-title">Rolagem rápida</h2>
+  <div class="quick">
+    @for (sides of quickDice; track sides) {
+      <button type="button" class="die" (click)="rollNotation('1d' + sides)">d{{ sides }}</button>
+    }
+  </div>
+
+  <form class="expr" (submit)="$event.preventDefault(); rollNotation(expr.value)">
+    <label for="expr">Expressão</label>
+    <input id="expr" #expr value="2d6+3" autocomplete="off" aria-describedby="expr-help" />
+    <button type="submit" class="primary">Rolar</button>
+  </form>
+  <p id="expr-help" class="help">
+    Ex.: <code>2d6+3</code>, <code>4d6kh3</code> (mantém os 3 maiores), <code>d%</code>.
+  </p>
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+</section>
+
+<section class="panel" aria-labelledby="d20-title">
+  <h2 id="d20-title">Teste de d20</h2>
+  <div class="d20">
+    <label for="mod">Modificador</label>
+    <input id="mod" #mod type="number" value="0" inputmode="numeric" />
+    <fieldset class="modes">
+      <legend>Modo</legend>
+      @for (m of modes; track m.value) {
+        <label class="mode">
+          <input
+            type="radio"
+            name="mode"
+            [value]="m.value"
+            [checked]="mode() === m.value"
+            (change)="mode.set(m.value)"
+          />
+          {{ m.label }}
+        </label>
+      }
+    </fieldset>
+    <button type="button" class="primary" (click)="rollD20(mod.value)">Rolar d20</button>
+  </div>
+</section>
+
+<section class="panel result" aria-labelledby="result-title" aria-live="polite">
+  <h2 id="result-title">Resultado</h2>
+  @if (store.last(); as last) {
+    <ul class="dice-list" aria-label="Dados rolados">
+      @for (d of dice(); track d.key) {
+        <li>
+          <app-die
+            [sides]="d.sides"
+            [value]="d.value"
+            [dropped]="d.dropped"
+            [delay]="d.delay"
+            [highlight]="d.highlight"
+          />
+        </li>
+      }
+    </ul>
+    @for (r of [last.id]; track r) {
+      <div
+        class="total"
+        [class.crit]="last.d20?.crit"
+        [class.fumble]="last.d20?.fumble"
+        [style.animation-delay.ms]="settleMs()"
+      >
+        {{ last.result.total }}
+      </div>
+    }
+    <p class="detail">
+      {{ format(last.result.expr) }}
+      @if (last.d20?.crit) {
+        <span class="tag crit">Crítico!</span>
+      }
+      @if (last.d20?.fumble) {
+        <span class="tag fumble">Falha crítica</span>
+      }
+    </p>
+  } @else {
+    <p class="help">Faça uma rolagem para ver o resultado.</p>
+  }
+</section>
+
+<section class="panel" aria-labelledby="hist-title">
+  <div class="hist-head">
+    <h2 id="hist-title">Histórico</h2>
+    <button type="button" (click)="store.clear()" [disabled]="!store.history().length">
+      Limpar
+    </button>
+  </div>
+  <ol class="history">
+    @for (e of store.history(); track e.id) {
+      <li>
+        <span class="expr-text">{{ format(e.result.expr) }}</span>
+        <span class="hist-total">{{ e.result.total }}</span>
+      </li>
+    } @empty {
+      <li class="help">Nenhuma rolagem ainda.</li>
+    }
+  </ol>
+</section>

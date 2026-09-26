@@ -1,0 +1,167 @@
+:host {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+h1 {
+  margin: 0;
+}
+
+.panel {
+  padding: var(--space-4);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: inset 0 0 0 1px rgb(212 169 79 / 0.1);
+}
+
+.quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.die {
+  min-width: 56px;
+  font-family: var(--font-display);
+}
+
+.expr,
+.d20 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.expr input {
+  flex: 1 1 160px;
+  font-family: var(--font-display);
+}
+
+.d20 input[type='number'] {
+  width: 5rem;
+}
+
+.modes {
+  display: flex;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.modes legend {
+  position: absolute;
+  left: -9999px;
+}
+
+.mode {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 44px;
+}
+
+.help {
+  margin: var(--space-2) 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.error {
+  margin: var(--space-2) 0 0;
+  color: var(--danger-text);
+}
+
+.result {
+  text-align: center;
+}
+
+.total {
+  font-family: var(--font-display);
+  font-size: 4rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--gold);
+  animation: reveal 300ms ease-out both;
+
+  &.crit {
+    color: var(--success);
+  }
+  &.fumble {
+    color: var(--danger-text);
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+}
+
+.detail {
+  margin: 0;
+  color: var(--muted);
+}
+
+.tag {
+  margin-left: var(--space-2);
+  padding: 2px 8px;
+  border: 1px solid currentColor;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+
+  &.crit {
+    color: var(--success);
+  }
+  &.fumble {
+    color: var(--danger-text);
+  }
+}
+
+.dice-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hist-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.history {
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--border-soft);
+  }
+}
+
+.hist-total {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--gold);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .total {
+    animation-delay: 0ms !important;
+  }
+}

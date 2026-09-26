@@ -1,1 +1,116 @@
-/* You can add global styles to this file, and also import other style files */
+// Tokens da direção visual "Fantasia" (ver canvas de design). Nenhuma cor fora daqui.
+:root {
+  --bg: #14100c;
+  --panel: #1f1812;
+  --panel-2: #2a2018;
+  --border: #4a3a26;
+  --border-soft: #2c2016;
+  --gold: #d4a94f;
+  --gold-dim: #9c7c3a;
+  --text: #eadfc4;
+  --muted: #a99a7e;
+  --danger: #c44a3f;
+  --danger-text: #ec7f72;
+  --info: #5b93c9;
+  --info-text: #8fbde6;
+  --success: #6fae6a;
+  --warning: #e08a3c;
+
+  --font-display: 'Cinzel', 'Times New Roman', serif;
+  --font-body: 'Alegreya Sans', 'Segoe UI', sans-serif;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --radius: 6px;
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font: 400 1.0625rem/1.45 var(--font-body);
+}
+
+h1,
+h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+h1 {
+  font-size: 1.6rem;
+}
+
+h2 {
+  margin: 0 0 var(--space-2);
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: var(--gold-dim);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  &.primary {
+    background: var(--gold);
+    border-color: #f0cf85;
+    color: #1a130b;
+  }
+}
+
+input:not([type='radio']) {
+  min-height: 44px;
+  padding: 0 12px;
+  background: #0d0906;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+code {
+  color: var(--gold);
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

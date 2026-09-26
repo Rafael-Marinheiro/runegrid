@@ -4,7 +4,7 @@ Tático de combate em grid para D&D 5e, feito em Angular. Projeto de portfólio:
 
 ## Status
 
-- **Fase 0:** F0-1, F0-2 (lint + Prettier; sem hook de commit, o CI cobre), F0-3, F0-4 (tokens em `styles.scss`), F0-5, F0-7 concluídos. Pendentes: F0-6 (deploy), F0-8 (tipos base de criatura).
+- **Fase 0:** F0-1, F0-2 (lint + Prettier; sem hook de commit, o CI cobre), F0-3, F0-4 (tokens em `styles.scss`), F0-5, F0-7 concluídos. Pendentes: F0-8 (tipos base de criatura).
 - **Fase 1:** F1-1 a F1-5 concluídos (parser, RNG com semente, vantagem/crítico, rolador, histórico). F1-6 concluído (dados animados que pousam no resultado do motor, com movimento reduzido respeitado). Próximo: F1-6b (bandeja reutilizável), F1-7 (macros).
 
 ## 1. Visão e escopo

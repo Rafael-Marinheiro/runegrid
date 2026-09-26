@@ -264,6 +264,9 @@ export class CombatPage {
     return out;
   });
 
+  /** Reações à espera: o Mestre vê todas; o jogador, as dos seus personagens (a projeção já filtra). */
+  protected readonly reactions = computed(() => this.combat().pending ?? []);
+
   protected readonly logView = computed(() => [...this.s().log].reverse().slice(0, 60));
 
   protected creature(id?: string | null): Creature | undefined {
@@ -426,6 +429,14 @@ export class CombatPage {
 
   protected removeCondition(id: string, name: ConditionName): void {
     this.store.send({ type: 'removeCondition', targetId: id, condition: name });
+  }
+
+  protected react(actorId: string, use: boolean): void {
+    this.store.send({ type: 'reaction', actorId, use });
+  }
+
+  protected nameOf(id: string): string {
+    return this.store.state().creatures.find((c) => c.id === id)?.name ?? '?';
   }
 
   protected hasToken(id: string): boolean {

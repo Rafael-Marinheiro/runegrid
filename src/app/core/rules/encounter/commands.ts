@@ -46,6 +46,8 @@ export type Command =
   | { type: 'dodge'; actorId: string }
   | { type: 'disengage'; actorId: string }
   | { type: 'deathSave'; actorId: string }
+  /** Usa (ou recusa) a reação pendente do personagem: o ataque de oportunidade. */
+  | { type: 'reaction'; actorId: string; use: boolean }
   | { type: 'endTurn'; actorId: string };
 
 export type CommandType = Command['type'];
@@ -61,5 +63,6 @@ export const PLAYER_COMMANDS: readonly CommandType[] = [
   'dodge',
   'disengage',
   'deathSave',
+  'reaction',
   'endTurn',
 ];

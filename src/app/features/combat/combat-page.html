@@ -172,6 +172,20 @@
       }
     </div>
 
+    @for (r of reactions(); track r.id) {
+      <div class="panel reaction" role="alert">
+        <span>
+          <b>{{ nameOf(r.reactorId) }}</b> pode fazer um ataque de oportunidade contra
+          <b>{{ nameOf(r.targetId) }}</b
+          >.
+        </span>
+        <span class="react-btns">
+          <button type="button" class="primary" (click)="react(r.reactorId, true)">Atacar</button>
+          <button type="button" (click)="react(r.reactorId, false)">Recusar</button>
+        </span>
+      </div>
+    }
+
     @let a = active();
     <div class="panel actions" aria-label="Ações do turno">
       @if (running() && a) {

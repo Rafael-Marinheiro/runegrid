@@ -663,3 +663,102 @@ describe('dados rolados anexados ao registro (animação para todos)', () => {
     expect(view.log.some((e) => e.dice)).toBe(false);
   });
 });
+
+describe('ataque de oportunidade', () => {
+  const adj = { foePos: { x: 1, y: 0 } };
+  const leave = (s: EncounterState) =>
+    run(s, { type: 'move', actorId: 'hero', to: { x: 0, y: 3 } });
+
+  it('sair do alcance de um inimigo gera uma reação pendente para ele', () => {
+    const s = leave(started(adj));
+    expect(s.combat.pending).toEqual([
+      expect.objectContaining({ reactorId: 'foe', targetId: 'hero', attackIndex: 0, reach: 5 }),
+    ]);
+    expect(s.log.some((e) => e.text.includes('ataque de oportunidade possível'))).toBe(true);
+  });
+
+  it('continuar ao alcance, ou usar Desengajar, não gera reação', () => {
+    const stay = run(started(adj), { type: 'move', actorId: 'hero', to: { x: 0, y: 1 } }); // ainda adjacente (diagonal)
+    expect(stay.combat.pending).toEqual([]);
+    let d = run(started(adj), { type: 'disengage', actorId: 'hero' });
+    d = leave(d);
+    expect(d.combat.pending).toEqual([]);
+  });
+
+  it('inimigo já longe, sem ataque corpo a corpo ou incapaz de agir não reage', () => {
+    expect(leave(started({ foePos: { x: 5, y: 0 } })).combat.pending).toEqual([]);
+    const ranged = {
+      attacks: [{ name: 'Arco', bonus: 4, damage: '1d6', type: 'piercing' as const, range: 80 }],
+    };
+    expect(leave(started({ ...adj, foe: ranged })).combat.pending).toEqual([]);
+    const stunned = { conditions: [{ name: 'stunned' as const }] };
+    expect(leave(started({ ...adj, foe: stunned })).combat.pending).toEqual([]);
+  });
+
+  it('usar a reação ataca o alvo e gasta a reação; recusar mantém a reação', () => {
+    const s = leave(started(adj));
+    const used = run(s, { type: 'reaction', actorId: 'foe', use: true }, dice([20, 15], [4, 3]));
+    expect(used.combat.pending).toEqual([]);
+    expect(used.combat.reactionUsed).toEqual(['foe']);
+    expect(used.log.some((e) => e.text.includes('usa a reação'))).toBe(true);
+    expect(used.creatures.find((c) => c.id === 'hero')!.hp.current).toBeLessThan(30);
+
+    const declined = run(s, { type: 'reaction', actorId: 'foe', use: false });
+    expect(declined.combat.pending).toEqual([]);
+    expect(declined.combat.reactionUsed).toEqual([]);
+  });
+
+  it('só uma reação por rodada: depois de usar, nova saída não gera outra', () => {
+    let s = run(
+      leave(started({ ...adj, hero: { speed: 60 } })),
+      { type: 'reaction', actorId: 'foe', use: true },
+      dice([20, 1]),
+    );
+    // volta ao alcance e sai de novo no mesmo turno (movimento restante)
+    s = run(s, { type: 'move', actorId: 'hero', to: { x: 0, y: 1 } });
+    s = run(s, { type: 'move', actorId: 'hero', to: { x: 0, y: 4 } });
+    expect(s.combat.pending).toEqual([]);
+  });
+
+  it('a reação volta no começo do turno de quem a usou', () => {
+    let s = run(
+      leave(started(adj)),
+      { type: 'reaction', actorId: 'foe', use: true },
+      dice([20, 1]),
+    );
+    s = run(s, { type: 'endTurn', actorId: 'hero' });
+    expect(s.combat.reactionUsed).toEqual([]); // é a vez do goblin: reação renovada
+  });
+
+  it('enquanto há reação pendente, o turno não pode ser encerrado', () => {
+    const s = leave(started(adj));
+    expect(() => run(s, { type: 'endTurn', actorId: 'hero' })).toThrow(/reações pendentes/);
+    const cleared = run(s, { type: 'reaction', actorId: 'foe', use: false });
+    expect(run(cleared, { type: 'endTurn', actorId: 'hero' }).combat.turn?.actorId).toBe('foe');
+  });
+
+  it('sem reação pendente, o comando é recusado', () => {
+    expect(() => run(started(adj), { type: 'reaction', actorId: 'foe', use: true })).toThrow(
+      /pendente/,
+    );
+  });
+
+  it('o jogador decide pelo próprio personagem; o Mestre decide pelos monstros', () => {
+    const player: Role = { kind: 'player', owns: ['hero'] };
+    // o goblin sai do alcance do herói: reação pendente é do herói (jogador)
+    let s = run(started(adj), { type: 'endTurn', actorId: 'hero' });
+    s = run(s, { type: 'move', actorId: 'foe', to: { x: 1, y: 3 } });
+    expect(s.combat.pending).toEqual([expect.objectContaining({ reactorId: 'hero' })]);
+    expect(() => run(s, { type: 'reaction', actorId: 'foe', use: true }, dice(), player)).toThrow(
+      ForbiddenError,
+    );
+    const done = run(s, { type: 'reaction', actorId: 'hero', use: false }, dice(), player);
+    expect(done.combat.pending).toEqual([]);
+  });
+
+  it('o jogador só enxerga as reações dos seus personagens', () => {
+    const s = leave(started(adj)); // reação do goblin
+    expect(project(s, { kind: 'player', owns: ['hero'] }).combat.pending).toEqual([]);
+    expect(project(s, DM).combat.pending).toHaveLength(1);
+  });
+});

@@ -21,6 +21,18 @@ export interface TurnState {
   attacksLeft: number;
 }
 
+/** Uma reação à espera de decisão (por enquanto: ataque de oportunidade). */
+export interface PendingReaction {
+  id: number;
+  kind: 'opportunity';
+  reactorId: string;
+  targetId: string;
+  /** Índice do ataque corpo a corpo do reator. */
+  attackIndex: number;
+  /** Alcance (ft) do ataque no momento em que o alvo saiu dele. */
+  reach: number;
+}
+
 export type CombatPhase = 'setup' | 'running' | 'ended';
 
 export interface Combat {
@@ -33,6 +45,10 @@ export interface Combat {
   turn: TurnState | null;
   /** Quem está em Esquiva (vale até o início do próprio turno). */
   dodging: string[];
+  /** Reações à espera de decisão; bloqueiam o fim do turno de quem se moveu. */
+  pending?: PendingReaction[];
+  /** Quem já usou a reação nesta rodada (volta ao começo do turno de cada um). */
+  reactionUsed?: string[];
   /** Vencedor quando `phase === 'ended'`. */
   outcome?: 'party' | 'foes';
 }

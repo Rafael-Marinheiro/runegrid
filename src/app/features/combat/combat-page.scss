@@ -458,3 +458,18 @@ button.active {
   color: var(--muted);
   font-size: 0.9rem;
 }
+
+.reaction {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  border-color: var(--warning);
+  background: rgb(224 138 60 / 0.08);
+}
+
+.react-btns {
+  display: flex;
+  gap: var(--space-2);
+}

@@ -14,6 +14,8 @@ export const emptyCombat = (): Combat => ({
   initiative: {},
   turn: null,
   dodging: [],
+  pending: [],
+  reactionUsed: [],
 });
 
 export function newEncounter(

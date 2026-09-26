@@ -1,6 +1,12 @@
 import { CONDITION_LABEL, Creature } from '../../models/creature';
-import { EncounterState, Role, RolledDie, TurnState } from '../../models/encounter';
-import { inBounds } from '../../models/grid';
+import {
+  EncounterState,
+  PendingReaction,
+  Role,
+  RolledDie,
+  TurnState,
+} from '../../models/encounter';
+import { inBounds, Pos } from '../../models/grid';
 import {
   applyDamage,
   heal,
@@ -13,6 +19,7 @@ import {
   effectiveSpeed,
   removeCondition,
   tickConditions,
+  canAct,
 } from '../creature';
 import { AdvMode, criticalExpr, parseDice, roll, rollD20, Rng } from '../dice';
 import { canStand, distanceFt, findPath, key, MoveQuery } from '../grid/movement';
@@ -235,8 +242,13 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
         [actor.id],
       );
     }
+    case 'reaction':
+      return reaction(state, cmd.actorId, cmd.use, ctx.rng);
     case 'endTurn': {
       const { actor } = actorTurn(state, cmd.actorId, 'any');
+      if ((state.combat.pending ?? []).length) {
+        throw new RuleError('Há reações pendentes: use ou recuse antes de encerrar o turno.');
+      }
       const t = tickConditions(actor);
       let s = withCreature(state, t.creature);
       for (const n of t.expired)
@@ -417,6 +429,7 @@ function beginTurn(state: EncounterState): EncounterState {
       ...state.combat,
       turn: newTurn(actor.id),
       dodging: state.combat.dodging.filter((id) => id !== actor.id),
+      reactionUsed: (state.combat.reactionUsed ?? []).filter((id) => id !== actor.id),
     },
   };
   return addLog(s, `Turno de ${actor.name} (rodada ${s.combat.round}).`, [actor.id]);
@@ -488,7 +501,76 @@ function move(
     `${actor.name} se moveu ${cost} ft.`,
     [actorId],
   );
-  return hit ? triggerTrap(s, actorId, hit.trap.id, rng) : s;
+  const queued = turn.disengaged ? s : queueOpportunities(s, actorId, q.start, stop);
+  return hit ? triggerTrap(queued, actorId, hit.trap.id, rng) : queued;
+}
+
+/** Quem estava ao alcance e deixou de estar (sem Desengajar) dá uma reação a cada inimigo capaz. */
+function queueOpportunities(
+  state: EncounterState,
+  moverId: string,
+  from: Pos,
+  to: Pos,
+): EncounterState {
+  const mover = creatureOf(state, moverId);
+  const pending = [...(state.combat.pending ?? [])];
+  let seq = pending.reduce((n, p) => Math.max(n, p.id), 0);
+  for (const t of state.tokens) {
+    const h = creatureOf(state, t.creatureId);
+    if (teamOf(h) === teamOf(mover) || !canAct(h)) continue;
+    if ((state.combat.reactionUsed ?? []).includes(h.id)) continue;
+    const melee = h.attacks.map((a, i) => ({ a, i })).filter((x) => x.a.range <= 10);
+    if (!melee.length) continue;
+    const reach = Math.max(...melee.map((x) => x.a.range));
+    const before = distanceFt(t.pos, sizeOf(h), from, sizeOf(mover), state.rule);
+    const after = distanceFt(t.pos, sizeOf(h), to, sizeOf(mover), state.rule);
+    if (before > reach || after <= reach) continue;
+    pending.push({
+      id: ++seq,
+      kind: 'opportunity',
+      reactorId: h.id,
+      targetId: moverId,
+      attackIndex: melee[0].i,
+      reach,
+    });
+  }
+  if (pending.length === (state.combat.pending ?? []).length) return state;
+  const added = pending.slice((state.combat.pending ?? []).length);
+  const names = added.map((p) => creatureOf(state, p.reactorId).name).join(', ');
+  return addLog(
+    { ...state, combat: { ...state.combat, pending } },
+    `${mover.name} saiu do alcance de ${names}: ataque de oportunidade possível.`,
+    [moverId],
+  );
+}
+
+function reaction(
+  state: EncounterState,
+  reactorId: string,
+  use: boolean,
+  rng: Rng,
+): EncounterState {
+  const pending = state.combat.pending ?? [];
+  const p = pending.find((x: PendingReaction) => x.reactorId === reactorId);
+  if (!p) throw new RuleError('Não há reação pendente para essa criatura.');
+  const rest = { ...state, combat: { ...state.combat, pending: pending.filter((x) => x !== p) } };
+  const reactor = creatureOf(state, reactorId);
+  if (!use) return addLog(rest, `${reactor.name} recusa o ataque de oportunidade.`, [reactorId]);
+
+  const target = creatureOf(state, p.targetId);
+  if (!canAct(reactor)) throw new RuleError(`${reactor.name} não pode reagir agora.`);
+  if (target.status === 'dead')
+    return addLog(rest, `${reactor.name}: o alvo já está morto.`, [reactorId]);
+  const used = {
+    ...rest,
+    combat: { ...rest.combat, reactionUsed: [...(rest.combat.reactionUsed ?? []), reactorId] },
+  };
+  const announced = addLog(
+    used,
+    `${reactor.name} usa a reação: ataque de oportunidade contra ${target.name}.`,
+    [reactorId, target.id],
+  );
+  return strike(announced, reactor, target, p.attackIndex, p.reach, [], rng);
 }
 
 function attack(

@@ -68,6 +68,11 @@ export function project(state: EncounterState, role: Role): EncounterState {
       rooms: openRooms,
       traps: (map.traps ?? []).filter((t) => !t.hidden || t.triggered),
     },
-    combat: { ...state.combat, order, initiative },
+    combat: {
+      ...state.combat,
+      order,
+      initiative,
+      pending: (state.combat.pending ?? []).filter((p) => role.owns.includes(p.reactorId)),
+    },
   };
 }

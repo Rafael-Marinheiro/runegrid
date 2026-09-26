@@ -1,5 +1,6 @@
 export * from './commands';
-export { authorize, dispatch, moveQuery, type Context } from './reduce';
+export { authorize, dispatch, moveQuery } from './reduce';
+export type { Context } from './helpers';
 export { project } from './project';
 export {
   creatureOf,

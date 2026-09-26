@@ -107,6 +107,8 @@
       [map]="st.map"
       [tokens]="tokens()"
       [reach]="reach()"
+      [preview]="preview()"
+      (cellHover)="hover.set($event)"
       (cellClick)="onCell($event)"
       (tokenClick)="onToken($event)"
       (tokenMove)="onTokenMove($event)"
@@ -160,6 +162,19 @@
                 {{ w.name }} {{ fmt(w.bonus) }} · {{ w.damage }}
               </button>
             }
+            @if (a.spellcasting) {
+              <button
+                type="button"
+                [class.active]="spellsOpen()"
+                [disabled]="a.status !== 'alive'"
+                (click)="toggleSpells()"
+              >
+                Conjurar
+              </button>
+            }
+            @if (isProne()) {
+              <button type="button" (click)="act('standUp')">Levantar-se</button>
+            }
             <button
               type="button"
               [disabled]="!t.action || a.status !== 'alive'"
@@ -184,9 +199,14 @@
             <span class="grow"></span>
             <button type="button" class="primary" (click)="act('endTurn')">Encerrar turno</button>
           </div>
+          @if (spellsOpen()) {
+            <app-spell-panel [caster]="a" (chosen)="onSpell($event)" />
+          }
           @if (mode().kind === 'attack') {
             <p class="hint">Clique num inimigo com o anel laranja para atacar.</p>
-          } @else {
+          } @else if (mode().kind === 'cast') {
+            <p class="hint">Destaque em laranja mostra quem a magia atinge.</p>
+          } @else if (!spellsOpen()) {
             <p class="hint">Clique numa célula azul (ou arraste o token) para se mover.</p>
           }
         } @else {
@@ -230,6 +250,28 @@
             <dd>{{ c.speed }} ft</dd>
           </div>
         </dl>
+        @if (c.concentration) {
+          <p class="conc">Concentrado em {{ c.concentration }}</p>
+        }
+        @if (c.conditions.length) {
+          <ul class="conds" aria-label="Condições">
+            @for (k of c.conditions; track k.name) {
+              <li class="chip cond">
+                {{ condLabel[k.name] }}{{ k.rounds ? ' · ' + k.rounds + 'r' : '' }}
+                @if (isDm()) {
+                  <button
+                    type="button"
+                    class="x"
+                    [attr.aria-label]="'Remover ' + condLabel[k.name]"
+                    (click)="removeCondition(c.id, k.name)"
+                  >
+                    ×
+                  </button>
+                }
+              </li>
+            }
+          </ul>
+        }
         @if (c.status !== 'alive') {
           <p class="status">
             {{ c.status === 'dying' ? 'Morrendo' : c.status === 'stable' ? 'Estável' : 'Morto' }}
@@ -243,6 +285,23 @@
             </label>
             <button type="button" (click)="damage(c.id, amt.value)">Dano</button>
             <button type="button" (click)="heal(c.id, amt.value)">Cura</button>
+          </div>
+          <div class="dm cond-form">
+            <label class="field">
+              Condição
+              <select #cond>
+                @for (k of conditions; track k) {
+                  <option [value]="k">{{ condLabel[k] }}</option>
+                }
+              </select>
+            </label>
+            <label class="field rounds">
+              Rodadas
+              <input #rounds type="number" min="0" placeholder="∞" />
+            </label>
+            <button type="button" (click)="addCondition(c.id, cond.value, rounds.value)">
+              Aplicar
+            </button>
           </div>
           <div class="dm">
             @if (hasToken(c.id)) {

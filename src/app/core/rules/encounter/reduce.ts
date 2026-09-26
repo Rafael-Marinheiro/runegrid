@@ -1,4 +1,4 @@
-import { Creature } from '../../models/creature';
+import { CONDITION_LABEL, Creature } from '../../models/creature';
 import { EncounterState, Role, TurnState } from '../../models/encounter';
 import { inBounds } from '../../models/grid';
 import {
@@ -8,10 +8,28 @@ import {
   rollDeathSave,
   RuleError,
   abilityMod,
+  addCondition,
+  attackModifiers,
+  effectiveSpeed,
+  removeCondition,
+  tickConditions,
 } from '../creature';
 import { AdvMode, criticalExpr, parseDice, roll, rollD20, Rng } from '../dice';
 import { canStand, distanceFt, findPath, key, MoveQuery } from '../grid/movement';
+import { cast } from './cast';
 import { Command, PLAYER_COMMANDS } from './commands';
+import {
+  actorTurn,
+  aftermath,
+  checkOutcome,
+  combineModes,
+  Context,
+  dtype,
+  fmt,
+  notes,
+  setTurn,
+  spendAction,
+} from './helpers';
 import {
   addLog,
   creatureOf,
@@ -23,13 +41,6 @@ import {
   tokenOf,
   withCreature,
 } from './state';
-
-export interface Context {
-  rng: Rng;
-  role: Role;
-}
-
-const fmt = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
 
 /** O jogador só age por criaturas suas; o Mestre pode tudo. */
 export function authorize(cmd: Command, role: Role): void {
@@ -91,12 +102,43 @@ export function dispatch(state: EncounterState, cmd: Command, ctx: Context): Enc
     case 'damage': {
       const target = creatureOf(state, cmd.targetId);
       const r = applyDamage(target, cmd.amount, { type: cmd.damageType });
-      return checkOutcome(
-        addLog(
-          withCreature(state, r.creature),
-          `${target.name} sofreu ${r.dealt} de dano${notes(r)}.`,
-          [target.id],
-        ),
+      const s = addLog(
+        withCreature(state, r.creature),
+        `${target.name} sofreu ${r.dealt} de dano${notes(r)}.`,
+        [target.id],
+      );
+      return checkOutcome(aftermath(s, target.id, r.dealt, ctx.rng));
+    }
+    case 'addCondition': {
+      const target = creatureOf(state, cmd.targetId);
+      const s = withCreature(state, addCondition(target, cmd.condition, cmd.rounds));
+      const dur = cmd.rounds ? ` por ${cmd.rounds} rodada(s)` : '';
+      return addLog(s, `${target.name} ficou ${CONDITION_LABEL[cmd.condition]}${dur}.`, [
+        target.id,
+      ]);
+    }
+    case 'removeCondition': {
+      const target = creatureOf(state, cmd.targetId);
+      return addLog(
+        withCreature(state, removeCondition(target, cmd.condition)),
+        `${target.name}: ${CONDITION_LABEL[cmd.condition]} removido.`,
+        [target.id],
+      );
+    }
+    case 'cast':
+      return cast(state, cmd, ctx);
+    case 'standUp': {
+      const { actor, turn } = actorTurn(state, cmd.actorId);
+      if (!actor.conditions.some((c) => c.name === 'prone'))
+        throw new RuleError(`${actor.name} não está caído.`);
+      const cost = Math.floor(effectiveSpeed(actor) / 2);
+      const remaining = effectiveSpeed(actor) * (turn.dashed ? 2 : 1) - turn.movedFt;
+      if (cost <= 0 || remaining < cost) throw new RuleError('Sem deslocamento para se levantar.');
+      const s = withCreature(state, removeCondition(actor, 'prone'));
+      return addLog(
+        setTurn(s, { ...turn, movedFt: turn.movedFt + cost }),
+        `${actor.name} se levantou.`,
+        [actor.id],
       );
     }
     case 'heal': {
@@ -146,20 +188,16 @@ export function dispatch(state: EncounterState, cmd: Command, ctx: Context): Enc
         [actor.id],
       );
     }
-    case 'endTurn':
-      actorTurn(state, cmd.actorId, 'any');
-      return advanceTurn(state);
+    case 'endTurn': {
+      const { actor } = actorTurn(state, cmd.actorId, 'any');
+      const t = tickConditions(actor);
+      let s = withCreature(state, t.creature);
+      for (const n of t.expired)
+        s = addLog(s, `${actor.name}: ${CONDITION_LABEL[n]} terminou.`, [actor.id]);
+      return advanceTurn(s);
+    }
   }
 }
-
-const notes = (r: { instantDeath: boolean; creature: Creature; dropped: boolean }): string =>
-  r.instantDeath
-    ? ' — morte instantânea!'
-    : r.creature.status === 'dead'
-      ? ' — morreu'
-      : r.dropped
-        ? ' — caiu a 0 PV'
-        : '';
 
 // ---------- montagem ----------
 
@@ -321,48 +359,6 @@ function advanceTurn(state: EncounterState): EncounterState {
   return beginTurn({ ...state, combat: { ...state.combat, turnIndex, round } });
 }
 
-/** Termina o combate quando um dos lados não tem mais ninguém vivo. */
-function checkOutcome(state: EncounterState): EncounterState {
-  if (state.combat.phase !== 'running') return state;
-  const inCombat = state.creatures.filter((c) => state.combat.order.includes(c.id));
-  const alive = (team: 'party' | 'foes') =>
-    inCombat.some((c) => teamOf(c) === team && c.status !== 'dead');
-  const outcome = !alive('foes') ? 'party' : !alive('party') ? 'foes' : undefined;
-  if (!outcome) return state;
-  return addLog(
-    { ...state, combat: { ...state.combat, phase: 'ended', turn: null, outcome } },
-    outcome === 'party'
-      ? 'Fim do combate: o grupo venceu.'
-      : 'Fim do combate: o grupo foi derrotado.',
-  );
-}
-
-function actorTurn(
-  state: EncounterState,
-  actorId: string,
-  need: 'alive' | 'dying' | 'any' = 'alive',
-) {
-  const actor = creatureOf(state, actorId);
-  const turn = state.combat.turn;
-  if (state.combat.phase !== 'running' || !turn)
-    throw new RuleError('O combate não está em andamento.');
-  if (turn.actorId !== actorId) throw new RuleError(`Não é a vez de ${actor.name}.`);
-  if (need === 'alive' && actor.status !== 'alive')
-    throw new RuleError(`${actor.name} não pode agir agora.`);
-  if (need === 'dying' && actor.status !== 'dying')
-    throw new RuleError(`${actor.name} não está morrendo.`);
-  return { actor, turn };
-}
-
-const setTurn = (state: EncounterState, turn: TurnState): EncounterState => ({
-  ...state,
-  combat: { ...state.combat, turn },
-});
-
-function spendAction(turn: TurnState): void {
-  if (!turn.action) throw new RuleError('Sem ação disponível neste turno.');
-}
-
 /**
  * Consulta de movimento da criatura na vez: a mesma usada para validar `move`
  * e para a interface destacar as células alcançáveis.
@@ -371,7 +367,7 @@ export function moveQuery(state: EncounterState, actorId: string): MoveQuery {
   const { actor, turn } = actorTurn(state, actorId);
   const from = tokenOf(state, actorId);
   if (!from) throw new RuleError(`${actor.name} não está no mapa.`);
-  const remaining = actor.speed * (turn.dashed ? 2 : 1) - turn.movedFt;
+  const remaining = effectiveSpeed(actor) * (turn.dashed ? 2 : 1) - turn.movedFt;
   if (remaining <= 0) throw new RuleError('Sem deslocamento restante.');
   return {
     map: state.map,
@@ -409,12 +405,6 @@ function move(
   );
 }
 
-function combineModes(modes: AdvMode[]): AdvMode {
-  const adv = modes.includes('advantage');
-  const dis = modes.includes('disadvantage');
-  return adv && !dis ? 'advantage' : dis && !adv ? 'disadvantage' : 'normal';
-}
-
 function attack(
   state: EncounterState,
   cmd: Extract<Command, { type: 'attack' }>,
@@ -444,8 +434,32 @@ function attack(
     attacksLeft = Math.max(0, actor.attacksPerAction - 1);
   } else throw new RuleError('Sem ação disponível neste turno.');
 
-  const modes: AdvMode[] = [cmd.mode ?? 'normal'];
-  if (state.combat.dodging.includes(target.id)) modes.push('disadvantage');
+  const extra: AdvMode[] = [cmd.mode ?? 'normal'];
+  if (state.combat.dodging.includes(target.id)) extra.push('disadvantage');
+  return strike(
+    setTurn(state, { ...turn, action, attacksLeft }),
+    actor,
+    target,
+    cmd.attackIndex,
+    dist,
+    extra,
+    ctx.rng,
+  );
+}
+
+/** Rola um ataque já validado (alcance, ação): condições, crítico, dano e concentração. */
+function strike(
+  state: EncounterState,
+  actor: Creature,
+  target: Creature,
+  attackIndex: number,
+  dist: number,
+  extra: AdvMode[],
+  rng: Rng,
+): EncounterState {
+  const weapon = actor.attacks[attackIndex];
+  const from = tokenOf(state, actor.id)!;
+  const modes = [...extra];
   if (weapon.range > 5) {
     const meleeFoe = state.tokens.some((t) => {
       const o = creatureOf(state, t.creatureId);
@@ -457,25 +471,25 @@ function attack(
     });
     if (meleeFoe) modes.push('disadvantage'); // atirar com inimigo adjacente
   }
-  const mode = combineModes(modes);
+  const cond = attackModifiers(actor, target, dist, weapon.range > 5);
+  const mode = combineModes([...modes, ...cond.modes]);
 
-  const d20 = rollD20(weapon.bonus, mode, ctx.rng);
+  const d20 = rollD20(weapon.bonus, mode, rng);
   const hit = d20.crit || (!d20.fumble && d20.roll.total >= target.ac);
+  const crit = hit && (d20.crit || cond.autoCrit);
   const head =
     `${actor.name} atacou ${target.name} com ${weapon.name}: d20 ${d20.natural} ${fmt(weapon.bonus)} = ${d20.roll.total} vs CA ${target.ac}` +
     (mode === 'normal' ? '' : mode === 'advantage' ? ' (vantagem)' : ' (desvantagem)');
-
-  let next = setTurn(state, { ...turn, action, attacksLeft });
-  if (!hit) return addLog(next, `${head} — erro.`, [actor.id, target.id]);
+  if (!hit) return addLog(state, `${head} — erro.`, [actor.id, target.id]);
 
   const expr = parseDice(weapon.damage);
-  const dmg = roll(d20.crit ? criticalExpr(expr) : expr, ctx.rng);
-  const r = applyDamage(target, Math.max(0, dmg.total), { type: weapon.type, crit: d20.crit });
-  next = withCreature(next, r.creature);
+  const dmg = roll(crit ? criticalExpr(expr) : expr, rng);
+  const r = applyDamage(target, Math.max(0, dmg.total), { type: weapon.type, crit });
+  let next = withCreature(state, r.creature);
   next = addLog(
     next,
-    `${head} — ${d20.crit ? 'ACERTO CRÍTICO' : 'acerto'}: ${r.dealt} de dano ${weapon.type}${notes(r)}.`,
+    `${head} — ${crit ? 'ACERTO CRÍTICO' : 'acerto'}: ${r.dealt} de dano ${dtype(weapon.type)}${notes(r)}.`,
     [actor.id, target.id],
   );
-  return checkOutcome(next);
+  return checkOutcome(aftermath(next, target.id, r.dealt, rng));
 }

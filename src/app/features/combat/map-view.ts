@@ -28,7 +28,14 @@ export interface TokenView {
   selected: boolean;
   /** Alvo válido do ataque em preparo. */
   targetable: boolean;
+  /** Quantidade de condições ativas. */
+  conditions: number;
+  concentrating: boolean;
 }
+
+export type AreaPreview =
+  | { kind: 'sphere'; center: Pos; radiusFt: number }
+  | { kind: 'cone'; origin: Pos; originSize: number; toward: Pos; lengthFt: number };
 
 interface Drag {
   id: string;
@@ -65,23 +72,50 @@ export class MapView {
   readonly tokens = input.required<TokenView[]>();
   /** Células alcançáveis pela criatura na vez. */
   readonly reach = input<Pos[]>([]);
+  /** Área de magia em preparo, desenhada sobre o mapa. */
+  readonly preview = input<AreaPreview | null>(null);
 
   readonly cellClick = output<Pos>();
   readonly tokenClick = output<string>();
   readonly tokenMove = output<{ id: string; pos: Pos }>();
   readonly tokenNudge = output<{ id: string; dx: number; dy: number }>();
+  /** Célula sob o cursor (null ao sair do mapa). */
+  readonly cellHover = output<Pos | null>();
 
   protected readonly C = CELL;
   protected readonly zoom = signal(1);
   protected readonly pan = signal<Pos>({ x: 0, y: 0 });
   protected readonly drag = signal<Drag | null>(null);
   private panning: Pan | null = null;
+  private lastHover = '';
   private readonly svg = viewChild.required<ElementRef<SVGSVGElement>>('svg');
 
   protected readonly cells = computed(() => {
     const m = this.map();
     return m.cells.map((t, i) => ({ i, x: i % m.width, y: Math.floor(i / m.width), t }));
   });
+  protected readonly sphere = computed(() => {
+    const p = this.preview();
+    if (p?.kind !== 'sphere') return null;
+    return {
+      cx: (p.center.x + 0.5) * CELL,
+      cy: (p.center.y + 0.5) * CELL,
+      r: (p.radiusFt / 5) * CELL,
+    };
+  });
+
+  protected readonly cone = computed(() => {
+    const p = this.preview();
+    if (p?.kind !== 'cone') return null;
+    const ox = (p.origin.x + p.originSize / 2) * CELL;
+    const oy = (p.origin.y + p.originSize / 2) * CELL;
+    const ang = Math.atan2((p.toward.y + 0.5) * CELL - oy, (p.toward.x + 0.5) * CELL - ox);
+    const len = (p.lengthFt / 5) * CELL;
+    const half = Math.atan(0.5); // a largura do cone é igual ao comprimento
+    const pt = (a: number) => `${ox + len * Math.cos(a)},${oy + len * Math.sin(a)}`;
+    return `${ox},${oy} ${pt(ang - half)} ${pt(ang + half)}`;
+  });
+
   protected readonly width = computed(() => this.map().width * CELL);
   protected readonly height = computed(() => this.map().height * CELL);
   protected readonly viewBox = computed(() => {
@@ -180,6 +214,7 @@ export class MapView {
       return;
     }
     const pn = this.panning;
+    if (!pn) return this.hoverAt(e);
     if (pn) {
       const scale = this.svg().nativeElement.getScreenCTM()?.a ?? 1;
       const dx = e.clientX - pn.startX;
@@ -212,6 +247,24 @@ export class MapView {
       const m = this.map();
       if (pos.x >= 0 && pos.y >= 0 && pos.x < m.width && pos.y < m.height) this.cellClick.emit(pos);
     }
+  }
+
+  private hoverAt(e: PointerEvent): void {
+    const p = this.toSvg(e);
+    const m = this.map();
+    const x = Math.floor(p.x / CELL);
+    const y = Math.floor(p.y / CELL);
+    const inside = x >= 0 && y >= 0 && x < m.width && y < m.height;
+    const k = inside ? `${x},${y}` : '';
+    if (k === this.lastHover) return;
+    this.lastHover = k;
+    this.cellHover.emit(inside ? { x, y } : null);
+  }
+
+  protected onLeave(): void {
+    if (this.lastHover === '') return;
+    this.lastHover = '';
+    this.cellHover.emit(null);
   }
 
   // ---------- teclado ----------

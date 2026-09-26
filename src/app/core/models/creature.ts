@@ -78,6 +78,47 @@ export const DAMAGE_LABEL: Record<DamageType, string> = {
   thunder: 'Trovejante',
 };
 
+export const CONDITIONS = [
+  'blinded',
+  'charmed',
+  'deafened',
+  'frightened',
+  'grappled',
+  'incapacitated',
+  'invisible',
+  'paralyzed',
+  'petrified',
+  'poisoned',
+  'prone',
+  'restrained',
+  'stunned',
+  'unconscious',
+] as const;
+export type ConditionName = (typeof CONDITIONS)[number];
+
+export const CONDITION_LABEL: Record<ConditionName, string> = {
+  blinded: 'Cego',
+  charmed: 'Enfeitiçado',
+  deafened: 'Surdo',
+  frightened: 'Amedrontado',
+  grappled: 'Agarrado',
+  incapacitated: 'Incapacitado',
+  invisible: 'Invisível',
+  paralyzed: 'Paralisado',
+  petrified: 'Petrificado',
+  poisoned: 'Envenenado',
+  prone: 'Caído',
+  restrained: 'Contido',
+  stunned: 'Atordoado',
+  unconscious: 'Inconsciente',
+};
+
+export interface ActiveCondition {
+  name: ConditionName;
+  /** Rodadas restantes, contadas no fim do turno de quem tem a condição. Sem valor = até ser removida. */
+  rounds?: number;
+}
+
 export type CreatureKind = 'pc' | 'npc' | 'monster';
 export type LifeStatus = 'alive' | 'dying' | 'stable' | 'dead';
 
@@ -120,9 +161,14 @@ export interface Creature {
   spellSlots: Record<number, { max: number; used: number }>;
   resources: Resource[];
   attacks: Attack[];
+  /** Conjuração: atributo e magias conhecidas/preparadas (ids de `SPELLS`). */
+  spellcasting?: { ability: Ability; spells: string[] };
   /** Ataques por ação Atacar (Ataque Extra). */
   attacksPerAction: number;
   resistances: DamageType[];
   immunities: DamageType[];
   vulnerabilities: DamageType[];
+  conditions: ActiveCondition[];
+  /** Magia mantida em concentração. */
+  concentration?: string;
 }

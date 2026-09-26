@@ -1,18 +1,24 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { Creature } from '@core/models/creature';
+import { CONDITION_LABEL, CONDITIONS, ConditionName, Creature } from '@core/models/creature';
 import { Pos } from '@core/models/grid';
+import { Spell } from '@core/models/spell';
 import { fmtBonus } from '@core/rules/creature';
 import { moveQuery, occupiedCells, sizeOf, teamOf, tokenOf } from '@core/rules/encounter';
+import { inCone, inSphere } from '@core/rules/grid/area';
 import { canStand, distanceFt, reachable } from '@core/rules/grid/movement';
 import { EncounterStore } from '@state/encounter.store';
 import { PartyStore } from '@state/party.store';
-import { MapView, TokenView } from './map-view';
+import { AreaPreview, MapView, TokenView } from './map-view';
+import { SpellPanel } from './spell-panel';
 
-type Mode = { kind: 'move' } | { kind: 'attack'; index: number };
+type Mode =
+  | { kind: 'move' }
+  | { kind: 'attack'; index: number }
+  | { kind: 'cast'; spell: Spell; slot: number };
 
 @Component({
   selector: 'app-combat-page',
-  imports: [MapView],
+  imports: [MapView, SpellPanel],
   templateUrl: './combat-page.html',
   styleUrl: './combat-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -21,7 +27,8 @@ export class CombatPage {
   protected readonly store = inject(EncounterStore);
   protected readonly party = inject(PartyStore);
   protected readonly fmt = fmtBonus;
-  protected readonly pips = [0, 1, 2];
+  protected readonly conditions = CONDITIONS;
+  protected readonly condLabel = CONDITION_LABEL;
 
   /** O que este papel enxerga do encontro. */
   protected readonly s = this.store.view;
@@ -31,6 +38,9 @@ export class CombatPage {
 
   protected readonly selectedId = signal<string | null>(null);
   protected readonly mode = signal<Mode>({ kind: 'move' });
+  protected readonly spellsOpen = signal(false);
+  /** Célula sob o cursor (para a prévia de área). */
+  protected readonly hover = signal<Pos | null>(null);
 
   protected readonly active = computed(() => this.creature(this.combat().turn?.actorId));
   /** Quem está na vez é controlado por quem está usando? */
@@ -41,6 +51,9 @@ export class CombatPage {
   });
   protected readonly selected = computed(() =>
     this.creature(this.selectedId() ?? this.active()?.id),
+  );
+  protected readonly isProne = computed(
+    () => !!this.active()?.conditions.some((c) => c.name === 'prone'),
   );
 
   /** Personagens que podem ser "vistos como" (visão de jogador). */
@@ -59,6 +72,28 @@ export class CombatPage {
         ? this.combat().order
         : st.tokens.map((t) => t.creatureId);
     return ids.map((id) => this.creature(id)).filter((c): c is Creature => !!c);
+  });
+
+  /** Prévia da área da magia em preparo (esfera no cursor, cone na direção do cursor). */
+  protected readonly preview = computed<AreaPreview | null>(() => {
+    const m = this.mode();
+    const a = this.active();
+    const h = this.hover();
+    if (m.kind !== 'cast' || !a || !h) return null;
+    const from = tokenOf(this.s(), a.id);
+    if (!from) return null;
+    const t = m.spell.target;
+    if (t.kind === 'sphere') return { kind: 'sphere', center: h, radiusFt: t.radius };
+    if (t.kind === 'cone') {
+      return {
+        kind: 'cone',
+        origin: from.pos,
+        originSize: sizeOf(a),
+        toward: h,
+        lengthFt: t.length,
+      };
+    }
+    return null;
   });
 
   protected readonly tokens = computed<TokenView[]>(() => {
@@ -83,6 +118,8 @@ export class CombatPage {
           active: c.id === active,
           selected: c.id === sel,
           targetable: targets.has(c.id),
+          conditions: c.conditions.length,
+          concentrating: !!c.concentration,
         },
       ];
     });
@@ -104,19 +141,45 @@ export class CombatPage {
     }
   });
 
+  /** Criaturas destacadas: alvos válidos do ataque/magia ou atingidas pela área em prévia. */
   protected readonly targetIds = computed(() => {
     const m = this.mode();
     const a = this.active();
     const out = new Set<string>();
-    if (m.kind !== 'attack' || !a || !this.canAct()) return out;
-    const weapon = a.attacks[m.index];
-    const from = tokenOf(this.s(), a.id);
-    if (!weapon || !from) return out;
-    for (const t of this.s().tokens) {
+    if (m.kind === 'move' || !a || !this.canAct()) return out;
+    const st = this.s();
+    const from = tokenOf(st, a.id);
+    if (!from) return out;
+
+    if (m.kind === 'attack') {
+      const weapon = a.attacks[m.index];
+      if (!weapon) return out;
+      for (const t of st.tokens) {
+        const o = this.creature(t.creatureId);
+        if (!o || o.id === a.id || teamOf(o) === teamOf(a) || o.status === 'dead') continue;
+        if (distanceFt(from.pos, sizeOf(a), t.pos, sizeOf(o), st.rule) <= weapon.range)
+          out.add(o.id);
+      }
+      return out;
+    }
+
+    const target = m.spell.target;
+    for (const t of st.tokens) {
       const o = this.creature(t.creatureId);
-      if (!o || o.id === a.id || teamOf(o) === teamOf(a) || o.status === 'dead') continue;
-      if (distanceFt(from.pos, sizeOf(a), t.pos, sizeOf(o), this.s().rule) <= weapon.range)
-        out.add(o.id);
+      if (!o) continue;
+      if (target.kind === 'creature') {
+        const ok = o.status !== 'dead' || !!m.spell.heal;
+        if (ok && distanceFt(from.pos, sizeOf(a), t.pos, sizeOf(o), st.rule) <= m.spell.range)
+          out.add(o.id);
+      } else {
+        const h = this.hover();
+        if (!h || o.status === 'dead') continue;
+        const hit =
+          target.kind === 'sphere'
+            ? inSphere(h, target.radius, t.pos, sizeOf(o))
+            : inCone(from.pos, sizeOf(a), h, target.length, t.pos, sizeOf(o));
+        if (hit && !(target.kind === 'cone' && o.id === a.id)) out.add(o.id);
+      }
     }
     return out;
   });
@@ -144,13 +207,36 @@ export class CombatPage {
 
   protected setRole(value: string): void {
     this.store.role.set(value === 'dm' ? { kind: 'dm' } : { kind: 'player', owns: [value] });
+    this.resetMode();
+  }
+
+  private resetMode(): void {
     this.mode.set({ kind: 'move' });
+    this.spellsOpen.set(false);
+    this.hover.set(null);
   }
 
   // ---------- interação com o mapa ----------
 
   protected onCell(pos: Pos): void {
-    this.tryMove(this.running() ? this.active()?.id : this.selected()?.id, pos);
+    const m = this.mode();
+    const a = this.active();
+    if (m.kind === 'cast' && a && m.spell.target.kind !== 'creature') {
+      // magia de área: o clique define o ponto (esfera) ou a direção (cone)
+      if (
+        this.store.send({
+          type: 'cast',
+          actorId: a.id,
+          spellId: m.spell.id,
+          slotLevel: m.slot,
+          point: pos,
+        })
+      ) {
+        this.resetMode();
+      }
+      return;
+    }
+    this.tryMove(this.running() ? a?.id : this.selected()?.id, pos);
   }
 
   protected onToken(id: string): void {
@@ -158,9 +244,28 @@ export class CombatPage {
     const a = this.active();
     if (m.kind === 'attack' && a && id !== a.id) {
       if (this.store.send({ type: 'attack', actorId: a.id, targetId: id, attackIndex: m.index })) {
-        // depois do ataque volta ao modo de movimento
         this.mode.set({ kind: 'move' });
       }
+      return;
+    }
+    if (m.kind === 'cast' && a) {
+      const ok =
+        m.spell.target.kind === 'creature'
+          ? this.store.send({
+              type: 'cast',
+              actorId: a.id,
+              spellId: m.spell.id,
+              slotLevel: m.slot,
+              targetId: id,
+            })
+          : this.store.send({
+              type: 'cast',
+              actorId: a.id,
+              spellId: m.spell.id,
+              slotLevel: m.slot,
+              point: tokenOf(this.s(), id)?.pos,
+            });
+      if (ok) this.resetMode();
       return;
     }
     this.selectedId.set(id);
@@ -192,16 +297,28 @@ export class CombatPage {
 
   protected chooseAttack(index: number): void {
     const m = this.mode();
+    this.spellsOpen.set(false);
     this.mode.set(
       m.kind === 'attack' && m.index === index ? { kind: 'move' } : { kind: 'attack', index },
     );
   }
 
-  protected act(type: 'dash' | 'dodge' | 'disengage' | 'deathSave' | 'endTurn'): void {
+  protected toggleSpells(): void {
+    const open = !this.spellsOpen();
+    this.spellsOpen.set(open);
+    if (!open) this.mode.set({ kind: 'move' });
+  }
+
+  /** O painel de magias escolheu uma magia e um espaço (ou limpou a escolha). */
+  protected onSpell(pick: { spell: Spell; slot: number } | null): void {
+    this.mode.set(pick ? { kind: 'cast', spell: pick.spell, slot: pick.slot } : { kind: 'move' });
+  }
+
+  protected act(type: 'dash' | 'dodge' | 'disengage' | 'deathSave' | 'endTurn' | 'standUp'): void {
     const a = this.active();
     if (!a) return;
     this.store.send({ type, actorId: a.id });
-    this.mode.set({ kind: 'move' });
+    this.resetMode();
   }
 
   protected setInitiative(id: string, value: string): void {
@@ -215,6 +332,20 @@ export class CombatPage {
 
   protected heal(id: string, amount: string): void {
     this.store.send({ type: 'heal', targetId: id, amount: Number(amount) || 0 });
+  }
+
+  protected addCondition(id: string, name: string, rounds: string): void {
+    const n = Number(rounds);
+    this.store.send({
+      type: 'addCondition',
+      targetId: id,
+      condition: name as ConditionName,
+      rounds: n > 0 ? Math.floor(n) : undefined,
+    });
+  }
+
+  protected removeCondition(id: string, name: ConditionName): void {
+    this.store.send({ type: 'removeCondition', targetId: id, condition: name });
   }
 
   protected hasToken(id: string): boolean {

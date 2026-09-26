@@ -11,6 +11,7 @@
     (pointermove)="onPointerMove($event)"
     (pointerup)="onPointerUp($event)"
     (pointercancel)="drag.set(null)"
+    (pointerleave)="onLeave()"
   >
     <rect [attr.width]="width()" [attr.height]="height()" class="bg" />
 
@@ -53,6 +54,13 @@
         [attr.height]="C - 4"
         rx="4"
       />
+    }
+
+    @if (sphere(); as sp) {
+      <circle class="aoe" [attr.cx]="sp.cx" [attr.cy]="sp.cy" [attr.r]="sp.r" />
+    }
+    @if (cone(); as pts) {
+      <polygon class="aoe" [attr.points]="pts" />
     }
 
     @for (t of tokens(); track t.id) {
@@ -107,6 +115,23 @@
           height="5"
           rx="2"
         />
+        @if (t.conditions > 0) {
+          <g class="badge" aria-hidden="true">
+            <circle [attr.cx]="d - 9" cy="9" r="8" />
+            <text [attr.x]="d - 9" y="13" text-anchor="middle" font-size="11">
+              {{ t.conditions }}
+            </text>
+          </g>
+        }
+        @if (t.concentrating) {
+          <circle
+            class="focus"
+            [attr.cx]="d / 2"
+            [attr.cy]="d / 2"
+            [attr.r]="d / 2 + 2"
+            aria-hidden="true"
+          />
+        }
       </g>
     }
   </svg>

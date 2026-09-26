@@ -17,7 +17,7 @@ import {
 } from '@core/rules/creature';
 import { RNG } from './rng.token';
 
-const KEY = 'runegrid.creatures.v2';
+const KEY = 'runegrid.creatures.v3';
 
 function load(): Creature[] | null {
   try {

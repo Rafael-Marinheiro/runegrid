@@ -7,7 +7,7 @@ import { RuleError } from '@core/rules/creature';
 import { Command, dispatch, newEncounter, project } from '@core/rules/encounter';
 import { RNG } from './rng.token';
 
-const KEY = 'runegrid.encounter.v1';
+const KEY = 'runegrid.encounter.v2';
 const MAX_UNDO = 100;
 
 const SAMPLE_MAP = [

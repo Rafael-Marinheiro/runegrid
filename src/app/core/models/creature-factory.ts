@@ -26,6 +26,7 @@ export function newCreature(kind: CreatureKind, over: Partial<Creature> = {}): C
     resistances: [],
     immunities: [],
     vulnerabilities: [],
+    conditions: [],
     ...over,
   };
 }
@@ -59,10 +60,19 @@ export function sampleCreatures(): Creature[] {
       saveProficiencies: ['int', 'wis'],
       skills: { arcana: 'proficient', history: 'proficient', investigation: 'proficient' },
       hp: { max: 29, current: 24, temp: 0 },
-      attacks: [
-        { name: 'Raio de Fogo', bonus: 7, damage: '2d10', type: 'fire', range: 120 },
-        { name: 'Bordão', bonus: 1, damage: '1d6-1', type: 'bludgeoning', range: 5 },
-      ],
+      attacks: [{ name: 'Bordão', bonus: 1, damage: '1d6-1', type: 'bludgeoning', range: 5 }],
+      spellcasting: {
+        ability: 'int',
+        spells: [
+          'fire-bolt',
+          'ray-of-frost',
+          'magic-missile',
+          'burning-hands',
+          'hold-person',
+          'shatter',
+          'fireball',
+        ],
+      },
       spellSlots: {
         ...fullCasterSlots(5),
         1: { max: 4, used: 1 },
@@ -79,6 +89,17 @@ export function sampleCreatures(): Creature[] {
       skills: { medicine: 'proficient', religion: 'proficient', insight: 'proficient' },
       hp: { max: 40, current: 36, temp: 0 },
       attacks: [{ name: 'Maça', bonus: 4, damage: '1d6+2', type: 'bludgeoning', range: 5 }],
+      spellcasting: {
+        ability: 'wis',
+        spells: [
+          'sacred-flame',
+          'cure-wounds',
+          'healing-word',
+          'guiding-bolt',
+          'inflict-wounds',
+          'hold-person',
+        ],
+      },
       spellSlots: fullCasterSlots(5),
       resources: [{ name: 'Canalizar Divindade', max: 1, used: 0, recharge: 'short' }],
     }),

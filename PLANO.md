@@ -9,6 +9,7 @@ Tático de combate em grid para D&D 5e, feito em Angular. Projeto de portfólio:
 - **Fase 2:** F2-1, F2-2, F2-3, F2-4, F2-5, F2-6 e F2-7 concluídos: ficha completa (atributos, salvaguardas, perícias, CA, PV com dano/cura/temporários, morte, espaços de magia, recursos, descansos, resistências), lista de criaturas com persistência local e rolagem de testes pela ficha.
 - **Fase 3:** F3-1 a F3-5, F3-8, F3-11 concluídos: mapa SVG com zoom/pan, tokens arrastáveis com encaixe, colisão, terreno difícil, regra de diagonal simples ou 5-10-5, criaturas grandes (2×2+), destaque de alcance e navegação por teclado. Pendentes: F3-6 (prévia do caminho), F3-7 (régua), F3-9 (ícones), F3-10 (texturas).
 - **Fase 4:** F4-0 (modelo Command/Event com papéis dm/player e `project()`), F4-1 a F4-7 concluídos: iniciativa, turnos e rodadas, orçamento de ação/movimento, ataque com crítico, vantagem/desvantagem, Ataque Extra, Esquiva/Disparada/Desengajar, log, desfazer/refazer. Pendente: F4-8 (salvaguardas em área) e F4-9 (resumo do fim).
+- **Fase 5:** F5-1 (14 condições SRD com efeitos: vantagem/desvantagem, sem ação, deslocamento 0, falha automática, crítico automático), F5-2 (duração em rodadas), F5-3 (concentração), F5-4 (conjuração com espaço, upcast, truques que escalam, alvo único, esfera e cone, salvaguarda individual, cura, condição), F4-8 (salvaguardas em área) concluídos, com 14 magias do SRD e prévia de área no mapa. Pendentes: F5-5 (ataque de oportunidade), F5-6, F5-7 (Ajuda/Esconder), F5-8.
 
 ## 1. Visão e escopo
 

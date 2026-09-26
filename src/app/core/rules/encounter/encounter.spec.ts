@@ -424,3 +424,136 @@ describe('remoção durante o combate', () => {
     expect(() => run(s, { type: 'move', actorId: 'hero', to: { x: 1, y: 0 } })).toThrow(/agir/);
   });
 });
+
+describe('condições no combate', () => {
+  const adj = { foePos: { x: 1, y: 0 } };
+  const cond = (
+    name: 'paralyzed' | 'prone' | 'stunned' | 'grappled' | 'poisoned',
+    rounds?: number,
+  ) => ({
+    conditions: [{ name, ...(rounds ? { rounds } : {}) }],
+  });
+
+  it('atordoado não age nem se move', () => {
+    const s = started({ ...adj, hero: cond('stunned') });
+    expect(() =>
+      run(s, { type: 'attack', actorId: 'hero', targetId: 'foe', attackIndex: 0 }),
+    ).toThrow(/não pode agir/);
+    expect(() => run(s, { type: 'move', actorId: 'hero', to: { x: 0, y: 1 } })).toThrow(
+      /não pode agir/,
+    );
+    expect(run(s, { type: 'endTurn', actorId: 'hero' }).combat.turn?.actorId).toBe('foe'); // ainda pode passar a vez
+  });
+
+  it('agarrado não tem deslocamento', () => {
+    const s = started({ hero: cond('grappled') });
+    expect(() => run(s, { type: 'move', actorId: 'hero', to: { x: 0, y: 1 } })).toThrow(
+      /deslocamento/,
+    );
+  });
+
+  it('alvo caído recebe ataque corpo a corpo com vantagem', () => {
+    const s = started({ ...adj, foe: cond('prone') });
+    // vantagem: 2d20, fica o maior (3 e 19 → 19)
+    const r = run(
+      s,
+      { type: 'attack', actorId: 'hero', targetId: 'foe', attackIndex: 0 },
+      dice([20, 3], [20, 19], [8, 1]),
+    );
+    expect(r.log.at(-1)?.text).toContain('(vantagem)');
+    expect(r.log.at(-1)?.text).toContain('acerto');
+  });
+
+  it('acerto em paralisado a 5 ft é crítico automático (dobra os dados)', () => {
+    const s = started({ ...adj, foe: cond('paralyzed') });
+    // vantagem por paralisado (2d20) e depois 2d8 por causa do crítico: 4 e 5 + 3 = 12
+    const r = run(
+      s,
+      { type: 'attack', actorId: 'hero', targetId: 'foe', attackIndex: 0 },
+      dice([20, 12], [20, 14], [8, 4], [8, 5]),
+    );
+    expect(r.log.at(-1)?.text).toContain('CRÍTICO');
+    expect(r.creatures.find((c) => c.id === 'foe')?.hp.current).toBe(20 - 12);
+  });
+
+  it('atacante envenenado tem desvantagem', () => {
+    const s = started({ ...adj, hero: cond('poisoned') });
+    const r = run(
+      s,
+      { type: 'attack', actorId: 'hero', targetId: 'foe', attackIndex: 0 },
+      dice([20, 18], [20, 2]),
+    );
+    expect(r.log.at(-1)?.text).toContain('(desvantagem)');
+    expect(r.log.at(-1)?.text).toContain('erro');
+  });
+
+  it('duração em rodadas: desconta no fim do turno de quem tem a condição e expira', () => {
+    let s = started({ hero: cond('poisoned', 2) });
+    s = run(s, { type: 'endTurn', actorId: 'hero' });
+    expect(s.creatures.find((c) => c.id === 'hero')?.conditions).toEqual([
+      { name: 'poisoned', rounds: 1 },
+    ]);
+    s = run(s, { type: 'endTurn', actorId: 'foe' });
+    s = run(s, { type: 'endTurn', actorId: 'hero' });
+    expect(s.creatures.find((c) => c.id === 'hero')?.conditions).toEqual([]);
+    expect(s.log.some((e) => e.text.includes('Envenenado terminou'))).toBe(true);
+  });
+
+  it('levantar-se gasta metade do deslocamento e remove Caído', () => {
+    let s = started({ hero: cond('prone') });
+    s = run(s, { type: 'standUp', actorId: 'hero' });
+    expect(s.creatures.find((c) => c.id === 'hero')?.conditions).toEqual([]);
+    expect(s.combat.turn?.movedFt).toBe(15);
+    expect(() => run(s, { type: 'standUp', actorId: 'hero' })).toThrow(/não está caído/);
+  });
+
+  it('só o Mestre aplica condições', () => {
+    const s = started();
+    const player: Role = { kind: 'player', owns: ['hero'] };
+    expect(() =>
+      run(s, { type: 'addCondition', targetId: 'foe', condition: 'stunned' }, dice(), player),
+    ).toThrow(ForbiddenError);
+    const r = run(s, { type: 'addCondition', targetId: 'foe', condition: 'stunned', rounds: 2 });
+    expect(r.creatures.find((c) => c.id === 'foe')?.conditions).toEqual([
+      { name: 'stunned', rounds: 2 },
+    ]);
+  });
+});
+
+describe('concentração no combate', () => {
+  const adj = { foePos: { x: 1, y: 0 } };
+  const focused = {
+    concentration: 'Bênção',
+    abilities: { str: 8, dex: 10, con: 10, int: 10, wis: 8, cha: 8 },
+  };
+
+  it('dano pede salvaguarda de Constituição (CD 10 ou metade do dano)', () => {
+    let s = started({ ...adj, foe: focused });
+    // acerta (15+5), dano 1d8+3 = 4+3 = 7 → CD 10; salvaguarda d20 12 (+0) = 12: mantém
+    s = run(
+      s,
+      { type: 'attack', actorId: 'hero', targetId: 'foe', attackIndex: 0 },
+      dice([20, 15], [8, 4], [20, 12]),
+    );
+    expect(s.creatures.find((c) => c.id === 'foe')?.concentration).toBe('Bênção');
+    expect(s.log.at(-1)?.text).toContain('mantida');
+  });
+
+  it('falhar na salvaguarda perde a concentração', () => {
+    let s = started({ ...adj, foe: focused });
+    s = run(
+      s,
+      { type: 'attack', actorId: 'hero', targetId: 'foe', attackIndex: 0 },
+      dice([20, 15], [8, 4], [20, 5]),
+    );
+    expect(s.creatures.find((c) => c.id === 'foe')?.concentration).toBeUndefined();
+    expect(s.log.at(-1)?.text).toContain('perdida');
+  });
+
+  it('cair a 0 PV encerra a concentração sem salvaguarda', () => {
+    let s = started({ ...adj, hero: { ...focused, hp: { max: 30, current: 30, temp: 0 } } });
+    s = run(s, { type: 'damage', targetId: 'hero', amount: 30 });
+    expect(s.creatures.find((c) => c.id === 'hero')?.concentration).toBeUndefined();
+    expect(s.log.at(-1)?.text).toContain('perde a concentração');
+  });
+});

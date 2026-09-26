@@ -1,4 +1,4 @@
-import { Creature, DamageType } from '../../models/creature';
+import { ConditionName, Creature, DamageType } from '../../models/creature';
 import { Pos, Terrain } from '../../models/grid';
 import { AdvMode } from '../dice';
 
@@ -16,9 +16,20 @@ export type Command =
   | { type: 'endCombat' }
   | { type: 'damage'; targetId: string; amount: number; damageType?: DamageType }
   | { type: 'heal'; targetId: string; amount: number }
+  | { type: 'addCondition'; targetId: string; condition: ConditionName; rounds?: number }
+  | { type: 'removeCondition'; targetId: string; condition: ConditionName }
   // Ações de turno (jogador dono da criatura ou Mestre)
   | { type: 'move'; actorId: string; to: Pos }
   | { type: 'attack'; actorId: string; targetId: string; attackIndex: number; mode?: AdvMode }
+  | {
+      type: 'cast';
+      actorId: string;
+      spellId: string;
+      slotLevel?: number;
+      targetId?: string;
+      point?: Pos;
+    }
+  | { type: 'standUp'; actorId: string }
   | { type: 'dash'; actorId: string }
   | { type: 'dodge'; actorId: string }
   | { type: 'disengage'; actorId: string }
@@ -30,6 +41,8 @@ export type CommandType = Command['type'];
 /** Comandos que um jogador pode enviar (sempre por uma criatura sua, na vez dela). */
 export const PLAYER_COMMANDS: readonly CommandType[] = [
   'move',
+  'standUp',
+  'cast',
   'attack',
   'dash',
   'dodge',

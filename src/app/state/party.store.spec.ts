@@ -65,14 +65,14 @@ describe('PartyStore', () => {
     const s = setup();
     s.patch(s.selectedId()!, { name: 'Persistido' });
     TestBed.tick();
-    expect(localStorage.getItem('runegrid.creatures.v2')).toContain('Persistido');
+    expect(localStorage.getItem('runegrid.creatures.v3')).toContain('Persistido');
 
     TestBed.resetTestingModule();
     expect(setup().creatures()[0].name).toBe('Persistido');
   });
 
   it('dado corrompido no armazenamento cai no exemplo', () => {
-    localStorage.setItem('runegrid.creatures.v2', '{"quebrado"');
+    localStorage.setItem('runegrid.creatures.v3', '{"quebrado"');
     expect(setup().creatures().length).toBeGreaterThan(3);
   });
 });

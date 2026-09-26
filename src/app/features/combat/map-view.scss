@@ -146,3 +146,31 @@
     font-size: 1.1rem;
   }
 }
+
+.aoe {
+  fill: rgb(224 138 60 / 0.18);
+  stroke: var(--warning);
+  stroke-width: 2;
+  stroke-dasharray: 8 5;
+  pointer-events: none;
+}
+
+.badge circle {
+  fill: var(--warning);
+  stroke: var(--bg);
+  stroke-width: 1.5;
+}
+
+.badge text {
+  fill: #1a130b;
+  font-family: var(--font-num);
+  font-weight: 700;
+}
+
+.focus {
+  fill: none;
+  stroke: var(--info-text);
+  stroke-width: 1.5;
+  stroke-dasharray: 2 4;
+  pointer-events: none;
+}

@@ -229,6 +229,9 @@ export function dispatch(state: EncounterState, cmd: Command, ctx: Context): Enc
         s = addLog(s, `${actor.name}: ${CONDITION_LABEL[n]} terminou.`, [actor.id]);
       return advanceTurn(s);
     }
+    default:
+      // mensagens malformadas de jogadores nunca chegam aqui (validação), mas o reducer não confia em ninguém
+      throw new RuleError('Comando desconhecido.');
   }
 }
 

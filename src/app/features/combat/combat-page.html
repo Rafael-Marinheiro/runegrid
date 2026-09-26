@@ -5,15 +5,17 @@
     Combate <small>{{ st.name }}</small>
   </h1>
   <div class="tools">
-    <label class="role">
-      Ver como
-      <select #role (change)="setRole(role.value)">
-        <option value="dm" [selected]="roleValue() === 'dm'">Mestre</option>
-        @for (c of playable(); track c.id) {
-          <option [value]="c.id" [selected]="roleValue() === c.id">Jogador: {{ c.name }}</option>
-        }
-      </select>
-    </label>
+    @if (!isRemote()) {
+      <label class="role">
+        Ver como
+        <select #role (change)="setRole(role.value)">
+          <option value="dm" [selected]="roleValue() === 'dm'">Mestre</option>
+          @for (c of playable(); track c.id) {
+            <option [value]="c.id" [selected]="roleValue() === c.id">Jogador: {{ c.name }}</option>
+          }
+        </select>
+      </label>
+    }
     @if (isDm()) {
       <button type="button" [disabled]="!store.canUndo()" (click)="store.undo()">Desfazer</button>
       <button type="button" [disabled]="!store.canRedo()" (click)="store.redo()">Refazer</button>

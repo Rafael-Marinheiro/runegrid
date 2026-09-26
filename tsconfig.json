@@ -18,7 +18,8 @@
       "@core/*": ["./src/app/core/*"],
       "@features/*": ["./src/app/features/*"],
       "@shared/*": ["./src/app/shared/*"],
-      "@state/*": ["./src/app/state/*"]
+      "@state/*": ["./src/app/state/*"],
+      "@net/*": ["./src/app/net/*"]
     }
   },
   "angularCompilerOptions": {

@@ -17,6 +17,11 @@ import { canStand } from '@core/rules/grid/movement';
 import { RNG } from './rng.token';
 
 const KEY = 'runegrid.encounter.v2';
+
+/** Ligação com o Mestre quando este navegador é um jogador numa sala. */
+export interface RemoteLink {
+  send(cmd: Command): Promise<{ ok: boolean; error?: string }>;
+}
 const MAX_UNDO = 100;
 
 const SAMPLE_MAP = [
@@ -73,6 +78,8 @@ export class EncounterStore {
   /** O que este papel enxerga (jogador não vê tokens ocultos nem PV exatos dos inimigos). */
   readonly view = computed(() => project(this.state(), this.role()));
   readonly message = signal('');
+  /** Presente quando este navegador é um jogador: o estado vem do Mestre e os comandos vão para ele. */
+  readonly remote = signal<RemoteLink | null>(null);
 
   private readonly past = signal<EncounterState[]>([]);
   private readonly future = signal<EncounterState[]>([]);
@@ -81,6 +88,8 @@ export class EncounterStore {
 
   constructor() {
     effect(() => {
+      // jogador numa sala não grava por cima do encontro local
+      if (this.remote()) return;
       const data = JSON.stringify(this.state());
       try {
         localStorage.setItem(KEY, data);
@@ -92,6 +101,14 @@ export class EncounterStore {
 
   /** Envia um comando. Devolve `true` se foi aceito; senão a regra violada vira mensagem. */
   send(cmd: Command): boolean {
+    const link = this.remote();
+    if (link) {
+      // jogador: o Mestre valida; a resposta chega depois e o estado novo vem por `applyRemote`
+      void link
+        .send(cmd)
+        .then((r) => this.message.set(r.ok ? '' : (r.error ?? 'Comando recusado.')));
+      return true;
+    }
     try {
       const next = dispatch(this.state(), cmd, { rng: this.rng, role: this.role() });
       this.past.update((p) => [...p, this.state()].slice(-MAX_UNDO));
@@ -104,6 +121,24 @@ export class EncounterStore {
       this.message.set(e.message);
       return false;
     }
+  }
+
+  /** Mestre: aplica o comando de um jogador remoto com o papel dele. Nunca lança. */
+  sendAs(cmd: Command, role: Role): { ok: boolean; error?: string } {
+    try {
+      const next = dispatch(this.state(), cmd, { rng: this.rng, role });
+      this.past.update((p) => [...p, this.state()].slice(-MAX_UNDO));
+      this.future.set([]);
+      this.state.set(next);
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: e instanceof RuleError ? e.message : 'Comando inválido.' };
+    }
+  }
+
+  /** Jogador: recebe a visão enviada pelo Mestre. */
+  applyRemote(view: EncounterState): void {
+    this.state.set(view);
   }
 
   undo(): void {

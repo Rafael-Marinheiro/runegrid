@@ -13,6 +13,11 @@ export const routes: Routes = [
     loadComponent: () => import('@features/combat/combat-page').then((m) => m.CombatPage),
   },
   {
+    path: 'mesa',
+    title: 'Mesa online · Runegrid',
+    loadComponent: () => import('@features/lobby/lobby-page').then((m) => m.LobbyPage),
+  },
+  {
     path: 'gerador',
     title: 'Gerador · Runegrid',
     loadComponent: () => import('@features/generator/generator-page').then((m) => m.GeneratorPage),

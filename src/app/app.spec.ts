@@ -21,6 +21,7 @@ describe('App', () => {
       'Bestiário',
       'Magias',
       'Dados',
+      'Mesa',
     ]);
   });
 });

@@ -33,6 +33,7 @@ export class CombatPage {
   /** O que este papel enxerga do encontro. */
   protected readonly s = this.store.view;
   protected readonly combat = computed(() => this.s().combat);
+  protected readonly isRemote = computed(() => !!this.store.remote());
   protected readonly isDm = computed(() => this.store.role().kind === 'dm');
   protected readonly running = computed(() => this.combat().phase === 'running');
 

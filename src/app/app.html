@@ -8,6 +8,14 @@
     <a routerLink="/bestiario" routerLinkActive="active">Bestiário</a>
     <a routerLink="/magias" routerLinkActive="active">Magias</a>
     <a routerLink="/dados" routerLinkActive="active">Dados</a>
+    <a routerLink="/mesa" routerLinkActive="active" class="room-link">
+      Mesa
+      @if (room.online()) {
+        <span class="live" aria-label="Sala ativa"
+          >● {{ room.code() }} · {{ room.peers().length + 1 }}</span
+        >
+      }
+    </a>
   </nav>
 </header>
 <main>

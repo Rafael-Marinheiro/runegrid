@@ -53,3 +53,13 @@ footer {
     color: var(--gold);
   }
 }
+
+.room-link .live {
+  margin-left: var(--space-2);
+  padding: 2px 8px;
+  border: 1px solid var(--success);
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--success);
+}

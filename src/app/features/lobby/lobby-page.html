@@ -1,0 +1,159 @@
+<h1>Mesa online</h1>
+
+@if (!room.online()) {
+  <p class="sub">
+    O Mestre cria a sala e passa o código; os jogadores entram por ele. Tudo roda direto entre os
+    navegadores.
+  </p>
+
+  @if (room.error()) {
+    <p class="error" role="alert">{{ room.error() }}</p>
+  }
+  @if (room.status() === 'connecting') {
+    <p class="muted" role="status">Conectando…</p>
+  }
+
+  <div class="cards">
+    <section class="panel">
+      <h2>Sou o Mestre</h2>
+      <p class="muted">
+        Você controla o mundo: cria e revela mapas, conduz o combate e decide o que cada jogador vê.
+      </p>
+      <button
+        type="button"
+        class="primary big"
+        [disabled]="room.status() === 'connecting'"
+        (click)="room.host()"
+      >
+        Criar sala
+      </button>
+      @if (saved()?.host) {
+        <p class="hint">Última sala: {{ saved()!.code }} (a sala nova terá outro código).</p>
+      }
+    </section>
+
+    <section class="panel">
+      <h2>Sou jogador</h2>
+      <form class="join" (submit)="$event.preventDefault(); room.join(code.value, who.value)">
+        <label class="field">
+          Código da sala
+          <input
+            #code
+            [value]="prefill() || saved()?.code || ''"
+            maxlength="8"
+            autocomplete="off"
+            placeholder="ABC234"
+          />
+        </label>
+        <label class="field">
+          Seu nome
+          <input #who [value]="saved()?.name ?? ''" maxlength="24" autocomplete="nickname" />
+        </label>
+        <button type="submit" class="primary big" [disabled]="room.status() === 'connecting'">
+          Entrar
+        </button>
+      </form>
+    </section>
+  </div>
+} @else {
+  <div class="head">
+    <div class="code">
+      <span class="label">Código da sala</span>
+      <span class="value" aria-live="polite">{{ room.code() }}</span>
+    </div>
+    <div class="head-actions">
+      @if (room.isHost()) {
+        <button type="button" (click)="copy(link())">Copiar link de convite</button>
+      }
+      <button type="button" class="danger" (click)="room.leave()">
+        {{ room.isHost() ? 'Encerrar sala' : 'Sair' }}
+      </button>
+    </div>
+  </div>
+  <p class="notice" role="status" aria-live="polite">{{ notice() }}</p>
+
+  <div class="layout">
+    <section class="panel">
+      <h2>
+        Na sala <small class="muted">{{ room.peers().length }} jogador(es) + Mestre</small>
+      </h2>
+      <ul class="peers">
+        <li>
+          <span class="name">{{ room.isHost() ? 'Você (Mestre)' : 'Mestre' }}</span>
+          <span class="chip">Mestre</span>
+        </li>
+        @for (p of room.peers(); track p.id) {
+          <li>
+            <span class="name">{{ p.name }}{{ p.id === room.myId() ? ' (você)' : '' }}</span>
+            @if (room.isHost()) {
+              <label class="assign">
+                <span class="sr">Personagem de {{ p.name }}</span>
+                <select #sel (change)="assign(p.id, sel.value)">
+                  <option value="" [selected]="!p.owns.length">Sem personagem</option>
+                  @for (c of characters(); track c.id) {
+                    <option [value]="c.id" [selected]="p.owns.includes(c.id)">
+                      {{ c.name
+                      }}{{
+                        ownerOf(c.id) && ownerOf(c.id) !== p.name
+                          ? ' (de ' + ownerOf(c.id) + ')'
+                          : ''
+                      }}
+                    </option>
+                  }
+                </select>
+              </label>
+              <button
+                type="button"
+                class="small danger"
+                [attr.aria-label]="'Remover ' + p.name"
+                (click)="room.kick(p.id)"
+              >
+                Remover
+              </button>
+            } @else {
+              <span class="muted">
+                {{
+                  p.owns.length ? 'controla ' + p.owns.length + ' personagem(ns)' : 'sem personagem'
+                }}
+              </span>
+            }
+          </li>
+        } @empty {
+          <li class="muted">Ninguém entrou ainda. Passe o código ou o link.</li>
+        }
+      </ul>
+      @if (!room.isHost() && !room.peers().some((p) => p.id === room.myId() && p.owns.length)) {
+        <p class="hint">Aguarde o Mestre entregar um personagem a você.</p>
+      }
+    </section>
+
+    <app-voice-panel />
+
+    <section class="panel chat" aria-label="Chat">
+      <h2>Chat</h2>
+      <ol class="lines" role="log">
+        @for (l of room.chat(); track $index) {
+          <li [class.whisper]="l.whisper">
+            <span class="at">{{ time(l.at) }}</span>
+            <b>{{ l.from }}</b
+            >{{ l.whisper ? ' (sussurro)' : '' }}: {{ l.text }}
+          </li>
+        } @empty {
+          <li class="muted">Nenhuma mensagem.</li>
+        }
+      </ol>
+      <form class="say" (submit)="$event.preventDefault(); send(msg, to)">
+        <label class="sr" for="msg">Mensagem</label>
+        <input #msg id="msg" maxlength="500" autocomplete="off" placeholder="Escreva algo…" />
+        <label class="sr" for="to" [hidden]="!room.isHost()">Para</label>
+        <select #to id="to" [hidden]="!room.isHost()">
+          <option value="">Todos</option>
+          @for (p of room.peers(); track p.id) {
+            <option [value]="p.id">Sussurrar a {{ p.name }}</option>
+          }
+        </select>
+        <button type="submit" class="primary">Enviar</button>
+      </form>
+    </section>
+  </div>
+}

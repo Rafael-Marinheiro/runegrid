@@ -74,7 +74,20 @@ export class GeneratorPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
 
   protected readonly themes = THEMES;
-  protected readonly themeLabel = (t: ThemeId) => THEME_DATA[t].label;
+  protected readonly themeLabel = (t: ThemeId) =>
+    this.ui.locale() === 'en'
+      ? (
+          {
+            crypt: 'Crypt',
+            cave: 'Cave',
+            ruins: 'Ruins',
+            forest: 'Forest',
+            swamp: 'Swamp',
+            fortress: 'Fortress',
+            sewer: 'Sewer',
+          } as const
+        )[t]
+      : THEME_DATA[t].label;
   protected readonly sizes = SIZES;
   protected readonly sizeLabel = SIZE_LABEL;
   protected readonly difficulties = DIFFICULTIES;
@@ -82,6 +95,47 @@ export class GeneratorPage implements OnInit {
   protected readonly emphases = EMPHASES;
   protected readonly emphasisLabel = EMPHASIS_LABEL;
   protected readonly roleLabel = ROLE_LABEL;
+
+  protected sizeName(value: SizeId): string {
+    const labels: Record<SizeId, string> = {
+      small: 'Small · 5 rooms',
+      medium: 'Medium · 10',
+      large: 'Large · 20',
+    };
+    return this.ui.locale() === 'en' ? labels[value] : this.sizeLabel[value];
+  }
+
+  protected difficultyName(value: DifficultyId): string {
+    const labels: Record<DifficultyId, string> = {
+      easy: 'Easy',
+      medium: 'Medium',
+      hard: 'Hard',
+      deadly: 'Deadly',
+    };
+    return this.ui.locale() === 'en' ? labels[value] : this.difficultyLabel[value];
+  }
+
+  protected emphasisName(value: EmphasisId): string {
+    const labels: Record<EmphasisId, string> = {
+      combat: 'Combat',
+      traps: 'Traps',
+      exploration: 'Exploration',
+      mixed: 'Mixed',
+    };
+    return this.ui.locale() === 'en' ? labels[value] : this.emphasisLabel[value];
+  }
+
+  protected roleName(value: RoomRole): string {
+    const labels: Record<RoomRole, string> = {
+      entrance: 'Entrance',
+      empty: 'Empty',
+      encounter: 'Encounter',
+      trap: 'Trap',
+      treasure: 'Treasure',
+      boss: 'Boss',
+    };
+    return this.ui.locale() === 'en' ? labels[value] : this.roleLabel[value];
+  }
 
   protected readonly params = signal<GeneratorParams>({ ...DEFAULT_PARAMS });
   protected readonly adventure = signal<GeneratedAdventure | null>(null);
@@ -181,7 +235,10 @@ export class GeneratorPage implements OnInit {
   }
 
   protected generate(): void {
-    if (!this.ready()) return void this.message.set('O bestiário ainda está carregando.');
+    if (!this.ready())
+      return void this.message.set(
+        this.ui.text('O bestiário ainda está carregando.', 'The bestiary is still loading.'),
+      );
     this.adventure.set(generateAdventure(this.params(), this.srd.monsters()));
     this.locked.set(new Set());
     this.message.set('');
@@ -208,9 +265,9 @@ export class GeneratorPage implements OnInit {
     const e = a.encounters.find((x) => x.roomId === r.id);
     if (e) parts.push(e.groups.map((g) => `${g.count}× ${g.name}`).join(', '));
     const t = a.traps.filter((x) => x.roomId === r.id);
-    if (t.length) parts.push(`${t.length} armadilha(s)`);
+    if (t.length) parts.push(`${t.length} ${this.ui.text('armadilha(s)', 'trap(s)')}`);
     const tr = a.treasures.find((x) => x.roomId === r.id);
-    if (tr) parts.push(`${tr.gp} po`);
+    if (tr) parts.push(`${tr.gp} ${this.ui.text('po', 'gp')}`);
     return parts.join(' · ') || '—';
   }
 
@@ -238,7 +295,12 @@ export class GeneratorPage implements OnInit {
     const url = `${location.origin}${location.pathname}?${q}`;
     try {
       await navigator.clipboard.writeText(url);
-      this.message.set('Link copiado. A mesma semente gera a mesma dungeon.');
+      this.message.set(
+        this.ui.text(
+          'Link copiado. A mesma semente gera a mesma dungeon.',
+          'Link copied. The same seed generates the same dungeon.',
+        ),
+      );
     } catch {
       this.message.set(url);
     }

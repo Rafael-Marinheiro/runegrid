@@ -9,6 +9,7 @@ import {
 import { SrdSpell } from '@core/models/srd';
 import { getSpell } from '@core/rules/spells/data';
 import { SrdStore } from '@state/srd.store';
+import { UiPrefs } from '@state/ui-prefs';
 
 const PAGE = 60;
 
@@ -20,6 +21,7 @@ const PAGE = 60;
 })
 export class SpellsPage implements OnInit {
   protected readonly srd = inject(SrdStore);
+  protected readonly ui = inject(UiPrefs);
 
   protected readonly levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
   protected readonly query = signal('');
@@ -68,7 +70,9 @@ export class SpellsPage implements OnInit {
   }
 
   protected levelLabel(s: SrdSpell): string {
-    return s.level === 0 ? 'Truque' : `${s.level}º nível`;
+    return s.level === 0
+      ? this.ui.text('Truque', 'Cantrip')
+      : this.ui.text(`${s.level}º nível`, `Level ${s.level}`);
   }
 
   /** O motor de combate já resolve esta magia por completo? */

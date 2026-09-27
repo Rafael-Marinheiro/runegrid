@@ -10,6 +10,7 @@ import {
   toggleEquip,
 } from '@core/rules/inventory/inventory';
 import { PartyStore } from '@state/party.store';
+import { UiPrefs } from '@state/ui-prefs';
 
 const GROUPS: { kind: string; label: string }[] = [
   { kind: 'weapon', label: 'Armas' },
@@ -25,11 +26,11 @@ const GROUPS: { kind: string; label: string }[] = [
   template: `
     @let c = creature();
     <section class="panel" aria-labelledby="inv-title">
-      <h2 id="inv-title">Inventário</h2>
+      <h2 id="inv-title">{{ ui.text('Inventário', 'Inventory') }}</h2>
       <p class="hint" [class.over]="weight() > capacity()">
-        Carga: {{ weight() }} / {{ capacity() }} lb
+        {{ ui.text('Carga:', 'Load:') }} {{ weight() }} / {{ capacity() }} lb
         @if (weight() > capacity()) {
-          (sobrecarregado)
+          {{ ui.text('(sobrecarregado)', '(encumbered)') }}
         }
       </p>
 
@@ -50,24 +51,28 @@ const GROUPS: { kind: string; label: string }[] = [
                 [attr.aria-pressed]="i.equipped"
                 (click)="equip(i.id)"
               >
-                {{ i.equipped ? 'Equipado' : 'Equipar' }}
+                {{ i.equipped ? ui.text('Equipado', 'Equipped') : ui.text('Equipar', 'Equip') }}
               </button>
             }
-            <button type="button" [attr.aria-label]="'Remover ' + d?.name" (click)="remove(i.id)">
+            <button
+              type="button"
+              [attr.aria-label]="ui.text('Remover ', 'Remove ') + d?.name"
+              (click)="remove(i.id)"
+            >
               ×
             </button>
           </li>
         } @empty {
-          <li class="hint">Nada por aqui.</li>
+          <li class="hint">{{ ui.text('Nada por aqui.', 'Nothing here.') }}</li>
         }
       </ul>
 
       <label class="field">
-        Adicionar item
+        {{ ui.text('Adicionar item', 'Add item') }}
         <select #pick (change)="add(pick.value); pick.value = ''">
-          <option value="">Escolha…</option>
+          <option value="">{{ ui.text('Escolha…', 'Choose…') }}</option>
           @for (g of groups; track g.kind) {
-            <optgroup [label]="g.label">
+            <optgroup [label]="groupName(g)">
               @for (d of catalog; track d.id) {
                 @if (d.kind === g.kind) {
                   <option [value]="d.id">{{ d.name }}</option>
@@ -104,6 +109,7 @@ const GROUPS: { kind: string; label: string }[] = [
 export class InventoryPanel {
   readonly creature = input.required<Creature>();
   private readonly store = inject(PartyStore);
+  protected readonly ui = inject(UiPrefs);
 
   protected readonly catalog = CATALOG;
   protected readonly groups = GROUPS;
@@ -111,6 +117,17 @@ export class InventoryPanel {
   protected readonly weight = computed(() => carriedWeight(this.creature()));
   protected readonly capacity = computed(() => carryCapacity(this.creature()));
   protected readonly error = signal('');
+
+  protected groupName(group: { kind: string; label: string }): string {
+    const labels: Record<string, string> = {
+      weapon: 'Weapons',
+      armor: 'Armor',
+      shield: 'Shields',
+      consumable: 'Consumables',
+      gear: 'Gear',
+    };
+    return this.ui.locale() === 'en' ? labels[group.kind] : group.label;
+  }
 
   private edit(fn: (c: Creature) => Creature): void {
     try {

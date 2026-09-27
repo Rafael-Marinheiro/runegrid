@@ -55,6 +55,33 @@ nav {
   }
 }
 
+.locale {
+  display: inline-flex;
+  margin-left: var(--space-2);
+
+  button {
+    min-width: 44px;
+    min-height: 36px;
+    padding: 0 var(--space-2);
+    border-radius: 0;
+
+    &:first-child {
+      border-radius: var(--radius) 0 0 var(--radius);
+    }
+
+    &:last-child {
+      margin-left: -1px;
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }
+
+    &[aria-pressed='true'] {
+      color: var(--gold);
+      border-color: var(--gold);
+      background: var(--panel-2);
+    }
+  }
+}
+
 kbd {
   padding: 2px 6px;
   border: 1px solid var(--border);

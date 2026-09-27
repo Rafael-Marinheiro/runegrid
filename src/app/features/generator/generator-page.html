@@ -1,15 +1,19 @@
-<h1>Gerador de desafios</h1>
+<h1>{{ ui.text('Gerador de desafios', 'Challenge generator') }}</h1>
 <p class="sub">
-  Escolha o tema, o tamanho e a dificuldade: o Runegrid monta o mapa, os encontros, as armadilhas e
-  o tesouro.
+  {{
+    ui.text(
+      'Escolha o tema, o tamanho e a dificuldade: o Runegrid monta o mapa, os encontros, as armadilhas e o tesouro.',
+      'Choose theme, size, and difficulty: Runegrid builds the map, encounters, traps, and treasure.'
+    )
+  }}
 </p>
 
 <div class="layout">
-  <section class="panel form" aria-label="Parâmetros">
-    <h2>Parâmetros</h2>
+  <section class="panel form" [attr.aria-label]="ui.text('Parâmetros', 'Parameters')">
+    <h2>{{ ui.text('Parâmetros', 'Parameters') }}</h2>
 
     <fieldset>
-      <legend>Tema</legend>
+      <legend>{{ ui.text('Tema', 'Theme') }}</legend>
       <div class="chips">
         @for (t of themes; track t) {
           <button
@@ -26,7 +30,7 @@
     </fieldset>
 
     <fieldset>
-      <legend>Tamanho</legend>
+      <legend>{{ ui.text('Tamanho', 'Size') }}</legend>
       <div class="chips">
         @for (s of sizes; track s) {
           <button
@@ -36,14 +40,14 @@
             [attr.aria-pressed]="params().size === s"
             (click)="set('size', s)"
           >
-            {{ sizeLabel[s] }}
+            {{ sizeName(s) }}
           </button>
         }
       </div>
     </fieldset>
 
     <fieldset>
-      <legend>Dificuldade</legend>
+      <legend>{{ ui.text('Dificuldade', 'Difficulty') }}</legend>
       <div class="chips">
         @for (d of difficulties; track d) {
           <button
@@ -53,14 +57,14 @@
             [attr.aria-pressed]="params().difficulty === d"
             (click)="set('difficulty', d)"
           >
-            {{ difficultyLabel[d] }}
+            {{ difficultyName(d) }}
           </button>
         }
       </div>
     </fieldset>
 
     <fieldset>
-      <legend>Ênfase</legend>
+      <legend>{{ ui.text('Ênfase', 'Focus') }}</legend>
       <div class="chips">
         @for (e of emphases; track e) {
           <button
@@ -70,7 +74,7 @@
             [attr.aria-pressed]="params().emphasis === e"
             (click)="set('emphasis', e)"
           >
-            {{ emphasisLabel[e] }}
+            {{ emphasisName(e) }}
           </button>
         }
       </div>
@@ -78,7 +82,7 @@
 
     <div class="two">
       <label class="field">
-        Nível médio
+        {{ ui.text('Nível médio', 'Average level') }}
         <input
           #lv
           type="number"
@@ -89,7 +93,7 @@
         />
       </label>
       <label class="field">
-        Jogadores
+        {{ ui.text('Jogadores', 'Players') }}
         <input
           #pc
           type="number"
@@ -102,25 +106,29 @@
     </div>
 
     <label class="field">
-      Semente
+      {{ ui.text('Semente', 'Seed') }}
       <span class="seed">
         <input #sd [value]="params().seed" (change)="set('seed', sd.value.trim() || 'semente')" />
-        <button type="button" (click)="randomSeed()">Aleatória</button>
+        <button type="button" (click)="randomSeed()">{{ ui.text('Aleatória', 'Random') }}</button>
       </span>
     </label>
 
     <button type="button" class="primary big" [disabled]="!ready()" (click)="generate()">
-      {{ ready() ? 'Gerar dungeon' : 'Carregando bestiário…' }}
+      {{
+        ready()
+          ? ui.text('Gerar dungeon', 'Generate dungeon')
+          : ui.text('Carregando bestiário…', 'Loading bestiary…')
+      }}
     </button>
     <p class="msg" role="status" aria-live="polite">{{ message() }}</p>
   </section>
 
-  <section class="result" aria-label="Resultado">
+  <section class="result" [attr.aria-label]="ui.text('Resultado', 'Result')">
     @if (adventure(); as a) {
       <div class="panel">
         <div class="title">
           <h2>{{ a.name }}</h2>
-          <span class="muted">semente {{ a.params.seed }}</span>
+          <span class="muted">{{ ui.text('semente', 'seed') }} {{ a.params.seed }}</span>
         </div>
         <app-map-view
           [map]="previewMap()!"
@@ -131,9 +139,17 @@
           [traps]="a.map.traps ?? []"
         />
         <p class="legend">
-          <span><i class="sw trap"></i> armadilha</span>
-          <span><i class="sw room"></i> sala</span>
-          <span><i class="sw foe"></i> encontro (número de monstros; C = chefe)</span>
+          <span><i class="sw trap"></i> {{ ui.text('armadilha', 'trap') }}</span>
+          <span><i class="sw room"></i> {{ ui.text('sala', 'room') }}</span>
+          <span
+            ><i class="sw foe"></i>
+            {{
+              ui.text(
+                'encontro (número de monstros; C = chefe)',
+                'encounter (monster count; B = boss)'
+              )
+            }}</span
+          >
         </p>
       </div>
 
@@ -141,11 +157,11 @@
         @let s = stats()!;
         <dl class="stats">
           <div>
-            <dt>Salas</dt>
+            <dt>{{ ui.text('Salas', 'Rooms') }}</dt>
             <dd>{{ a.rooms.length }}</dd>
           </div>
           <div>
-            <dt>Monstros</dt>
+            <dt>{{ ui.text('Monstros', 'Monsters') }}</dt>
             <dd>{{ s.monsters }}</dd>
           </div>
           <div>
@@ -153,28 +169,42 @@
             <dd>{{ s.xp }}</dd>
           </div>
           <div>
-            <dt>Armadilhas</dt>
+            <dt>{{ ui.text('Armadilhas', 'Traps') }}</dt>
             <dd>{{ a.traps.length }}</dd>
           </div>
           <div>
-            <dt>Tesouro</dt>
-            <dd>{{ s.gp }} po</dd>
+            <dt>{{ ui.text('Tesouro', 'Treasure') }}</dt>
+            <dd>{{ s.gp }} {{ ui.text('po', 'gp') }}</dd>
           </div>
         </dl>
-        <p class="hook"><span class="hook-label">Gancho</span><br />{{ a.hook }}</p>
+        <p class="hook">
+          <span class="hook-label">{{ ui.text('Gancho', 'Hook') }}</span
+          ><br />{{ a.hook }}
+        </p>
         <div class="actions">
-          <button type="button" (click)="reroll()">Regenerar sem as travadas</button>
-          <button type="button" (click)="copyLink()">Copiar link</button>
-          <button type="button" class="primary" (click)="toCombat()">Levar ao combate</button>
+          <button type="button" (click)="reroll()">
+            {{ ui.text('Regenerar sem as travadas', 'Regenerate unlocked rooms') }}
+          </button>
+          <button type="button" (click)="copyLink()">
+            {{ ui.text('Copiar link', 'Copy link') }}
+          </button>
+          <button type="button" class="primary" (click)="toCombat()">
+            {{ ui.text('Levar ao combate', 'Send to combat') }}
+          </button>
         </div>
       </div>
 
       <div class="panel">
-        <h2>Salas <small class="muted">cadeado = manter ao regenerar</small></h2>
+        <h2>
+          {{ ui.text('Salas', 'Rooms') }}
+          <small class="muted">{{
+            ui.text('cadeado = manter ao regenerar', 'lock = keep when regenerating')
+          }}</small>
+        </h2>
         <ul class="rooms">
           @for (r of a.rooms; track r.id) {
             <li>
-              <span class="role" [attr.data-role]="r.role">{{ roleLabel[r.role] }}</span>
+              <span class="role" [attr.data-role]="r.role">{{ roleName(r.role) }}</span>
               <span class="rn"
                 ><b>{{ r.name }}</b> <span class="muted">· {{ summary(r) }}</span></span
               >
@@ -183,7 +213,11 @@
                 class="lock"
                 [class.on]="locked().has(r.id)"
                 [attr.aria-pressed]="locked().has(r.id)"
-                [attr.aria-label]="(locked().has(r.id) ? 'Destravar ' : 'Travar ') + r.name"
+                [attr.aria-label]="
+                  (locked().has(r.id)
+                    ? ui.text('Destravar ', 'Unlock ')
+                    : ui.text('Travar ', 'Lock ')) + r.name
+                "
                 (click)="toggleLock(r.id)"
               >
                 {{ locked().has(r.id) ? '🔒' : '🔓' }}
@@ -194,9 +228,18 @@
       </div>
     } @else {
       <div class="panel empty">
-        <p>Configure ao lado e clique em <b>Gerar dungeon</b>.</p>
+        <p>
+          {{ ui.text('Configure ao lado e clique em', 'Choose the settings and click') }}
+          <b>{{ ui.text('Gerar dungeon', 'Generate dungeon') }}</b
+          >.
+        </p>
         <p class="muted">
-          A mesma semente, com os mesmos parâmetros, gera sempre a mesma aventura.
+          {{
+            ui.text(
+              'A mesma semente, com os mesmos parâmetros, gera sempre a mesma aventura.',
+              'The same seed and parameters always generate the same adventure.'
+            )
+          }}
         </p>
       </div>
     }

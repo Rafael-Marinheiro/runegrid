@@ -48,3 +48,29 @@ test('paleta e atalhos navegam entre ferramentas', async ({ page }) => {
   await page.keyboard.press('Alt+7');
   await expect(page).toHaveURL(/\/dados$/);
 });
+
+test('idioma muda em runtime e persiste', async ({ page }) => {
+  await page.goto('/criaturas');
+  await page.getByRole('button', { name: 'EN', exact: true }).click();
+  await expect(page.getByRole('navigation', { name: 'Main' })).toContainText('Creatures');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await page.reload();
+  await expect(page.getByRole('navigation', { name: 'Main' })).toContainText('Creatures');
+  const translatedPages: [string, string][] = [
+    ['/criaturas', 'Creatures'],
+    ['/combate', 'Combat'],
+    ['/gerador', 'Challenge generator'],
+    ['/estudio', 'Game Master Studio'],
+    ['/bestiario', 'Bestiary'],
+    ['/magias', 'Spells'],
+    ['/dados', 'Dice'],
+    ['/mesa', 'Online table'],
+  ];
+  for (const [path, heading] of translatedPages) {
+    await page.goto(path);
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(heading);
+    await expect(page).toHaveTitle(/Runegrid$/);
+  }
+  await page.keyboard.press('Control+K');
+  await expect(page.getByRole('dialog', { name: 'Commands' })).toBeVisible();
+});

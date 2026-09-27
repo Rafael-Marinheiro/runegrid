@@ -7,6 +7,7 @@ import {
   LifeStatus,
 } from '@core/models/creature';
 import { PartyStore } from '@state/party.store';
+import { UiPrefs } from '@state/ui-prefs';
 
 const STATUS: Record<LifeStatus, string> = {
   alive: 'Vivo',
@@ -22,14 +23,14 @@ const STATUS: Record<LifeStatus, string> = {
     @let c = creature();
     <section class="panel" [attr.aria-labelledby]="'hp-' + c.id">
       <div class="head">
-        <h2 [id]="'hp-' + c.id">Pontos de vida</h2>
+        <h2 [id]="'hp-' + c.id">{{ ui.text('Pontos de vida', 'Hit points') }}</h2>
         <span class="chip" [class]="'status ' + c.status">{{ statusLabel() }}</span>
       </div>
 
       <div
         class="bar"
         role="meter"
-        aria-label="Pontos de vida"
+        [attr.aria-label]="ui.text('Pontos de vida', 'Hit points')"
         aria-valuemin="0"
         [attr.aria-valuenow]="c.hp.current"
         [attr.aria-valuemax]="c.hp.max"
@@ -39,33 +40,39 @@ const STATUS: Record<LifeStatus, string> = {
       <p class="numbers">
         <b>{{ c.hp.current }}</b> / {{ c.hp.max }}
         @if (c.hp.temp > 0) {
-          <span class="chip temp">+{{ c.hp.temp }} temporários</span>
+          <span class="chip temp">+{{ c.hp.temp }} {{ ui.text('temporários', 'temporary') }}</span>
         }
       </p>
 
       <div class="apply">
         <label class="field">
-          Valor
+          {{ ui.text('Valor', 'Amount') }}
           <input #amt type="number" min="0" value="1" inputmode="numeric" />
         </label>
         <label class="field">
-          Tipo de dano
+          {{ ui.text('Tipo de dano', 'Damage type') }}
           <select #typ>
-            <option value="">Sem tipo</option>
+            <option value="">{{ ui.text('Sem tipo', 'Untyped') }}</option>
             @for (t of types; track t) {
-              <option [value]="t">{{ label[t] }}</option>
+              <option [value]="t">{{ damageName(t) }}</option>
             }
           </select>
         </label>
       </div>
       <div class="actions">
-        <button type="button" class="danger" (click)="damage(amt.value, typ.value)">Dano</button>
-        <button type="button" (click)="store.heal(c.id, amt.valueAsNumber || 0)">Cura</button>
-        <button type="button" (click)="store.tempHp(c.id, amt.valueAsNumber || 0)">PV temp.</button>
+        <button type="button" class="danger" (click)="damage(amt.value, typ.value)">
+          {{ ui.text('Dano', 'Damage') }}
+        </button>
+        <button type="button" (click)="store.heal(c.id, amt.valueAsNumber || 0)">
+          {{ ui.text('Cura', 'Heal') }}
+        </button>
+        <button type="button" (click)="store.tempHp(c.id, amt.valueAsNumber || 0)">
+          {{ ui.text('PV temp.', 'Temp HP') }}
+        </button>
       </div>
 
       <label class="field max">
-        PV máximos
+        {{ ui.text('PV máximos', 'Maximum HP') }}
         <input
           #mx
           type="number"
@@ -76,9 +83,13 @@ const STATUS: Record<LifeStatus, string> = {
       </label>
 
       @if (c.status === 'dying') {
-        <div class="death" role="group" aria-label="Salvaguardas contra a morte">
+        <div
+          class="death"
+          role="group"
+          [attr.aria-label]="ui.text('Salvaguardas contra a morte', 'Death saving throws')"
+        >
           <div class="pips">
-            <span>Sucessos</span>
+            <span>{{ ui.text('Sucessos', 'Successes') }}</span>
             @for (i of three; track i) {
               <span
                 class="pip ok"
@@ -86,10 +97,12 @@ const STATUS: Record<LifeStatus, string> = {
                 aria-hidden="true"
               ></span>
             }
-            <span class="sr">{{ c.deathSaves.successes }} de 3 sucessos</span>
+            <span class="sr"
+              >{{ c.deathSaves.successes }} {{ ui.text('de 3 sucessos', 'of 3 successes') }}</span
+            >
           </div>
           <div class="pips">
-            <span>Falhas</span>
+            <span>{{ ui.text('Falhas', 'Failures') }}</span>
             @for (i of three; track i) {
               <span
                 class="pip bad"
@@ -97,20 +110,28 @@ const STATUS: Record<LifeStatus, string> = {
                 aria-hidden="true"
               ></span>
             }
-            <span class="sr">{{ c.deathSaves.failures }} de 3 falhas</span>
+            <span class="sr"
+              >{{ c.deathSaves.failures }} {{ ui.text('de 3 falhas', 'of 3 failures') }}</span
+            >
           </div>
           <div class="actions">
             <button type="button" class="primary" (click)="store.deathSave(c.id)">
-              Rolar salvaguarda
+              {{ ui.text('Rolar salvaguarda', 'Roll saving throw') }}
             </button>
-            <button type="button" (click)="store.stabilize(c.id)">Estabilizar</button>
+            <button type="button" (click)="store.stabilize(c.id)">
+              {{ ui.text('Estabilizar', 'Stabilize') }}
+            </button>
           </div>
         </div>
       }
 
       <div class="actions rest">
-        <button type="button" (click)="store.rest(c.id, 'short')">Descanso curto</button>
-        <button type="button" (click)="store.rest(c.id, 'long')">Descanso longo</button>
+        <button type="button" (click)="store.rest(c.id, 'short')">
+          {{ ui.text('Descanso curto', 'Short rest') }}
+        </button>
+        <button type="button" (click)="store.rest(c.id, 'long')">
+          {{ ui.text('Descanso longo', 'Long rest') }}
+        </button>
       </div>
     </section>
   `,
@@ -234,6 +255,7 @@ const STATUS: Record<LifeStatus, string> = {
 export class HpPanel {
   readonly creature = input.required<Creature>();
   protected readonly store = inject(PartyStore);
+  protected readonly ui = inject(UiPrefs);
   protected readonly types = DAMAGE_TYPES;
   protected readonly label = DAMAGE_LABEL;
   protected readonly three = [0, 1, 2];
@@ -242,7 +264,21 @@ export class HpPanel {
     const { current, max } = this.creature().hp;
     return Math.max(0, Math.min(100, (current / max) * 100));
   });
-  protected readonly statusLabel = computed(() => STATUS[this.creature().status]);
+  protected readonly statusLabel = computed(() => {
+    const labels: Record<LifeStatus, string> = {
+      alive: 'Alive',
+      dying: 'Dying',
+      stable: 'Stable',
+      dead: 'Dead',
+    };
+    return this.ui.locale() === 'en'
+      ? labels[this.creature().status]
+      : STATUS[this.creature().status];
+  });
+
+  protected damageName(type: DamageType): string {
+    return this.ui.locale() === 'en' ? type : this.label[type];
+  }
 
   protected damage(amount: string, type: string): void {
     this.store.damage(this.creature().id, Number(amount) || 0, (type as DamageType) || undefined);

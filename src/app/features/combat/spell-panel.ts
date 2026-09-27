@@ -1,7 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import { Creature } from '@core/models/creature';
 import { Spell } from '@core/models/spell';
 import { getSpell } from '@core/rules/spells/data';
+import { UiPrefs } from '@state/ui-prefs';
 
 /** Escolha da magia e do espaço de magia; o alvo/área é escolhido depois, no mapa. */
 @Component({
@@ -9,7 +18,7 @@ import { getSpell } from '@core/rules/spells/data';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @let c = caster();
-    <div class="spells" role="group" aria-label="Magias">
+    <div class="spells" role="group" [attr.aria-label]="ui.text('Magias', 'Spells')">
       @for (sp of known(); track sp.id) {
         <button
           type="button"
@@ -20,10 +29,16 @@ import { getSpell } from '@core/rules/spells/data';
           (click)="pick(sp)"
         >
           <span class="name">{{ sp.name }}</span>
-          <span class="meta">{{ sp.level === 0 ? 'Truque' : sp.level + 'º' }}</span>
+          <span class="meta">{{
+            sp.level === 0
+              ? ui.text('Truque', 'Cantrip')
+              : ui.text(sp.level + 'º', 'Level ' + sp.level)
+          }}</span>
         </button>
       } @empty {
-        <p class="none">{{ c.name }} não conhece magias.</p>
+        <p class="none">
+          {{ c.name }} {{ ui.text('não conhece magias.', 'does not know any spells.') }}
+        </p>
       }
     </div>
     @if (picked(); as sp) {
@@ -31,10 +46,12 @@ import { getSpell } from '@core/rules/spells/data';
         <p>{{ sp.description }}</p>
         @if (sp.level > 0) {
           <label class="slot">
-            Espaço
+            {{ ui.text('Espaço', 'Slot') }}
             <select #sel (change)="setSlot(+sel.value)">
               @for (l of available(sp); track l) {
-                <option [value]="l" [selected]="l === slot()">{{ l }}º nível</option>
+                <option [value]="l" [selected]="l === slot()">
+                  {{ ui.text(l + 'º nível', 'Level ' + l) }}
+                </option>
               }
             </select>
           </label>
@@ -42,10 +59,10 @@ import { getSpell } from '@core/rules/spells/data';
         <p class="hint">
           {{
             sp.target.kind === 'creature'
-              ? 'Clique no alvo no mapa.'
+              ? ui.text('Clique no alvo no mapa.', 'Click the target on the map.')
               : sp.target.kind === 'sphere'
-                ? 'Clique no ponto central da esfera.'
-                : 'Clique na direção do cone.'
+                ? ui.text('Clique no ponto central da esfera.', 'Click the center of the sphere.')
+                : ui.text('Clique na direção do cone.', 'Click the cone direction.')
           }}
         </p>
       </div>
@@ -96,6 +113,7 @@ import { getSpell } from '@core/rules/spells/data';
   `,
 })
 export class SpellPanel {
+  protected readonly ui = inject(UiPrefs);
   readonly caster = input.required<Creature>();
   readonly picked = signal<Spell | null>(null);
   readonly slot = signal(0);

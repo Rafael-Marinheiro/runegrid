@@ -1,13 +1,14 @@
-<h1>Bestiário</h1>
+<h1>{{ ui.text('Bestiário', 'Bestiary') }}</h1>
 <p class="sub">
-  SRD 5.1 · {{ filtered().length }} de {{ srd.monsters().length }} criaturas (nomes em inglês)
+  SRD 5.1 · {{ filtered().length }} {{ ui.text('de', 'of') }} {{ srd.monsters().length }}
+  {{ ui.text('criaturas (nomes em inglês)', 'creatures') }}
 </p>
 
 <div class="layout">
-  <section class="panel list" aria-label="Lista de monstros">
+  <section class="panel list" [attr.aria-label]="ui.text('Lista de monstros', 'Monster list')">
     <div class="filters">
       <label class="field grow">
-        Buscar
+        {{ ui.text('Buscar', 'Search') }}
         <input
           #q
           type="search"
@@ -16,16 +17,16 @@
         />
       </label>
       <label class="field">
-        Tipo
+        {{ ui.text('Tipo', 'Type') }}
         <select #tp (change)="type.set(tp.value); resetPage()">
-          <option value="">Todos</option>
+          <option value="">{{ ui.text('Todos', 'All') }}</option>
           @for (t of types(); track t) {
             <option [value]="t">{{ t }}</option>
           }
         </select>
       </label>
       <label class="field">
-        ND mín.
+        {{ ui.text('ND mín.', 'Min. CR') }}
         <select #lo (change)="setNumber(minCr, lo.value)">
           @for (c of crs; track c) {
             <option [value]="c" [selected]="c === minCr()">{{ cr(c) }}</option>
@@ -33,7 +34,7 @@
         </select>
       </label>
       <label class="field">
-        ND máx.
+        {{ ui.text('ND máx.', 'Max. CR') }}
         <select #hi (change)="setNumber(maxCr, hi.value)">
           @for (c of crs; track c) {
             <option [value]="c" [selected]="c === maxCr()">{{ cr(c) }}</option>
@@ -43,9 +44,11 @@
     </div>
 
     @if (srd.monstersStatus() === 'loading') {
-      <p class="muted">Carregando o SRD…</p>
+      <p class="muted">{{ ui.text('Carregando o SRD…', 'Loading SRD…') }}</p>
     } @else if (srd.monstersStatus() === 'error') {
-      <p class="error" role="alert">Não foi possível carregar o bestiário.</p>
+      <p class="error" role="alert">
+        {{ ui.text('Não foi possível carregar o bestiário.', 'Could not load the bestiary.') }}
+      </p>
     }
 
     <ul class="rows">
@@ -54,13 +57,16 @@
           <button type="button" class="pick" (click)="selectedId.set(m.id)">
             <span class="nm">{{ m.name }}</span>
             <span class="meta"
-              >{{ m.type }} · ND {{ cr(m.cr) }} · CA {{ m.ac }} · {{ m.hp }} PV</span
+              >{{ m.type }} · {{ ui.text('ND', 'CR') }} {{ cr(m.cr) }} · {{ ui.text('CA', 'AC') }}
+              {{ m.ac }} · {{ m.hp }} {{ ui.text('PV', 'HP') }}</span
             >
           </button>
           <button
             type="button"
             class="plus"
-            [attr.aria-label]="'Adicionar ' + m.name + ' ao encontro'"
+            [attr.aria-label]="
+              ui.text('Adicionar ', 'Add ') + m.name + ui.text(' ao encontro', ' to encounter')
+            "
             (click)="add(m)"
           >
             +
@@ -68,16 +74,23 @@
         </li>
       } @empty {
         @if (srd.monstersStatus() === 'ready') {
-          <li class="muted">Nenhum monstro com esses filtros.</li>
+          <li class="muted">
+            {{ ui.text('Nenhum monstro com esses filtros.', 'No monsters match these filters.') }}
+          </li>
         }
       }
     </ul>
     @if (filtered().length > visible().length) {
-      <button type="button" class="more" (click)="shown.set(shown() + 60)">Mostrar mais</button>
+      <button type="button" class="more" (click)="shown.set(shown() + 60)">
+        {{ ui.text('Mostrar mais', 'Show more') }}
+      </button>
     }
   </section>
 
-  <section class="panel block" aria-label="Ficha do monstro">
+  <section
+    class="panel block"
+    [attr.aria-label]="ui.text('Ficha do monstro', 'Monster stat block')"
+  >
     @if (selected(); as m) {
       <div class="bhead">
         <h2>{{ m.name }}</h2>
@@ -85,27 +98,27 @@
       </div>
       <dl class="core">
         <div>
-          <dt>CA</dt>
+          <dt>{{ ui.text('CA', 'AC') }}</dt>
           <dd>{{ m.ac }}</dd>
         </div>
         <div>
-          <dt>PV</dt>
+          <dt>{{ ui.text('PV', 'HP') }}</dt>
           <dd>
             {{ m.hp }} <small>({{ m.hitDice }})</small>
           </dd>
         </div>
         <div>
-          <dt>Desl.</dt>
+          <dt>{{ ui.text('Desl.', 'Speed') }}</dt>
           <dd>{{ m.speed }} ft</dd>
         </div>
         <div>
-          <dt>ND</dt>
+          <dt>{{ ui.text('ND', 'CR') }}</dt>
           <dd>
             {{ cr(m.cr) }} <small>({{ xp(m.cr) }} XP)</small>
           </dd>
         </div>
       </dl>
-      <table class="abil" aria-label="Atributos">
+      <table class="abil" [attr.aria-label]="ui.text('Atributos', 'Abilities')">
         <thead>
           <tr>
             @for (a of abilities; track a) {
@@ -122,92 +135,126 @@
         </tbody>
       </table>
       @if (saves(m)) {
-        <p><b>Salvaguardas</b> {{ saves(m) }}</p>
+        <p>
+          <b>{{ ui.text('Salvaguardas', 'Saving throws') }}</b> {{ saves(m) }}
+        </p>
       }
       @if (skills(m)) {
-        <p><b>Perícias</b> {{ skills(m) }}</p>
+        <p>
+          <b>{{ ui.text('Perícias', 'Skills') }}</b> {{ skills(m) }}
+        </p>
       }
       @if (m.notes) {
-        <p><b>Defesas</b> {{ m.notes }}</p>
+        <p>
+          <b>{{ ui.text('Defesas', 'Defenses') }}</b> {{ m.notes }}
+        </p>
       }
-      <p><b>Sentidos</b> {{ m.senses }}</p>
-      <p><b>Idiomas</b> {{ m.languages || '—' }}</p>
+      <p>
+        <b>{{ ui.text('Sentidos', 'Senses') }}</b> {{ m.senses }}
+      </p>
+      <p>
+        <b>{{ ui.text('Idiomas', 'Languages') }}</b> {{ m.languages || '—' }}
+      </p>
 
       @if (m.traits.length) {
-        <h3>Características</h3>
+        <h3>{{ ui.text('Características', 'Traits') }}</h3>
         @for (t of m.traits; track t.name) {
           <p>
             <b>{{ t.name }}.</b> {{ t.desc }}
           </p>
         }
       }
-      <h3>Ações</h3>
+      <h3>{{ ui.text('Ações', 'Actions') }}</h3>
       @for (a of m.actions; track a.name) {
         <p>
           <b>{{ a.name }}.</b> {{ a.desc }}
         </p>
       }
       <p class="engine">
-        No combate:
+        {{ ui.text('No combate:', 'In combat:') }}
         {{
           m.attacks.length
-            ? m.attacks.length + ' ataque(s) reconhecido(s)'
-            : 'sem ataque automático'
+            ? m.attacks.length + ui.text(' ataque(s) reconhecido(s)', ' supported attack(s)')
+            : ui.text('sem ataque automático', 'no automatic attack')
         }}
         @if (m.attacksPerAction > 1) {
-          · {{ m.attacksPerAction }} por ação
+          · {{ m.attacksPerAction }} {{ ui.text('por ação', 'per action') }}
         }
       </p>
       <div class="acts">
-        <button type="button" class="primary" (click)="add(m)">Adicionar ao encontro</button>
-        <button type="button" (click)="toParty(m)">Guardar em Criaturas</button>
+        <button type="button" class="primary" (click)="add(m)">
+          {{ ui.text('Adicionar ao encontro', 'Add to encounter') }}
+        </button>
+        <button type="button" (click)="toParty(m)">
+          {{ ui.text('Guardar em Criaturas', 'Save to Creatures') }}
+        </button>
       </div>
     } @else {
-      <p class="muted">Escolha um monstro na lista.</p>
+      <p class="muted">
+        {{ ui.text('Escolha um monstro na lista.', 'Choose a monster from the list.') }}
+      </p>
     }
   </section>
 
-  <aside class="panel build" aria-label="Encontro em preparo">
-    <h2>Encontro em preparo</h2>
+  <aside class="panel build" [attr.aria-label]="ui.text('Encontro em preparo', 'Encounter setup')">
+    <h2>{{ ui.text('Encontro em preparo', 'Encounter setup') }}</h2>
     @for (p of pickedList(); track p.m.id) {
       <div class="line">
         <span
-          >{{ p.n }}× {{ p.m.name }} <small class="muted">ND {{ cr(p.m.cr) }}</small></span
+          >{{ p.n }}× {{ p.m.name }}
+          <small class="muted">{{ ui.text('ND', 'CR') }} {{ cr(p.m.cr) }}</small></span
         >
         <span class="steps">
-          <button type="button" [attr.aria-label]="'Menos um ' + p.m.name" (click)="add(p.m, -1)">
+          <button
+            type="button"
+            [attr.aria-label]="ui.text('Menos um ', 'Remove one ') + p.m.name"
+            (click)="add(p.m, -1)"
+          >
             −
           </button>
-          <button type="button" [attr.aria-label]="'Mais um ' + p.m.name" (click)="add(p.m)">
+          <button
+            type="button"
+            [attr.aria-label]="ui.text('Mais um ', 'Add one ') + p.m.name"
+            (click)="add(p.m)"
+          >
             +
           </button>
         </span>
       </div>
     } @empty {
-      <p class="muted">Use o + na lista para escolher monstros.</p>
+      <p class="muted">
+        {{
+          ui.text(
+            'Use o + na lista para escolher monstros.',
+            'Use + in the list to choose monsters.'
+          )
+        }}
+      </p>
     }
 
     @let e = estimate();
     <dl class="est">
       <div>
-        <dt>Grupo</dt>
-        <dd>{{ partyLevels().length }} PJ(s)</dd>
+        <dt>{{ ui.text('Grupo', 'Party') }}</dt>
+        <dd>{{ partyLevels().length }} {{ ui.text('PJ(s)', 'PC(s)') }}</dd>
       </div>
       <div>
         <dt>XP</dt>
         <dd>{{ e.baseXp }} → {{ e.adjustedXp }}</dd>
       </div>
       <div>
-        <dt>Dificuldade</dt>
-        <dd class="diff" [attr.data-level]="e.difficulty">{{ difficultyLabel[e.difficulty] }}</dd>
+        <dt>{{ ui.text('Dificuldade', 'Difficulty') }}</dt>
+        <dd class="diff" [attr.data-level]="e.difficulty">{{ difficulty(e.difficulty) }}</dd>
       </div>
     </dl>
     <p class="muted thr">
-      Limiares: fácil {{ e.thresholds.easy }} · médio {{ e.thresholds.medium }} · difícil
-      {{ e.thresholds.hard }} · mortal {{ e.thresholds.deadly }}
+      {{ ui.text('Limiares:', 'Thresholds:') }} {{ ui.text('fácil', 'easy') }}
+      {{ e.thresholds.easy }} · {{ ui.text('médio', 'medium') }} {{ e.thresholds.medium }} ·
+      {{ ui.text('difícil', 'hard') }} {{ e.thresholds.hard }} · {{ ui.text('mortal', 'deadly') }}
+      {{ e.thresholds.deadly }}
     </p>
     <button type="button" class="primary" [disabled]="!pickedList().length" (click)="toEncounter()">
-      Levar ao mapa
+      {{ ui.text('Levar ao mapa', 'Send to map') }}
     </button>
   </aside>
 </div>

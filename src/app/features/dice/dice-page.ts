@@ -11,6 +11,7 @@ import {
 import { AdvMode, DiceError, formatDice } from '@core/rules/dice';
 import { DiceStore } from '@state/dice.store';
 import { MacroStore } from '@state/macros.store';
+import { UiPrefs } from '@state/ui-prefs';
 import { DiceTray3d } from './dice-3d/dice-tray-3d';
 import { Die, ROLL_MS } from './die';
 
@@ -24,14 +25,15 @@ import { Die, ROLL_MS } from './die';
 export class DicePage {
   protected readonly store = inject(DiceStore);
   protected readonly macroStore = inject(MacroStore);
+  protected readonly ui = inject(UiPrefs);
   protected readonly format = formatDice;
 
   protected readonly quickDice = [4, 6, 8, 10, 12, 20, 100];
-  protected readonly modes: { value: AdvMode; label: string }[] = [
-    { value: 'normal', label: 'Normal' },
-    { value: 'advantage', label: 'Vantagem' },
-    { value: 'disadvantage', label: 'Desvantagem' },
-  ];
+  protected readonly modes = computed<{ value: AdvMode; label: string }[]>(() => [
+    { value: 'normal', label: this.ui.text('Normal', 'Normal') },
+    { value: 'advantage', label: this.ui.text('Vantagem', 'Advantage') },
+    { value: 'disadvantage', label: this.ui.text('Desvantagem', 'Disadvantage') },
+  ]);
 
   /** Dados da última rolagem, com atraso escalonado para cair um após o outro. */
   protected readonly dice = computed(() => {

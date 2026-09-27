@@ -1,11 +1,15 @@
-<h1>Criaturas</h1>
+<h1>{{ ui.text('Criaturas', 'Creatures') }}</h1>
 <p class="message" role="status" aria-live="polite">{{ store.message() }}</p>
 
 <div class="layout">
-  <aside class="list panel" aria-label="Lista de criaturas">
+  <aside class="list panel" [attr.aria-label]="ui.text('Lista de criaturas', 'Creature list')">
     <div class="add">
-      <button type="button" (click)="store.add('pc')">+ Personagem</button>
-      <button type="button" (click)="store.add('monster')">+ Monstro</button>
+      <button type="button" (click)="store.add('pc')">
+        + {{ ui.text('Personagem', 'Character') }}
+      </button>
+      <button type="button" (click)="store.add('monster')">
+        + {{ ui.text('Monstro', 'Monster') }}
+      </button>
     </div>
     <ul>
       @for (c of store.creatures(); track c.id) {
@@ -20,16 +24,17 @@
             <span class="top">
               <span class="name">{{ c.name }}</span>
               <span class="chip" [class.monster]="c.kind === 'monster'">{{
-                kindLabel[c.kind]
+                kindName(c.kind)
               }}</span>
             </span>
             <span class="sub">
-              CA {{ c.ac }} · {{ c.hp.current }}/{{ c.hp.max }} PV
+              {{ ui.text('CA', 'AC') }} {{ c.ac }} · {{ c.hp.current }}/{{ c.hp.max }}
+              {{ ui.text('PV', 'HP') }}
               @if (c.status === 'dying') {
-                · morrendo
+                · {{ ui.text('morrendo', 'dying') }}
               }
               @if (c.status === 'dead') {
-                · morto
+                · {{ ui.text('morto', 'dead') }}
               }
             </span>
             <span class="mini" aria-hidden="true">
@@ -45,17 +50,32 @@
     @if (store.selected(); as c) {
       <div class="toolbar">
         <h2 class="who">{{ c.name }}</h2>
-        <button type="button" (click)="store.duplicate(c.id)">Duplicar</button>
+        <button type="button" (click)="store.duplicate(c.id)">
+          {{ ui.text('Duplicar', 'Duplicate') }}
+        </button>
         <button type="button" class="danger" (click)="remove(c.id)">
-          {{ confirming() ? 'Confirmar exclusão' : 'Excluir' }}
+          {{
+            confirming()
+              ? ui.text('Confirmar exclusão', 'Confirm deletion')
+              : ui.text('Excluir', 'Delete')
+          }}
         </button>
         @if (confirming()) {
-          <button type="button" (click)="confirming.set(false)">Cancelar</button>
+          <button type="button" (click)="confirming.set(false)">
+            {{ ui.text('Cancelar', 'Cancel') }}
+          </button>
         }
       </div>
       <app-creature-sheet [creature]="c" />
     } @else {
-      <p class="empty">Nenhuma criatura. Crie um personagem ou monstro para começar.</p>
+      <p class="empty">
+        {{
+          ui.text(
+            'Nenhuma criatura. Crie um personagem ou monstro para começar.',
+            'No creatures. Create a character or monster to begin.'
+          )
+        }}
+      </p>
     }
   </div>
 </div>

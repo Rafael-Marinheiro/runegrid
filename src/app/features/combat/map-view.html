@@ -4,7 +4,7 @@
     class="map"
     [class.hc]="highContrast()"
     role="group"
-    aria-label="Mapa de combate"
+    [attr.aria-label]="ui.text('Mapa de combate', 'Combat map')"
     [attr.viewBox]="viewBox()"
     preserveAspectRatio="xMidYMid meet"
     (wheel)="onWheel($event)"
@@ -314,9 +314,23 @@
     }
   </svg>
 
-  <div class="zoom" role="group" aria-label="Zoom do mapa">
-    <button type="button" aria-label="Aproximar" (click)="zoomBy(1.25)">+</button>
-    <button type="button" aria-label="Afastar" (click)="zoomBy(0.8)">−</button>
-    <button type="button" aria-label="Ajustar ao mapa" (click)="reset()">⌂</button>
+  <div class="zoom" role="group" [attr.aria-label]="ui.text('Zoom do mapa', 'Map zoom')">
+    <button
+      type="button"
+      [attr.aria-label]="ui.text('Aproximar', 'Zoom in')"
+      (click)="zoomBy(1.25)"
+    >
+      +
+    </button>
+    <button type="button" [attr.aria-label]="ui.text('Afastar', 'Zoom out')" (click)="zoomBy(0.8)">
+      −
+    </button>
+    <button
+      type="button"
+      [attr.aria-label]="ui.text('Ajustar ao mapa', 'Fit map')"
+      (click)="reset()"
+    >
+      ⌂
+    </button>
   </div>
 </div>

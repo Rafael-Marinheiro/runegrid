@@ -3,12 +3,14 @@ import {
   Component,
   computed,
   ElementRef,
+  inject,
   input,
   output,
   signal,
   viewChild,
 } from '@angular/core';
 import { GridMap, Pos, Room, Trap } from '@core/models/grid';
+import { UiPrefs } from '@state/ui-prefs';
 import { ICON_PATH, IconId } from './token-icons';
 
 export const CELL = 48;
@@ -76,6 +78,7 @@ const MAX_ZOOM = 3;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MapView {
+  protected readonly ui = inject(UiPrefs);
   readonly map = input.required<GridMap>();
   readonly tokens = input.required<TokenView[]>();
   /** Células alcançáveis pela criatura na vez. */
@@ -208,8 +211,15 @@ export class MapView {
   }
 
   protected label(t: TokenView): string {
-    const state = t.dead ? ', morto' : t.hidden ? ', oculto' : '';
-    return `${t.name}${state}, coluna ${t.pos.x + 1}, linha ${t.pos.y + 1}. Setas movem, Enter seleciona.`;
+    const state = t.dead
+      ? this.ui.text(', morto', ', dead')
+      : t.hidden
+        ? this.ui.text(', oculto', ', hidden')
+        : '';
+    return this.ui.text(
+      `${t.name}${state}, coluna ${t.pos.x + 1}, linha ${t.pos.y + 1}. Setas movem, Enter seleciona.`,
+      `${t.name}${state}, column ${t.pos.x + 1}, row ${t.pos.y + 1}. Arrow keys move, Enter selects.`,
+    );
   }
 
   // ---------- zoom / pan ----------

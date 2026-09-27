@@ -1,17 +1,17 @@
 <header class="topbar">
   <a class="brand" routerLink="/">Runegrid</a>
-  <nav aria-label="Principal">
-    <a routerLink="/criaturas" routerLinkActive="active">Criaturas</a>
-    <a routerLink="/combate" routerLinkActive="active">Combate</a>
-    <a routerLink="/gerador" routerLinkActive="active">Gerador</a>
-    <a routerLink="/estudio" routerLinkActive="active">Estúdio</a>
-    <a routerLink="/bestiario" routerLinkActive="active">Bestiário</a>
-    <a routerLink="/magias" routerLinkActive="active">Magias</a>
-    <a routerLink="/dados" routerLinkActive="active">Dados</a>
+  <nav [attr.aria-label]="ui.text('Principal', 'Main')">
+    <a routerLink="/criaturas" routerLinkActive="active">{{ ui.text('Criaturas', 'Creatures') }}</a>
+    <a routerLink="/combate" routerLinkActive="active">{{ ui.text('Combate', 'Combat') }}</a>
+    <a routerLink="/gerador" routerLinkActive="active">{{ ui.text('Gerador', 'Generator') }}</a>
+    <a routerLink="/estudio" routerLinkActive="active">{{ ui.text('Estúdio', 'Studio') }}</a>
+    <a routerLink="/bestiario" routerLinkActive="active">{{ ui.text('Bestiário', 'Bestiary') }}</a>
+    <a routerLink="/magias" routerLinkActive="active">{{ ui.text('Magias', 'Spells') }}</a>
+    <a routerLink="/dados" routerLinkActive="active">{{ ui.text('Dados', 'Dice') }}</a>
     <a routerLink="/mesa" routerLinkActive="active" class="room-link">
-      Mesa
+      {{ ui.text('Mesa', 'Table') }}
       @if (room.online()) {
-        <span class="live" aria-label="Sala ativa"
+        <span class="live" [attr.aria-label]="ui.text('Sala ativa', 'Active room')"
           >● {{ room.code() }} · {{ room.peers().length + 1 }}</span
         >
       }
@@ -22,15 +22,36 @@
       aria-keyshortcuts="Control+K Meta+K"
       (click)="openPalette()"
     >
-      Comandos <kbd>Ctrl K</kbd>
+      {{ ui.text('Comandos', 'Commands') }} <kbd>Ctrl K</kbd>
     </button>
+    <span class="locale" role="group" [attr.aria-label]="ui.text('Idioma', 'Language')">
+      <button
+        type="button"
+        [attr.aria-pressed]="ui.locale() === 'pt-BR'"
+        (click)="ui.locale.set('pt-BR')"
+      >
+        PT
+      </button>
+      <button
+        type="button"
+        [attr.aria-pressed]="ui.locale() === 'en'"
+        (click)="ui.locale.set('en')"
+      >
+        EN
+      </button>
+    </span>
   </nav>
 </header>
 <main>
   <router-outlet />
 </main>
 <footer>
-  Conteúdo baseado no SRD 5.1 da Wizards of the Coast, licenciado sob
+  {{
+    ui.text(
+      'Conteúdo baseado no SRD 5.1 da Wizards of the Coast, licenciado sob',
+      'Content based on the Wizards of the Coast SRD 5.1, licensed under'
+    )
+  }}
   <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC-BY-4.0</a
   >.
 </footer>
@@ -38,12 +59,17 @@
 <dialog #palette class="command-palette" aria-labelledby="command-title">
   <div class="command-box">
     <div class="command-head">
-      <h2 id="command-title">Comandos</h2>
-      <button type="button" class="command-close" aria-label="Fechar" (click)="closePalette()">
+      <h2 id="command-title">{{ ui.text('Comandos', 'Commands') }}</h2>
+      <button
+        type="button"
+        class="command-close"
+        [attr.aria-label]="ui.text('Fechar', 'Close')"
+        (click)="closePalette()"
+      >
         ×
       </button>
     </div>
-    <label for="command-search">Buscar comando</label>
+    <label for="command-search">{{ ui.text('Buscar comando', 'Search commands') }}</label>
     <input
       #commandSearch
       id="command-search"
@@ -62,7 +88,7 @@
           }
         </button>
       } @empty {
-        <p role="status">Nenhum comando encontrado.</p>
+        <p role="status">{{ ui.text('Nenhum comando encontrado.', 'No commands found.') }}</p>
       }
     </div>
   </div>

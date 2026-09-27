@@ -1,7 +1,7 @@
 @let st = shown();
 <div class="head">
   <h1>
-    Estúdio do Mestre <small>{{ state().name }}</small>
+    {{ ui.text('Estúdio do Mestre', 'Game Master Studio') }} <small>{{ state().name }}</small>
   </h1>
   <div class="tools-right">
     <label class="toggle">
@@ -11,14 +11,18 @@
         [checked]="ui.highContrast()"
         (change)="ui.highContrast.set(hc.checked)"
       />
-      Alto contraste
+      {{ ui.text('Alto contraste', 'High contrast') }}
     </label>
     <label class="toggle">
       <input #ap type="checkbox" [checked]="asPlayer()" (change)="asPlayer.set(ap.checked)" />
-      Ver como jogador
+      {{ ui.text('Ver como jogador', 'Player view') }}
     </label>
-    <button type="button" [disabled]="!store.canUndo()" (click)="store.undo()">Desfazer</button>
-    <button type="button" [disabled]="!store.canRedo()" (click)="store.redo()">Refazer</button>
+    <button type="button" [disabled]="!store.canUndo()" (click)="store.undo()">
+      {{ ui.text('Desfazer', 'Undo') }}
+    </button>
+    <button type="button" [disabled]="!store.canRedo()" (click)="store.redo()">
+      {{ ui.text('Refazer', 'Redo') }}
+    </button>
   </div>
 </div>
 
@@ -27,15 +31,18 @@
   <p class="banner">
     {{
       store.role().kind !== 'dm'
-        ? 'Só o Mestre edita o mapa.'
-        : 'O combate está em andamento: encerre-o na tela de Combate para editar.'
+        ? ui.text('Só o Mestre edita o mapa.', 'Only the Game Master can edit the map.')
+        : ui.text(
+            'O combate está em andamento: encerre-o na tela de Combate para editar.',
+            'Combat is in progress: end it on the Combat page to edit.'
+          )
     }}
   </p>
 }
 
 <div class="layout">
-  <aside class="panel palette" aria-label="Ferramentas">
-    <h2>Ferramentas</h2>
+  <aside class="panel palette" [attr.aria-label]="ui.text('Ferramentas', 'Tools')">
+    <h2>{{ ui.text('Ferramentas', 'Tools') }}</h2>
     <div class="grid">
       @for (t of tools; track t.id) {
         <button
@@ -45,13 +52,17 @@
           [disabled]="!editable() && t.id !== 'select'"
           (click)="pick(t.id)"
         >
-          {{ t.label }}
+          {{ toolLabel(t) }}
         </button>
       }
     </div>
     <p class="hint">
-      Arraste no mapa para pintar. Shift + arrastar move a vista; use dois dedos ou a roda para
-      mover e ampliar.
+      {{
+        ui.text(
+          'Arraste no mapa para pintar. Shift + arrastar move a vista; use dois dedos ou a roda para mover e ampliar.',
+          'Drag on the map to paint. Shift + drag pans; use two fingers or the wheel to pan and zoom.'
+        )
+      }}
     </p>
   </aside>
 
@@ -74,18 +85,18 @@
       (cellClick)="onStart($event)"
     />
     <p class="legend">
-      <span><i class="sw fog"></i> névoa (só o Mestre vê)</span>
-      <span><i class="sw trap"></i> armadilha</span>
-      <span><i class="sw room"></i> sala</span>
+      <span><i class="sw fog"></i> {{ ui.text('névoa (só o Mestre vê)', 'fog (GM only)') }}</span>
+      <span><i class="sw trap"></i> {{ ui.text('armadilha', 'trap') }}</span>
+      <span><i class="sw room"></i> {{ ui.text('sala', 'room') }}</span>
     </p>
   </section>
 
   <aside class="side">
     @if (selectedRoom(); as r) {
-      <section class="panel" aria-label="Sala selecionada">
-        <h2>Sala</h2>
+      <section class="panel" [attr.aria-label]="ui.text('Sala selecionada', 'Selected room')">
+        <h2>{{ ui.text('Sala', 'Room') }}</h2>
         <label class="field">
-          Nome
+          {{ ui.text('Nome', 'Name') }}
           <input
             #rn
             [value]="r.name"
@@ -94,7 +105,7 @@
           />
         </label>
         <label class="field">
-          Texto para ler aos jogadores
+          {{ ui.text('Texto para ler aos jogadores', 'Read-aloud text') }}
           <textarea
             #rd
             rows="3"
@@ -104,7 +115,7 @@
           ></textarea>
         </label>
         <label class="field">
-          Notas secretas (só o Mestre)
+          {{ ui.text('Notas secretas (só o Mestre)', 'Secret notes (GM only)') }}
           <textarea
             #rt
             rows="2"
@@ -115,21 +126,23 @@
         </label>
         <div class="row">
           <button type="button" class="primary" [disabled]="!editable()" (click)="reveal(false)">
-            Revelar aos jogadores
+            {{ ui.text('Revelar aos jogadores', 'Reveal to players') }}
           </button>
-          <button type="button" [disabled]="!editable()" (click)="reveal(true)">Ocultar</button>
+          <button type="button" [disabled]="!editable()" (click)="reveal(true)">
+            {{ ui.text('Ocultar', 'Hide') }}
+          </button>
           <button type="button" class="danger" [disabled]="!editable()" (click)="removeRoom()">
-            Remover
+            {{ ui.text('Remover', 'Remove') }}
           </button>
         </div>
       </section>
     }
 
     @if (selectedTrap(); as t) {
-      <section class="panel" aria-label="Armadilha selecionada">
-        <h2>Armadilha</h2>
+      <section class="panel" [attr.aria-label]="ui.text('Armadilha selecionada', 'Selected trap')">
+        <h2>{{ ui.text('Armadilha', 'Trap') }}</h2>
         <label class="field">
-          Nome
+          {{ ui.text('Nome', 'Name') }}
           <input
             #tn
             [value]="t.name"
@@ -139,7 +152,7 @@
         </label>
         <div class="two">
           <label class="field">
-            Salvaguarda
+            {{ ui.text('Salvaguarda', 'Saving throw') }}
             <select #ta [disabled]="!editable()" (change)="editTrap({ ability: $any(ta.value) })">
               @for (a of abilities; track a) {
                 <option [value]="a" [selected]="a === t.ability">{{ a.toUpperCase() }}</option>
@@ -159,7 +172,7 @@
             />
           </label>
           <label class="field">
-            Dano
+            {{ ui.text('Dano', 'Damage') }}
             <input
               #td
               [value]="t.damage"
@@ -168,14 +181,14 @@
             />
           </label>
           <label class="field">
-            Tipo
+            {{ ui.text('Tipo', 'Type') }}
             <select
               #tt
               [disabled]="!editable()"
               (change)="editTrap({ damageType: damageType(tt.value) })"
             >
               @for (d of damageTypes; track d) {
-                <option [value]="d" [selected]="d === t.damageType">{{ damageLabel[d] }}</option>
+                <option [value]="d" [selected]="d === t.damageType">{{ damageName(d) }}</option>
               }
             </select>
           </label>
@@ -188,62 +201,73 @@
             [disabled]="!editable()"
             (change)="editTrap({ hidden: th.checked })"
           />
-          Escondida dos jogadores
+          {{ ui.text('Escondida dos jogadores', 'Hidden from players') }}
         </label>
         @if (t.triggered) {
-          <p class="hint">Já disparou. Reative desmarcando/remarcando pelo botão abaixo.</p>
+          <p class="hint">
+            {{
+              ui.text(
+                'Já disparou. Reative pelo botão abaixo.',
+                'Already triggered. Reset it with the button below.'
+              )
+            }}
+          </p>
           <button
             type="button"
             [disabled]="!editable()"
             (click)="editTrap({ triggered: false, hidden: true })"
           >
-            Rearmar
+            {{ ui.text('Rearmar', 'Reset') }}
           </button>
         }
         <button type="button" class="danger" [disabled]="!editable()" (click)="removeTrap()">
-          Remover
+          {{ ui.text('Remover', 'Remove') }}
         </button>
       </section>
     }
 
-    <section class="panel" aria-label="Mapa">
-      <h2>Mapa</h2>
+    <section class="panel" [attr.aria-label]="ui.text('Mapa', 'Map')">
+      <h2>{{ ui.text('Mapa', 'Map') }}</h2>
       <label class="field">
-        Textura do piso
+        {{ ui.text('Textura do piso', 'Floor texture') }}
         <select #tx [disabled]="!editable()" (change)="setTexture(tx.value)">
           @for (t of textures; track t) {
             <option [value]="t" [selected]="(state().map.texture ?? 'none') === t">
-              {{ textureLabel[t] }}
+              {{ textureName(t) }}
             </option>
           }
         </select>
       </label>
       <div class="two">
         <label class="field">
-          Largura
+          {{ ui.text('Largura', 'Width') }}
           <input #nw type="number" min="3" max="60" value="20" />
         </label>
         <label class="field">
-          Altura
+          {{ ui.text('Altura', 'Height') }}
           <input #nh type="number" min="3" max="60" value="14" />
         </label>
       </div>
       <button type="button" [disabled]="!editable()" (click)="newMap(nw.value, nh.value)">
-        Novo mapa em branco
+        {{ ui.text('Novo mapa em branco', 'New blank map') }}
       </button>
     </section>
 
-    <section class="panel" aria-label="Biblioteca de dungeons">
-      <h2>Biblioteca</h2>
+    <section class="panel" [attr.aria-label]="ui.text('Biblioteca de dungeons', 'Dungeon library')">
+      <h2>{{ ui.text('Biblioteca', 'Library') }}</h2>
       <label class="field">
-        Nome
+        {{ ui.text('Nome', 'Name') }}
         <input #ln [value]="state().name" />
       </label>
       <div class="row">
-        <button type="button" class="primary" (click)="saveToLibrary(ln.value)">Salvar</button>
-        <button type="button" (click)="exportMap(ln.value)">Exportar</button>
+        <button type="button" class="primary" (click)="saveToLibrary(ln.value)">
+          {{ ui.text('Salvar', 'Save') }}
+        </button>
+        <button type="button" (click)="exportMap(ln.value)">
+          {{ ui.text('Exportar', 'Export') }}
+        </button>
         <label class="file">
-          Importar
+          {{ ui.text('Importar', 'Import') }}
           <input
             #fi
             type="file"
@@ -260,11 +284,13 @@
               >{{ d.name }} <small class="muted">{{ d.map.width }}×{{ d.map.height }}</small></span
             >
             <span class="row">
-              <button type="button" [disabled]="!editable()" (click)="load(d)">Carregar</button>
+              <button type="button" [disabled]="!editable()" (click)="load(d)">
+                {{ ui.text('Carregar', 'Load') }}
+              </button>
               <button
                 type="button"
                 class="danger"
-                [attr.aria-label]="'Excluir ' + d.name"
+                [attr.aria-label]="ui.text('Excluir ', 'Delete ') + d.name"
                 (click)="library.remove(d.id)"
               >
                 ×
@@ -272,7 +298,7 @@
             </span>
           </li>
         } @empty {
-          <li class="muted">Nenhum dungeon salvo.</li>
+          <li class="muted">{{ ui.text('Nenhum dungeon salvo.', 'No saved dungeons.') }}</li>
         }
       </ul>
     </section>

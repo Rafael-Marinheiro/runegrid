@@ -1,7 +1,7 @@
-<h1>Dados</h1>
+<h1>{{ ui.text('Dados', 'Dice') }}</h1>
 
 <section class="panel" aria-labelledby="quick-title">
-  <h2 id="quick-title">Rolagem rápida</h2>
+  <h2 id="quick-title">{{ ui.text('Rolagem rápida', 'Quick roll') }}</h2>
   <div class="quick">
     @for (sides of quickDice; track sides) {
       <button
@@ -16,19 +16,26 @@
   </div>
 
   <form class="expr" (submit)="$event.preventDefault(); rollNotation(expr.value)">
-    <label for="expr">Expressão</label>
+    <label for="expr">{{ ui.text('Expressão', 'Expression') }}</label>
     <input id="expr" #expr value="2d6+3" autocomplete="off" aria-describedby="expr-help" />
-    <button type="submit" class="primary">Rolar</button>
+    <button type="submit" class="primary">{{ ui.text('Rolar', 'Roll') }}</button>
   </form>
   <div class="macros">
     <label class="field">
-      Nome do macro
-      <input #mname maxlength="40" autocomplete="off" placeholder="Ex.: Espada longa" />
+      {{ ui.text('Nome do macro', 'Macro name') }}
+      <input
+        #mname
+        maxlength="40"
+        autocomplete="off"
+        [placeholder]="ui.text('Ex.: Espada longa', 'E.g. Longsword')"
+      />
     </label>
-    <button type="button" (click)="saveMacro(mname.value, expr.value)">Salvar expressão</button>
+    <button type="button" (click)="saveMacro(mname.value, expr.value)">
+      {{ ui.text('Salvar expressão', 'Save expression') }}
+    </button>
   </div>
   @if (macroStore.macros().length) {
-    <ul class="macro-list" aria-label="Macros salvos">
+    <ul class="macro-list" [attr.aria-label]="ui.text('Macros salvos', 'Saved macros')">
       @for (m of macroStore.macros(); track m.name) {
         <li>
           <button type="button" (click)="rollNotation(m.expr)">
@@ -36,7 +43,7 @@
           </button>
           <button
             type="button"
-            [attr.aria-label]="'Remover macro ' + m.name"
+            [attr.aria-label]="ui.text('Remover macro ', 'Remove macro ') + m.name"
             (click)="macroStore.remove(m.name)"
           >
             ×
@@ -46,7 +53,8 @@
     </ul>
   }
   <p id="expr-help" class="help">
-    Ex.: <code>2d6+3</code>, <code>4d6kh3</code> (mantém os 3 maiores), <code>d%</code>.
+    {{ ui.text('Ex.:', 'E.g.') }} <code>2d6+3</code>, <code>4d6kh3</code>
+    {{ ui.text('(mantém os 3 maiores)', '(keep the highest 3)') }}, <code>d%</code>.
   </p>
   @if (error()) {
     <p class="error" role="alert">{{ error() }}</p>
@@ -54,13 +62,13 @@
 </section>
 
 <section class="panel" aria-labelledby="d20-title">
-  <h2 id="d20-title">Teste de d20</h2>
+  <h2 id="d20-title">{{ ui.text('Teste de d20', 'd20 check') }}</h2>
   <div class="d20">
-    <label for="mod">Modificador</label>
+    <label for="mod">{{ ui.text('Modificador', 'Modifier') }}</label>
     <input id="mod" #mod type="number" value="0" inputmode="numeric" />
     <fieldset class="modes">
-      <legend>Modo</legend>
-      @for (m of modes; track m.value) {
+      <legend>{{ ui.text('Modo', 'Mode') }}</legend>
+      @for (m of modes(); track m.value) {
         <label class="mode">
           <input
             type="radio"
@@ -73,16 +81,18 @@
         </label>
       }
     </fieldset>
-    <button type="button" class="primary" (click)="rollD20(mod.value)">Rolar d20</button>
+    <button type="button" class="primary" (click)="rollD20(mod.value)">
+      {{ ui.text('Rolar d20', 'Roll d20') }}
+    </button>
   </div>
 </section>
 
 <section class="panel result" aria-labelledby="result-title" aria-live="polite">
   <div class="result-head">
-    <h2 id="result-title">Resultado</h2>
+    <h2 id="result-title">{{ ui.text('Resultado', 'Result') }}</h2>
     <label class="toggle">
       <input type="checkbox" #t3d [checked]="use3d()" (change)="use3d.set(t3d.checked)" />
-      Dados 3D
+      {{ ui.text('Dados 3D', '3D dice') }}
     </label>
   </div>
   @if (store.last(); as last) {
@@ -93,13 +103,16 @@
         (settled)="onSettled()"
         (failed)="onFailed()"
       />
-      <ul class="sr-only" aria-label="Dados rolados">
+      <ul class="sr-only" [attr.aria-label]="ui.text('Dados rolados', 'Rolled dice')">
         @for (d of dice(); track d.key) {
-          <li>d{{ d.sides }}: {{ d.value }}{{ d.dropped ? ' (descartado)' : '' }}</li>
+          <li>
+            d{{ d.sides }}: {{ d.value
+            }}{{ d.dropped ? ui.text(' (descartado)', ' (dropped)') : '' }}
+          </li>
         }
       </ul>
     } @else {
-      <ul class="dice-list" aria-label="Dados rolados">
+      <ul class="dice-list" [attr.aria-label]="ui.text('Dados rolados', 'Rolled dice')">
         @for (d of dice(); track d.key) {
           <li>
             <app-die
@@ -124,22 +137,24 @@
     <p class="detail">
       {{ format(last.result.expr) }}
       @if (last.d20?.crit) {
-        <span class="tag crit">Crítico!</span>
+        <span class="tag crit">{{ ui.text('Crítico!', 'Critical!') }}</span>
       }
       @if (last.d20?.fumble) {
-        <span class="tag fumble">Falha crítica</span>
+        <span class="tag fumble">{{ ui.text('Falha crítica', 'Critical failure') }}</span>
       }
     </p>
   } @else {
-    <p class="help">Faça uma rolagem para ver o resultado.</p>
+    <p class="help">
+      {{ ui.text('Faça uma rolagem para ver o resultado.', 'Roll to see the result.') }}
+    </p>
   }
 </section>
 
 <section class="panel" aria-labelledby="hist-title">
   <div class="hist-head">
-    <h2 id="hist-title">Histórico</h2>
+    <h2 id="hist-title">{{ ui.text('Histórico', 'History') }}</h2>
     <button type="button" (click)="store.clear()" [disabled]="!store.history().length">
-      Limpar
+      {{ ui.text('Limpar', 'Clear') }}
     </button>
   </div>
   <ol class="history">
@@ -149,7 +164,7 @@
         <span class="hist-total">{{ e.result.total }}</span>
       </li>
     } @empty {
-      <li class="help">Nenhuma rolagem ainda.</li>
+      <li class="help">{{ ui.text('Nenhuma rolagem ainda.', 'No rolls yet.') }}</li>
     }
   </ol>
 </section>

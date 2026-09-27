@@ -10,6 +10,7 @@ import { ActivatedRoute } from '@angular/router';
 import { normalizeCode } from '@net/protocol';
 import { RoomService } from '@net/room.service';
 import { EncounterStore } from '@state/encounter.store';
+import { UiPrefs } from '@state/ui-prefs';
 import { VoicePanel } from './voice-panel';
 
 @Component({
@@ -21,6 +22,7 @@ import { VoicePanel } from './voice-panel';
 })
 export class LobbyPage implements OnInit {
   protected readonly room = inject(RoomService);
+  protected readonly ui = inject(UiPrefs);
   private readonly store = inject(EncounterStore);
   private readonly route = inject(ActivatedRoute);
 
@@ -55,7 +57,7 @@ export class LobbyPage implements OnInit {
   protected async copy(text: string): Promise<void> {
     try {
       await navigator.clipboard.writeText(text);
-      this.notice.set('Copiado.');
+      this.notice.set(this.ui.text('Copiado.', 'Copied.'));
     } catch {
       this.notice.set(text);
     }
@@ -67,6 +69,9 @@ export class LobbyPage implements OnInit {
   }
 
   protected time(at: number): string {
-    return new Date(at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    return new Date(at).toLocaleTimeString(this.ui.locale(), {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 }

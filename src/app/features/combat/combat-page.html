@@ -2,16 +2,20 @@
 @let cb = combat();
 <div class="head">
   <h1>
-    Combate <small>{{ st.name }}</small>
+    {{ ui.text('Combate', 'Combat') }} <small>{{ st.name }}</small>
   </h1>
   <div class="tools">
     @if (!isRemote()) {
       <label class="role">
-        Ver como
+        {{ ui.text('Ver como', 'View as') }}
         <select #role (change)="setRole(role.value)">
-          <option value="dm" [selected]="roleValue() === 'dm'">Mestre</option>
+          <option value="dm" [selected]="roleValue() === 'dm'">
+            {{ ui.text('Mestre', 'Game Master') }}
+          </option>
           @for (c of playable(); track c.id) {
-            <option [value]="c.id" [selected]="roleValue() === c.id">Jogador: {{ c.name }}</option>
+            <option [value]="c.id" [selected]="roleValue() === c.id">
+              {{ ui.text('Jogador:', 'Player:') }} {{ c.name }}
+            </option>
           }
         </select>
       </label>
@@ -22,7 +26,7 @@
       [attr.aria-pressed]="rulerOn()"
       (click)="toggleRuler()"
     >
-      Régua
+      {{ ui.text('Régua', 'Ruler') }}
     </button>
     <label class="toggle3d">
       <input
@@ -31,7 +35,7 @@
         [checked]="ui.highContrast()"
         (change)="ui.highContrast.set(hc.checked)"
       />
-      Alto contraste
+      {{ ui.text('Alto contraste', 'High contrast') }}
     </label>
     <label class="toggle3d">
       <input
@@ -40,11 +44,15 @@
         [checked]="diceStore.use3d()"
         (change)="diceStore.use3d.set(t3.checked)"
       />
-      Dados 3D
+      {{ ui.text('Dados 3D', '3D dice') }}
     </label>
     @if (isDm()) {
-      <button type="button" [disabled]="!store.canUndo()" (click)="store.undo()">Desfazer</button>
-      <button type="button" [disabled]="!store.canRedo()" (click)="store.redo()">Refazer</button>
+      <button type="button" [disabled]="!store.canUndo()" (click)="store.undo()">
+        {{ ui.text('Desfazer', 'Undo') }}
+      </button>
+      <button type="button" [disabled]="!store.canRedo()" (click)="store.redo()">
+        {{ ui.text('Refazer', 'Redo') }}
+      </button>
     }
   </div>
 </div>
@@ -52,11 +60,19 @@
 <p class="message" role="status" aria-live="polite">{{ store.message() }}</p>
 
 <div class="layout">
-  <aside class="panel side" aria-label="Iniciativa">
+  <aside class="panel side" [attr.aria-label]="ui.text('Iniciativa', 'Initiative')">
     <div class="side-head">
-      <h2>{{ running() ? 'Iniciativa' : cb.phase === 'ended' ? 'Fim do combate' : 'Montagem' }}</h2>
+      <h2>
+        {{
+          running()
+            ? ui.text('Iniciativa', 'Initiative')
+            : cb.phase === 'ended'
+              ? ui.text('Fim do combate', 'Combat ended')
+              : ui.text('Montagem', 'Setup')
+        }}
+      </h2>
       @if (running()) {
-        <span class="chip">Rodada {{ cb.round }}</span>
+        <span class="chip">{{ ui.text('Rodada', 'Round') }} {{ cb.round }}</span>
       }
     </div>
 
@@ -64,10 +80,10 @@
       <p class="outcome">
         {{
           cb.outcome === 'party'
-            ? 'O grupo venceu.'
+            ? ui.text('O grupo venceu.', 'The party won.')
             : cb.outcome === 'foes'
-              ? 'O grupo foi derrotado.'
-              : 'Encerrado pelo Mestre.'
+              ? ui.text('O grupo foi derrotado.', 'The party was defeated.')
+              : ui.text('Encerrado pelo Mestre.', 'Ended by the Game Master.')
         }}
       </p>
     }
@@ -82,15 +98,15 @@
             <span class="who">
               <span class="name">{{ c.name }}</span>
               <span class="sub">
-                {{ hpLabel(c) }} PV
+                {{ hpLabel(c) }} {{ ui.text('PV', 'HP') }}
                 @if (c.status === 'dying') {
-                  · morrendo
+                  · {{ ui.text('morrendo', 'dying') }}
                 }
                 @if (c.status === 'dead') {
-                  · morto
+                  · {{ ui.text('morto', 'dead') }}
                 }
                 @if (isHidden(c.id)) {
-                  · oculto
+                  · {{ ui.text('oculto', 'hidden') }}
                 }
               </span>
               <span class="bar" aria-hidden="true"
@@ -103,7 +119,7 @@
           </button>
           @if (cb.phase === 'setup' && isDm()) {
             <label class="init-in">
-              Iniciativa
+              {{ ui.text('Iniciativa', 'Initiative') }}
               <input
                 #ini
                 type="number"
@@ -114,18 +130,20 @@
           }
         </li>
       } @empty {
-        <li class="empty">Nenhuma criatura no mapa.</li>
+        <li class="empty">
+          {{ ui.text('Nenhuma criatura no mapa.', 'No creatures on the map.') }}
+        </li>
       }
     </ol>
 
     @if (isDm() && outside().length) {
       <div class="unplaced">
-        <h3>Fora da iniciativa</h3>
+        <h3>{{ ui.text('Fora da iniciativa', 'Outside initiative') }}</h3>
         @for (c of outside(); track c.id) {
           <div class="up-row">
             <span>{{ c.name }}</span>
             <button type="button" (click)="store.send({ type: 'joinCombat', id: c.id })">
-              Entrar
+              {{ ui.text('Entrar', 'Join') }}
             </button>
           </div>
         }
@@ -134,12 +152,12 @@
 
     @if (isDm() && cb.phase === 'setup' && unplaced().length) {
       <div class="unplaced">
-        <h3>Fora do mapa</h3>
+        <h3>{{ ui.text('Fora do mapa', 'Off the map') }}</h3>
         @for (c of unplaced(); track c.id) {
           <div class="up-row">
             <span>{{ c.name }}</span>
             <button type="button" (click)="store.autoPlace(c.id); selectedId.set(c.id)">
-              Posicionar
+              {{ ui.text('Posicionar', 'Place') }}
             </button>
           </div>
         }
@@ -150,17 +168,19 @@
       <div class="stack">
         @if (cb.phase === 'setup') {
           <button type="button" (click)="store.send({ type: 'rollInitiative' })">
-            Rolar iniciativa
+            {{ ui.text('Rolar iniciativa', 'Roll initiative') }}
           </button>
           <button type="button" class="primary" (click)="store.send({ type: 'startCombat' })">
-            Iniciar combate
+            {{ ui.text('Iniciar combate', 'Start combat') }}
           </button>
         } @else if (cb.phase === 'running') {
           <button type="button" (click)="store.send({ type: 'endCombat' })">
-            Encerrar combate
+            {{ ui.text('Encerrar combate', 'End combat') }}
           </button>
         } @else {
-          <button type="button" (click)="resetCombat()">Voltar à montagem</button>
+          <button type="button" (click)="resetCombat()">
+            {{ ui.text('Voltar à montagem', 'Return to setup') }}
+          </button>
         }
       </div>
     }
@@ -170,45 +190,53 @@
     @if (cb.phase === 'ended') {
       @let sum = summary();
       <section class="panel combat-summary" aria-labelledby="combat-summary-title">
-        <p class="summary-kicker">Encontro concluído</p>
+        <p class="summary-kicker">{{ ui.text('Encontro concluído', 'Encounter complete') }}</p>
         <h2 id="combat-summary-title">
           {{
             cb.outcome === 'party'
-              ? 'Vitória do grupo'
+              ? ui.text('Vitória do grupo', 'Party victory')
               : cb.outcome === 'foes'
-                ? 'Derrota do grupo'
-                : 'Combate encerrado'
+                ? ui.text('Derrota do grupo', 'Party defeat')
+                : ui.text('Combate encerrado', 'Combat ended')
           }}
         </h2>
         <dl class="summary-stats">
           <div>
-            <dt>Rodadas</dt>
+            <dt>{{ ui.text('Rodadas', 'Rounds') }}</dt>
             <dd>{{ sum.rounds }}</dd>
           </div>
           <div>
-            <dt>Inimigos derrotados</dt>
+            <dt>{{ ui.text('Inimigos derrotados', 'Defeated enemies') }}</dt>
             <dd>{{ sum.defeatedFoes.length }}</dd>
           </div>
           <div>
-            <dt>Aliados sobreviventes</dt>
+            <dt>{{ ui.text('Aliados sobreviventes', 'Surviving allies') }}</dt>
             <dd>{{ sum.survivingParty.length }}</dd>
           </div>
         </dl>
 
         <div class="summary-lists">
           <section aria-labelledby="defeated-title">
-            <h3 id="defeated-title">Derrotados</h3>
+            <h3 id="defeated-title">{{ ui.text('Derrotados', 'Defeated') }}</h3>
             <p>
-              {{ sum.defeatedFoes.length ? names(sum.defeatedFoes) : 'Nenhum inimigo derrotado.' }}
+              {{
+                sum.defeatedFoes.length
+                  ? names(sum.defeatedFoes)
+                  : ui.text('Nenhum inimigo derrotado.', 'No defeated enemies.')
+              }}
             </p>
           </section>
           <section aria-labelledby="survivors-title">
-            <h3 id="survivors-title">Grupo ao final</h3>
+            <h3 id="survivors-title">{{ ui.text('Grupo ao final', 'Final party') }}</h3>
             <p>
-              {{ sum.survivingParty.length ? names(sum.survivingParty) : 'Nenhum aliado de pé.' }}
+              {{
+                sum.survivingParty.length
+                  ? names(sum.survivingParty)
+                  : ui.text('Nenhum aliado de pé.', 'No allies standing.')
+              }}
             </p>
             @if (sum.fallenParty.length) {
-              <p class="fallen">Caídos: {{ names(sum.fallenParty) }}</p>
+              <p class="fallen">{{ ui.text('Caídos:', 'Fallen:') }} {{ names(sum.fallenParty) }}</p>
             }
           </section>
         </div>
@@ -216,12 +244,15 @@
         @if (isDm()) {
           <label class="xp-toggle">
             <input #xp type="checkbox" [checked]="showXp()" (change)="showXp.set(xp.checked)" />
-            Incluir XP no resumo
+            {{ ui.text('Incluir XP no resumo', 'Include XP in summary') }}
           </label>
           @if (showXp()) {
             <p class="xp-award" aria-live="polite">
               <strong>{{ sum.xp }} XP</strong>
-              <span>{{ sum.xpPerCharacter }} por personagem participante</span>
+              <span
+                >{{ sum.xpPerCharacter }}
+                {{ ui.text('por personagem participante', 'per participating character') }}</span
+              >
             </p>
           }
         }
@@ -268,37 +299,49 @@
     @for (r of reactions(); track r.id) {
       <div class="panel reaction" role="alert">
         <span>
-          <b>{{ nameOf(r.reactorId) }}</b> pode fazer um ataque de oportunidade contra
+          <b>{{ nameOf(r.reactorId) }}</b>
+          {{
+            ui.text(
+              'pode fazer um ataque de oportunidade contra',
+              'can make an opportunity attack against'
+            )
+          }}
           <b>{{ nameOf(r.targetId) }}</b
           >.
         </span>
         <span class="react-btns">
-          <button type="button" class="primary" (click)="react(r.reactorId, true)">Atacar</button>
-          <button type="button" (click)="react(r.reactorId, false)">Recusar</button>
+          <button type="button" class="primary" (click)="react(r.reactorId, true)">
+            {{ ui.text('Atacar', 'Attack') }}
+          </button>
+          <button type="button" (click)="react(r.reactorId, false)">
+            {{ ui.text('Recusar', 'Decline') }}
+          </button>
         </span>
       </div>
     }
 
     @let a = active();
-    <div class="panel actions" aria-label="Ações do turno">
+    <div class="panel actions" [attr.aria-label]="ui.text('Ações do turno', 'Turn actions')">
       @if (running() && a) {
         @let t = cb.turn!;
         @let b = budget();
         <div class="turn-head">
-          <span class="turn-name">Turno de {{ a.name }}</span>
-          <span class="res" aria-label="Ação">Ação <i class="pip" [class.on]="t.action"></i></span>
-          <span class="res" aria-label="Ação bônus"
-            >Bônus <i class="pip" [class.on]="t.bonus"></i
+          <span class="turn-name">{{ ui.text('Turno de', 'Turn for') }} {{ a.name }}</span>
+          <span class="res" [attr.aria-label]="ui.text('Ação', 'Action')"
+            >{{ ui.text('Ação', 'Action') }} <i class="pip" [class.on]="t.action"></i
           ></span>
-          <span class="res" aria-label="Reação"
-            >Reação <i class="pip" [class.on]="t.reaction"></i
+          <span class="res" [attr.aria-label]="ui.text('Ação bônus', 'Bonus action')"
+            >{{ ui.text('Bônus', 'Bonus') }} <i class="pip" [class.on]="t.bonus"></i
+          ></span>
+          <span class="res" [attr.aria-label]="ui.text('Reação', 'Reaction')"
+            >{{ ui.text('Reação', 'Reaction') }} <i class="pip" [class.on]="t.reaction"></i
           ></span>
           <span class="res move">
-            Movimento
+            {{ ui.text('Movimento', 'Movement') }}
             <span
               class="mbar"
               role="meter"
-              aria-label="Movimento gasto"
+              [attr.aria-label]="ui.text('Movimento gasto', 'Movement spent')"
               aria-valuemin="0"
               [attr.aria-valuemax]="b.max"
               [attr.aria-valuenow]="b.moved"
@@ -313,7 +356,7 @@
           <div class="buttons">
             @if (a.status === 'dying') {
               <button type="button" class="primary" (click)="act('deathSave')">
-                Rolar salvaguarda contra a morte
+                {{ ui.text('Rolar salvaguarda contra a morte', 'Roll death saving throw') }}
               </button>
             }
             @for (w of a.attacks; track $index) {
@@ -333,32 +376,34 @@
                 [disabled]="a.status !== 'alive'"
                 (click)="toggleSpells()"
               >
-                Conjurar
+                {{ ui.text('Conjurar', 'Cast') }}
               </button>
             }
             @if (isProne()) {
-              <button type="button" (click)="act('standUp')">Levantar-se</button>
+              <button type="button" (click)="act('standUp')">
+                {{ ui.text('Levantar-se', 'Stand up') }}
+              </button>
             }
             <button
               type="button"
               [disabled]="!t.action || a.status !== 'alive'"
               (click)="act('dash')"
             >
-              Correr
+              {{ ui.text('Correr', 'Dash') }}
             </button>
             <button
               type="button"
               [disabled]="!t.action || a.status !== 'alive'"
               (click)="act('dodge')"
             >
-              Esquivar
+              {{ ui.text('Esquivar', 'Dodge') }}
             </button>
             <button
               type="button"
               [disabled]="!t.action || a.status !== 'alive'"
               (click)="act('disengage')"
             >
-              Desengajar
+              {{ ui.text('Desengajar', 'Disengage') }}
             </button>
             <button
               type="button"
@@ -366,7 +411,7 @@
               [disabled]="!t.action || a.status !== 'alive'"
               (click)="toggleHelp()"
             >
-              Ajudar
+              {{ ui.text('Ajudar', 'Help') }}
             </button>
             @for (i of consumables(); track i.id) {
               <button
@@ -378,79 +423,115 @@
               </button>
             }
             <span class="grow"></span>
-            <button type="button" class="primary" (click)="act('endTurn')">Encerrar turno</button>
+            <button type="button" class="primary" (click)="act('endTurn')">
+              {{ ui.text('Encerrar turno', 'End turn') }}
+            </button>
           </div>
           @if (spellsOpen()) {
             <app-spell-panel [caster]="a" (chosen)="onSpell($event)" />
           }
           @if (mode().kind === 'attack') {
-            <p class="hint">Clique num inimigo com o anel laranja para atacar.</p>
+            <p class="hint">
+              {{
+                ui.text(
+                  'Clique num inimigo com o anel laranja para atacar.',
+                  'Click an enemy with an orange ring to attack.'
+                )
+              }}
+            </p>
           } @else if (mode().kind === 'help') {
             <p class="hint">
-              Clique num inimigo adjacente: o próximo ataque de um aliado contra ele tem vantagem.
+              {{
+                ui.text(
+                  'Clique num inimigo adjacente: o próximo ataque de um aliado contra ele tem vantagem.',
+                  'Click an adjacent enemy: the next allied attack against it has advantage.'
+                )
+              }}
             </p>
           } @else if (mode().kind === 'cast') {
-            <p class="hint">Destaque em laranja mostra quem a magia atinge.</p>
+            <p class="hint">
+              {{
+                ui.text(
+                  'Destaque em laranja mostra quem a magia atinge.',
+                  'Orange highlights show who the spell affects.'
+                )
+              }}
+            </p>
           } @else if (!spellsOpen()) {
             <p class="hint">
-              Clique numa célula azul (ou arraste o token) para se mover. Shift+clique marca um
-              ponto para todos.
+              {{
+                ui.text(
+                  'Clique numa célula azul (ou arraste o token) para se mover. Shift+clique marca um ponto para todos.',
+                  'Click a blue cell (or drag the token) to move. Shift+click marks a point for everyone.'
+                )
+              }}
             </p>
           }
         } @else {
-          <p class="hint">Aguardando a vez de {{ a.name }}.</p>
+          <p class="hint">{{ ui.text('Aguardando a vez de', 'Waiting for') }} {{ a.name }}.</p>
         }
       } @else if (cb.phase === 'setup') {
         <p class="hint">
-          Montagem:
+          {{ ui.text('Montagem:', 'Setup:') }}
           {{
             isDm()
-              ? 'clique numa célula para posicionar o personagem selecionado ou arraste os tokens.'
-              : 'o Mestre está preparando o encontro.'
+              ? ui.text(
+                  'clique numa célula para posicionar o personagem selecionado ou arraste os tokens.',
+                  'click a cell to place the selected character or drag tokens.'
+                )
+              : ui.text(
+                  'o Mestre está preparando o encontro.',
+                  'the Game Master is preparing the encounter.'
+                )
           }}
         </p>
       } @else {
-        <p class="hint">O combate terminou.</p>
+        <p class="hint">{{ ui.text('O combate terminou.', 'Combat has ended.') }}</p>
       }
     </div>
   </section>
 
   <aside class="side right">
     @if (selected(); as c) {
-      <section class="panel card" aria-label="Criatura selecionada">
+      <section
+        class="panel card"
+        [attr.aria-label]="ui.text('Criatura selecionada', 'Selected creature')"
+      >
         <div class="card-head">
           <h2>{{ c.name }}</h2>
           <span class="chip" [class.foe]="c.kind === 'monster'">{{ teamLabel(c) }}</span>
         </div>
         <dl class="stats">
           <div>
-            <dt>PV</dt>
+            <dt>{{ ui.text('PV', 'HP') }}</dt>
             <dd>{{ hpLabel(c) }}</dd>
           </div>
           @if (c.ac > 0) {
             <div>
-              <dt>CA</dt>
+              <dt>{{ ui.text('CA', 'AC') }}</dt>
               <dd>{{ c.ac }}</dd>
             </div>
           }
           <div>
-            <dt>Desl.</dt>
+            <dt>{{ ui.text('Desl.', 'Speed') }}</dt>
             <dd>{{ c.speed }} ft</dd>
           </div>
         </dl>
         @if (c.concentration) {
-          <p class="conc">Concentrado em {{ c.concentration }}</p>
+          <p class="conc">
+            {{ ui.text('Concentrado em', 'Concentrating on') }} {{ c.concentration }}
+          </p>
         }
         @if (c.conditions.length) {
-          <ul class="conds" aria-label="Condições">
+          <ul class="conds" [attr.aria-label]="ui.text('Condições', 'Conditions')">
             @for (k of c.conditions; track k.name) {
               <li class="chip cond">
-                {{ condLabel[k.name] }}{{ k.rounds ? ' · ' + k.rounds + 'r' : '' }}
+                {{ conditionName(k.name) }}{{ k.rounds ? ' · ' + k.rounds + 'r' : '' }}
                 @if (isDm()) {
                   <button
                     type="button"
                     class="x"
-                    [attr.aria-label]="'Remover ' + condLabel[k.name]"
+                    [attr.aria-label]="ui.text('Remover ', 'Remove ') + conditionName(k.name)"
                     (click)="removeCondition(c.id, k.name)"
                   >
                     ×
@@ -462,33 +543,43 @@
         }
         @if (c.status !== 'alive') {
           <p class="status">
-            {{ c.status === 'dying' ? 'Morrendo' : c.status === 'stable' ? 'Estável' : 'Morto' }}
+            {{
+              c.status === 'dying'
+                ? ui.text('Morrendo', 'Dying')
+                : c.status === 'stable'
+                  ? ui.text('Estável', 'Stable')
+                  : ui.text('Morto', 'Dead')
+            }}
           </p>
         }
         @if (isDm()) {
           <div class="dm">
             <label class="field">
-              Valor
+              {{ ui.text('Valor', 'Amount') }}
               <input #amt type="number" min="0" value="5" />
             </label>
-            <button type="button" (click)="damage(c.id, amt.value)">Dano</button>
-            <button type="button" (click)="heal(c.id, amt.value)">Cura</button>
+            <button type="button" (click)="damage(c.id, amt.value)">
+              {{ ui.text('Dano', 'Damage') }}
+            </button>
+            <button type="button" (click)="heal(c.id, amt.value)">
+              {{ ui.text('Cura', 'Heal') }}
+            </button>
           </div>
           <div class="dm cond-form">
             <label class="field">
-              Condição
+              {{ ui.text('Condição', 'Condition') }}
               <select #cond>
                 @for (k of conditions; track k) {
-                  <option [value]="k">{{ condLabel[k] }}</option>
+                  <option [value]="k">{{ conditionName(k) }}</option>
                 }
               </select>
             </label>
             <label class="field rounds">
-              Rodadas
+              {{ ui.text('Rodadas', 'Rounds') }}
               <input #rounds type="number" min="0" placeholder="∞" />
             </label>
             <button type="button" (click)="addCondition(c.id, cond.value, rounds.value)">
-              Aplicar
+              {{ ui.text('Aplicar', 'Apply') }}
             </button>
           </div>
           <div class="dm">
@@ -497,7 +588,7 @@
                 type="button"
                 (click)="store.send({ type: 'setHidden', id: c.id, hidden: !isHidden(c.id) })"
               >
-                {{ isHidden(c.id) ? 'Revelar' : 'Ocultar' }}
+                {{ isHidden(c.id) ? ui.text('Revelar', 'Reveal') : ui.text('Ocultar', 'Hide') }}
               </button>
             }
             <button
@@ -505,7 +596,7 @@
               class="danger"
               (click)="store.send({ type: 'removeCreature', id: c.id })"
             >
-              Remover
+              {{ ui.text('Remover', 'Remove') }}
             </button>
           </div>
         }
@@ -513,8 +604,11 @@
     }
 
     @if (isDm() && cb.phase === 'setup') {
-      <section class="panel roster" aria-label="Adicionar ao encontro">
-        <h2>Adicionar ao encontro</h2>
+      <section
+        class="panel roster"
+        [attr.aria-label]="ui.text('Adicionar ao encontro', 'Add to encounter')"
+      >
+        <h2>{{ ui.text('Adicionar ao encontro', 'Add to encounter') }}</h2>
         <ul>
           @for (c of party.creatures(); track c.id) {
             <li>
@@ -522,20 +616,29 @@
             </li>
           }
         </ul>
-        <p class="hint">Depois de adicionar, selecione e clique numa célula para posicionar.</p>
-        <button type="button" (click)="store.reset()">Restaurar exemplo</button>
+        <p class="hint">
+          {{
+            ui.text(
+              'Depois de adicionar, selecione e clique numa célula para posicionar.',
+              'After adding, select it and click a cell to place it.'
+            )
+          }}
+        </p>
+        <button type="button" (click)="store.reset()">
+          {{ ui.text('Restaurar exemplo', 'Restore example') }}
+        </button>
       </section>
     }
 
-    <section class="panel log" aria-label="Registro do combate">
-      <h2>Registro</h2>
+    <section class="panel log" [attr.aria-label]="ui.text('Registro do combate', 'Combat log')">
+      <h2>{{ ui.text('Registro', 'Log') }}</h2>
       @if (isDm()) {
         <form class="secret-roll" (submit)="$event.preventDefault(); secretRoll(sr.value)">
           <label class="field">
-            Rolagem secreta
+            {{ ui.text('Rolagem secreta', 'Secret roll') }}
             <input #sr placeholder="1d20+5" autocomplete="off" />
           </label>
-          <button type="submit">Rolar</button>
+          <button type="submit">{{ ui.text('Rolar', 'Roll') }}</button>
         </form>
       }
       <div role="log">
@@ -543,7 +646,9 @@
           @for (e of logView(); track e.id) {
             <li [class.secret]="e.secret">{{ e.text }}</li>
           } @empty {
-            <li class="empty">Nada aconteceu ainda.</li>
+            <li class="empty">
+              {{ ui.text('Nada aconteceu ainda.', 'Nothing has happened yet.') }}
+            </li>
           }
         </ol>
       </div>

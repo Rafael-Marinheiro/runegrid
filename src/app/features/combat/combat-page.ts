@@ -338,7 +338,13 @@ export class CombatPage {
   }
 
   protected teamLabel(c: Creature): string {
-    return teamOf(c) === 'foes' ? 'Inimigo' : 'Grupo';
+    return teamOf(c) === 'foes' ? this.ui.text('Inimigo', 'Enemy') : this.ui.text('Grupo', 'Party');
+  }
+
+  protected conditionName(condition: ConditionName): string {
+    return this.ui.locale() === 'en'
+      ? condition.replace(/_/g, ' ').replace(/^./, (letter) => letter.toUpperCase())
+      : this.condLabel[condition];
   }
 
   protected setRole(value: string): void {

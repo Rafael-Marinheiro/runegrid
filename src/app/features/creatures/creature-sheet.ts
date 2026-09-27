@@ -28,6 +28,7 @@ import {
 import { ICON_IDS, ICON_LABEL } from '@features/combat/token-icons';
 import { DiceStore } from '@state/dice.store';
 import { PartyStore } from '@state/party.store';
+import { UiPrefs } from '@state/ui-prefs';
 import { HpPanel } from './hp-panel';
 import { InventoryPanel } from './inventory-panel';
 import { SlotsPanel } from './slots-panel';
@@ -46,6 +47,7 @@ export class CreatureSheet {
 
   private readonly store = inject(PartyStore);
   private readonly dice = inject(DiceStore);
+  protected readonly ui = inject(UiPrefs);
 
   protected readonly icons = ICON_IDS;
   protected readonly iconLabel = ICON_LABEL;
@@ -62,6 +64,42 @@ export class CreatureSheet {
     { key: 'immunities', label: 'Imunidades' },
     { key: 'vulnerabilities', label: 'Vulnerabilidades' },
   ];
+
+  protected abilityName(ability: Ability): string {
+    const labels: Record<Ability, string> = {
+      str: 'Strength',
+      dex: 'Dexterity',
+      con: 'Constitution',
+      int: 'Intelligence',
+      wis: 'Wisdom',
+      cha: 'Charisma',
+    };
+    return this.ui.locale() === 'en' ? labels[ability] : this.abilityLabel[ability];
+  }
+
+  protected skillName(skill: Skill): string {
+    if (this.ui.locale() !== 'en') return this.skills[skill].label;
+    return skill.replace(/_/g, ' ').replace(/^./, (letter) => letter.toUpperCase());
+  }
+
+  protected sizeName(size: Size): string {
+    return this.ui.locale() === 'en'
+      ? size.replace(/^./, (letter) => letter.toUpperCase())
+      : this.sizeLabel[size];
+  }
+
+  protected damageName(type: DamageType): string {
+    return this.ui.locale() === 'en' ? type : this.damageLabel[type];
+  }
+
+  protected traitName(trait: { key: Trait; label: string }): string {
+    const labels: Record<Trait, string> = {
+      resistances: 'Resistances',
+      immunities: 'Immunities',
+      vulnerabilities: 'Vulnerabilities',
+    };
+    return this.ui.locale() === 'en' ? labels[trait.key] : trait.label;
+  }
 
   protected readonly mod = abilityMod;
   protected readonly bonus = fmtBonus;

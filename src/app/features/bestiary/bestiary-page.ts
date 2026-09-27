@@ -15,6 +15,7 @@ import { DIFFICULTY_LABEL, estimateEncounter, xpForCr } from '@core/rules/srd/xp
 import { EncounterStore } from '@state/encounter.store';
 import { PartyStore } from '@state/party.store';
 import { SrdStore } from '@state/srd.store';
+import { UiPrefs } from '@state/ui-prefs';
 
 const PAGE = 60;
 const CRS = [0, 0.125, 0.25, 0.5, ...Array.from({ length: 30 }, (_, i) => i + 1)];
@@ -27,6 +28,7 @@ const CRS = [0, 0.125, 0.25, 0.5, ...Array.from({ length: 30 }, (_, i) => i + 1)
 })
 export class BestiaryPage implements OnInit {
   protected readonly srd = inject(SrdStore);
+  protected readonly ui = inject(UiPrefs);
   private readonly encounter = inject(EncounterStore);
   private readonly party = inject(PartyStore);
   private readonly router = inject(Router);
@@ -39,6 +41,17 @@ export class BestiaryPage implements OnInit {
   protected readonly abilities = ABILITIES;
   protected readonly abilityLabel = ABILITY_LABEL;
   protected readonly difficultyLabel = DIFFICULTY_LABEL;
+
+  protected difficulty(value: keyof typeof DIFFICULTY_LABEL): string {
+    const labels = {
+      trivial: 'Trivial',
+      easy: 'Easy',
+      medium: 'Medium',
+      hard: 'Hard',
+      deadly: 'Deadly',
+    } as const;
+    return this.ui.locale() === 'en' ? labels[value] : this.difficultyLabel[value];
+  }
 
   protected readonly query = signal('');
   protected readonly type = signal('');

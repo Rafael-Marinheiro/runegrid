@@ -1,25 +1,30 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RoomService } from '@net/room.service';
 import { VoiceService } from '@net/voice.service';
+import { UiPrefs } from '@state/ui-prefs';
 
 @Component({
   selector: 'app-voice-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="panel" aria-label="Chat de voz">
-      <h2>Voz</h2>
+    <section class="panel" [attr.aria-label]="ui.text('Chat de voz', 'Voice chat')">
+      <h2>{{ ui.text('Voz', 'Voice') }}</h2>
       <div class="row">
         @if (!voice.enabled()) {
-          <button type="button" class="primary" (click)="voice.enable()">Ligar microfone</button>
+          <button type="button" class="primary" (click)="voice.enable()">
+            {{ ui.text('Ligar microfone', 'Turn on microphone') }}
+          </button>
         } @else {
           <button
             type="button"
             (click)="voice.setMuted(!voice.muted())"
             [attr.aria-pressed]="voice.muted()"
           >
-            {{ voice.muted() ? 'Desmutar' : 'Mutar' }}
+            {{ voice.muted() ? ui.text('Desmutar', 'Unmute') : ui.text('Mutar', 'Mute') }}
           </button>
-          <button type="button" (click)="voice.disable()">Desligar</button>
+          <button type="button" (click)="voice.disable()">
+            {{ ui.text('Desligar', 'Turn off') }}
+          </button>
         }
         <label class="ptt">
           <input
@@ -28,21 +33,24 @@ import { VoiceService } from '@net/voice.service';
             [checked]="voice.pushToTalk()"
             (change)="voice.setPushToTalk(ptt.checked)"
           />
-          Push-to-talk (segure V)
+          {{ ui.text('Push-to-talk (segure V)', 'Push-to-talk (hold V)') }}
         </label>
       </div>
       <p class="me" [class.on]="voice.meSpeaking()">
         <span class="dot" aria-hidden="true"></span>
         {{
           !voice.enabled()
-            ? 'Microfone desligado (você ainda ouve os outros)'
+            ? ui.text(
+                'Microfone desligado (você ainda ouve os outros)',
+                'Microphone off (you can still hear others)'
+              )
             : voice.muted()
-              ? 'Mutado'
+              ? ui.text('Mutado', 'Muted')
               : voice.pushToTalk() && !voice.talking()
-                ? 'Segure V para falar'
+                ? ui.text('Segure V para falar', 'Hold V to talk')
                 : voice.meSpeaking()
-                  ? 'Você está falando'
-                  : 'Microfone aberto'
+                  ? ui.text('Você está falando', 'You are speaking')
+                  : ui.text('Microfone aberto', 'Microphone open')
         }}
       </p>
       @if (voice.error()) {
@@ -54,10 +62,14 @@ import { VoiceService } from '@net/voice.service';
             <span class="dot" aria-hidden="true"></span>
             <span class="name">{{ v.name }}</span>
             <span class="state">{{
-              v.connected ? (v.speaking ? 'falando' : 'conectado') : 'sem áudio'
+              v.connected
+                ? v.speaking
+                  ? ui.text('falando', 'speaking')
+                  : ui.text('conectado', 'connected')
+                : ui.text('sem áudio', 'no audio')
             }}</span>
             <label class="vol">
-              <span class="sr">Volume de {{ v.name }}</span>
+              <span class="sr">{{ ui.text('Volume de', 'Volume for') }} {{ v.name }}</span>
               <input
                 #vol
                 type="range"
@@ -72,18 +84,25 @@ import { VoiceService } from '@net/voice.service';
               <button
                 type="button"
                 class="small"
-                [attr.aria-label]="'Silenciar ' + v.name"
+                [attr.aria-label]="ui.text('Silenciar ', 'Mute ') + v.name"
                 (click)="room.requestMute(v.id)"
               >
-                Silenciar
+                {{ ui.text('Silenciar', 'Mute') }}
               </button>
             }
           </li>
         } @empty {
-          <li class="muted">Ninguém mais na sala.</li>
+          <li class="muted">{{ ui.text('Ninguém mais na sala.', 'No one else in the room.') }}</li>
         }
       </ul>
-      <p class="hint">O áudio vai direto entre os navegadores e nunca é gravado.</p>
+      <p class="hint">
+        {{
+          ui.text(
+            'O áudio vai direto entre os navegadores e nunca é gravado.',
+            'Audio goes directly between browsers and is never recorded.'
+          )
+        }}
+      </p>
     </section>
   `,
   styles: `
@@ -172,4 +191,5 @@ import { VoiceService } from '@net/voice.service';
 export class VoicePanel {
   protected readonly voice = inject(VoiceService);
   protected readonly room = inject(RoomService);
+  protected readonly ui = inject(UiPrefs);
 }

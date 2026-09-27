@@ -1,23 +1,32 @@
-<h1>Mesa online</h1>
+<h1>{{ ui.text('Mesa online', 'Online table') }}</h1>
 
 @if (!room.online()) {
   <p class="sub">
-    O Mestre cria a sala e passa o código; os jogadores entram por ele. Tudo roda direto entre os
-    navegadores.
+    {{
+      ui.text(
+        'O Mestre cria a sala e passa o código; os jogadores entram por ele. Tudo roda direto entre os navegadores.',
+        'The Game Master creates a room and shares its code. Everything runs directly between browsers.'
+      )
+    }}
   </p>
 
   @if (room.error()) {
     <p class="error" role="alert">{{ room.error() }}</p>
   }
   @if (room.status() === 'connecting') {
-    <p class="muted" role="status">Conectando…</p>
+    <p class="muted" role="status">{{ ui.text('Conectando…', 'Connecting…') }}</p>
   }
 
   <div class="cards">
     <section class="panel">
-      <h2>Sou o Mestre</h2>
+      <h2>{{ ui.text('Sou o Mestre', 'I am the Game Master') }}</h2>
       <p class="muted">
-        Você controla o mundo: cria e revela mapas, conduz o combate e decide o que cada jogador vê.
+        {{
+          ui.text(
+            'Você controla o mundo: cria e revela mapas, conduz o combate e decide o que cada jogador vê.',
+            'You control the world: create and reveal maps, run combat, and decide what each player sees.'
+          )
+        }}
       </p>
       @if (room.savedHost(); as snapshot) {
         <button
@@ -26,16 +35,21 @@
           [disabled]="room.status() === 'connecting'"
           (click)="room.resume()"
         >
-          Retomar sala {{ snapshot.code }}
+          {{ ui.text('Retomar sala', 'Resume room') }} {{ snapshot.code }}
         </button>
-        <p class="hint">{{ snapshot.state.name }} continuará do último estado salvo.</p>
+        <p class="hint">
+          {{ snapshot.state.name }}
+          {{
+            ui.text('continuará do último estado salvo.', 'will resume from its last saved state.')
+          }}
+        </p>
         <button
           type="button"
           class="big"
           [disabled]="room.status() === 'connecting'"
           (click)="room.host()"
         >
-          Criar nova sala
+          {{ ui.text('Criar nova sala', 'Create new room') }}
         </button>
       } @else {
         <button
@@ -44,16 +58,16 @@
           [disabled]="room.status() === 'connecting'"
           (click)="room.host()"
         >
-          Criar sala
+          {{ ui.text('Criar sala', 'Create room') }}
         </button>
       }
     </section>
 
     <section class="panel">
-      <h2>Sou jogador</h2>
+      <h2>{{ ui.text('Sou jogador', 'I am a player') }}</h2>
       <form class="join" (submit)="$event.preventDefault(); room.join(code.value, who.value)">
         <label class="field">
-          Código da sala
+          {{ ui.text('Código da sala', 'Room code') }}
           <input
             #code
             [value]="prefill() || saved()?.code || ''"
@@ -63,11 +77,11 @@
           />
         </label>
         <label class="field">
-          Seu nome
+          {{ ui.text('Seu nome', 'Your name') }}
           <input #who [value]="saved()?.name ?? ''" maxlength="24" autocomplete="nickname" />
         </label>
         <button type="submit" class="primary big" [disabled]="room.status() === 'connecting'">
-          Entrar
+          {{ ui.text('Entrar', 'Join') }}
         </button>
       </form>
     </section>
@@ -75,15 +89,17 @@
 } @else {
   <div class="head">
     <div class="code">
-      <span class="label">Código da sala</span>
+      <span class="label">{{ ui.text('Código da sala', 'Room code') }}</span>
       <span class="value" aria-live="polite">{{ room.code() }}</span>
     </div>
     <div class="head-actions">
       @if (room.isHost()) {
-        <button type="button" (click)="copy(link())">Copiar link de convite</button>
+        <button type="button" (click)="copy(link())">
+          {{ ui.text('Copiar link de convite', 'Copy invite link') }}
+        </button>
       }
       <button type="button" class="danger" (click)="room.leave()">
-        {{ room.isHost() ? 'Encerrar sala' : 'Sair' }}
+        {{ room.isHost() ? ui.text('Encerrar sala', 'End room') : ui.text('Sair', 'Leave') }}
       </button>
     </div>
   </div>
@@ -92,27 +108,39 @@
   <div class="layout">
     <section class="panel">
       <h2>
-        Na sala <small class="muted">{{ room.peers().length }} jogador(es) + Mestre</small>
+        {{ ui.text('Na sala', 'In the room') }}
+        <small class="muted"
+          >{{ room.peers().length }}
+          {{ ui.text('jogador(es) + Mestre', 'player(s) + Game Master') }}</small
+        >
       </h2>
       <ul class="peers">
         <li>
-          <span class="name">{{ room.isHost() ? 'Você (Mestre)' : 'Mestre' }}</span>
-          <span class="chip">Mestre</span>
+          <span class="name">{{
+            room.isHost()
+              ? ui.text('Você (Mestre)', 'You (Game Master)')
+              : ui.text('Mestre', 'Game Master')
+          }}</span>
+          <span class="chip">{{ ui.text('Mestre', 'GM') }}</span>
         </li>
         @for (p of room.peers(); track p.id) {
           <li>
-            <span class="name">{{ p.name }}{{ p.id === room.myId() ? ' (você)' : '' }}</span>
+            <span class="name"
+              >{{ p.name }}{{ p.id === room.myId() ? ui.text(' (você)', ' (you)') : '' }}</span
+            >
             @if (room.isHost()) {
               <label class="assign">
-                <span class="sr">Personagem de {{ p.name }}</span>
+                <span class="sr">{{ ui.text('Personagem de', 'Character for') }} {{ p.name }}</span>
                 <select #sel (change)="assign(p.id, sel.value)">
-                  <option value="" [selected]="!p.owns.length">Sem personagem</option>
+                  <option value="" [selected]="!p.owns.length">
+                    {{ ui.text('Sem personagem', 'No character') }}
+                  </option>
                   @for (c of characters(); track c.id) {
                     <option [value]="c.id" [selected]="p.owns.includes(c.id)">
                       {{ c.name
                       }}{{
                         ownerOf(c.id) && ownerOf(c.id) !== p.name
-                          ? ' (de ' + ownerOf(c.id) + ')'
+                          ? ui.text(' (de ', ' (owned by ') + ownerOf(c.id) + ')'
                           : ''
                       }}
                     </option>
@@ -122,25 +150,43 @@
               <button
                 type="button"
                 class="small danger"
-                [attr.aria-label]="'Remover ' + p.name"
+                [attr.aria-label]="ui.text('Remover ', 'Remove ') + p.name"
                 (click)="room.kick(p.id)"
               >
-                Remover
+                {{ ui.text('Remover', 'Remove') }}
               </button>
             } @else {
               <span class="muted">
                 {{
-                  p.owns.length ? 'controla ' + p.owns.length + ' personagem(ns)' : 'sem personagem'
+                  p.owns.length
+                    ? ui.text('controla ', 'controls ') +
+                      p.owns.length +
+                      ui.text(' personagem(ns)', ' character(s)')
+                    : ui.text('sem personagem', 'no character')
                 }}
               </span>
             }
           </li>
         } @empty {
-          <li class="muted">Ninguém entrou ainda. Passe o código ou o link.</li>
+          <li class="muted">
+            {{
+              ui.text(
+                'Ninguém entrou ainda. Passe o código ou o link.',
+                'No one has joined yet. Share the code or link.'
+              )
+            }}
+          </li>
         }
       </ul>
       @if (!room.isHost() && !room.peers().some((p) => p.id === room.myId() && p.owns.length)) {
-        <p class="hint">Aguarde o Mestre entregar um personagem a você.</p>
+        <p class="hint">
+          {{
+            ui.text(
+              'Aguarde o Mestre entregar um personagem a você.',
+              'Wait for the Game Master to assign you a character.'
+            )
+          }}
+        </p>
       }
     </section>
 
@@ -154,24 +200,30 @@
             <li [class.whisper]="l.whisper">
               <span class="at">{{ time(l.at) }}</span>
               <b>{{ l.from }}</b
-              >{{ l.whisper ? ' (sussurro)' : '' }}: {{ l.text }}
+              >{{ l.whisper ? ui.text(' (sussurro)', ' (whisper)') : '' }}: {{ l.text }}
             </li>
           } @empty {
-            <li class="muted">Nenhuma mensagem.</li>
+            <li class="muted">{{ ui.text('Nenhuma mensagem.', 'No messages.') }}</li>
           }
         </ol>
       </div>
       <form class="say" (submit)="$event.preventDefault(); send(msg, to)">
-        <label class="sr" for="msg">Mensagem</label>
-        <input #msg id="msg" maxlength="500" autocomplete="off" placeholder="Escreva algo…" />
-        <label class="sr" for="to" [hidden]="!room.isHost()">Para</label>
+        <label class="sr" for="msg">{{ ui.text('Mensagem', 'Message') }}</label>
+        <input
+          #msg
+          id="msg"
+          maxlength="500"
+          autocomplete="off"
+          [placeholder]="ui.text('Escreva algo…', 'Write something…')"
+        />
+        <label class="sr" for="to" [hidden]="!room.isHost()">{{ ui.text('Para', 'To') }}</label>
         <select #to id="to" [hidden]="!room.isHost()">
-          <option value="">Todos</option>
+          <option value="">{{ ui.text('Todos', 'Everyone') }}</option>
           @for (p of room.peers(); track p.id) {
-            <option [value]="p.id">Sussurrar a {{ p.name }}</option>
+            <option [value]="p.id">{{ ui.text('Sussurrar a', 'Whisper to') }} {{ p.name }}</option>
           }
         </select>
-        <button type="submit" class="primary">Enviar</button>
+        <button type="submit" class="primary">{{ ui.text('Enviar', 'Send') }}</button>
       </form>
     </section>
   </div>

@@ -1,13 +1,14 @@
-<h1>Magias</h1>
+<h1>{{ ui.text('Magias', 'Spells') }}</h1>
 <p class="sub">
-  SRD 5.1 · {{ filtered().length }} de {{ srd.spells().length }} magias (textos em inglês)
+  SRD 5.1 · {{ filtered().length }} {{ ui.text('de', 'of') }} {{ srd.spells().length }}
+  {{ ui.text('magias (textos em inglês)', 'spells') }}
 </p>
 
 <div class="layout">
-  <section class="panel" aria-label="Lista de magias">
+  <section class="panel" [attr.aria-label]="ui.text('Lista de magias', 'Spell list')">
     <div class="filters">
       <label class="field grow">
-        Buscar
+        {{ ui.text('Buscar', 'Search') }}
         <input
           #q
           type="search"
@@ -16,27 +17,29 @@
         />
       </label>
       <label class="field">
-        Nível
+        {{ ui.text('Nível', 'Level') }}
         <select #lv (change)="setLevel(lv.value)">
-          <option value="">Todos</option>
+          <option value="">{{ ui.text('Todos', 'All') }}</option>
           @for (l of levels; track l) {
-            <option [value]="l">{{ l === 0 ? 'Truque' : l + 'º' }}</option>
+            <option [value]="l">
+              {{ l === 0 ? ui.text('Truque', 'Cantrip') : ui.text(l + 'º', 'Level ' + l) }}
+            </option>
           }
         </select>
       </label>
       <label class="field">
-        Escola
+        {{ ui.text('Escola', 'School') }}
         <select #sc (change)="school.set(sc.value); reset()">
-          <option value="">Todas</option>
+          <option value="">{{ ui.text('Todas', 'All') }}</option>
           @for (s of schools(); track s) {
             <option [value]="s">{{ s }}</option>
           }
         </select>
       </label>
       <label class="field">
-        Classe
+        {{ ui.text('Classe', 'Class') }}
         <select #cl (change)="klass.set(cl.value); reset()">
-          <option value="">Todas</option>
+          <option value="">{{ ui.text('Todas', 'All') }}</option>
           @for (c of classes(); track c) {
             <option [value]="c">{{ c }}</option>
           }
@@ -45,9 +48,11 @@
     </div>
 
     @if (srd.spellsStatus() === 'loading') {
-      <p class="muted">Carregando o SRD…</p>
+      <p class="muted">{{ ui.text('Carregando o SRD…', 'Loading SRD…') }}</p>
     } @else if (srd.spellsStatus() === 'error') {
-      <p class="error" role="alert">Não foi possível carregar as magias.</p>
+      <p class="error" role="alert">
+        {{ ui.text('Não foi possível carregar as magias.', 'Could not load spells.') }}
+      </p>
     }
 
     <ul class="rows">
@@ -58,7 +63,7 @@
             <span class="meta">
               {{ levelLabel(s) }} · {{ s.school }}
               @if (inCombat(s)) {
-                · <span class="live">resolvida no combate</span>
+                · <span class="live">{{ ui.text('resolvida no combate', 'combat-ready') }}</span>
               }
             </span>
           </button>
@@ -66,45 +71,61 @@
       }
     </ul>
     @if (filtered().length > visible().length) {
-      <button type="button" class="more" (click)="shown.set(shown() + 60)">Mostrar mais</button>
+      <button type="button" class="more" (click)="shown.set(shown() + 60)">
+        {{ ui.text('Mostrar mais', 'Show more') }}
+      </button>
     }
   </section>
 
-  <section class="panel detail" aria-label="Detalhes da magia">
+  <section class="panel detail" [attr.aria-label]="ui.text('Detalhes da magia', 'Spell details')">
     @if (selected(); as s) {
       <h2>{{ s.name }}</h2>
       <p class="muted">{{ levelLabel(s) }} · {{ s.school }}{{ s.ritual ? ' · ritual' : '' }}</p>
       <dl>
         <div>
-          <dt>Execução</dt>
+          <dt>{{ ui.text('Execução', 'Casting time') }}</dt>
           <dd>{{ s.castingTime }}</dd>
         </div>
         <div>
-          <dt>Alcance</dt>
+          <dt>{{ ui.text('Alcance', 'Range') }}</dt>
           <dd>{{ s.range }}</dd>
         </div>
         <div>
-          <dt>Componentes</dt>
+          <dt>{{ ui.text('Componentes', 'Components') }}</dt>
           <dd>{{ s.components }}</dd>
         </div>
         <div>
-          <dt>Duração</dt>
-          <dd>{{ s.concentration ? 'Concentração, ' : '' }}{{ s.duration }}</dd>
+          <dt>{{ ui.text('Duração', 'Duration') }}</dt>
+          <dd>
+            {{ s.concentration ? ui.text('Concentração, ', 'Concentration, ') : ''
+            }}{{ s.duration }}
+          </dd>
         </div>
         <div>
-          <dt>Classes</dt>
+          <dt>{{ ui.text('Classes', 'Classes') }}</dt>
           <dd>{{ s.classes.join(', ') }}</dd>
         </div>
       </dl>
       <p class="desc">{{ s.desc }}</p>
       @if (s.higher) {
-        <p class="desc"><b>Em níveis superiores.</b> {{ s.higher }}</p>
+        <p class="desc">
+          <b>{{ ui.text('Em níveis superiores.', 'At higher levels.') }}</b> {{ s.higher }}
+        </p>
       }
       @if (inCombat(s)) {
-        <p class="live">Esta magia já é resolvida pelo motor de combate.</p>
+        <p class="live">
+          {{
+            ui.text(
+              'Esta magia já é resolvida pelo motor de combate.',
+              'This spell is supported by the combat engine.'
+            )
+          }}
+        </p>
       }
     } @else {
-      <p class="muted">Escolha uma magia na lista.</p>
+      <p class="muted">
+        {{ ui.text('Escolha uma magia na lista.', 'Choose a spell from the list.') }}
+      </p>
     }
   </section>
 </div>

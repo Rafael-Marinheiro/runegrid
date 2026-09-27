@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { Creature } from '@core/models/creature';
 import { fullCasterSlots } from '@core/rules/creature';
 import { PartyStore } from '@state/party.store';
+import { UiPrefs } from '@state/ui-prefs';
 
 const range = (n: number): number[] => Array.from({ length: n }, (_, i) => i);
 
@@ -11,11 +12,11 @@ const range = (n: number): number[] => Array.from({ length: n }, (_, i) => i);
   template: `
     @let c = creature();
     <section class="panel" [attr.aria-labelledby]="'slots-' + c.id">
-      <h2 [id]="'slots-' + c.id">Espaços de magia</h2>
+      <h2 [id]="'slots-' + c.id">{{ ui.text('Espaços de magia', 'Spell slots') }}</h2>
 
       @for (row of rows(); track row.level) {
         <div class="row">
-          <span class="lv">Nível {{ row.level }}</span>
+          <span class="lv">{{ ui.text('Nível', 'Level') }} {{ row.level }}</span>
           <div class="pips">
             @for (i of row.pips; track i) {
               <button
@@ -24,12 +25,12 @@ const range = (n: number): number[] => Array.from({ length: n }, (_, i) => i);
                 [class.used]="i >= row.max - row.used"
                 [attr.aria-label]="
                   row.level +
-                  'º nível, espaço ' +
+                  ui.text('º nível, espaço ', ' level, slot ') +
                   (i + 1) +
                   ': ' +
                   (i < row.max - row.used
-                    ? 'disponível, clique para gastar'
-                    : 'gasto, clique para devolver')
+                    ? ui.text('disponível, clique para gastar', 'available, click to spend')
+                    : ui.text('gasto, clique para devolver', 'spent, click to restore'))
                 "
                 (click)="store.toggleSlot(c.id, row.level, i < row.max - row.used)"
               ></button>
@@ -39,7 +40,7 @@ const range = (n: number): number[] => Array.from({ length: n }, (_, i) => i);
           <button
             type="button"
             class="step"
-            aria-label="Menos um espaço"
+            [attr.aria-label]="ui.text('Menos um espaço', 'Remove one slot')"
             (click)="store.setSlotMax(c.id, row.level, row.max - 1)"
           >
             −
@@ -47,23 +48,26 @@ const range = (n: number): number[] => Array.from({ length: n }, (_, i) => i);
           <button
             type="button"
             class="step"
-            aria-label="Mais um espaço"
+            [attr.aria-label]="ui.text('Mais um espaço', 'Add one slot')"
             (click)="store.setSlotMax(c.id, row.level, row.max + 1)"
           >
             +
           </button>
         </div>
       } @empty {
-        <p class="help">Sem espaços de magia.</p>
+        <p class="help">{{ ui.text('Sem espaços de magia.', 'No spell slots.') }}</p>
       }
       <div class="actions">
-        <button type="button" (click)="fill()">Conjurador completo (nível {{ c.level }})</button>
+        <button type="button" (click)="fill()">
+          {{ ui.text('Conjurador completo', 'Full caster') }} ({{ ui.text('nível', 'level') }}
+          {{ c.level }})
+        </button>
         <button type="button" (click)="store.setSlotMax(c.id, nextLevel(), 1)">
-          Adicionar nível
+          {{ ui.text('Adicionar nível', 'Add level') }}
         </button>
       </div>
 
-      <h2 class="res">Recursos</h2>
+      <h2 class="res">{{ ui.text('Recursos', 'Resources') }}</h2>
       @for (r of c.resources; track r.name) {
         <div class="row">
           <span class="lv">{{ r.name }}</span>
@@ -75,20 +79,24 @@ const range = (n: number): number[] => Array.from({ length: n }, (_, i) => i);
                 [class.used]="i >= r.max - r.used"
                 [attr.aria-label]="
                   r.name +
-                  ', uso ' +
+                  ui.text(', uso ', ', use ') +
                   (i + 1) +
-                  (i < r.max - r.used ? ': disponível, clique para gastar' : ': gasto')
+                  (i < r.max - r.used
+                    ? ui.text(': disponível, clique para gastar', ': available, click to spend')
+                    : ui.text(': gasto', ': spent'))
                 "
                 [disabled]="i >= r.max - r.used"
                 (click)="store.useResource(c.id, r.name)"
               ></button>
             }
           </div>
-          <span class="count">{{ r.recharge === 'short' ? 'curto' : 'longo' }}</span>
+          <span class="count">{{
+            r.recharge === 'short' ? ui.text('curto', 'short') : ui.text('longo', 'long')
+          }}</span>
           <button
             type="button"
             class="step"
-            [attr.aria-label]="'Remover ' + r.name"
+            [attr.aria-label]="ui.text('Remover ', 'Remove ') + r.name"
             (click)="store.removeResource(c.id, r.name)"
           >
             ×
@@ -96,16 +104,21 @@ const range = (n: number): number[] => Array.from({ length: n }, (_, i) => i);
         </div>
       }
       <form class="add" (submit)="$event.preventDefault(); add(rn, rm, rr)">
-        <label class="field">Novo recurso<input #rn placeholder="Fúria, Ki…" /></label>
-        <label class="field">Usos<input #rm type="number" min="1" value="1" /></label>
+        <label class="field"
+          >{{ ui.text('Novo recurso', 'New resource')
+          }}<input #rn [placeholder]="ui.text('Fúria, Ki…', 'Rage, Ki…')"
+        /></label>
+        <label class="field"
+          >{{ ui.text('Usos', 'Uses') }}<input #rm type="number" min="1" value="1"
+        /></label>
         <label class="field">
-          Recarrega
+          {{ ui.text('Recarrega', 'Recharges') }}
           <select #rr>
-            <option value="short">Descanso curto</option>
-            <option value="long">Descanso longo</option>
+            <option value="short">{{ ui.text('Descanso curto', 'Short rest') }}</option>
+            <option value="long">{{ ui.text('Descanso longo', 'Long rest') }}</option>
           </select>
         </label>
-        <button type="submit">Adicionar</button>
+        <button type="submit">{{ ui.text('Adicionar', 'Add') }}</button>
       </form>
     </section>
   `,
@@ -184,6 +197,7 @@ const range = (n: number): number[] => Array.from({ length: n }, (_, i) => i);
 export class SlotsPanel {
   readonly creature = input.required<Creature>();
   protected readonly store = inject(PartyStore);
+  protected readonly ui = inject(UiPrefs);
   protected readonly pips = range;
 
   protected readonly rows = computed(() =>

@@ -67,6 +67,39 @@ export class StudioPage {
   protected readonly selectedTrapId = signal<string | null>(null);
   protected readonly message = signal('');
 
+  protected toolLabel(tool: ToolButton): string {
+    const labels: Record<string, string> = {
+      select: 'Select',
+      floor: 'Floor',
+      wall: 'Wall',
+      difficult: 'Difficult',
+      water: 'Water',
+      door: 'Door',
+      'door-closed': 'Closed door',
+      'door-locked': 'Locked door',
+      room: 'Room',
+      trap: 'Trap',
+      'fog-on': 'Hide',
+      'fog-off': 'Reveal',
+    };
+    return this.ui.locale() === 'en' ? labels[tool.id] : tool.label;
+  }
+
+  protected textureName(texture: Texture): string {
+    const labels: Record<Texture, string> = {
+      none: 'No texture',
+      stone: 'Stone',
+      cave: 'Cave',
+      grass: 'Grass',
+      mud: 'Mud',
+    };
+    return this.ui.locale() === 'en' ? labels[texture] : this.textureLabel[texture];
+  }
+
+  protected damageName(type: DamageType): string {
+    return this.ui.locale() === 'en' ? type : this.damageLabel[type];
+  }
+
   /** Traço em andamento (células do pincel) e retângulo de sala. */
   protected readonly stroke = signal<Pos[]>([]);
   protected readonly draft = signal<{ a: Pos; b: Pos } | null>(null);
@@ -165,7 +198,7 @@ export class StudioPage {
     const n = this.rooms().length + 1;
     const room: Room = {
       id: crypto.randomUUID(),
-      name: `Sala ${n}`,
+      name: `${this.ui.text('Sala', 'Room')} ${n}`,
       description: '',
       notes: '',
       x: Math.min(d.a.x, d.b.x),
@@ -179,7 +212,7 @@ export class StudioPage {
   private addTrap(pos: Pos): void {
     const trap: Trap = {
       id: crypto.randomUUID(),
-      name: 'Armadilha',
+      name: this.ui.text('Armadilha', 'Trap'),
       pos,
       ability: 'dex',
       dc: 13,
@@ -249,7 +282,9 @@ export class StudioPage {
 
   protected saveToLibrary(name: string): void {
     this.library.save(name || this.state().name, this.state().map);
-    this.message.set(`"${name || this.state().name}" salvo na biblioteca.`);
+    this.message.set(
+      `"${name || this.state().name}" ${this.ui.text('salvo na biblioteca.', 'saved to the library.')}`,
+    );
   }
 
   protected load(d: SavedDungeon): void {
@@ -270,8 +305,14 @@ export class StudioPage {
     input.value = '';
     if (!file) return;
     const parsed = this.library.parse(await file.text());
-    if (!parsed) return void this.message.set('Arquivo inválido: não é um mapa do Runegrid.');
+    if (!parsed)
+      return void this.message.set(
+        this.ui.text(
+          'Arquivo inválido: não é um mapa do Runegrid.',
+          'Invalid file: this is not a Runegrid map.',
+        ),
+      );
     if (this.send({ type: 'setMap', map: parsed.map }))
-      this.message.set(`"${parsed.name}" importado.`);
+      this.message.set(`"${parsed.name}" ${this.ui.text('importado.', 'imported.')}`);
   }
 }

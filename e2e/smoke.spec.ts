@@ -36,3 +36,15 @@ test('mapa fica em primeiro plano no tablet', async ({ page }) => {
   expect(initiative).not.toBeNull();
   expect(map!.y).toBeLessThan(initiative!.y);
 });
+
+test('paleta e atalhos navegam entre ferramentas', async ({ page }) => {
+  await page.goto('/criaturas');
+  await page.keyboard.press('Control+K');
+  const palette = page.getByRole('dialog', { name: 'Comandos' });
+  await expect(palette).toBeVisible();
+  await palette.getByLabel('Buscar comando').fill('estudio');
+  await palette.getByRole('button', { name: 'Ir para Estúdio' }).click();
+  await expect(page).toHaveURL(/\/estudio$/);
+  await page.keyboard.press('Alt+7');
+  await expect(page).toHaveURL(/\/dados$/);
+});

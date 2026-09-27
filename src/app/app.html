@@ -16,6 +16,14 @@
         >
       }
     </a>
+    <button
+      type="button"
+      class="command-trigger"
+      aria-keyshortcuts="Control+K Meta+K"
+      (click)="openPalette()"
+    >
+      Comandos <kbd>Ctrl K</kbd>
+    </button>
   </nav>
 </header>
 <main>
@@ -26,3 +34,36 @@
   <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC-BY-4.0</a
   >.
 </footer>
+
+<dialog #palette class="command-palette" aria-labelledby="command-title">
+  <div class="command-box">
+    <div class="command-head">
+      <h2 id="command-title">Comandos</h2>
+      <button type="button" class="command-close" aria-label="Fechar" (click)="closePalette()">
+        ×
+      </button>
+    </div>
+    <label for="command-search">Buscar comando</label>
+    <input
+      #commandSearch
+      id="command-search"
+      type="search"
+      autocomplete="off"
+      [value]="query()"
+      (input)="query.set(commandSearch.value)"
+      (keydown)="onSearchKey($event)"
+    />
+    <div class="command-list">
+      @for (command of filteredCommands(); track command.label) {
+        <button type="button" (click)="run(command)">
+          <span>{{ command.label }}</span>
+          @if (command.shortcut) {
+            <kbd>{{ command.shortcut }}</kbd>
+          }
+        </button>
+      } @empty {
+        <p role="status">Nenhum comando encontrado.</p>
+      }
+    </div>
+  </div>
+</dialog>

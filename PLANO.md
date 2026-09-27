@@ -4,25 +4,41 @@ Tático de combate em grid para D&D 5e, feito em Angular. Projeto de portfólio:
 
 ## Status
 
-- **Fase 0:** F0-1 a F0-5, F0-7 e F0-8 concluídos (lint + Prettier sem hook de commit, o CI cobre; tokens em `styles.scss`; modelo de criatura em `core/models`). Pendente: F0-6 (deploy no ar em runegrid-nine.vercel.app; falta o CI do GitHub, bloqueado por pagamento da conta).
-- **Fase 1:** F1-1 a F1-6e concluídos (parser, RNG com semente, vantagem/crítico, rolador, histórico, dados 3D com física e cor por tipo). Próximo: F1-6b (bandeja reutilizável), F1-7 (macros).
+- **Fase 0:** F0-1 a F0-8 concluídos ou cobertos, com F0-2 parcial (sem hook de commit). Deploy automático no ar em runegrid-nine.vercel.app; a execução do GitHub Actions segue bloqueada por cobrança/limite da conta, não por código.
+- **Fase 1:** F1-1 a F1-6b, F1-6d, F1-6e e F1-7 concluídos (parser, RNG com semente, vantagem/crítico, rolador, histórico, bandeja, dados 3D com física e cor por tipo, macros). Pendente: F1-6c (som opcional).
 - **Fase 2:** F2-1, F2-2, F2-3, F2-4, F2-5, F2-6 e F2-7 concluídos: ficha completa (atributos, salvaguardas, perícias, CA, PV com dano/cura/temporários, morte, espaços de magia, recursos, descansos, resistências), lista de criaturas com persistência local e rolagem de testes pela ficha.
 - **Fase 3:** F3-1 a F3-5, F3-8, F3-11 concluídos: mapa SVG com zoom/pan, tokens arrastáveis com encaixe, colisão, terreno difícil, regra de diagonal simples ou 5-10-5, criaturas grandes (2×2+), destaque de alcance e navegação por teclado. F3-6 (prévia do caminho com custo), F3-7 (régua que respeita a regra de diagonal), F3-9 (14 ícones próprios nos tokens, escolhidos por criatura ou deduzidos do nome), F3-10 e F7-14 (texturas de piso por tema: pedra, caverna, grama, lama) e F3-11 (alto contraste: sem texturas e anéis mais grossos) concluídos.
 - **Fase 4:** F4-0 (modelo Command/Event com papéis dm/player e `project()`), F4-1 a F4-9 concluídos: iniciativa, turnos e rodadas, orçamento de ação/movimento, ataque com crítico, vantagem/desvantagem, Ataque Extra, Esquiva/Disparada/Desengajar, log, desfazer/refazer, salvaguardas e resumo final com XP opcional.
-- **Fase 5:** F5-1 (14 condições SRD com efeitos: vantagem/desvantagem, sem ação, deslocamento 0, falha automática, crítico automático), F5-2 (duração em rodadas), F5-3 (concentração), F5-4 (conjuração com espaço, upcast, truques que escalam, alvo único, esfera e cone, salvaguarda individual, cura, condição), F4-8 (salvaguardas em área) concluídos, com 14 magias do SRD e prévia de área no mapa. F5-5 (ataque de oportunidade: reação pendente ao sair do alcance, decidida pelo dono; uma reação por rodada; Desengajar evita) e F8-9 (pedido de decisão ao jogador) concluídos. F5-6 (cobertura: +2/+5 por obstáculos na linha, nos ataques e magias de ataque) e Ajudar (F5-7, vantagem no próximo ataque contra o alvo) concluídos. Pendentes: Esconder, F5-8.
+- **Fase 5:** F5-1 a F5-6 e F5-8 concluídos, com condições, duração, concentração, magias, ataques de oportunidade, cobertura e armas versáteis. F5-7 parcial: Disparada, Esquiva, Desengajar e Ajudar concluídos; falta Esconder.
 - **Acessibilidade:** Lighthouse 100 em combate, gerador, mesa e criaturas (contraste, landmarks, roles, nomes acessíveis).
 - **E2E:** Playwright (`npm run e2e`): smoke das 8 rotas sem erros de página.
 - **Ping (F8-14):** Shift+clique no mapa marca uma célula para todos na mesa (relay pelo Mestre, some em 4 s).
 - **Macros e armas (F1-7, F5-8):** rolagens salvas na página de dados; armas versáteis usam o dano maior sem escudo.
 - **PWA:** instalável e offline (service worker do Angular, SRD em cache).
 - **Fase 6:** F6-1 (script `scripts/import-srd.mjs` gera 322 monstros e 319 magias do SRD em JSON versionado), F6-2 (bestiário com busca e filtros), F6-3 (monstro do SRD vira criatura de combate e é posicionado no mapa), F6-4 (compêndio de magias) e F6-7 (construtor de encontro por XP, com dificuldade do DMG) concluídos; `joinCombat` traz criaturas para um combate em andamento. F6-5 e F6-6 concluídos (catálogo SRD, equipar armadura/escudo recalcula a CA, arma equipada vira ataque, peso/carga, poções e antídoto usam a ação via comando `useItem`). F6-8 já coberto pelo gerador (tesouro por sala, escala com nível e chefe).
-- **Fase 7:** F7-1 (editor com pincel de piso, parede, difícil, água), F7-2 (portas aberta/fechada/trancada; jogador abre pela criatura), F7-3 (salas com texto de leitura), F7-5 (névoa de guerra por célula/sala), F7-6 (armadilhas com CD e dano que param o movimento e disparam), F7-10 (notas secretas), F7-12 (biblioteca local + exportar/importar JSON) concluídos, com "ver como jogador". Pendentes: F7-4 (monstros ocultos pelo editor), F7-7 (imagem de fundo), F7-8 (linha de visão), F7-9 (prévia de área já existe em combate), F7-11, F7-14 (texturas).
-- **Fase 7B (gerador):** G-1 a G-13 e G-15 concluídos: 7 temas (cripta, caverna, ruínas, floresta, pântano, fortaleza, esgoto) com layouts de masmorra, caverna e terreno aberto, conectividade garantida, chefe na sala mais distante, povoamento por orçamento de XP do DMG com monstros do tema, armadilhas por severidade e nível, tesouro por nível, nomes e ganchos em PT-BR, semente reproduzível, regeneração com salas travadas, "levar ao combate" (grupo na entrada, monstros ocultos, névoa) e link com a semente. Pendente: G-16 (texto por IA, opcional).
-- **Fase 8 (multiplayer):** F8-3 (sala por código, convite por link), F8-4 (presença), F8-5 (comandos jogador → Mestre, estado Mestre → jogadores, mapa só quando muda), F8-6 (cada jogador recebe apenas a sua projeção: sem tokens ocultos, névoa aplicada, PV de inimigos em %), F8-8 (jogador só controla o(s) personagem(ns) que o Mestre atribuir; comandos de Mestre descartados na validação), F8-10 (reconexão pelo nome recupera os personagens), F8-13 (chat com sussurro do Mestre), F8-15 a F8-18 (voz WebRTC: microfone, mudo, push-to-talk, volume por pessoa, indicador de quem fala, Mestre silencia/remove) e F8-19 (STUN + TURN público) concluídos, **sem servidor próprio** (PeerJS). Testado com duas abas reais; a parte de áudio precisa ser conferida à mão (o ambiente automatizado não tem microfone). F8-20 (dados 3D sincronizados: cada entrada do registro leva os dados rolados e todos veem a mesma animação; rolagens de criaturas ocultas ficam secretas) e F1-6b (bandeja sobre o mapa) concluídos. Pendentes: F8-1/F8-2 (contas e nuvem: fora do escopo pela decisão P2P), F8-11 (snapshot ao sair). F8-7 (rolagem secreta do Mestre, comando `secretRoll`) e F8-14 (ping) concluídos.
+- **Fase 7:** F7-1 a F7-3, F7-5, F7-6, F7-9, F7-10, F7-12 e F7-14 concluídos (editor, portas, salas, névoa, armadilhas, áreas, notas, biblioteca e texturas). F7-4 parcial. Pendentes: F7-7 (imagem de fundo), F7-8 (linha de visão) e F7-11 (andares).
+- **Fase 7B (gerador):** G-1 a G-13 e G-15 concluídos: 7 temas, layouts reproduzíveis, povoamento por XP, perigos, tesouro, narrativa, regeneração parcial e integração com o Estúdio. Pendentes: G-14 (encontro rápido) e G-16 (texto por IA, opcional).
+- **Fase 8 (multiplayer):** F8-3 a F8-10 e F8-13 a F8-20 concluídos ou cobertos, **sem servidor próprio** (PeerJS); F8-1/F8-2/F8-12 estão fora do escopo pela decisão P2P. Pendente: F8-11 (snapshot quando o Mestre sai). A parte de áudio ainda precisa de teste manual com microfone em dois navegadores reais.
+- **Fase 9:** F9-2, F9-4 e F9-5 concluídos; F9-1, F9-6 e F9-7 parciais. Pendentes: F9-3 (tablet/toque), F9-8 (i18n) e F9-9 (atalhos e paleta).
 
 **Legenda do backlog (colunas de ID nas tabelas das fases):** ✅ concluído · 🟡 parcial · ⛔ fora do escopo (decisão P2P, sem servidor) · sem marca = pendente.
 Parciais: F0-2 (sem hook de commit), F3-9 (sem upload de imagem própria), F5-7 (falta Esconder), F7-4 (posicionar oculto só via gerador/ficha), F9-1 (persistência local; falta exportar sessão), F9-6 (E2E é smoke das rotas), F9-7 (README sem GIFs).
 Pendentes: F1-6c, F3-9 (upload), F7-7, F7-8, F7-11, F8-11, F9-3, F9-8, F9-9, G-14, G-16.
+
+### Próximas tarefas — ordem de implementação
+
+1. **F8-11** — salvar snapshot ao Mestre sair/fechar e restaurar a sessão.
+2. **F9-3** — responsivo/toque para tablet: arrastar tokens e pan/zoom.
+3. **F9-9** — atalhos de teclado e paleta de comandos (`Ctrl+K`).
+4. **F9-8** — i18n em pt-BR/en com troca em runtime.
+5. **F1-6c** — som de dados opcional, volume e mudo; desligado por padrão.
+6. **F7-8 + F7-7** — linha de visão e imagem de fundo com calibragem do grid.
+7. **F7-11** — múltiplos andares ligados por escadas/portais.
+8. **G-14** — encontro rápido avulso no mapa atual.
+9. **F5-7** — completar ações padrão com Esconder.
+10. **F3-9** — upload de imagem própria para tokens.
+11. **G-16** — texto por IA com chave do Mestre, opcional.
+12. **F9-7** — adicionar GIFs ao README.
 
 ## 1. Visão e escopo
 

@@ -31,7 +31,7 @@ Fluxo central: toda mudança é um **Comando** → `dispatch(state, cmd, {rng, r
 
 1. **Regras fora do Angular.** `core/rules` não importa framework: testa-se em milissegundos e o núcleo é reaproveitável. _Custo:_ uma camada de stores para ligar tudo.
 2. **Estado imutável + Comando/Evento.** Desfazer/refazer, log e sincronização vêm de graça; `RuleError` vira mensagem ao usuário, não exceção perdida.
-3. **Mestre autoritativo, sem servidor.** O host valida todo comando (`authorize`) e envia a cada jogador uma **projeção** (`project`) do estado: tokens ocultos, névoa, log secreto e PV inimigo (só em %) nunca saem do host. Trocou Supabase por PeerJS: custo zero e sem conta. _Custo:_ a sala morre se o Mestre sai; NAT restritivo depende do TURN público.
+3. **Mestre autoritativo, sem servidor.** O host valida todo comando (`authorize`) e envia a cada jogador uma **projeção** (`project`) do estado: tokens ocultos, névoa, log secreto e PV inimigo (só em %) nunca saem do host. Trocou Supabase por PeerJS: custo zero e sem conta. _Custo:_ a sala pausa se o Mestre sai e os jogadores reconectam após ele restaurar o snapshot; NAT restritivo depende do TURN público.
 4. **Dados 3D reproduzíveis.** A física roda uma vez (cannon-es), grava os quadros e reproduz; as faces são renomeadas para que a de cima seja o valor do motor. O resultado nunca depende da animação, e todos veem a mesma rolagem.
 5. **Bundle pequeno.** three, cannon-es e PeerJS são `import()` dinâmicos; o shell fica ~250 kB.
 6. **Conteúdo do SRD 5.1 (CC-BY-4.0)** importado por script versionado (`scripts/import-srd.mjs`), não em runtime.

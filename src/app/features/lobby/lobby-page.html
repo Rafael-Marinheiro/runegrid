@@ -19,16 +19,33 @@
       <p class="muted">
         Você controla o mundo: cria e revela mapas, conduz o combate e decide o que cada jogador vê.
       </p>
-      <button
-        type="button"
-        class="primary big"
-        [disabled]="room.status() === 'connecting'"
-        (click)="room.host()"
-      >
-        Criar sala
-      </button>
-      @if (saved()?.host) {
-        <p class="hint">Última sala: {{ saved()!.code }} (a sala nova terá outro código).</p>
+      @if (room.savedHost(); as snapshot) {
+        <button
+          type="button"
+          class="primary big"
+          [disabled]="room.status() === 'connecting'"
+          (click)="room.resume()"
+        >
+          Retomar sala {{ snapshot.code }}
+        </button>
+        <p class="hint">{{ snapshot.state.name }} continuará do último estado salvo.</p>
+        <button
+          type="button"
+          class="big"
+          [disabled]="room.status() === 'connecting'"
+          (click)="room.host()"
+        >
+          Criar nova sala
+        </button>
+      } @else {
+        <button
+          type="button"
+          class="primary big"
+          [disabled]="room.status() === 'connecting'"
+          (click)="room.host()"
+        >
+          Criar sala
+        </button>
       }
     </section>
 

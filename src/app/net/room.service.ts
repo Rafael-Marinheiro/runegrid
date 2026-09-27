@@ -49,6 +49,49 @@ export interface ChatLine {
 const JOIN_TIMEOUT_MS = 12000;
 const CMD_TIMEOUT_MS = 8000;
 const SESSION_KEY = 'runegrid.room';
+const SNAPSHOT_KEY = 'runegrid.room.snapshot.v1';
+
+export interface RoomSnapshot {
+  version: 1;
+  code: string;
+  state: EncounterState;
+  assignments: Record<string, string[]>;
+  savedAt: number;
+}
+
+export function readRoomSnapshot(storage: Storage = localStorage): RoomSnapshot | null {
+  try {
+    const raw = JSON.parse(storage.getItem(SNAPSHOT_KEY) ?? 'null') as Partial<RoomSnapshot> | null;
+    return raw?.version === 1 &&
+      typeof raw.code === 'string' &&
+      isValidCode(raw.code) &&
+      Array.isArray(raw.state?.map?.cells) &&
+      Array.isArray(raw.state.creatures) &&
+      raw.state.combat &&
+      typeof raw.assignments === 'object' &&
+      raw.assignments !== null &&
+      Object.values(raw.assignments).every(
+        (owns) => Array.isArray(owns) && owns.every((id) => typeof id === 'string'),
+      ) &&
+      typeof raw.savedAt === 'number'
+      ? (raw as RoomSnapshot)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+export function writeRoomSnapshot(
+  snapshot: RoomSnapshot,
+  storage: Storage = localStorage,
+): boolean {
+  try {
+    storage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshot));
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Sala multiplayer ponto a ponto. O Mestre (host) é a única fonte da verdade: recebe comandos,
@@ -73,6 +116,7 @@ export class RoomService {
   readonly muteRequests = signal(0);
   readonly isHost = computed(() => this.status() === 'hosting');
   readonly online = this.shared.online;
+  readonly savedHost = signal<RoomSnapshot | null>(readRoomSnapshot());
 
   peer: Peer | null = null;
   private readonly conns = new Map<string, DataConnection>();
@@ -87,24 +131,47 @@ export class RoomService {
     // Mestre: a cada mudança do encontro, cada jogador recebe a sua visão
     effect(() => {
       const state = this.store.state();
-      if (this.status() === 'hosting') untracked(() => this.broadcast(state));
+      if (this.status() === 'hosting')
+        untracked(() => {
+          this.broadcast(state);
+          this.saveHostSnapshot(state);
+        });
     });
+    window.addEventListener('pagehide', () => this.saveHostSnapshot());
   }
 
   // ---------- Mestre ----------
 
   async host(): Promise<void> {
+    await this.startHost(null);
+  }
+
+  async resume(): Promise<void> {
+    const snapshot = this.savedHost();
+    if (snapshot) await this.startHost(snapshot);
+  }
+
+  private async startHost(snapshot: RoomSnapshot | null): Promise<void> {
     this.leave();
     this.status.set('connecting');
     try {
       let peer: Peer | null = null;
-      let code = '';
-      for (let attempt = 0; attempt < 5 && !peer; attempt++) {
-        code = randomCode();
-        try {
-          peer = await this.open(peerIdFor(code));
-        } catch (e) {
-          if ((e as { type?: string }).type !== 'unavailable-id') throw e;
+      let code = snapshot?.code ?? '';
+      if (snapshot) {
+        peer = await this.open(peerIdFor(code));
+        this.store.load(snapshot.state);
+        this.assignments.clear();
+        for (const [name, owns] of Object.entries(snapshot.assignments)) {
+          this.assignments.set(name, owns);
+        }
+      } else {
+        for (let attempt = 0; attempt < 5 && !peer; attempt++) {
+          code = randomCode();
+          try {
+            peer = await this.open(peerIdFor(code));
+          } catch (e) {
+            if ((e as { type?: string }).type !== 'unavailable-id') throw e;
+          }
         }
       }
       if (!peer) throw new Error('Não foi possível reservar um código de sala.');
@@ -116,6 +183,7 @@ export class RoomService {
       peer.on('error', (e) => this.error.set(`Rede: ${e.type}`));
       this.status.set('hosting');
       this.saveSession({ host: true, code });
+      this.saveHostSnapshot();
     } catch (e) {
       this.fail(e);
     }
@@ -165,6 +233,7 @@ export class RoomService {
     if (conn) this.send(conn, { t: 'role', owns });
     this.broadcastPeers();
     this.broadcast(this.store.state());
+    this.saveHostSnapshot();
   }
 
   kick(peerId: string): void {
@@ -269,8 +338,7 @@ export class RoomService {
       conn.on('open', () => conn.send({ t: 'hello', name: who } satisfies ClientMsg));
       conn.on('data', (raw) => this.onClientData(raw as HostMsg));
       conn.on('close', () => {
-        if (this.status() === 'joined')
-          this.fail(new Error('A conexão com o Mestre foi encerrada.'));
+        if (this.status() === 'joined') this.pauseClient();
       });
       setTimeout(() => {
         if (this.status() === 'connecting')
@@ -341,6 +409,7 @@ export class RoomService {
   // ---------- comum ----------
 
   leave(): void {
+    this.saveHostSnapshot();
     for (const c of this.conns.values()) c.close();
     this.conns.clear();
     this.hostConn?.close();
@@ -348,6 +417,7 @@ export class RoomService {
     this.peer?.destroy();
     this.peer = null;
     this.pending.clear();
+    this.assignments.clear();
     this.peers.set([]);
     this.clientMap = null;
     this.status.set('offline');
@@ -378,6 +448,27 @@ export class RoomService {
     } catch {
       /* sem armazenamento */
     }
+  }
+
+  private saveHostSnapshot(state: EncounterState = this.store.state()): void {
+    if (!this.isHost() || !this.code()) return;
+    const snapshot: RoomSnapshot = {
+      version: 1,
+      code: this.code(),
+      state,
+      assignments: Object.fromEntries(this.assignments),
+      savedAt: Date.now(),
+    };
+    if (writeRoomSnapshot(snapshot)) this.savedHost.set(snapshot);
+    else this.error.set('Não foi possível salvar o snapshot da sala neste navegador.');
+  }
+
+  private pauseClient(): void {
+    const session = { host: false, code: this.code(), name: this.name() };
+    this.leave();
+    this.saveSession(session);
+    this.status.set('paused');
+    this.error.set('O Mestre saiu. A sala foi pausada; tente entrar novamente quando ele voltar.');
   }
 
   /** O PeerJS só é baixado quando alguém abre ou entra numa sala. */

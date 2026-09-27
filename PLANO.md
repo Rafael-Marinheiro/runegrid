@@ -18,27 +18,26 @@ Tático de combate em grid para D&D 5e, feito em Angular. Projeto de portfólio:
 - **Fase 6:** F6-1 (script `scripts/import-srd.mjs` gera 322 monstros e 319 magias do SRD em JSON versionado), F6-2 (bestiário com busca e filtros), F6-3 (monstro do SRD vira criatura de combate e é posicionado no mapa), F6-4 (compêndio de magias) e F6-7 (construtor de encontro por XP, com dificuldade do DMG) concluídos; `joinCombat` traz criaturas para um combate em andamento. F6-5 e F6-6 concluídos (catálogo SRD, equipar armadura/escudo recalcula a CA, arma equipada vira ataque, peso/carga, poções e antídoto usam a ação via comando `useItem`). F6-8 já coberto pelo gerador (tesouro por sala, escala com nível e chefe).
 - **Fase 7:** F7-1 a F7-3, F7-5, F7-6, F7-9, F7-10, F7-12 e F7-14 concluídos (editor, portas, salas, névoa, armadilhas, áreas, notas, biblioteca e texturas). F7-4 parcial. Pendentes: F7-7 (imagem de fundo), F7-8 (linha de visão) e F7-11 (andares).
 - **Fase 7B (gerador):** G-1 a G-13 e G-15 concluídos: 7 temas, layouts reproduzíveis, povoamento por XP, perigos, tesouro, narrativa, regeneração parcial e integração com o Estúdio. Pendentes: G-14 (encontro rápido) e G-16 (texto por IA, opcional).
-- **Fase 8 (multiplayer):** F8-3 a F8-10 e F8-13 a F8-20 concluídos ou cobertos, **sem servidor próprio** (PeerJS); F8-1/F8-2/F8-12 estão fora do escopo pela decisão P2P. Pendente: F8-11 (snapshot quando o Mestre sai). A parte de áudio ainda precisa de teste manual com microfone em dois navegadores reais.
+- **Fase 8 (multiplayer):** F8-3 a F8-11 e F8-13 a F8-20 concluídos ou cobertos, **sem servidor próprio** (PeerJS); F8-1/F8-2/F8-12 estão fora do escopo pela decisão P2P. A sala pausa quando o Mestre sai, salva encontro/código/atribuições e pode ser retomada no mesmo código. A parte de áudio ainda precisa de teste manual com microfone em dois navegadores reais.
 - **Fase 9:** F9-2, F9-4 e F9-5 concluídos; F9-1, F9-6 e F9-7 parciais. Pendentes: F9-3 (tablet/toque), F9-8 (i18n) e F9-9 (atalhos e paleta).
 
 **Legenda do backlog (colunas de ID nas tabelas das fases):** ✅ concluído · 🟡 parcial · ⛔ fora do escopo (decisão P2P, sem servidor) · sem marca = pendente.
 Parciais: F0-2 (sem hook de commit), F3-9 (sem upload de imagem própria), F5-7 (falta Esconder), F7-4 (posicionar oculto só via gerador/ficha), F9-1 (persistência local; falta exportar sessão), F9-6 (E2E é smoke das rotas), F9-7 (README sem GIFs).
-Pendentes: F1-6c, F3-9 (upload), F7-7, F7-8, F7-11, F8-11, F9-3, F9-8, F9-9, G-14, G-16.
+Pendentes: F1-6c, F3-9 (upload), F7-7, F7-8, F7-11, F9-3, F9-8, F9-9, G-14, G-16.
 
 ### Próximas tarefas — ordem de implementação
 
-1. **F8-11** — salvar snapshot ao Mestre sair/fechar e restaurar a sessão.
-2. **F9-3** — responsivo/toque para tablet: arrastar tokens e pan/zoom.
-3. **F9-9** — atalhos de teclado e paleta de comandos (`Ctrl+K`).
-4. **F9-8** — i18n em pt-BR/en com troca em runtime.
-5. **F1-6c** — som de dados opcional, volume e mudo; desligado por padrão.
-6. **F7-8 + F7-7** — linha de visão e imagem de fundo com calibragem do grid.
-7. **F7-11** — múltiplos andares ligados por escadas/portais.
-8. **G-14** — encontro rápido avulso no mapa atual.
-9. **F5-7** — completar ações padrão com Esconder.
-10. **F3-9** — upload de imagem própria para tokens.
-11. **G-16** — texto por IA com chave do Mestre, opcional.
-12. **F9-7** — adicionar GIFs ao README.
+1. **F9-3** — responsivo/toque para tablet: arrastar tokens e pan/zoom.
+2. **F9-9** — atalhos de teclado e paleta de comandos (`Ctrl+K`).
+3. **F9-8** — i18n em pt-BR/en com troca em runtime.
+4. **F1-6c** — som de dados opcional, volume e mudo; desligado por padrão.
+5. **F7-8 + F7-7** — linha de visão e imagem de fundo com calibragem do grid.
+6. **F7-11** — múltiplos andares ligados por escadas/portais.
+7. **G-14** — encontro rápido avulso no mapa atual.
+8. **F5-7** — completar ações padrão com Esconder.
+9. **F3-9** — upload de imagem própria para tokens.
+10. **G-16** — texto por IA com chave do Mestre, opcional.
+11. **F9-7** — adicionar GIFs ao README.
 
 ## 1. Visão e escopo
 
@@ -279,7 +278,7 @@ O Mestre escolhe **tema, terreno, tamanho** (e nível/tamanho do grupo, dificuld
 | ✅ F8-8 | Jogador controla só o próprio personagem (UI limitada por papel) | P0 | M | Botões inválidos desabilitados **e** rejeitados no validador |
 | ✅ F8-9 | Reações e pedidos ao jogador (salvaguarda, opp. attack) com timeout | P1 | M | Mestre aguarda ou resolve automaticamente |
 | ✅ F8-10 | Reconexão e retomada (snapshot + eventos) | P0 | M | F5 no meio do combate não perde nada |
-| F8-11 | Mestre offline: sala pausa (autoridade é do Mestre) e salva snapshot | P1 | M | Retoma na próxima sessão |
+| ✅ F8-11 | Mestre offline: sala pausa (autoridade é do Mestre) e salva snapshot | P1 | M | Retoma na próxima sessão |
 | ⛔ F8-12 | Fichas de jogador na nuvem; Mestre pode editar/conceder itens, XP, dano | P1 | M | Alterações auditadas no log |
 | ✅ F8-13 | Chat + sussurros do Mestre | P2 | M | Mensagem privada por jogador |
 | ✅ F8-14 | Cursor/ping no mapa ("olhem aqui") | P2 | S | Ping visível a todos |

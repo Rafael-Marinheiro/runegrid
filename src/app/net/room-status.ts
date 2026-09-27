@@ -1,7 +1,7 @@
 import { computed, Injectable, signal } from '@angular/core';
 import { PeerInfo } from './protocol';
 
-export type RoomStatus = 'offline' | 'connecting' | 'hosting' | 'joined' | 'error';
+export type RoomStatus = 'offline' | 'connecting' | 'hosting' | 'joined' | 'paused' | 'error';
 
 /**
  * Estado observável da sala (só signals). O cabeçalho usa este arquivo e não o `RoomService`,

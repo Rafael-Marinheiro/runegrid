@@ -160,8 +160,16 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       return startCombat(state);
     case 'joinCombat':
       return joinCombat(state, cmd.id, ctx.rng);
-    case 'endCombat':
-      return addLog({ ...state, combat: emptyCombat() }, 'Combate encerrado.');
+    case 'endCombat': {
+      if (state.combat.phase !== 'running') throw new RuleError('O combate não está em andamento.');
+      return addLog(
+        { ...state, combat: { ...state.combat, phase: 'ended', turn: null } },
+        'Combate encerrado pelo Mestre.',
+      );
+    }
+    case 'resetCombat':
+      if (state.combat.phase !== 'ended') throw new RuleError('O combate ainda não terminou.');
+      return addLog({ ...state, combat: emptyCombat() }, 'Novo combate em montagem.');
     case 'damage': {
       const target = creatureOf(state, cmd.targetId);
       const r = applyDamage(target, cmd.amount, { type: cmd.damageType });

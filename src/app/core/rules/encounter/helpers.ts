@@ -3,10 +3,27 @@ import { EncounterState, Role, TurnState } from '../../models/encounter';
 import { canAct, checkConcentration, RuleError } from '../creature';
 import { AdvMode, Rng } from '../dice';
 import { addLog, creatureOf, teamOf, withCreature } from './state';
+import { xpForCr } from '../srd/xp';
 
 export interface Context {
   rng: Rng;
   role: Role;
+}
+
+/** Dados derivados para a tela final; XP é calculado só pelos inimigos derrotados. */
+export function summarizeCombat(state: EncounterState) {
+  const participants = state.creatures.filter((c) => state.combat.order.includes(c.id));
+  const party = participants.filter((c) => teamOf(c) === 'party');
+  const defeatedFoes = participants.filter((c) => teamOf(c) === 'foes' && c.status === 'dead');
+  const xp = defeatedFoes.reduce((total, c) => total + xpForCr(c.cr ?? 0), 0);
+  return {
+    rounds: state.combat.round,
+    defeatedFoes,
+    survivingParty: party.filter((c) => c.status !== 'dead'),
+    fallenParty: party.filter((c) => c.status === 'dead'),
+    xp,
+    xpPerCharacter: party.length ? Math.floor(xp / party.length) : 0,
+  };
 }
 
 /** Tipo de dano em português, para o registro. */

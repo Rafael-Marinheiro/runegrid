@@ -28,6 +28,7 @@ export type Command =
   | { type: 'joinCombat'; id: string }
   | { type: 'startCombat' }
   | { type: 'endCombat' }
+  | { type: 'resetCombat' }
   | { type: 'damage'; targetId: string; amount: number; damageType?: DamageType }
   | { type: 'heal'; targetId: string; amount: number }
   | { type: 'addCondition'; targetId: string; condition: ConditionName; rounds?: number }

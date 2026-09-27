@@ -12,7 +12,14 @@ import { CONDITION_LABEL, CONDITIONS, ConditionName, Creature } from '@core/mode
 import { Pos } from '@core/models/grid';
 import { Spell } from '@core/models/spell';
 import { fmtBonus } from '@core/rules/creature';
-import { moveQuery, occupiedCells, sizeOf, teamOf, tokenOf } from '@core/rules/encounter';
+import {
+  moveQuery,
+  occupiedCells,
+  sizeOf,
+  summarizeCombat,
+  teamOf,
+  tokenOf,
+} from '@core/rules/encounter';
 import { inCone, inSphere } from '@core/rules/grid/area';
 import { canStand, distanceFt, findPath, reachable } from '@core/rules/grid/movement';
 import { DiceTray3d } from '@features/dice/dice-3d/dice-tray-3d';
@@ -115,6 +122,8 @@ export class CombatPage {
   protected readonly isRemote = computed(() => !!this.store.remote());
   protected readonly isDm = computed(() => this.store.role().kind === 'dm');
   protected readonly running = computed(() => this.combat().phase === 'running');
+  protected readonly summary = computed(() => summarizeCombat(this.s()));
+  protected readonly showXp = signal(false);
 
   protected readonly selectedId = signal<string | null>(null);
   protected readonly mode = signal<Mode>({ kind: 'move' });
@@ -132,6 +141,12 @@ export class CombatPage {
   protected readonly selected = computed(() =>
     this.creature(this.selectedId() ?? this.active()?.id),
   );
+  protected names(creatures: Creature[]): string {
+    return creatures.map((c) => c.name).join(', ');
+  }
+  protected resetCombat(): void {
+    if (this.store.send({ type: 'resetCombat' })) this.showXp.set(false);
+  }
   protected readonly isProne = computed(
     () => !!this.active()?.conditions.some((c) => c.name === 'prone'),
   );

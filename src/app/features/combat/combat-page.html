@@ -62,7 +62,13 @@
 
     @if (cb.phase === 'ended') {
       <p class="outcome">
-        {{ cb.outcome === 'party' ? 'O grupo venceu.' : 'O grupo foi derrotado.' }}
+        {{
+          cb.outcome === 'party'
+            ? 'O grupo venceu.'
+            : cb.outcome === 'foes'
+              ? 'O grupo foi derrotado.'
+              : 'Encerrado pelo Mestre.'
+        }}
       </p>
     }
 
@@ -149,16 +155,78 @@
           <button type="button" class="primary" (click)="store.send({ type: 'startCombat' })">
             Iniciar combate
           </button>
-        } @else {
+        } @else if (cb.phase === 'running') {
           <button type="button" (click)="store.send({ type: 'endCombat' })">
             Encerrar combate
           </button>
+        } @else {
+          <button type="button" (click)="resetCombat()">Voltar à montagem</button>
         }
       </div>
     }
   </aside>
 
-  <section class="center">
+  <section class="center" [class.ended]="cb.phase === 'ended'">
+    @if (cb.phase === 'ended') {
+      @let sum = summary();
+      <section class="panel combat-summary" aria-labelledby="combat-summary-title">
+        <p class="summary-kicker">Encontro concluído</p>
+        <h2 id="combat-summary-title">
+          {{
+            cb.outcome === 'party'
+              ? 'Vitória do grupo'
+              : cb.outcome === 'foes'
+                ? 'Derrota do grupo'
+                : 'Combate encerrado'
+          }}
+        </h2>
+        <dl class="summary-stats">
+          <div>
+            <dt>Rodadas</dt>
+            <dd>{{ sum.rounds }}</dd>
+          </div>
+          <div>
+            <dt>Inimigos derrotados</dt>
+            <dd>{{ sum.defeatedFoes.length }}</dd>
+          </div>
+          <div>
+            <dt>Aliados sobreviventes</dt>
+            <dd>{{ sum.survivingParty.length }}</dd>
+          </div>
+        </dl>
+
+        <div class="summary-lists">
+          <section aria-labelledby="defeated-title">
+            <h3 id="defeated-title">Derrotados</h3>
+            <p>
+              {{ sum.defeatedFoes.length ? names(sum.defeatedFoes) : 'Nenhum inimigo derrotado.' }}
+            </p>
+          </section>
+          <section aria-labelledby="survivors-title">
+            <h3 id="survivors-title">Grupo ao final</h3>
+            <p>
+              {{ sum.survivingParty.length ? names(sum.survivingParty) : 'Nenhum aliado de pé.' }}
+            </p>
+            @if (sum.fallenParty.length) {
+              <p class="fallen">Caídos: {{ names(sum.fallenParty) }}</p>
+            }
+          </section>
+        </div>
+
+        @if (isDm()) {
+          <label class="xp-toggle">
+            <input #xp type="checkbox" [checked]="showXp()" (change)="showXp.set(xp.checked)" />
+            Incluir XP no resumo
+          </label>
+          @if (showXp()) {
+            <p class="xp-award" aria-live="polite">
+              <strong>{{ sum.xp }} XP</strong>
+              <span>{{ sum.xpPerCharacter }} por personagem participante</span>
+            </p>
+          }
+        }
+      </section>
+    }
     <div class="stage">
       <app-map-view
         [map]="st.map"

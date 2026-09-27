@@ -3,7 +3,15 @@ import { newCreature } from '../../models/creature-factory';
 import { EncounterState, Role } from '../../models/encounter';
 import { mapFromAscii } from '../../models/grid';
 import { RuleError } from '../creature';
-import { Command, dispatch, ForbiddenError, newEncounter, project, tokenOf } from './index';
+import {
+  Command,
+  dispatch,
+  ForbiddenError,
+  newEncounter,
+  project,
+  summarizeCombat,
+  tokenOf,
+} from './index';
 
 const DM: Role = { kind: 'dm' };
 /** RNG que devolve, em ordem, o valor de face pedido para dados de `sides` lados. */
@@ -326,6 +334,29 @@ describe('ataques', () => {
     expect(s.combat.phase).toBe('ended');
     expect(s.combat.outcome).toBe('party');
   });
+
+  it('encerramento manual preserva os dados usados pelo resumo', () => {
+    let s = run(started(), { type: 'endTurn', actorId: 'hero' });
+    s = run(s, { type: 'endTurn', actorId: 'foe' });
+    const order = s.combat.order;
+    s = run(s, { type: 'endCombat' });
+    expect(s.combat).toMatchObject({ phase: 'ended', round: 2, order, turn: null });
+    expect(s.combat.outcome).toBeUndefined();
+    expect(() => run(s, { type: 'endCombat' })).toThrow(/andamento/);
+    expect(run(s, { type: 'resetCombat' }).combat.phase).toBe('setup');
+  });
+
+  it('resume derrotados, sobreviventes e XP dividido entre o grupo participante', () => {
+    let s = started({ foe: { cr: 2, status: 'dead' } });
+    s = { ...s, combat: { ...s.combat, phase: 'ended', turn: null, outcome: 'party' } };
+    const summary = summarizeCombat(s);
+    expect(summary.rounds).toBe(1);
+    expect(summary.defeatedFoes.map((c) => c.name)).toEqual(['Goblin']);
+    expect(summary.survivingParty.map((c) => c.name)).toEqual(['Herói']);
+    expect(summary.fallenParty).toEqual([]);
+    expect(summary.xp).toBe(450);
+    expect(summary.xpPerCharacter).toBe(450);
+  });
 });
 
 describe('autorização por papel', () => {
@@ -400,6 +431,7 @@ describe('remoção durante o combate', () => {
       pos: { x: 0, y: 4 },
     });
     s = run(s, { type: 'endCombat' });
+    s = run(s, { type: 'resetCombat' });
     s = run(s, { type: 'setInitiative', id: 'hero', value: 18 });
     s = run(s, { type: 'setInitiative', id: 'ally', value: 14 });
     s = run(s, { type: 'setInitiative', id: 'foe', value: 10 });

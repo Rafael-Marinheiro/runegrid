@@ -171,6 +171,25 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.result-options {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.volume {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+#dice-volume {
+  width: 7rem;
 }
 
 .toggle {

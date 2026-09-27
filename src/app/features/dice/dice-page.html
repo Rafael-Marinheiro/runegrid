@@ -90,10 +90,32 @@
 <section class="panel result" aria-labelledby="result-title" aria-live="polite">
   <div class="result-head">
     <h2 id="result-title">{{ ui.text('Resultado', 'Result') }}</h2>
-    <label class="toggle">
-      <input type="checkbox" #t3d [checked]="use3d()" (change)="use3d.set(t3d.checked)" />
-      {{ ui.text('Dados 3D', '3D dice') }}
-    </label>
+    <div class="result-options">
+      <label class="toggle">
+        <input type="checkbox" #t3d [checked]="use3d()" (change)="use3d.set(t3d.checked)" />
+        {{ ui.text('Dados 3D', '3D dice') }}
+      </label>
+      <label class="toggle">
+        <input
+          type="checkbox"
+          #sound
+          [checked]="store.soundOn()"
+          (change)="store.soundOn.set(sound.checked); store.playSound()"
+        />
+        {{ ui.text('Som dos dados', 'Dice sound') }}
+      </label>
+      <label class="volume" for="dice-volume">{{ ui.text('Volume', 'Volume') }}</label>
+      <input
+        id="dice-volume"
+        type="range"
+        min="0"
+        max="1"
+        step="0.05"
+        [value]="store.soundVolume()"
+        [disabled]="!store.soundOn()"
+        (input)="store.soundVolume.set(+$any($event.target).value)"
+      />
+    </div>
   </div>
   @if (store.last(); as last) {
     @if (show3d()) {

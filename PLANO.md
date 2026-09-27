@@ -5,7 +5,7 @@ Tático de combate em grid para D&D 5e, feito em Angular. Projeto de portfólio:
 ## Status
 
 - **Fase 0:** F0-1 a F0-8 concluídos ou cobertos, com F0-2 parcial (sem hook de commit). Deploy automático no ar em runegrid-nine.vercel.app; a execução do GitHub Actions segue bloqueada por cobrança/limite da conta, não por código.
-- **Fase 1:** F1-1 a F1-6b, F1-6d, F1-6e e F1-7 concluídos (parser, RNG com semente, vantagem/crítico, rolador, histórico, bandeja, dados 3D com física e cor por tipo, macros). Pendente: F1-6c (som opcional).
+- **Fase 1:** F1-1 a F1-7 concluídos (parser, RNG com semente, vantagem/crítico, rolador, histórico, bandeja, dados 3D com física e cor por tipo, macros e som opcional persistente).
 - **Fase 2:** F2-1, F2-2, F2-3, F2-4, F2-5, F2-6 e F2-7 concluídos: ficha completa (atributos, salvaguardas, perícias, CA, PV com dano/cura/temporários, morte, espaços de magia, recursos, descansos, resistências), lista de criaturas com persistência local e rolagem de testes pela ficha.
 - **Fase 3:** F3-1 a F3-5, F3-8, F3-11 concluídos: mapa SVG com zoom/pan, tokens arrastáveis com encaixe, colisão, terreno difícil, regra de diagonal simples ou 5-10-5, criaturas grandes (2×2+), destaque de alcance e navegação por teclado. F3-6 (prévia do caminho com custo), F3-7 (régua que respeita a regra de diagonal), F3-9 (14 ícones próprios nos tokens, escolhidos por criatura ou deduzidos do nome), F3-10 e F7-14 (texturas de piso por tema: pedra, caverna, grama, lama) e F3-11 (alto contraste: sem texturas e anéis mais grossos) concluídos.
 - **Fase 4:** F4-0 (modelo Command/Event com papéis dm/player e `project()`), F4-1 a F4-9 concluídos: iniciativa, turnos e rodadas, orçamento de ação/movimento, ataque com crítico, vantagem/desvantagem, Ataque Extra, Esquiva/Disparada/Desengajar, log, desfazer/refazer, salvaguardas e resumo final com XP opcional.
@@ -23,18 +23,17 @@ Tático de combate em grid para D&D 5e, feito em Angular. Projeto de portfólio:
 
 **Legenda do backlog (colunas de ID nas tabelas das fases):** ✅ concluído · 🟡 parcial · ⛔ fora do escopo (decisão P2P, sem servidor) · sem marca = pendente.
 Parciais: F0-2 (sem hook de commit), F3-9 (sem upload de imagem própria), F5-7 (falta Esconder), F7-4 (posicionar oculto só via gerador/ficha), F9-1 (persistência local; falta exportar sessão), F9-6 (E2E é smoke das rotas), F9-7 (README sem GIFs).
-Pendentes: F1-6c, F3-9 (upload), F7-7, F7-8, F7-11, G-14, G-16.
+Pendentes: F3-9 (upload), F7-7, F7-8, F7-11, G-14, G-16.
 
 ### Próximas tarefas — ordem de implementação
 
-1. **F1-6c** — som de dados opcional, volume e mudo; desligado por padrão.
-2. **F7-8 + F7-7** — linha de visão e imagem de fundo com calibragem do grid.
-3. **F7-11** — múltiplos andares ligados por escadas/portais.
-4. **G-14** — encontro rápido avulso no mapa atual.
-5. **F5-7** — completar ações padrão com Esconder.
-6. **F3-9** — upload de imagem própria para tokens.
-7. **G-16** — texto por IA com chave do Mestre, opcional.
-8. **F9-7** — adicionar GIFs ao README.
+1. **F7-8 + F7-7** — linha de visão e imagem de fundo com calibragem do grid.
+2. **F7-11** — múltiplos andares ligados por escadas/portais.
+3. **G-14** — encontro rápido avulso no mapa atual.
+4. **F5-7** — completar ações padrão com Esconder.
+5. **F3-9** — upload de imagem própria para tokens.
+6. **G-16** — texto por IA com chave do Mestre, opcional.
+7. **F9-7** — adicionar GIFs ao README.
 
 ## 1. Visão e escopo
 
@@ -142,7 +141,7 @@ Legenda: **P0** essencial (MVP) · **P1** importante · **P2** desejável. Estim
 | ✅ F1-5 | Histórico de rolagens (filtro, limpar) | P1 | S | Persiste na sessão |
 | ✅ F1-6 | **Lançamento visual de dados**: d4/d6/d8/d10/d12/d20/d100 animados (SVG/CSS 3D), rolando e **pousando no resultado já decidido** pelo motor | P1 | L | Face final = valor do RNG (teste); vários dados na mesma rolagem; `prefers-reduced-motion` mostra só o resultado |
 | ✅ F1-6b | Componente `<app-dice-tray>` reutilizável (bandeja no mapa/painel), destaque de crítico (20) e falha crítica (1), vantagem mostra os 2 d20 e descarta um | P1 | M | Usado por ataque, dano e salvaguarda |
-| F1-6c | Som de dados opcional + volume/mudo | P2 | S | Desligado por padrão |
+| ✅ F1-6c | Som de dados opcional + volume/mudo | P2 | S | Desligado por padrão |
 | ✅ F1-6d | ✅ **Dados 3D com física** (Three.js + cannon-es, chunk sob demanda): caem, quicam e param; o motor decide o valor e as faces são rotuladas para a de cima mostrar exatamente ele; se um dado termina inclinado/sobreposto, é endireitado e afastado (resultado nunca fica escondido) | P2 | L | Teste: 10 sementes × 10 dados, face do resultado para cima e sem sobreposição; fallback 2D sem WebGL/movimento reduzido |
 | ✅ F1-6e | ✅ **Cor própria por tipo de dado** (tokens `--die-dN`): botão, dado 3D e dado 2D compartilham a cor, para o jogador identificar o dado na bandeja | P1 | S | Texto claro ≥ 4.5:1 sobre cada cor |
 | ✅ F1-7 | Macros salvas (`Ataque espada: 1d20+5`) | P2 | S | CRUD local |

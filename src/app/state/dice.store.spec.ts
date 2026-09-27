@@ -7,6 +7,7 @@ describe('DiceStore', () => {
   let store: DiceStore;
 
   beforeEach(() => {
+    localStorage.clear();
     TestBed.configureTestingModule({ providers: [{ provide: RNG, useValue: () => 0.5 }] });
     store = TestBed.inject(DiceStore);
   });
@@ -34,5 +35,19 @@ describe('DiceStore', () => {
     expect(store.history()).toHaveLength(50);
     store.clear();
     expect(store.history()).toHaveLength(0);
+  });
+
+  it('mantém o som desligado por padrão e limita o volume', () => {
+    expect(store.soundOn()).toBe(false);
+    expect(store.soundVolume()).toBe(0.55);
+
+    TestBed.flushEffects();
+    localStorage.setItem('runegrid.dice-sound.v1', JSON.stringify({ on: true, volume: 9 }));
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [{ provide: RNG, useValue: () => 0.5 }] });
+    store = TestBed.inject(DiceStore);
+
+    expect(store.soundOn()).toBe(true);
+    expect(store.soundVolume()).toBe(1);
   });
 });

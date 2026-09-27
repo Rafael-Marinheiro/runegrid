@@ -74,8 +74,12 @@ export class CombatPage {
       const st = this.store.view();
       const from = this.lastSeq;
       this.lastSeq = st.seq;
-      if (!this.diceStore.use3d() || this.still) return;
       const fresh = st.log.filter((e) => e.id >= from && e.dice?.length);
+      if (fresh.length)
+        untracked(() =>
+          this.diceStore.playSound(fresh.reduce((n, e) => n + (e.dice?.length ?? 0), 0)),
+        );
+      if (!this.diceStore.use3d() || this.still) return;
       if (fresh.length)
         untracked(() =>
           this.showRoll(

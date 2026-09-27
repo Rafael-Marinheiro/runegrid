@@ -61,6 +61,11 @@ interface Pan {
   moved: boolean;
 }
 
+interface Pinch {
+  distance: number;
+  midpoint: Pos;
+}
+
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
 
@@ -133,6 +138,8 @@ export class MapView {
   protected readonly pan = signal<Pos>({ x: 0, y: 0 });
   protected readonly drag = signal<Drag | null>(null);
   private panning: Pan | null = null;
+  private pinch: Pinch | null = null;
+  private readonly touches = new Map<number, Pos>();
   private lastHover = '';
   private stroking = false;
   private lastStroke = '';
@@ -246,6 +253,19 @@ export class MapView {
     const p = this.toSvg(e);
     const el = (e.target as Element).closest<SVGGElement>('[data-token]');
     this.svg().nativeElement.setPointerCapture(e.pointerId);
+    if (e.pointerType === 'touch') {
+      this.touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (this.touches.size === 2) {
+        this.drag.set(null);
+        this.panning = null;
+        if (this.stroking) {
+          this.stroking = false;
+          this.strokeEnd.emit();
+        }
+        this.pinch = this.pinchState();
+        return;
+      }
+    }
     if (el) {
       const t = this.tokens().find((x) => x.id === el.dataset['token']);
       if (!t) return;
@@ -281,6 +301,10 @@ export class MapView {
   }
 
   protected onPointerMove(e: PointerEvent): void {
+    if (e.pointerType === 'touch' && this.touches.has(e.pointerId)) {
+      this.touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (this.touches.size >= 2) return this.updatePinch();
+    }
     const d = this.drag();
     if (d) {
       const p = this.toSvg(e);
@@ -310,6 +334,24 @@ export class MapView {
   }
 
   protected onPointerUp(e: PointerEvent): void {
+    if (e.pointerType === 'touch') {
+      const wasPinching = this.pinch !== null;
+      this.touches.delete(e.pointerId);
+      if (wasPinching) {
+        this.pinch = null;
+        const remaining = this.touches.values().next().value as Pos | undefined;
+        this.panning = remaining
+          ? {
+              startX: remaining.x,
+              startY: remaining.y,
+              originX: this.pan().x,
+              originY: this.pan().y,
+              moved: true,
+            }
+          : null;
+        return;
+      }
+    }
     const d = this.drag();
     if (d) {
       this.drag.set(null);
@@ -337,6 +379,45 @@ export class MapView {
       if (pos.x >= 0 && pos.y >= 0 && pos.x < m.width && pos.y < m.height)
         (e.shiftKey ? this.cellPing : this.cellClick).emit(pos);
     }
+  }
+
+  protected onPointerCancel(e: PointerEvent): void {
+    this.touches.delete(e.pointerId);
+    this.pinch = null;
+    this.drag.set(null);
+    this.panning = null;
+    if (this.stroking) {
+      this.stroking = false;
+      this.strokeEnd.emit();
+    }
+  }
+
+  private pinchState(): Pinch {
+    const [a, b] = [...this.touches.values()];
+    return {
+      distance: Math.max(1, Math.hypot(b.x - a.x, b.y - a.y)),
+      midpoint: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+    };
+  }
+
+  private updatePinch(): void {
+    const next = this.pinchState();
+    const previous = this.pinch;
+    if (!previous) {
+      this.pinch = next;
+      return;
+    }
+    const scale = this.svg().nativeElement.getScreenCTM()?.a ?? 1;
+    const pan = this.pan();
+    this.pan.set({
+      x: pan.x - (next.midpoint.x - previous.midpoint.x) / scale,
+      y: pan.y - (next.midpoint.y - previous.midpoint.y) / scale,
+    });
+    this.zoomBy(
+      next.distance / previous.distance,
+      this.toSvg({ clientX: next.midpoint.x, clientY: next.midpoint.y }),
+    );
+    this.pinch = next;
   }
 
   private cellAt(e: PointerEvent): Pos | null {

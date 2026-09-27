@@ -456,6 +456,10 @@ button.active {
   .layout {
     grid-template-columns: 1fr;
   }
+
+  .center {
+    order: -1;
+  }
 }
 
 @media (max-width: 600px) {

@@ -19,25 +19,24 @@ Tático de combate em grid para D&D 5e, feito em Angular. Projeto de portfólio:
 - **Fase 7:** F7-1 a F7-3, F7-5, F7-6, F7-9, F7-10, F7-12 e F7-14 concluídos (editor, portas, salas, névoa, armadilhas, áreas, notas, biblioteca e texturas). F7-4 parcial. Pendentes: F7-7 (imagem de fundo), F7-8 (linha de visão) e F7-11 (andares).
 - **Fase 7B (gerador):** G-1 a G-13 e G-15 concluídos: 7 temas, layouts reproduzíveis, povoamento por XP, perigos, tesouro, narrativa, regeneração parcial e integração com o Estúdio. Pendentes: G-14 (encontro rápido) e G-16 (texto por IA, opcional).
 - **Fase 8 (multiplayer):** F8-3 a F8-11 e F8-13 a F8-20 concluídos ou cobertos, **sem servidor próprio** (PeerJS); F8-1/F8-2/F8-12 estão fora do escopo pela decisão P2P. A sala pausa quando o Mestre sai, salva encontro/código/atribuições e pode ser retomada no mesmo código. A parte de áudio ainda precisa de teste manual com microfone em dois navegadores reais.
-- **Fase 9:** F9-2, F9-4 e F9-5 concluídos; F9-1, F9-6 e F9-7 parciais. Pendentes: F9-3 (tablet/toque), F9-8 (i18n) e F9-9 (atalhos e paleta).
+- **Fase 9:** F9-2, F9-3, F9-4 e F9-5 concluídos; F9-1, F9-6 e F9-7 parciais. O mapa prioriza a área de jogo em 768 px, arrasta tokens por toque e aceita pan/pinça com dois dedos. Pendentes: F9-8 (i18n) e F9-9 (atalhos e paleta).
 
 **Legenda do backlog (colunas de ID nas tabelas das fases):** ✅ concluído · 🟡 parcial · ⛔ fora do escopo (decisão P2P, sem servidor) · sem marca = pendente.
 Parciais: F0-2 (sem hook de commit), F3-9 (sem upload de imagem própria), F5-7 (falta Esconder), F7-4 (posicionar oculto só via gerador/ficha), F9-1 (persistência local; falta exportar sessão), F9-6 (E2E é smoke das rotas), F9-7 (README sem GIFs).
-Pendentes: F1-6c, F3-9 (upload), F7-7, F7-8, F7-11, F9-3, F9-8, F9-9, G-14, G-16.
+Pendentes: F1-6c, F3-9 (upload), F7-7, F7-8, F7-11, F9-8, F9-9, G-14, G-16.
 
 ### Próximas tarefas — ordem de implementação
 
-1. **F9-3** — responsivo/toque para tablet: arrastar tokens e pan/zoom.
-2. **F9-9** — atalhos de teclado e paleta de comandos (`Ctrl+K`).
-3. **F9-8** — i18n em pt-BR/en com troca em runtime.
-4. **F1-6c** — som de dados opcional, volume e mudo; desligado por padrão.
-5. **F7-8 + F7-7** — linha de visão e imagem de fundo com calibragem do grid.
-6. **F7-11** — múltiplos andares ligados por escadas/portais.
-7. **G-14** — encontro rápido avulso no mapa atual.
-8. **F5-7** — completar ações padrão com Esconder.
-9. **F3-9** — upload de imagem própria para tokens.
-10. **G-16** — texto por IA com chave do Mestre, opcional.
-11. **F9-7** — adicionar GIFs ao README.
+1. **F9-9** — atalhos de teclado e paleta de comandos (`Ctrl+K`).
+2. **F9-8** — i18n em pt-BR/en com troca em runtime.
+3. **F1-6c** — som de dados opcional, volume e mudo; desligado por padrão.
+4. **F7-8 + F7-7** — linha de visão e imagem de fundo com calibragem do grid.
+5. **F7-11** — múltiplos andares ligados por escadas/portais.
+6. **G-14** — encontro rápido avulso no mapa atual.
+7. **F5-7** — completar ações padrão com Esconder.
+8. **F3-9** — upload de imagem própria para tokens.
+9. **G-16** — texto por IA com chave do Mestre, opcional.
+10. **F9-7** — adicionar GIFs ao README.
 
 ## 1. Visão e escopo
 
@@ -294,7 +293,7 @@ O Mestre escolhe **tema, terreno, tamanho** (e nível/tamanho do grupo, dificuld
 |---|---|---|---|---|
 | 🟡 F9-1 | Persistência de sessão/encontro + export/import JSON | P0 | M | Recarregar não perde o combate |
 | ✅ F9-2 | Acessibilidade (WCAG AA: contraste, foco, ARIA, leitor de tela p/ log) | P0 | M | Axe sem violações críticas |
-| F9-3 | Responsivo/toque (tablet como mesa) | P1 | M | Usável em 768px |
+| ✅ F9-3 | Responsivo/toque (tablet como mesa) | P1 | M | Usável em 768px |
 | ✅ F9-4 | PWA offline | P2 | S | Instalável, funciona offline |
 | ✅ F9-5 | Performance (OnPush/signals, lazy routes, bundle < 300 kB inicial) | P1 | M | Lighthouse ≥ 90 |
 | 🟡 F9-6 | Testes E2E (criar encontro → combater → fim) | P1 | M | Playwright verde no CI |

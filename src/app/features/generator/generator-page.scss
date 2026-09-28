@@ -183,6 +183,26 @@ legend {
   color: var(--gold);
 }
 
+.ai-text {
+  margin: 0 0 var(--space-3);
+
+  summary {
+    cursor: pointer;
+    font-weight: 700;
+  }
+}
+
+.ai-controls {
+  display: flex;
+  gap: var(--space-2);
+  align-items: end;
+  margin: var(--space-2) 0;
+
+  .field {
+    flex: 1;
+  }
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -236,6 +256,13 @@ legend {
   min-width: 0;
 }
 
+.description {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
 .lock {
   min-width: 44px;
   padding: 0;
@@ -254,5 +281,12 @@ legend {
 @media (max-width: 1000px) {
   .layout {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .ai-controls {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

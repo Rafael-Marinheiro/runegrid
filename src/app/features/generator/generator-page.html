@@ -186,6 +186,36 @@
           <span class="hook-label">{{ ui.text('Gancho', 'Hook') }}</span
           ><br />{{ a.hook }}
         </p>
+        <details class="ai-text">
+          <summary>{{ ui.text('Texto por IA (opcional)', 'AI text (optional)') }}</summary>
+          <div class="ai-controls">
+            <label class="field">
+              {{ ui.text('Chave da API OpenAI', 'OpenAI API key') }}
+              <input
+                #apiKey
+                type="password"
+                autocomplete="off"
+                placeholder="sk-..."
+                [disabled]="enhancing()"
+              />
+            </label>
+            <button type="button" [disabled]="enhancing()" (click)="enhanceText(apiKey.value)">
+              {{
+                enhancing()
+                  ? ui.text('Gerando...', 'Generating...')
+                  : ui.text('Aprimorar descrições', 'Enhance descriptions')
+              }}
+            </button>
+          </div>
+          <small class="muted">
+            {{
+              ui.text(
+                'A chave não é salva e é enviada diretamente à OpenAI.',
+                'The key is not saved and is sent directly to OpenAI.'
+              )
+            }}
+          </small>
+        </details>
         <div class="actions">
           <button type="button" (click)="reroll()">
             {{ ui.text('Regenerar sem as travadas', 'Regenerate unlocked rooms') }}
@@ -211,7 +241,8 @@
             <li>
               <span class="role" [attr.data-role]="r.role">{{ roleName(r.role) }}</span>
               <span class="rn"
-                ><b>{{ r.name }}</b> <span class="muted">· {{ summary(r) }}</span></span
+                ><b>{{ r.name }}</b> <span class="muted">· {{ summary(r) }}</span
+                ><span class="description">{{ r.description }}</span></span
               >
               <button
                 type="button"

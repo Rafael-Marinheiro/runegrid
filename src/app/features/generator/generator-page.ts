@@ -34,6 +34,7 @@ import { monsterToCreature } from '@core/rules/srd/convert';
 import { DIFFICULTY_LABEL } from '@core/rules/srd/xp';
 import { MapView, TokenView } from '@features/combat/map-view';
 import { iconFor } from '@features/combat/token-icons';
+import { enhanceAdventureText } from '@net/ai-text';
 import { UiPrefs } from '@state/ui-prefs';
 import { EncounterStore } from '@state/encounter.store';
 import { PartyStore } from '@state/party.store';
@@ -144,6 +145,7 @@ export class GeneratorPage implements OnInit {
   protected readonly adventure = signal<GeneratedAdventure | null>(null);
   protected readonly locked = signal<ReadonlySet<string>>(new Set());
   protected readonly message = signal('');
+  protected readonly enhancing = signal(false);
   protected readonly ready = computed(() => this.srd.monstersStatus() === 'ready');
   private nonce = 0;
 
@@ -338,6 +340,27 @@ export class GeneratorPage implements OnInit {
       );
     } catch {
       this.message.set(url);
+    }
+  }
+
+  protected async enhanceText(apiKey: string): Promise<void> {
+    const adventure = this.adventure();
+    if (!adventure || !apiKey.trim())
+      return void this.message.set(
+        this.ui.text('Informe sua chave da OpenAI.', 'Enter your OpenAI API key.'),
+      );
+    this.enhancing.set(true);
+    this.message.set(this.ui.text('Aprimorando os textos...', 'Enhancing the text...'));
+    try {
+      this.adventure.set(await enhanceAdventureText(adventure, apiKey, this.ui.locale()));
+      this.message.set(this.ui.text('Textos aprimorados com IA.', 'Text enhanced with AI.'));
+    } catch (error) {
+      this.message.set(
+        this.ui.text('Não foi possível gerar o texto: ', 'Could not generate text: ') +
+          (error instanceof Error ? error.message : String(error)),
+      );
+    } finally {
+      this.enhancing.set(false);
     }
   }
 }

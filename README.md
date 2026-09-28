@@ -9,7 +9,7 @@ Feito em **Angular 22** (standalone, signals, zoneless, OnPush). Plano e backlog
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Regras 5e   | Movimento (terreno difícil, diagonais, cantos, criaturas grandes), iniciativa, ações, ataques (crítico, vantagem, Ataque Extra), 14 condições, concentração, magias (espaços, upcast, áreas, salvaguardas), ataques de oportunidade, armadilhas, portas, névoa de guerra |
 | Dados       | Parser `NdM`/`kh`/`kl`/`d%`, RNG com semente, rolagem **3D** (three.js + cannon-es, carregada sob demanda) com o resultado sempre lido na face de cima, fallback 2D, cor por tipo de dado                                                                                |
-| Mestre      | Estúdio de mapas (pincel, salas, armadilhas, texturas), biblioteca de dungeons, gerador de aventuras reproduzível por semente, bestiário e magias do SRD (322 monstros, 319 magias)                                                                                      |
+| Mestre      | Estúdio de mapas (pincel, salas, armadilhas, texturas), biblioteca de dungeons, gerador de aventuras reproduzível por semente e texto por IA opcional, bestiário e magias do SRD (322 monstros, 319 magias)                                                              |
 | Jogadores   | Controlam só as próprias criaturas, dentro das regras; o Mestre valida tudo                                                                                                                                                                                              |
 | Multiplayer | WebRTC via PeerJS (host = Mestre, código de 6 letras), chat, sussurro, chat de voz (mudo, push-to-talk, volume por pessoa)                                                                                                                                               |
 | Itens       | Catálogo do SRD, equipar armadura/escudo/arma altera CA e ataques, peso, poções que gastam a ação                                                                                                                                                                        |
@@ -21,7 +21,7 @@ Feito em **Angular 22** (standalone, signals, zoneless, OnPush). Plano e backlog
 core/models   tipos puros (Creature, GridMap, EncounterState…)
 core/rules    regras em TS puro, sem Angular: dice · creature · grid · encounter · spells · generator · inventory
 state         stores com signals (party, encounter, dice, srd, ui-prefs)
-net           PeerJS: sala, protocolo, voz
+net           PeerJS: sala, protocolo, voz · OpenAI opt-in para texto do gerador
 features      telas lazy: combate · criaturas · estúdio · gerador · bestiário · magias · dados · mesa
 ```
 
@@ -36,6 +36,7 @@ Fluxo central: toda mudança é um **Comando** → `dispatch(state, cmd, {rng, r
 5. **Bundle pequeno.** three, cannon-es e PeerJS são `import()` dinâmicos; o shell fica ~250 kB.
 6. **Conteúdo do SRD 5.1 (CC-BY-4.0)** importado por script versionado (`scripts/import-srd.mjs`), não em runtime.
 7. **Signals + zoneless + OnPush** em todos os componentes; `@let` e control flow nativo.
+8. **IA somente opt-in e BYOK.** O gerador pode reescrever gancho e descrições via Responses API. A chave informada pelo Mestre permanece apenas no campo da página, nunca vai para storage, e a requisição usa `store: false`.
 
 ## Rodando
 

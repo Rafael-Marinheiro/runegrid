@@ -17,18 +17,17 @@ Tático de combate em grid para D&D 5e, feito em Angular. Projeto de portfólio:
 - **PWA:** instalável e offline (service worker do Angular, SRD em cache).
 - **Fase 6:** F6-1 (script `scripts/import-srd.mjs` gera 322 monstros e 319 magias do SRD em JSON versionado), F6-2 (bestiário com busca e filtros), F6-3 (monstro do SRD vira criatura de combate e é posicionado no mapa), F6-4 (compêndio de magias) e F6-7 (construtor de encontro por XP, com dificuldade do DMG) concluídos; `joinCombat` traz criaturas para um combate em andamento. F6-5 e F6-6 concluídos (catálogo SRD, equipar armadura/escudo recalcula a CA, arma equipada vira ataque, peso/carga, poções e antídoto usam a ação via comando `useItem`). F6-8 já coberto pelo gerador (tesouro por sala, escala com nível e chefe).
 - **Fase 7:** F7-1 a F7-3 e F7-5 a F7-14 concluídos (editor, portas, salas, névoa, armadilhas, imagem calibrada, linha de visão/visão no escuro, áreas, notas, biblioteca, andares ligados por portais e texturas). F7-4 parcial.
-- **Fase 7B (gerador):** G-1 a G-15 concluídos: 7 temas, layouts reproduzíveis, povoamento por XP, perigos, tesouro, narrativa, regeneração parcial, encontro rápido no mapa atual e integração com o Estúdio. Pendente: G-16 (texto por IA, opcional).
+- **Fase 7B (gerador):** G-1 a G-16 concluídos: 7 temas, layouts reproduzíveis, povoamento por XP, perigos, tesouro, narrativa, regeneração parcial, encontro rápido no mapa atual, integração com o Estúdio e texto por IA opt-in com chave efêmera do Mestre.
 - **Fase 8 (multiplayer):** F8-3 a F8-11 e F8-13 a F8-20 concluídos ou cobertos, **sem servidor próprio** (PeerJS); F8-1/F8-2/F8-12 estão fora do escopo pela decisão P2P. A sala pausa quando o Mestre sai, salva encontro/código/atribuições e pode ser retomada no mesmo código. A parte de áudio ainda precisa de teste manual com microfone em dois navegadores reais.
 - **Fase 9:** F9-2 a F9-5, F9-8 e F9-9 concluídos; F9-1, F9-6 e F9-7 parciais. O mapa prioriza a área de jogo em 768 px, arrasta tokens por toque e aceita pan/pinça com dois dedos. `Ctrl+K` abre a paleta global e `Alt+1…8` navega entre ferramentas. A interface principal alterna entre pt-BR/en em runtime e persiste a escolha; conteúdo SRD e registros existentes preservam o idioma de origem.
 
 **Legenda do backlog (colunas de ID nas tabelas das fases):** ✅ concluído · 🟡 parcial · ⛔ fora do escopo (decisão P2P, sem servidor) · sem marca = pendente.
 Parciais: F0-2 (sem hook de commit), F7-4 (posicionar oculto só via gerador/ficha), F9-1 (persistência local; falta exportar sessão), F9-6 (E2E é smoke das rotas), F9-7 (README sem GIFs).
-Pendente: G-16.
+Pendente: nenhum item funcional; F9-7 segue parcial por faltar mídia no README.
 
 ### Próximas tarefas — ordem de implementação
 
-1. **G-16** — texto por IA com chave do Mestre, opcional.
-2. **F9-7** — adicionar GIFs ao README.
+1. **F9-7** — adicionar GIFs ao README.
 
 ## 1. Visão e escopo
 
@@ -254,7 +253,7 @@ O Mestre escolhe **tema, terreno, tamanho** (e nível/tamanho do grupo, dificuld
 | ✅ G-13 | Compartilhar semente/URL (`?tema=cripta&tam=M&seed=…`) | P2 | S | Link reproduz a mesma dungeon |
 | ✅ G-14 | Gerar **encontro rápido** avulso (só combate no mapa atual) | P1 | M | Mestre escolhe terreno e recebe encontro posicionado |
 | ✅ G-15 | Estimador de dificuldade + relatório do gerado (XP, nº de monstros, perigos) | P2 | S | Painel resumo |
-| G-16 | Descrições com IA (opt-in, chave do próprio Mestre) | P2 | M | Desligado por padrão |
+| ✅ G-16 | Descrições com IA (opt-in, chave do próprio Mestre) | P2 | M | Desligado por padrão |
 
 ### Fase 8 — Multiplayer
 | ID | Item | Pri | Est | Critério de aceite |

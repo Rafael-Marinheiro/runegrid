@@ -3,6 +3,18 @@
 Combate em grade com **Mestre autoritativo**, **dados 3D**, editor de dungeons, **gerador de desafios** por tema/terreno/tamanho e **multiplayer P2P com voz** — sem backend.
 Feito em **Angular 22** (standalone, signals, zoneless, OnPush). Plano e backlog completos em [PLANO.md](PLANO.md).
 
+**[Abrir a demo](https://runegrid-nine.vercel.app)**
+
+## Em ação
+
+**Gerador reproduzível, com texto por IA opcional**
+
+![Gerador criando uma dungeon e abrindo o aprimoramento de texto por IA](docs/media/generator.gif)
+
+**Combate tático com iniciativa, mapa e economia de ações**
+
+![Combate passando da montagem para o primeiro turno](docs/media/combat.gif)
+
 ## O que tem
 
 | Área        | Destaques                                                                                                                                                                                                                                                                |
@@ -13,7 +25,7 @@ Feito em **Angular 22** (standalone, signals, zoneless, OnPush). Plano e backlog
 | Jogadores   | Controlam só as próprias criaturas, dentro das regras; o Mestre valida tudo                                                                                                                                                                                              |
 | Multiplayer | WebRTC via PeerJS (host = Mestre, código de 6 letras), chat, sussurro, chat de voz (mudo, push-to-talk, volume por pessoa)                                                                                                                                               |
 | Itens       | Catálogo do SRD, equipar armadura/escudo/arma altera CA e ataques, peso, poções que gastam a ação                                                                                                                                                                        |
-| Qualidade   | ~310 testes, Lighthouse 100 (acessibilidade/boas práticas/SEO), modo alto contraste, PWA instalável e offline                                                                                                                                                            |
+| Qualidade   | 343 testes, Lighthouse 100 (acessibilidade/boas práticas/SEO), modo alto contraste, PWA instalável e offline                                                                                                                                                             |
 
 ## Arquitetura
 
@@ -53,6 +65,7 @@ Multiplayer: abra `/mesa`, clique em "Criar sala" e passe o código; outros abre
 ## Limitações conhecidas
 
 - Áudio de voz depende de microfone/permissão e de rede que permita WebRTC.
-- Cobertura parcial (cobertura, Ajudar/Esconder, macros de dados, mensagens de rolagem secreta); veja `PARTIAL` no PLANO.
+- A sessão é persistida localmente, mas ainda não há exportação para arquivo.
+- Os E2E atuais cobrem os fluxos críticos como smoke; a suíte detalhada está nas regras puras.
 
 Conteúdo baseado no SRD 5.1 da Wizards of the Coast, licenciado sob CC-BY-4.0.

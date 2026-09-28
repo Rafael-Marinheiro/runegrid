@@ -64,6 +64,15 @@ const themeMonsters = (theme: Theme, all: SrdMonster[]): SrdMonster[] =>
         theme.monsterNames?.test(m.name)),
   );
 
+/** Gera apenas os grupos de um combate temático, sem trocar o mapa atual. */
+export function generateQuickEncounter(params: GeneratorParams, monsters: SrdMonster[]) {
+  const levels = Array<number>(params.partySize).fill(params.partyLevel);
+  const themed = themeMonsters(THEME_DATA[params.theme], monsters);
+  const pool = themed.length >= 3 ? themed : monsters;
+  const rng = mulberry32(seedOf(params, 'quick'));
+  return pickEncounter(pool, budgetFor(levels, params.difficulty, false, rng), levels, false, rng);
+}
+
 function buildLayout(p: GeneratorParams, theme: Theme, rng: () => number): Layout {
   const s = SIZE[p.size];
   if (theme.layout === 'cave') return caveLayout(s.width, s.height, s.rooms, rng);

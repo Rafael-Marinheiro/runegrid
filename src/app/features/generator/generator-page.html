@@ -113,13 +113,18 @@
       </span>
     </label>
 
-    <button type="button" class="primary big" [disabled]="!ready()" (click)="generate()">
-      {{
-        ready()
-          ? ui.text('Gerar dungeon', 'Generate dungeon')
-          : ui.text('Carregando bestiário…', 'Loading bestiary…')
-      }}
-    </button>
+    <div class="actions">
+      <button type="button" class="primary big" [disabled]="!ready()" (click)="generate()">
+        {{
+          ready()
+            ? ui.text('Gerar dungeon', 'Generate dungeon')
+            : ui.text('Carregando bestiário…', 'Loading bestiary…')
+        }}
+      </button>
+      <button type="button" class="big" [disabled]="!ready()" (click)="quickEncounter()">
+        {{ ui.text('Encontro rápido no mapa atual', 'Quick encounter on current map') }}
+      </button>
+    </div>
     <p class="msg" role="status" aria-live="polite">{{ message() }}</p>
   </section>
 

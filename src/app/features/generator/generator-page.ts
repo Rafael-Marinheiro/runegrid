@@ -25,9 +25,12 @@ import {
   adventureToEncounter,
   DEFAULT_PARAMS,
   generateAdventure,
+  generateQuickEncounter,
   regenerate,
   THEME_DATA,
 } from '@core/rules/generator';
+import { teamOf } from '@core/rules/encounter';
+import { monsterToCreature } from '@core/rules/srd/convert';
 import { DIFFICULTY_LABEL } from '@core/rules/srd/xp';
 import { MapView, TokenView } from '@features/combat/map-view';
 import { iconFor } from '@features/combat/token-icons';
@@ -242,6 +245,37 @@ export class GeneratorPage implements OnInit {
     this.adventure.set(generateAdventure(this.params(), this.srd.monsters()));
     this.locked.set(new Set());
     this.message.set('');
+  }
+
+  protected quickEncounter(): void {
+    if (!this.ready()) return;
+    if (this.encounter.state().combat.phase === 'running')
+      return void this.message.set(
+        this.ui.text(
+          'Encerre o combate atual antes de gerar outro.',
+          'End the current combat first.',
+        ),
+      );
+    const result = generateQuickEncounter(this.params(), this.srd.monsters());
+    if (!result)
+      return void this.message.set(
+        this.ui.text(
+          'Nenhum encontro disponível para estes parâmetros.',
+          'No encounter is available.',
+        ),
+      );
+    const byId = new Map(this.srd.monsters().map((monster) => [monster.id, monster]));
+    for (const creature of this.encounter.state().creatures.filter((c) => teamOf(c) === 'foes'))
+      this.encounter.send({ type: 'removeCreature', id: creature.id });
+    for (const group of result.groups) {
+      const monster = byId.get(group.monsterId);
+      if (!monster) continue;
+      for (let i = 0; i < group.count; i++) {
+        const id = this.encounter.addFromRoster(monsterToCreature(monster));
+        this.encounter.autoPlace(id);
+      }
+    }
+    void this.router.navigate(['/combate']);
   }
 
   /** Sorteia de novo as salas destravadas, mantendo o mapa e o que foi travado. */

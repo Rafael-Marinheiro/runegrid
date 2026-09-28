@@ -8,6 +8,7 @@ import {
   adventureToEncounter,
   DEFAULT_PARAMS,
   generateAdventure,
+  generateQuickEncounter,
   regenerate,
   THEME_DATA,
 } from './index';
@@ -88,6 +89,20 @@ describe('estrutura do mapa', () => {
 });
 
 describe('povoamento', () => {
+  it('gera encontro rápido temático e reproduzível', () => {
+    const params = { ...DEFAULT_PARAMS, theme: 'crypt' as const, seed: 'rápido' };
+    const first = generateQuickEncounter(params, monsters);
+    expect(first).toEqual(generateQuickEncounter(params, monsters));
+    expect(first?.groups.length).toBeGreaterThan(0);
+    for (const group of first?.groups ?? []) {
+      const monster = monsters.find((item) => item.id === group.monsterId)!;
+      expect(
+        monster.type.toLowerCase().startsWith('undead') ||
+          /skeleton|zombie|ghoul|wight|specter|wraith/i.test(monster.name),
+      ).toBe(true);
+    }
+  });
+
   it('monstros respeitam o tema (cripta = mortos-vivos)', () => {
     const t = THEME_DATA.crypt;
     for (const seed of ['1', '2', '3', '4']) {

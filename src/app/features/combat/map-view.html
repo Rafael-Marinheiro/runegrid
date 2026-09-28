@@ -280,7 +280,18 @@
           <circle class="sel" [attr.cx]="d / 2" [attr.cy]="d / 2" [attr.r]="d / 2 - 1" />
         }
         <circle class="body" [attr.cx]="d / 2" [attr.cy]="d / 2" [attr.r]="d / 2 - 5" />
-        @if (t.icon && !t.dead) {
+        @if (t.image && !t.dead) {
+          <image
+            class="portrait"
+            [attr.href]="t.image"
+            x="5"
+            y="5"
+            [attr.width]="d - 10"
+            [attr.height]="d - 10"
+            preserveAspectRatio="xMidYMid slice"
+            aria-hidden="true"
+          />
+        } @else if (t.icon && !t.dead) {
           <g
             class="icon"
             aria-hidden="true"

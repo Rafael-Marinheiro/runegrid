@@ -74,7 +74,15 @@ export interface IconSource {
   name: string;
   kind: 'pc' | 'npc' | 'monster';
   icon?: string;
+  tokenImage?: string;
 }
+
+export const tokenImageFor = (c: IconSource): string | null =>
+  c.tokenImage &&
+  c.tokenImage.length <= 512 * 1024 &&
+  /^data:image\/(?:png|jpeg|webp);base64,/.test(c.tokenImage)
+    ? c.tokenImage
+    : null;
 
 export function iconFor(c: IconSource): IconId | null {
   if (c.icon && (ICON_IDS as readonly string[]).includes(c.icon)) return c.icon as IconId;

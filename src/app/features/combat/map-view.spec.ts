@@ -3,6 +3,25 @@ import { mapFromAscii } from '@core/models/grid';
 import { MapView, TokenView } from './map-view';
 
 describe('MapView por toque', () => {
+  const token: TokenView = {
+    id: 'hero',
+    name: 'Heroína',
+    letter: 'H',
+    pos: { x: 0, y: 0 },
+    size: 1,
+    team: 'party',
+    hpPct: 100,
+    hidden: false,
+    dead: false,
+    active: false,
+    selected: false,
+    targetable: false,
+    icon: null,
+    image: null,
+    conditions: 0,
+    concentrating: false,
+  };
+
   function setup(tokens: TokenView[] = []) {
     const fixture = TestBed.createComponent(MapView);
     fixture.componentRef.setInput('map', mapFromAscii(['....', '....']));
@@ -22,23 +41,6 @@ describe('MapView por toque', () => {
   }
 
   it('arrasta token e encaixa na célula', () => {
-    const token: TokenView = {
-      id: 'hero',
-      name: 'Heroína',
-      letter: 'H',
-      pos: { x: 0, y: 0 },
-      size: 1,
-      team: 'party',
-      hpPct: 100,
-      hidden: false,
-      dead: false,
-      active: false,
-      selected: false,
-      targetable: false,
-      icon: null,
-      conditions: 0,
-      concentrating: false,
-    };
     const { component, fixture } = setup([token]);
     const moved = vi.fn();
     component.tokenMove.subscribe(moved);
@@ -81,6 +83,14 @@ describe('MapView por toque', () => {
     expect(image.getAttribute('y')).toBe('48');
     expect(image.getAttribute('width')).toBe('192');
     expect(image.getAttribute('opacity')).toBe('0.7');
+  });
+
+  it('renderiza retrato próprio dentro do token', () => {
+    const src = 'data:image/webp;base64,AAAA';
+    const { fixture } = setup([{ ...token, image: src }]);
+    const image = fixture.nativeElement.querySelector('.portrait') as SVGImageElement;
+    expect(image.getAttribute('href')).toBe(src);
+    expect(image.getAttribute('width')).toBe('38');
   });
 });
 

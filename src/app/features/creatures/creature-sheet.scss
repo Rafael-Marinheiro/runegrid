@@ -32,6 +32,20 @@
   grid-column: 1 / -1;
 }
 
+.token-image {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+
+  img {
+    width: 56px;
+    height: 56px;
+    border: 2px solid var(--gold-dim);
+    border-radius: 50%;
+    object-fit: cover;
+  }
+}
+
 .derived {
   display: flex;
   flex-wrap: wrap;

@@ -174,6 +174,8 @@ export interface Creature {
   conditions: ActiveCondition[];
   /** Ícone do token (ver `token-icons`); se ausente, deduzido do nome. */
   icon?: string;
+  /** Retrato próprio do token, compactado como data URL local. */
+  tokenImage?: string;
   /** Itens carregados (ver `models/item`). */
   inventory?: InventoryItem[];
   /** Magia mantida em concentração. */

@@ -57,6 +57,23 @@
             }
           </select>
         </label>
+        <label class="field wide">
+          {{ ui.text('Imagem do token', 'Token image') }}
+          <input
+            #tokenImage
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            (change)="uploadTokenImage(tokenImage)"
+          />
+        </label>
+        @if (c.tokenImage) {
+          <div class="token-image wide">
+            <img [src]="c.tokenImage" alt="" />
+            <button type="button" (click)="patch({ tokenImage: undefined })">
+              {{ ui.text('Remover imagem', 'Remove image') }}
+            </button>
+          </div>
+        }
         <label class="field">
           {{ ui.text('Tamanho', 'Size') }}
           <select #size (change)="setSize(size.value)">

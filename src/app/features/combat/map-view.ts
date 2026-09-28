@@ -33,6 +33,8 @@ export interface TokenView {
   targetable: boolean;
   /** Ícone do token; sem ele, aparece a inicial. */
   icon: IconId | null;
+  /** Retrato próprio; tem prioridade sobre o ícone. */
+  image: string | null;
   /** Quantidade de condições ativas. */
   conditions: number;
   concentrating: boolean;

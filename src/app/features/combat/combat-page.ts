@@ -31,7 +31,7 @@ import { RoomService } from '@net/room.service';
 import { PartyStore } from '@state/party.store';
 import { UiPrefs } from '@state/ui-prefs';
 import { AreaPreview, MapView, TokenView } from './map-view';
-import { iconFor } from './token-icons';
+import { iconFor, tokenImageFor } from './token-icons';
 import { SpellPanel } from './spell-panel';
 
 type Mode =
@@ -230,6 +230,7 @@ export class CombatPage {
           selected: c.id === sel,
           targetable: targets.has(c.id),
           icon: iconFor(c),
+          image: tokenImageFor(c),
           conditions: c.conditions.length,
           concentrating: !!c.concentration,
         },

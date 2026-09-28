@@ -121,6 +121,11 @@
   }
 }
 
+.portrait {
+  clip-path: circle(50% at 50% 50%);
+  pointer-events: none;
+}
+
 .hp-bg {
   fill: #0d0906;
 }

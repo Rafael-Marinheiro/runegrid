@@ -15,7 +15,7 @@ import {
 } from '@core/models/grid';
 import { project, sizeOf, teamOf } from '@core/rules/encounter';
 import { MapView, TokenView } from '@features/combat/map-view';
-import { iconFor } from '@features/combat/token-icons';
+import { iconFor, tokenImageFor } from '@features/combat/token-icons';
 import { UiPrefs } from '@state/ui-prefs';
 import { DungeonLibrary, SavedDungeon } from '@state/dungeon-library';
 import { EncounterStore } from '@state/encounter.store';
@@ -174,6 +174,7 @@ export class StudioPage {
           selected: false,
           targetable: false,
           icon: iconFor(c),
+          image: tokenImageFor(c),
           conditions: 0,
           concentrating: false,
         },

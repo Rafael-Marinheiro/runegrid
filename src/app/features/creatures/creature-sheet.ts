@@ -163,6 +163,43 @@ export class CreatureSheet {
     this.patch({ size: size as Size });
   }
 
+  protected async uploadTokenImage(input: HTMLInputElement): Promise<void> {
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    if (
+      !['image/png', 'image/jpeg', 'image/webp'].includes(file.type) ||
+      file.size > 5 * 1024 * 1024
+    )
+      return void this.check.set(
+        this.ui.text('Use PNG, JPEG ou WebP de até 5 MB.', 'Use PNG, JPEG, or WebP up to 5 MB.'),
+      );
+    try {
+      const image = await createImageBitmap(file);
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = 256;
+      const side = Math.min(image.width, image.height);
+      canvas
+        .getContext('2d')!
+        .drawImage(
+          image,
+          (image.width - side) / 2,
+          (image.height - side) / 2,
+          side,
+          side,
+          0,
+          0,
+          256,
+          256,
+        );
+      image.close();
+      this.patch({ tokenImage: canvas.toDataURL('image/webp', 0.85) });
+      this.check.set(this.ui.text('Imagem do token atualizada.', 'Token image updated.'));
+    } catch {
+      this.check.set(this.ui.text('Não foi possível ler a imagem.', 'Could not read the image.'));
+    }
+  }
+
   /** Rola um d20 com o bônus e anuncia o resultado. */
   protected roll(label: string, bonus: number): void {
     this.dice.rollD20(bonus, 'normal');

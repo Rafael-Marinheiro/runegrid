@@ -180,6 +180,7 @@ export class GeneratorPage implements OnInit {
           selected: false,
           targetable: false,
           icon: iconFor({ name: e.groups[0]?.name ?? '', kind: 'monster' }),
+          image: null,
           conditions: 0,
           concentrating: false,
         },

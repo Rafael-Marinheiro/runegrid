@@ -53,6 +53,25 @@ export interface Pos {
 export const TEXTURES = ['none', 'stone', 'cave', 'grass', 'mud'] as const;
 export type Texture = (typeof TEXTURES)[number];
 
+export interface MapBackground {
+  /** Imagem persistente (data URL). */
+  src: string;
+  widthPx: number;
+  heightPx: number;
+  /** Quantos pixels da imagem correspondem a uma célula do grid. */
+  pixelsPerCell: number;
+  /** Deslocamento da imagem em células. */
+  offsetX: number;
+  offsetY: number;
+  opacity: number;
+}
+
+export interface MapVision {
+  enabled: boolean;
+  /** Sem iluminação, cada criatura enxerga somente até sua visão no escuro. */
+  darkness: boolean;
+}
+
 export interface GridMap {
   width: number;
   height: number;
@@ -64,6 +83,8 @@ export interface GridMap {
   traps?: Trap[];
   /** Textura do piso (só aparência; nunca muda regras). */
   texture?: Texture;
+  background?: MapBackground;
+  vision?: MapVision;
 }
 
 /** Regra de diagonal: simples (5 ft) ou alternada 5-10-5 (variante do DMG). */
@@ -136,6 +157,25 @@ export function isGridMap(v: unknown): v is GridMap {
     Array.isArray(m.cells) &&
     m.cells.length === m.width * m.height &&
     m.cells.every((c) => typeof c === 'string') &&
-    (m.fog === undefined || (Array.isArray(m.fog) && m.fog.length === m.cells.length))
+    (m.fog === undefined || (Array.isArray(m.fog) && m.fog.length === m.cells.length)) &&
+    isMapBackground(m.background) &&
+    (m.vision === undefined ||
+      (typeof m.vision.enabled === 'boolean' && typeof m.vision.darkness === 'boolean'))
+  );
+}
+
+export function isMapBackground(background: GridMap['background']): boolean {
+  if (background === undefined) return true;
+  return (
+    typeof background.src === 'string' &&
+    background.src.length <= 3 * 1024 * 1024 &&
+    /^data:image\/(?:png|jpeg|webp|gif);base64,/.test(background.src) &&
+    background.widthPx > 0 &&
+    background.heightPx > 0 &&
+    background.pixelsPerCell > 0 &&
+    Number.isFinite(background.offsetX) &&
+    Number.isFinite(background.offsetY) &&
+    background.opacity >= 0 &&
+    background.opacity <= 1
   );
 }

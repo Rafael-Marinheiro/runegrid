@@ -60,6 +60,28 @@ describe('MapView por toque', () => {
 
     expect((component as unknown as { zoom(): number }).zoom()).toBeCloseTo(1.5);
   });
+
+  it('renderiza a imagem calibrada atrás do grid', () => {
+    const { fixture } = setup();
+    fixture.componentRef.setInput('map', {
+      ...mapFromAscii(['....', '....']),
+      background: {
+        src: 'data:image/png;base64,AA==',
+        widthPx: 400,
+        heightPx: 200,
+        pixelsPerCell: 100,
+        offsetX: 0.5,
+        offsetY: 1,
+        opacity: 0.7,
+      },
+    });
+    fixture.detectChanges();
+    const image = fixture.nativeElement.querySelector('.map-background') as SVGImageElement;
+    expect(image.getAttribute('x')).toBe('24');
+    expect(image.getAttribute('y')).toBe('48');
+    expect(image.getAttribute('width')).toBe('192');
+    expect(image.getAttribute('opacity')).toBe('0.7');
+  });
 });
 
 function touch(target: Element, type: string, pointerId: number, clientX: number, clientY: number) {

@@ -1,6 +1,7 @@
 import { Creature } from '../../models/creature';
 import { EncounterState, Role } from '../../models/encounter';
 import { footprint } from '../grid/movement';
+import { visibleCells } from '../grid/visibility';
 import { sizeOf, teamOf } from './state';
 
 /** Esconde de um inimigo o que o jogador não deve saber: PV exatos, ataques, magias. */
@@ -25,7 +26,23 @@ export function project(state: EncounterState, role: Role): EncounterState {
   if (role.kind === 'dm') return state;
   const { map } = state;
   const fog = map.fog;
-  const fogged = (x: number, y: number) => !!fog && fog[y * map.width + x] === true;
+  const dynamic = map.vision?.enabled === true;
+  const sight = dynamic
+    ? visibleCells(
+        map,
+        state.tokens.flatMap((token) => {
+          if (!role.owns.includes(token.creatureId)) return [];
+          const creature = state.creatures.find((c) => c.id === token.creatureId);
+          if (!creature) return [];
+          const rangeFt = map.vision?.darkness ? (creature.darkvision ?? 0) : Infinity;
+          return footprint(token.pos, sizeOf(creature)).map((pos) => ({ pos, rangeFt }));
+        }),
+      )
+    : null;
+  const fogged = (x: number, y: number) => {
+    const i = y * map.width + x;
+    return fog?.[i] === true || (sight !== null && !sight.has(i));
+  };
 
   // criatura na névoa não é vista (a menos que seja do próprio jogador)
   const visible = new Set(
@@ -63,7 +80,9 @@ export function project(state: EncounterState, role: Role): EncounterState {
     log: state.log.filter((e) => !e.secret),
     map: {
       ...map,
-      cells: map.cells.map((t, i) => (fog?.[i] ? 'unknown' : t)),
+      cells: map.cells.map((t, i) =>
+        fogged(i % map.width, Math.floor(i / map.width)) ? 'unknown' : t,
+      ),
       fog: undefined,
       rooms: openRooms,
       traps: (map.traps ?? []).filter((t) => !t.hidden || t.triggered),

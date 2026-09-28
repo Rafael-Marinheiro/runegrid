@@ -1,6 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DAMAGE_LABEL, DAMAGE_TYPES, DamageType } from '@core/models/creature';
-import { blankMap, Pos, Room, Terrain, Texture, TEXTURES, Trap } from '@core/models/grid';
+import {
+  blankMap,
+  MapBackground,
+  MapVision,
+  Pos,
+  Room,
+  Terrain,
+  Texture,
+  TEXTURES,
+  Trap,
+} from '@core/models/grid';
 import { project, sizeOf, teamOf } from '@core/rules/encounter';
 import { MapView, TokenView } from '@features/combat/map-view';
 import { iconFor } from '@features/combat/token-icons';
@@ -274,6 +284,56 @@ export class StudioPage {
     this.send({ type: 'setTexture', texture: value as Texture });
   }
 
+  protected setVision(changes: Partial<MapVision>): void {
+    const vision = this.state().map.vision ?? { enabled: false, darkness: false };
+    this.send({ type: 'setVision', vision: { ...vision, ...changes } });
+  }
+
+  protected editBackground(changes: Partial<MapBackground>): void {
+    const background = this.state().map.background;
+    if (background)
+      this.send({ type: 'setMapBackground', background: { ...background, ...changes } });
+  }
+
+  protected removeBackground(): void {
+    this.send({ type: 'setMapBackground' });
+  }
+
+  protected async importBackground(input: HTMLInputElement): Promise<void> {
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    if (
+      !['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type) ||
+      file.size > 2 * 1024 * 1024
+    ) {
+      this.message.set(
+        this.ui.text('Use uma imagem válida de até 2 MB.', 'Use a valid image up to 2 MB.'),
+      );
+      return;
+    }
+    try {
+      const src = await fileToDataUrl(file);
+      const image = new Image();
+      image.src = src;
+      await image.decode();
+      this.send({
+        type: 'setMapBackground',
+        background: {
+          src,
+          widthPx: image.naturalWidth,
+          heightPx: image.naturalHeight,
+          pixelsPerCell: image.naturalWidth / this.state().map.width,
+          offsetX: 0,
+          offsetY: 0,
+          opacity: 1,
+        },
+      });
+    } catch {
+      this.message.set(this.ui.text('Não foi possível ler a imagem.', 'Could not read the image.'));
+    }
+  }
+
   // ---------- mapa e biblioteca ----------
 
   protected newMap(w: string, h: string): void {
@@ -315,4 +375,13 @@ export class StudioPage {
     if (this.send({ type: 'setMap', map: parsed.map }))
       this.message.set(`"${parsed.name}" ${this.ui.text('importado.', 'imported.')}`);
   }
+}
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
 }

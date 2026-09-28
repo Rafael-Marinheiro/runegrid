@@ -22,6 +22,7 @@ const hero = (over: Partial<Creature> = {}) =>
     id: 'hero',
     name: 'Herói',
     speed: 30,
+    darkvision: 60,
     hp: { max: 30, current: 30, temp: 0 },
     abilities: { str: 10, dex: 12, con: 10, int: 10, wis: 10, cha: 10 },
     ...over,
@@ -258,6 +259,23 @@ describe('névoa de guerra e salas', () => {
     const s = run(withRoom(), { type: 'removeRoom', id: 'r1' });
     expect(s.map.rooms).toEqual([]);
   });
+
+  it('a visão dinâmica esconde células e inimigos atrás de paredes', () => {
+    let s = scene(['..#..']);
+    s = run(s, { type: 'setVision', vision: { enabled: true, darkness: false } });
+    const view = project(s, player);
+    expect(view.map.cells[2]).toBe('wall');
+    expect(view.map.cells[4]).toBe('unknown');
+    expect(view.tokens.map((t) => t.creatureId)).toEqual(['hero']);
+  });
+
+  it('a escuridão respeita a visão no escuro da criatura', () => {
+    let s = scene(['....................']);
+    s = run(s, { type: 'setVision', vision: { enabled: true, darkness: true } });
+    const view = project(s, player);
+    expect(view.map.cells[12]).toBe('floor');
+    expect(view.map.cells[13]).toBe('unknown');
+  });
 });
 
 describe('trocar o mapa', () => {
@@ -279,5 +297,30 @@ describe('trocar o mapa', () => {
     expect(() => run(newEncounter(mapFromAscii(ascii)), { type: 'setMap', map: bad })).toThrow(
       /inválido/,
     );
+  });
+});
+
+describe('imagem de fundo e visão', () => {
+  it('guarda a calibragem e recusa fontes que não sejam imagens raster locais', () => {
+    const background = {
+      src: 'data:image/png;base64,AA==',
+      widthPx: 700,
+      heightPx: 400,
+      pixelsPerCell: 50,
+      offsetX: -0.5,
+      offsetY: 1,
+      opacity: 0.8,
+    };
+    const s = run(newEncounter(mapFromAscii(ascii)), {
+      type: 'setMapBackground',
+      background,
+    });
+    expect(s.map.background).toEqual(background);
+    expect(() =>
+      run(s, {
+        type: 'setMapBackground',
+        background: { ...background, src: 'https://example.com/map.png' },
+      }),
+    ).toThrow(/inválida/);
   });
 });

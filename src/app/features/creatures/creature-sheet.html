@@ -77,6 +77,17 @@
           />
         </label>
         <label class="field">
+          {{ ui.text('Visão no escuro (ft)', 'Darkvision (ft)') }}
+          <input
+            #darkvision
+            type="number"
+            min="0"
+            step="5"
+            [value]="c.darkvision ?? 0"
+            (change)="patch({ darkvision: num(darkvision.valueAsNumber, 0, 1000) })"
+          />
+        </label>
+        <label class="field">
           {{ ui.text('Classe de armadura', 'Armor class') }}
           <input
             #ac

@@ -1,5 +1,14 @@
 import { ConditionName, Creature, DamageType } from '../../models/creature';
-import { GridMap, Pos, Room, Terrain, Texture, Trap } from '../../models/grid';
+import {
+  GridMap,
+  MapBackground,
+  MapVision,
+  Pos,
+  Room,
+  Terrain,
+  Texture,
+  Trap,
+} from '../../models/grid';
 import { AdvMode } from '../dice';
 
 /** Tudo que muda o encontro passa por um destes comandos. */
@@ -15,6 +24,8 @@ export type Command =
   | { type: 'setFog'; cells: Pos[]; hidden: boolean }
   | { type: 'setMap'; map: GridMap }
   | { type: 'setTexture'; texture: Texture }
+  | { type: 'setMapBackground'; background?: MapBackground }
+  | { type: 'setVision'; vision: MapVision }
   | { type: 'upsertRoom'; room: Room }
   | { type: 'removeRoom'; id: string }
   /** Revela (ou oculta) toda a sala e publica o texto de leitura. */

@@ -6,7 +6,7 @@ import {
   RolledDie,
   TurnState,
 } from '../../models/encounter';
-import { inBounds, Pos } from '../../models/grid';
+import { inBounds, isMapBackground, Pos } from '../../models/grid';
 import {
   applyDamage,
   heal,
@@ -126,6 +126,11 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       return setMap(state, cmd.map);
     case 'setTexture':
       return { ...state, map: { ...state.map, texture: cmd.texture } };
+    case 'setMapBackground':
+      if (!isMapBackground(cmd.background)) throw new RuleError('Imagem de fundo inválida.');
+      return { ...state, map: { ...state.map, background: cmd.background } };
+    case 'setVision':
+      return { ...state, map: { ...state.map, vision: cmd.vision } };
     case 'upsertRoom':
       return upsertRoom(state, cmd.room);
     case 'removeRoom':

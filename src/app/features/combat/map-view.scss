@@ -23,6 +23,14 @@
   fill: var(--tile-wall);
 }
 
+.map-background {
+  pointer-events: none;
+}
+
+.map.has-background .tile:not(.wall) {
+  fill-opacity: 0.2;
+}
+
 .tile {
   stroke: var(--tile-line);
   stroke-width: 1;

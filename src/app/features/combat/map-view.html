@@ -3,6 +3,7 @@
     #svg
     class="map"
     [class.hc]="highContrast()"
+    [class.has-background]="!!map().background"
     role="group"
     [attr.aria-label]="ui.text('Mapa de combate', 'Combat map')"
     [attr.viewBox]="viewBox()"
@@ -46,6 +47,18 @@
       </pattern>
     </defs>
     <rect [attr.width]="width()" [attr.height]="height()" class="bg" />
+    @if (map().background; as image) {
+      <image
+        class="map-background"
+        [attr.href]="image.src"
+        [attr.x]="image.offsetX * C"
+        [attr.y]="image.offsetY * C"
+        [attr.width]="(image.widthPx / image.pixelsPerCell) * C"
+        [attr.height]="(image.heightPx / image.pixelsPerCell) * C"
+        [attr.opacity]="image.opacity"
+        preserveAspectRatio="none"
+      />
+    }
 
     @for (c of cells(); track c.i) {
       <rect

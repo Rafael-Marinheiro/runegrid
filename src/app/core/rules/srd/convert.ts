@@ -32,6 +32,7 @@ export function monsterToCreature(m: SrdMonster, name: string = m.name): Creatur
     cr: m.cr,
     size: m.size,
     speed: m.speed,
+    darkvision: Number(/darkvision\s+(\d+)/i.exec(m.senses)?.[1] ?? 0),
     ac: m.ac,
     abilities,
     saveProficiencies: ABILITY_ORDER.filter((a) => m.saves[a] !== undefined),

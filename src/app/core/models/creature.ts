@@ -151,6 +151,8 @@ export interface Creature {
   size: Size;
   /** Deslocamento em pés. */
   speed: number;
+  /** Alcance de visão no escuro em pés. Ausente ou zero = sem visão no escuro. */
+  darkvision?: number;
   ac: number;
   abilities: Record<Ability, number>;
   saveProficiencies: Ability[];

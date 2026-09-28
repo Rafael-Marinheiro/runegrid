@@ -407,6 +407,13 @@
             </button>
             <button
               type="button"
+              [disabled]="!t.action || a.status !== 'alive'"
+              (click)="act('hide')"
+            >
+              {{ ui.text('Esconder', 'Hide') }}
+            </button>
+            <button
+              type="button"
               [class.active]="mode().kind === 'help'"
               [disabled]="!t.action || a.status !== 'alive'"
               (click)="toggleHelp()"

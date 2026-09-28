@@ -9,7 +9,7 @@ Tático de combate em grid para D&D 5e, feito em Angular. Projeto de portfólio:
 - **Fase 2:** F2-1, F2-2, F2-3, F2-4, F2-5, F2-6 e F2-7 concluídos: ficha completa (atributos, salvaguardas, perícias, CA, PV com dano/cura/temporários, morte, espaços de magia, recursos, descansos, resistências), lista de criaturas com persistência local e rolagem de testes pela ficha.
 - **Fase 3:** F3-1 a F3-5, F3-8, F3-11 concluídos: mapa SVG com zoom/pan, tokens arrastáveis com encaixe, colisão, terreno difícil, regra de diagonal simples ou 5-10-5, criaturas grandes (2×2+), destaque de alcance e navegação por teclado. F3-6 (prévia do caminho com custo), F3-7 (régua que respeita a regra de diagonal), F3-9 (14 ícones próprios nos tokens, escolhidos por criatura ou deduzidos do nome), F3-10 e F7-14 (texturas de piso por tema: pedra, caverna, grama, lama) e F3-11 (alto contraste: sem texturas e anéis mais grossos) concluídos.
 - **Fase 4:** F4-0 (modelo Command/Event com papéis dm/player e `project()`), F4-1 a F4-9 concluídos: iniciativa, turnos e rodadas, orçamento de ação/movimento, ataque com crítico, vantagem/desvantagem, Ataque Extra, Esquiva/Disparada/Desengajar, log, desfazer/refazer, salvaguardas e resumo final com XP opcional.
-- **Fase 5:** F5-1 a F5-6 e F5-8 concluídos, com condições, duração, concentração, magias, ataques de oportunidade, cobertura e armas versáteis. F5-7 parcial: Disparada, Esquiva, Desengajar e Ajudar concluídos; falta Esconder.
+- **Fase 5:** F5-1 a F5-8 concluídos, com condições, duração, concentração, magias, ações padrão, ataques de oportunidade, cobertura e armas versáteis.
 - **Acessibilidade:** Lighthouse 100 em combate, gerador, mesa e criaturas (contraste, landmarks, roles, nomes acessíveis).
 - **E2E:** Playwright (`npm run e2e`): smoke das 8 rotas sem erros de página.
 - **Ping (F8-14):** Shift+clique no mapa marca uma célula para todos na mesa (relay pelo Mestre, some em 4 s).
@@ -22,15 +22,14 @@ Tático de combate em grid para D&D 5e, feito em Angular. Projeto de portfólio:
 - **Fase 9:** F9-2 a F9-5, F9-8 e F9-9 concluídos; F9-1, F9-6 e F9-7 parciais. O mapa prioriza a área de jogo em 768 px, arrasta tokens por toque e aceita pan/pinça com dois dedos. `Ctrl+K` abre a paleta global e `Alt+1…8` navega entre ferramentas. A interface principal alterna entre pt-BR/en em runtime e persiste a escolha; conteúdo SRD e registros existentes preservam o idioma de origem.
 
 **Legenda do backlog (colunas de ID nas tabelas das fases):** ✅ concluído · 🟡 parcial · ⛔ fora do escopo (decisão P2P, sem servidor) · sem marca = pendente.
-Parciais: F0-2 (sem hook de commit), F3-9 (sem upload de imagem própria), F5-7 (falta Esconder), F7-4 (posicionar oculto só via gerador/ficha), F9-1 (persistência local; falta exportar sessão), F9-6 (E2E é smoke das rotas), F9-7 (README sem GIFs).
+Parciais: F0-2 (sem hook de commit), F3-9 (sem upload de imagem própria), F7-4 (posicionar oculto só via gerador/ficha), F9-1 (persistência local; falta exportar sessão), F9-6 (E2E é smoke das rotas), F9-7 (README sem GIFs).
 Pendentes: F3-9 (upload), G-16.
 
 ### Próximas tarefas — ordem de implementação
 
-1. **F5-7** — completar ações padrão com Esconder.
-2. **F3-9** — upload de imagem própria para tokens.
-3. **G-16** — texto por IA com chave do Mestre, opcional.
-4. **F9-7** — adicionar GIFs ao README.
+1. **F3-9** — upload de imagem própria para tokens.
+2. **G-16** — texto por IA com chave do Mestre, opcional.
+3. **F9-7** — adicionar GIFs ao README.
 
 ## 1. Visão e escopo
 
@@ -192,7 +191,7 @@ Legenda: **P0** essencial (MVP) · **P1** importante · **P2** desejável. Estim
 | ✅ F5-4 | Conjuração (nível, slot, upcast, ação/bônus/reação) | P0 | L | Gasta slot correto; upcast escala dano |
 | ✅ F5-5 | Ataques de oportunidade (reação ao sair do alcance) | P1 | M | Disparado pelo movimento, com opção de recusar |
 | ✅ F5-6 | Cobertura, visibilidade básica | P2 | M | Bônus de CA por cobertura |
-| 🟡 F5-7 | Ações padrão (Dash, Dodge, Disengage, Help, Hide) | P1 | M | Efeitos aplicados |
+| ✅ F5-7 | Ações padrão (Dash, Dodge, Disengage, Help, Hide) | P1 | M | Efeitos aplicados |
 | ✅ F5-8 | Rolagem de dano de arma com propriedades (finesse, versatile) | P2 | M | Modificador correto |
 
 ### Fase 6 — Conteúdo (bestiário, itens, encontros)

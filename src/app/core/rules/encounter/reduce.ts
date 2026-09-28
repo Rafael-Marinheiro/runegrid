@@ -11,6 +11,7 @@ import {
   applyDamage,
   heal,
   initiativeBonus,
+  passivePerception,
   rollDeathSave,
   RuleError,
   abilityMod,
@@ -20,9 +21,11 @@ import {
   removeCondition,
   tickConditions,
   canAct,
+  skillBonus,
 } from '../creature';
 import { AdvMode, criticalExpr, parseDice, roll, rollD20, Rng } from '../dice';
-import { canStand, distanceFt, findPath, key, MoveQuery } from '../grid/movement';
+import { canStand, distanceFt, findPath, footprint, key, MoveQuery } from '../grid/movement';
+import { hasLineOfSight } from '../grid/visibility';
 import { consume, itemDef } from '../inventory/inventory';
 import { cast } from './cast';
 import { consumeHelp, coverBonus } from './cover';
@@ -225,7 +228,7 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       );
     }
     case 'cast':
-      return cast(state, cmd, ctx);
+      return revealToken(cast(state, cmd, ctx), cmd.actorId);
     case 'standUp': {
       const { actor, turn } = actorTurn(state, cmd.actorId);
       if (!actor.conditions.some((c) => c.name === 'prone'))
@@ -277,6 +280,44 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
         `${actor.name} se desengajou.`,
         [actor.id],
       );
+    }
+    case 'hide': {
+      const { actor, turn } = actorTurn(state, cmd.actorId);
+      const token = tokenOf(state, actor.id);
+      if (!token) throw new RuleError('Criatura fora do mapa.');
+      if (token.hidden) throw new RuleError(`${actor.name} já está oculto.`);
+      const observers = state.tokens
+        .map((other) => ({ token: other, creature: creatureOf(state, other.creatureId) }))
+        .filter(({ creature }) => teamOf(creature) !== teamOf(actor) && creature.status !== 'dead');
+      const seen = observers.some(({ token: other, creature: observer }) => {
+        if (observer.conditions.some((condition) => condition.name === 'blinded')) return false;
+        const range = state.map.vision?.darkness ? (observer.darkvision ?? 0) / 5 : Infinity;
+        return footprint(other.pos, sizeOf(observer)).some((from) =>
+          footprint(token.pos, sizeOf(actor)).some(
+            (to) =>
+              Math.hypot(from.x - to.x, from.y - to.y) <= range &&
+              hasLineOfSight(state.map, from, to),
+          ),
+        );
+      });
+      if (seen) throw new RuleError('Saia da vista dos inimigos para se esconder.');
+      spendAction(turn);
+      const bonus = skillBonus(actor, 'stealth');
+      const check = rollD20(bonus, 'normal', ctx.rng);
+      const dc = Math.max(0, ...observers.map(({ creature }) => passivePerception(creature)));
+      let next = addLog(
+        setTurn(state, { ...turn, action: false }),
+        `${actor.name} tentou se esconder: d20 ${check.natural} ${fmt(bonus)} = ${check.roll.total}.`,
+        [actor.id],
+      );
+      if (check.roll.total >= dc)
+        next = {
+          ...next,
+          tokens: next.tokens.map((item) =>
+            item.creatureId === actor.id ? { ...item, hidden: true } : item,
+          ),
+        };
+      return next;
     }
     case 'useItem': {
       const { actor, turn } = actorTurn(state, cmd.actorId);
@@ -697,17 +738,28 @@ function attack(
   } else throw new RuleError('Sem ação disponível neste turno.');
 
   const extra: AdvMode[] = [cmd.mode ?? 'normal'];
+  if (from.hidden) extra.push('advantage');
   if (state.combat.dodging.includes(target.id)) extra.push('disadvantage');
-  return strike(
-    setTurn(state, { ...turn, action, attacksLeft }),
-    actor,
-    target,
-    cmd.attackIndex,
-    dist,
-    extra,
-    ctx.rng,
+  return revealToken(
+    strike(
+      setTurn(state, { ...turn, action, attacksLeft }),
+      actor,
+      target,
+      cmd.attackIndex,
+      dist,
+      extra,
+      ctx.rng,
+    ),
+    actor.id,
   );
 }
+
+const revealToken = (state: EncounterState, id: string): EncounterState => ({
+  ...state,
+  tokens: state.tokens.map((token) =>
+    token.creatureId === id ? { ...token, hidden: false } : token,
+  ),
+});
 
 /** Rola um ataque já validado (alcance, ação): condições, crítico, dano e concentração. */
 function strike(

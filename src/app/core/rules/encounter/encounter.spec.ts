@@ -359,6 +359,45 @@ describe('ataques', () => {
   });
 });
 
+describe('Esconder', () => {
+  const behindWall = () => {
+    let s = newEncounter(mapFromAscii(['..#...']));
+    s = run(s, { type: 'addCreature', creature: hero(), pos: { x: 0, y: 0 } });
+    s = run(s, { type: 'addCreature', creature: foe(), pos: { x: 5, y: 0 } });
+    s = run(s, { type: 'setInitiative', id: 'hero', value: 20 });
+    s = run(s, { type: 'setInitiative', id: 'foe', value: 10 });
+    return run(s, { type: 'startCombat' });
+  };
+
+  it('gasta a ação, rola Furtividade e oculta quem saiu da vista', () => {
+    const s = run(behindWall(), { type: 'hide', actorId: 'hero' }, dice([20, 15]));
+    expect(tokenOf(s, 'hero')?.hidden).toBe(true);
+    expect(s.combat.turn?.action).toBe(false);
+    expect(s.log.at(-1)?.dice).toEqual([{ sides: 20, value: 15, dropped: false }]);
+    expect(project(s, { kind: 'player', owns: ['hero'] }).tokens).toHaveLength(2);
+    expect(project(s, { kind: 'player', owns: ['foe'] }).tokens).toHaveLength(1);
+  });
+
+  it('não permite se esconder sob a vista de um inimigo', () => {
+    expect(() => run(started(), { type: 'hide', actorId: 'hero' })).toThrow(/vista/);
+  });
+
+  it('atacar revela o personagem e concede vantagem', () => {
+    let s = run(started({ foePos: { x: 1, y: 0 } }), {
+      type: 'setHidden',
+      id: 'hero',
+      hidden: true,
+    });
+    s = run(
+      s,
+      { type: 'attack', actorId: 'hero', targetId: 'foe', attackIndex: 0 },
+      dice([20, 5], [20, 15], [8, 1]),
+    );
+    expect(tokenOf(s, 'hero')?.hidden).toBe(false);
+    expect(s.log.at(-1)?.text).toContain('(vantagem)');
+  });
+});
+
 describe('autorização por papel', () => {
   const player: Role = { kind: 'player', owns: ['hero'] };
 

@@ -481,7 +481,9 @@ export class CombatPage {
     this.mode.update((m) => (m.kind === 'help' ? { kind: 'move' } : { kind: 'help' }));
   }
 
-  protected act(type: 'dash' | 'dodge' | 'disengage' | 'deathSave' | 'endTurn' | 'standUp'): void {
+  protected act(
+    type: 'dash' | 'dodge' | 'disengage' | 'hide' | 'deathSave' | 'endTurn' | 'standUp',
+  ): void {
     const a = this.active();
     if (!a) return;
     this.store.send({ type, actorId: a.id });

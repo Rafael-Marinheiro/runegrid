@@ -74,6 +74,7 @@ export type Command =
   | { type: 'dash'; actorId: string }
   | { type: 'dodge'; actorId: string }
   | { type: 'disengage'; actorId: string }
+  | { type: 'hide'; actorId: string }
   /** Ajudar: o próximo ataque de um aliado contra o inimigo adjacente tem vantagem. */
   | { type: 'help'; actorId: string; targetId: string }
   /** Usa um consumível do próprio inventário (gasta a ação). */
@@ -95,6 +96,7 @@ export const PLAYER_COMMANDS: readonly CommandType[] = [
   'dash',
   'dodge',
   'disengage',
+  'hide',
   'help',
   'useItem',
   'deathSave',

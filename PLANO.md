@@ -23,11 +23,18 @@ Tático de combate em grid para D&D 5e, feito em Angular. Projeto de portfólio:
 
 **Legenda do backlog (colunas de ID nas tabelas das fases):** ✅ concluído · 🟡 parcial · ⛔ fora do escopo (decisão P2P, sem servidor) · sem marca = pendente.
 Parciais: F0-2 (sem hook de commit), F7-4 (posicionar oculto só via gerador/ficha), F9-1 (persistência local; falta exportar sessão), F9-6 (E2E é smoke das rotas).
-Pendente: nenhum item da fila atual.
+Pendente: concluir os quatro itens parciais antes de iniciar a Fase 10.
 
 ### Próximas tarefas — ordem de implementação
 
-Nenhuma tarefa autônoma pendente. Restam as validações que dependem do usuário: áudio de voz em dois navegadores reais e a decisão sobre tornar o repositório público.
+1. **F7-4 — posicionamento completo no Estúdio:** adicionar criaturas, NPCs e itens diretamente ao mapa, com opção de começar oculto e garantia de que a projeção do jogador não recebe o token.
+2. **F9-1 — exportar/importar a sessão:** completar a persistência atual com JSON versionado do encontro, validação antes de substituir o estado e recuperação sem perda do snapshot local.
+3. **F9-6 — fluxo E2E completo:** cobrir no Playwright a criação de encontro, início do combate, ação, passagem de turno e tela final. Depende de F7-4 e F9-1 estarem estáveis.
+4. **F0-2 — automação local de qualidade:** concluir o item com hook leve de pre-commit para formatação e lint; a suíte completa continua obrigatória antes do commit e no CI quando a cobrança da conta for liberada.
+5. **F10-1 — interoperabilidade VTT:** importar/exportar um JSON simplificado e documentado, começando por Foundry. Depende do formato nativo versionado de F9-1.
+6. **F10-2 — assistente narrativo por IA:** reutilizar o BYOK de G-16 para sugestões de cena e intenção de NPC, sempre como recomendação aprovada pelo Mestre, nunca como mutação autônoma das regras.
+
+**Depois, somente mediante decisão de escopo:** SRD 5.2/regras de 2024, grid hexagonal e migração da voz para SFU/vídeo. Restam também duas validações que dependem do usuário: áudio de voz em dois navegadores reais e tornar ou não o repositório público.
 
 ## 1. Visão e escopo
 
@@ -293,10 +300,13 @@ O Mestre escolhe **tema, terreno, tamanho** (e nível/tamanho do grupo, dificuld
 | ✅ F9-9 | Atalhos de teclado + paleta de comandos | P2 | M | `Ctrl+K` |
 
 ### Fase 10 — Stretch
-- Importar/exportar formatos VTT (ex.: JSON do Foundry/Roll20 simplificado).
-- IA para descrever cenas (além de G-16) / decidir turnos de NPC (opt-in, API externa).
-- Voz em malha só escala até ~6–8 pessoas: migrar para SFU (LiveKit) e/ou adicionar vídeo.
-- Grid hexagonal; regras da 2024 (SRD 5.2).
+| ID | Item | Pri | Est | Critério de aceite |
+|---|---|---|---|---|
+| F10-1 | Importar/exportar formato VTT simplificado, começando por Foundry | P2 | M | Round-trip preserva mapa, paredes, portas e tokens suportados |
+| F10-2 | Assistente por IA para cenas e intenções de NPC (opt-in, BYOK) | P2 | M | Só produz sugestão; Mestre aprova antes de qualquer efeito |
+| F10-3 | Regras de 2024 e conteúdo do SRD 5.2 | P2 | L | Versão de regras selecionável sem quebrar campanhas 5.1 |
+| F10-4 | Grid hexagonal | P2 | L | Movimento, distância, área e pathfinding testados no novo grid |
+| F10-5 | Voz via SFU (LiveKit) e vídeo opcional | P2 | L | Mesa com mais de 8 participantes sem malha completa |
 
 ## 5. Definição de pronto (por item)
 

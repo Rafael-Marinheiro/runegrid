@@ -22,9 +22,19 @@ describe('DungeonLibrary', () => {
   it('exporta e importa o mesmo mapa', () => {
     const l = lib();
     const map = blankMap(7, 6);
-    const back = l.parse(l.serialize({ name: 'Ida e volta', map }));
+    const floors = [{ id: 'cellar', name: 'Porão', map: blankMap(5, 4) }];
+    const back = l.parse(
+      l.serialize({
+        name: 'Ida e volta',
+        map,
+        floorId: 'ground',
+        floorName: 'Térreo',
+        floors,
+      }),
+    );
     expect(back?.name).toBe('Ida e volta');
     expect(back?.map).toEqual(map);
+    expect(back?.floors).toEqual(floors);
   });
 
   it('recusa arquivos que não são mapas', () => {
@@ -32,6 +42,11 @@ describe('DungeonLibrary', () => {
     expect(l.parse('não é json')).toBeNull();
     expect(l.parse('{"map":{"width":3,"height":3,"cells":[]}}')).toBeNull();
     expect(l.parse('{"width":2,"height":2,"cells":["floor","wall"]}')).toBeNull();
+    expect(
+      l.parse(
+        '{"map":{"width":3,"height":3,"cells":["floor","floor","floor","floor","floor","floor","floor","floor","floor"]},"floors":[{"id":"x"}]}',
+      ),
+    ).toBeNull();
   });
 
   it('blankMap tem borda de parede e respeita os limites', () => {

@@ -41,6 +41,15 @@ import {
 } from './mapedit';
 import { Command, PLAYER_COMMANDS } from './commands';
 import {
+  addFloor,
+  removeFloor,
+  removePortal,
+  setFloors,
+  switchFloor,
+  travelPortal,
+  upsertPortal,
+} from './floors';
+import {
   actorTurn,
   aftermath,
   checkOutcome,
@@ -131,6 +140,20 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       return { ...state, map: { ...state.map, background: cmd.background } };
     case 'setVision':
       return { ...state, map: { ...state.map, vision: cmd.vision } };
+    case 'addFloor':
+      return addFloor(state, cmd);
+    case 'removeFloor':
+      return removeFloor(state, cmd.id);
+    case 'switchFloor':
+      return switchFloor(state, cmd.id);
+    case 'setFloors':
+      return setFloors(state, cmd.floorId, cmd.floorName, cmd.floors);
+    case 'upsertPortal':
+      return upsertPortal(state, cmd.portal);
+    case 'removePortal':
+      return removePortal(state, cmd.id);
+    case 'travelPortal':
+      return travelPortal(state, cmd.id);
     case 'upsertRoom':
       return upsertRoom(state, cmd.room);
     case 'removeRoom':
@@ -355,6 +378,10 @@ function removeCreature(state: EncounterState, id: string): EncounterState {
     ...state,
     creatures: state.creatures.filter((x) => x.id !== id),
     tokens: state.tokens.filter((t) => t.creatureId !== id),
+    floors: (state.floors ?? []).map((floor) => ({
+      ...floor,
+      tokens: floor.tokens.filter((token) => token.creatureId !== id),
+    })),
   };
   const { combat } = s;
   const idx = combat.order.indexOf(id);

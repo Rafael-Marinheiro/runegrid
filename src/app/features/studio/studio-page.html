@@ -88,6 +88,7 @@
       <span><i class="sw fog"></i> {{ ui.text('névoa (só o Mestre vê)', 'fog (GM only)') }}</span>
       <span><i class="sw trap"></i> {{ ui.text('armadilha', 'trap') }}</span>
       <span><i class="sw room"></i> {{ ui.text('sala', 'room') }}</span>
+      <span><i class="sw portal"></i> {{ ui.text('portal', 'portal') }}</span>
     </p>
   </section>
 
@@ -226,8 +227,113 @@
       </section>
     }
 
+    @if (selectedPortal(); as portal) {
+      <section class="panel" [attr.aria-label]="ui.text('Portal selecionado', 'Selected portal')">
+        <h2>{{ ui.text('Portal', 'Portal') }}</h2>
+        <label class="field">
+          {{ ui.text('Nome', 'Name') }}
+          <input
+            #portalName
+            [value]="portal.name"
+            [disabled]="!editable()"
+            (change)="editPortal({ name: portalName.value })"
+          />
+        </label>
+        <label class="field">
+          {{ ui.text('Andar de destino', 'Target floor') }}
+          <select
+            #targetFloor
+            [disabled]="!editable()"
+            (change)="changePortalFloor(targetFloor.value)"
+          >
+            @for (floor of state().floors ?? []; track floor.id) {
+              <option [value]="floor.id" [selected]="floor.id === portal.targetFloorId">
+                {{ floor.name }}
+              </option>
+            }
+          </select>
+        </label>
+        <div class="two">
+          <label class="field">
+            {{ ui.text('Coluna de destino', 'Target column') }}
+            <input
+              #targetX
+              type="number"
+              min="1"
+              [value]="portal.target.x + 1"
+              [disabled]="!editable()"
+              (change)="
+                editPortal({ target: { x: targetX.valueAsNumber - 1, y: portal.target.y } })
+              "
+            />
+          </label>
+          <label class="field">
+            {{ ui.text('Linha de destino', 'Target row') }}
+            <input
+              #targetY
+              type="number"
+              min="1"
+              [value]="portal.target.y + 1"
+              [disabled]="!editable()"
+              (change)="
+                editPortal({ target: { x: portal.target.x, y: targetY.valueAsNumber - 1 } })
+              "
+            />
+          </label>
+        </div>
+        <div class="row">
+          <button type="button" class="primary" [disabled]="!editable()" (click)="travelPortal()">
+            {{ ui.text('Levar grupo', 'Move party') }}
+          </button>
+          <button type="button" class="danger" [disabled]="!editable()" (click)="removePortal()">
+            {{ ui.text('Remover', 'Remove') }}
+          </button>
+        </div>
+      </section>
+    }
+
     <section class="panel" [attr.aria-label]="ui.text('Mapa', 'Map')">
       <h2>{{ ui.text('Mapa', 'Map') }}</h2>
+      <h3>{{ ui.text('Andares', 'Floors') }}</h3>
+      <ul class="floor-list">
+        @for (floor of floors(); track floor.id) {
+          <li>
+            <button
+              type="button"
+              [class.active]="floor.id === (state().floorId ?? 'floor-1')"
+              [attr.aria-pressed]="floor.id === (state().floorId ?? 'floor-1')"
+              [disabled]="!editable()"
+              (click)="switchFloor(floor.id)"
+            >
+              {{ floor.name }}
+            </button>
+            @if (floor.id !== (state().floorId ?? 'floor-1')) {
+              <button
+                type="button"
+                class="danger"
+                [attr.aria-label]="ui.text('Excluir ', 'Delete ') + floor.name"
+                [disabled]="!editable()"
+                (click)="removeFloor(floor.id)"
+              >
+                ×
+              </button>
+            }
+          </li>
+        }
+      </ul>
+      <div class="row floor-add">
+        <label class="field">
+          {{ ui.text('Novo andar', 'New floor') }}
+          <input #floorName [placeholder]="ui.text('Ex.: Porão', 'E.g. Cellar')" />
+        </label>
+        <button
+          type="button"
+          [disabled]="!editable()"
+          (click)="addFloor(floorName.value); floorName.value = ''"
+        >
+          {{ ui.text('Adicionar', 'Add') }}
+        </button>
+      </div>
       <label class="field">
         {{ ui.text('Textura do piso', 'Floor texture') }}
         <select #tx [disabled]="!editable()" (change)="setTexture(tx.value)">

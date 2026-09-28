@@ -9,6 +9,13 @@ export interface Token {
   hidden?: boolean;
 }
 
+export interface MapFloor {
+  id: string;
+  name: string;
+  map: GridMap;
+  tokens: Token[];
+}
+
 export interface TurnState {
   actorId: string;
   action: boolean;
@@ -82,6 +89,10 @@ export interface EncounterState {
   log: LogEntry[];
   /** Número do próximo evento de log. */
   seq: number;
+  /** O mapa ativo continua em `map`; os demais ficam guardados aqui. */
+  floorId?: string;
+  floorName?: string;
+  floors?: MapFloor[];
 }
 
 /** Quem está enviando o comando. */

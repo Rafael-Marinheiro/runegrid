@@ -72,6 +72,14 @@ export interface MapVision {
   darkness: boolean;
 }
 
+export interface Portal {
+  id: string;
+  name: string;
+  pos: Pos;
+  targetFloorId: string;
+  target: Pos;
+}
+
 export interface GridMap {
   width: number;
   height: number;
@@ -85,6 +93,8 @@ export interface GridMap {
   texture?: Texture;
   background?: MapBackground;
   vision?: MapVision;
+  /** Escadas, alçapões ou portais que levam a outro andar. */
+  portals?: Portal[];
 }
 
 /** Regra de diagonal: simples (5 ft) ou alternada 5-10-5 (variante do DMG). */
@@ -160,7 +170,18 @@ export function isGridMap(v: unknown): v is GridMap {
     (m.fog === undefined || (Array.isArray(m.fog) && m.fog.length === m.cells.length)) &&
     isMapBackground(m.background) &&
     (m.vision === undefined ||
-      (typeof m.vision.enabled === 'boolean' && typeof m.vision.darkness === 'boolean'))
+      (typeof m.vision.enabled === 'boolean' && typeof m.vision.darkness === 'boolean')) &&
+    (m.portals === undefined ||
+      (Array.isArray(m.portals) &&
+        m.portals.every(
+          (portal) =>
+            typeof portal.id === 'string' &&
+            typeof portal.name === 'string' &&
+            typeof portal.targetFloorId === 'string' &&
+            inBounds(m, portal.pos) &&
+            Number.isInteger(portal.target.x) &&
+            Number.isInteger(portal.target.y),
+        )))
   );
 }
 

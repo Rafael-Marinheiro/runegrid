@@ -2,8 +2,10 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { DAMAGE_LABEL, DAMAGE_TYPES, DamageType } from '@core/models/creature';
 import {
   blankMap,
+  IMPASSABLE,
   MapBackground,
   MapVision,
+  Portal,
   Pos,
   Room,
   Terrain,
@@ -23,6 +25,7 @@ type Tool =
   | { kind: 'terrain'; terrain: Terrain }
   | { kind: 'room' }
   | { kind: 'trap' }
+  | { kind: 'portal' }
   | { kind: 'fog'; hidden: boolean };
 
 interface ToolButton {
@@ -42,6 +45,7 @@ const TOOLS: ToolButton[] = [
   { id: 'door-locked', label: 'Trancada', tool: { kind: 'terrain', terrain: 'door-locked' } },
   { id: 'room', label: 'Sala', tool: { kind: 'room' } },
   { id: 'trap', label: 'Armadilha', tool: { kind: 'trap' } },
+  { id: 'portal', label: 'Portal', tool: { kind: 'portal' } },
   { id: 'fog-on', label: 'Ocultar', tool: { kind: 'fog', hidden: true } },
   { id: 'fog-off', label: 'Revelar', tool: { kind: 'fog', hidden: false } },
 ];
@@ -75,6 +79,7 @@ export class StudioPage {
   protected readonly asPlayer = signal(false);
   protected readonly selectedRoomId = signal<string | null>(null);
   protected readonly selectedTrapId = signal<string | null>(null);
+  protected readonly selectedPortalId = signal<string | null>(null);
   protected readonly message = signal('');
 
   protected toolLabel(tool: ToolButton): string {
@@ -89,6 +94,7 @@ export class StudioPage {
       'door-locked': 'Locked door',
       room: 'Room',
       trap: 'Trap',
+      portal: 'Portal',
       'fog-on': 'Hide',
       'fog-off': 'Reveal',
     };
@@ -130,11 +136,22 @@ export class StudioPage {
 
   protected readonly rooms = computed(() => this.state().map.rooms ?? []);
   protected readonly traps = computed(() => this.state().map.traps ?? []);
+  protected readonly portals = computed(() => this.state().map.portals ?? []);
+  protected readonly floors = computed(() => [
+    {
+      id: this.state().floorId ?? 'floor-1',
+      name: this.state().floorName ?? this.ui.text('Térreo', 'Ground floor'),
+    },
+    ...(this.state().floors ?? []).map(({ id, name }) => ({ id, name })),
+  ]);
   protected readonly selectedRoom = computed(() =>
     this.rooms().find((r) => r.id === this.selectedRoomId()),
   );
   protected readonly selectedTrap = computed(() =>
     this.traps().find((t) => t.id === this.selectedTrapId()),
+  );
+  protected readonly selectedPortal = computed(() =>
+    this.portals().find((portal) => portal.id === this.selectedPortalId()),
   );
 
   protected readonly tokens = computed<TokenView[]>(() => {
@@ -178,6 +195,7 @@ export class StudioPage {
     if (t.kind === 'terrain' || t.kind === 'fog') this.stroke.set([pos]);
     else if (t.kind === 'room') this.draft.set({ a: pos, b: pos });
     else if (t.kind === 'trap') this.addTrap(pos);
+    else if (t.kind === 'portal') this.addPortal(pos);
     else this.inspect(pos);
   }
 
@@ -234,12 +252,40 @@ export class StudioPage {
     if (this.send({ type: 'upsertTrap', trap })) this.selectedTrapId.set(trap.id);
   }
 
+  private addPortal(pos: Pos): void {
+    const floor = this.state().floors?.[0];
+    if (!floor) {
+      this.message.set(
+        this.ui.text(
+          'Crie outro andar antes de adicionar um portal.',
+          'Create another floor first.',
+        ),
+      );
+      return;
+    }
+    const target = floor.map.cells.findIndex((cell) => !IMPASSABLE.includes(cell));
+    if (target < 0)
+      return void this.message.set(
+        this.ui.text('O andar de destino está bloqueado.', 'The target floor is blocked.'),
+      );
+    const portal: Portal = {
+      id: crypto.randomUUID(),
+      name: `${this.ui.text('Portal', 'Portal')} ${this.portals().length + 1}`,
+      pos,
+      targetFloorId: floor.id,
+      target: { x: target % floor.map.width, y: Math.floor(target / floor.map.width) },
+    };
+    if (this.send({ type: 'upsertPortal', portal })) this.selectedPortalId.set(portal.id);
+  }
+
   private inspect(pos: Pos): void {
     const trap = this.traps().find((t) => t.pos.x === pos.x && t.pos.y === pos.y);
+    const portal = this.portals().find((item) => item.pos.x === pos.x && item.pos.y === pos.y);
     const room = this.rooms().find(
       (r) => pos.x >= r.x && pos.x < r.x + r.w && pos.y >= r.y && pos.y < r.y + r.h,
     );
     this.selectedTrapId.set(trap?.id ?? null);
+    this.selectedPortalId.set(portal?.id ?? null);
     this.selectedRoomId.set(room?.id ?? null);
   }
 
@@ -274,6 +320,59 @@ export class StudioPage {
   protected removeTrap(): void {
     const t = this.selectedTrap();
     if (t && this.send({ type: 'removeTrap', id: t.id })) this.selectedTrapId.set(null);
+  }
+
+  protected editPortal(changes: Partial<Portal>): void {
+    const portal = this.selectedPortal();
+    if (portal) this.send({ type: 'upsertPortal', portal: { ...portal, ...changes } });
+  }
+
+  protected changePortalFloor(id: string): void {
+    const portal = this.selectedPortal();
+    const floor = this.state().floors?.find((item) => item.id === id);
+    if (!portal || !floor) return;
+    const i = floor.map.cells.findIndex((cell) => !IMPASSABLE.includes(cell));
+    if (i >= 0)
+      this.editPortal({
+        targetFloorId: id,
+        target: { x: i % floor.map.width, y: Math.floor(i / floor.map.width) },
+      });
+  }
+
+  protected removePortal(): void {
+    const portal = this.selectedPortal();
+    if (portal && this.send({ type: 'removePortal', id: portal.id }))
+      this.selectedPortalId.set(null);
+  }
+
+  protected travelPortal(): void {
+    const portal = this.selectedPortal();
+    if (portal && this.send({ type: 'travelPortal', id: portal.id })) this.clearSelection();
+  }
+
+  protected addFloor(name: string): void {
+    const value = name.trim();
+    if (!value) return;
+    this.send({
+      type: 'addFloor',
+      id: crypto.randomUUID(),
+      name: value,
+      map: blankMap(this.state().map.width, this.state().map.height),
+    });
+  }
+
+  protected switchFloor(id: string): void {
+    if (this.send({ type: 'switchFloor', id })) this.clearSelection();
+  }
+
+  protected removeFloor(id: string): void {
+    if (this.send({ type: 'removeFloor', id })) this.clearSelection();
+  }
+
+  private clearSelection(): void {
+    this.selectedRoomId.set(null);
+    this.selectedTrapId.set(null);
+    this.selectedPortalId.set(null);
   }
 
   protected damageType(value: string): DamageType {
@@ -341,18 +440,39 @@ export class StudioPage {
   }
 
   protected saveToLibrary(name: string): void {
-    this.library.save(name || this.state().name, this.state().map);
+    const state = this.state();
+    this.library.save(
+      name || state.name,
+      state.map,
+      (state.floors ?? []).map(({ id, name, map }) => ({ id, name, map })),
+      state.floorId ?? 'floor-1',
+      state.floorName ?? this.ui.text('Térreo', 'Ground floor'),
+    );
     this.message.set(
       `"${name || this.state().name}" ${this.ui.text('salvo na biblioteca.', 'saved to the library.')}`,
     );
   }
 
   protected load(d: SavedDungeon): void {
-    this.send({ type: 'setMap', map: structuredClone(d.map) });
+    if (!this.send({ type: 'setMap', map: structuredClone(d.map) })) return;
+    this.send({
+      type: 'setFloors',
+      floorId: d.floorId ?? 'floor-1',
+      floorName: d.floorName ?? this.ui.text('Térreo', 'Ground floor'),
+      floors: structuredClone(d.floors ?? []),
+    });
+    this.clearSelection();
   }
 
   protected exportMap(name: string): void {
-    const text = this.library.serialize({ name: name || this.state().name, map: this.state().map });
+    const state = this.state();
+    const text = this.library.serialize({
+      name: name || state.name,
+      map: state.map,
+      floorId: state.floorId,
+      floorName: state.floorName,
+      floors: (state.floors ?? []).map(({ id, name, map }) => ({ id, name, map })),
+    });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
     a.download = `${(name || this.state().name).replace(/[^\w-]+/g, '-')}.runegrid.json`;
@@ -372,8 +492,15 @@ export class StudioPage {
           'Invalid file: this is not a Runegrid map.',
         ),
       );
-    if (this.send({ type: 'setMap', map: parsed.map }))
-      this.message.set(`"${parsed.name}" ${this.ui.text('importado.', 'imported.')}`);
+    if (!this.send({ type: 'setMap', map: parsed.map })) return;
+    this.send({
+      type: 'setFloors',
+      floorId: parsed.floorId ?? 'floor-1',
+      floorName: parsed.floorName ?? this.ui.text('Térreo', 'Ground floor'),
+      floors: parsed.floors ?? [],
+    });
+    this.clearSelection();
+    this.message.set(`"${parsed.name}" ${this.ui.text('importado.', 'imported.')}`);
   }
 }
 

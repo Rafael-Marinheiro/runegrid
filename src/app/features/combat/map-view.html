@@ -184,6 +184,23 @@
       />
     }
 
+    @for (portal of map().portals ?? []; track portal.id) {
+      <g class="portal" aria-hidden="true">
+        <rect
+          [attr.x]="portal.pos.x * C + 10"
+          [attr.y]="portal.pos.y * C + 10"
+          [attr.width]="C - 20"
+          [attr.height]="C - 20"
+          rx="3"
+        />
+        <path
+          [attr.d]="
+            'M' + (portal.pos.x * C + 17) + ' ' + (portal.pos.y * C + 24) + 'h14m-5-5 5 5-5 5'
+          "
+        />
+      </g>
+    }
+
     @for (t of visibleTraps(); track t.id) {
       <g
         class="trap"

@@ -1,20 +1,42 @@
 import { effect, Injectable, signal } from '@angular/core';
 import { GridMap, isGridMap } from '@core/models/grid';
 
+export interface SavedFloor {
+  id: string;
+  name: string;
+  map: GridMap;
+}
+
 export interface SavedDungeon {
   id: string;
   name: string;
   savedAt: number;
   map: GridMap;
+  floorId?: string;
+  floorName?: string;
+  floors?: SavedFloor[];
 }
 
 const KEY = 'runegrid.dungeons.v1';
+
+const isSavedFloor = (floor: unknown): floor is SavedFloor => {
+  const value = floor as SavedFloor | null;
+  return (
+    !!value &&
+    typeof value.id === 'string' &&
+    typeof value.name === 'string' &&
+    isGridMap(value.map)
+  );
+};
+
+const hasValidFloors = (value: { floors?: unknown }): boolean =>
+  value.floors === undefined || (Array.isArray(value.floors) && value.floors.every(isSavedFloor));
 
 function load(): SavedDungeon[] {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? '[]');
     return Array.isArray(raw)
-      ? raw.filter((d) => typeof d?.name === 'string' && isGridMap(d.map))
+      ? raw.filter((d) => typeof d?.name === 'string' && isGridMap(d.map) && hasValidFloors(d))
       : [];
   } catch {
     return [];
@@ -38,13 +60,22 @@ export class DungeonLibrary {
   }
 
   /** Salva (ou atualiza, se já existir um com o mesmo nome). */
-  save(name: string, map: GridMap): void {
+  save(
+    name: string,
+    map: GridMap,
+    floors: SavedFloor[] = [],
+    floorId = 'floor-1',
+    floorName = 'Térreo',
+  ): void {
     const n = name.trim() || 'Dungeon sem nome';
     const entry: SavedDungeon = {
       id: crypto.randomUUID(),
       name: n,
       savedAt: Date.now(),
       map: structuredClone(map),
+      floorId,
+      floorName,
+      floors: structuredClone(floors),
     };
     this.items.update((list) => {
       const i = list.findIndex((d) => d.name === n);
@@ -57,23 +88,25 @@ export class DungeonLibrary {
   }
 
   /** Lê um JSON exportado; devolve o mapa ou `null` se o arquivo não for válido. */
-  parse(text: string): { name: string; map: GridMap } | null {
+  parse(text: string): Omit<SavedDungeon, 'id' | 'savedAt'> | null {
     try {
       const raw = JSON.parse(text);
       const map = raw?.map ?? raw;
-      return isGridMap(map)
-        ? { name: typeof raw?.name === 'string' ? raw.name : 'Importado', map }
-        : null;
+      const floors = raw?.floors ?? [];
+      if (!isGridMap(map) || !Array.isArray(floors) || !floors.every(isSavedFloor)) return null;
+      return {
+        name: typeof raw?.name === 'string' ? raw.name : 'Importado',
+        map,
+        floorId: typeof raw?.floorId === 'string' ? raw.floorId : 'floor-1',
+        floorName: typeof raw?.floorName === 'string' ? raw.floorName : 'Térreo',
+        floors,
+      };
     } catch {
       return null;
     }
   }
 
-  serialize(d: { name: string; map: GridMap }): string {
-    return JSON.stringify(
-      { format: 'runegrid-dungeon', version: 1, name: d.name, map: d.map },
-      null,
-      1,
-    );
+  serialize(d: Omit<SavedDungeon, 'id' | 'savedAt'>): string {
+    return JSON.stringify({ format: 'runegrid-dungeon', version: 2, ...d }, null, 1);
   }
 }

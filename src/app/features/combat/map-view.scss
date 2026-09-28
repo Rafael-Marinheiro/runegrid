@@ -67,6 +67,23 @@
   pointer-events: none;
 }
 
+.portal {
+  pointer-events: none;
+
+  rect {
+    fill: rgb(31 93 108 / 0.75);
+    stroke: var(--info);
+    stroke-width: 2;
+  }
+  path {
+    fill: none;
+    stroke: white;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
 .token {
   cursor: pointer;
   outline: none;

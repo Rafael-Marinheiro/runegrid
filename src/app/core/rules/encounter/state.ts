@@ -23,7 +23,19 @@ export function newEncounter(
   name = 'Encontro',
   rule: DiagonalRule = 'simple',
 ): EncounterState {
-  return { name, map, rule, creatures: [], tokens: [], combat: emptyCombat(), log: [], seq: 1 };
+  return {
+    name,
+    map,
+    rule,
+    creatures: [],
+    tokens: [],
+    combat: emptyCombat(),
+    log: [],
+    seq: 1,
+    floorId: 'floor-1',
+    floorName: 'Térreo',
+    floors: [],
+  };
 }
 
 export const sizeOf = (c: Creature): number => SIZE_CELLS[c.size];

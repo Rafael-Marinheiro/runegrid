@@ -16,23 +16,22 @@ Tático de combate em grid para D&D 5e, feito em Angular. Projeto de portfólio:
 - **Macros e armas (F1-7, F5-8):** rolagens salvas na página de dados; armas versáteis usam o dano maior sem escudo.
 - **PWA:** instalável e offline (service worker do Angular, SRD em cache).
 - **Fase 6:** F6-1 (script `scripts/import-srd.mjs` gera 322 monstros e 319 magias do SRD em JSON versionado), F6-2 (bestiário com busca e filtros), F6-3 (monstro do SRD vira criatura de combate e é posicionado no mapa), F6-4 (compêndio de magias) e F6-7 (construtor de encontro por XP, com dificuldade do DMG) concluídos; `joinCombat` traz criaturas para um combate em andamento. F6-5 e F6-6 concluídos (catálogo SRD, equipar armadura/escudo recalcula a CA, arma equipada vira ataque, peso/carga, poções e antídoto usam a ação via comando `useItem`). F6-8 já coberto pelo gerador (tesouro por sala, escala com nível e chefe).
-- **Fase 7:** F7-1 a F7-3, F7-5 a F7-10, F7-12 e F7-14 concluídos (editor, portas, salas, névoa, armadilhas, imagem calibrada, linha de visão/visão no escuro, áreas, notas, biblioteca e texturas). F7-4 parcial. Pendente: F7-11 (andares).
+- **Fase 7:** F7-1 a F7-3 e F7-5 a F7-14 concluídos (editor, portas, salas, névoa, armadilhas, imagem calibrada, linha de visão/visão no escuro, áreas, notas, biblioteca, andares ligados por portais e texturas). F7-4 parcial.
 - **Fase 7B (gerador):** G-1 a G-13 e G-15 concluídos: 7 temas, layouts reproduzíveis, povoamento por XP, perigos, tesouro, narrativa, regeneração parcial e integração com o Estúdio. Pendentes: G-14 (encontro rápido) e G-16 (texto por IA, opcional).
 - **Fase 8 (multiplayer):** F8-3 a F8-11 e F8-13 a F8-20 concluídos ou cobertos, **sem servidor próprio** (PeerJS); F8-1/F8-2/F8-12 estão fora do escopo pela decisão P2P. A sala pausa quando o Mestre sai, salva encontro/código/atribuições e pode ser retomada no mesmo código. A parte de áudio ainda precisa de teste manual com microfone em dois navegadores reais.
 - **Fase 9:** F9-2 a F9-5, F9-8 e F9-9 concluídos; F9-1, F9-6 e F9-7 parciais. O mapa prioriza a área de jogo em 768 px, arrasta tokens por toque e aceita pan/pinça com dois dedos. `Ctrl+K` abre a paleta global e `Alt+1…8` navega entre ferramentas. A interface principal alterna entre pt-BR/en em runtime e persiste a escolha; conteúdo SRD e registros existentes preservam o idioma de origem.
 
 **Legenda do backlog (colunas de ID nas tabelas das fases):** ✅ concluído · 🟡 parcial · ⛔ fora do escopo (decisão P2P, sem servidor) · sem marca = pendente.
 Parciais: F0-2 (sem hook de commit), F3-9 (sem upload de imagem própria), F5-7 (falta Esconder), F7-4 (posicionar oculto só via gerador/ficha), F9-1 (persistência local; falta exportar sessão), F9-6 (E2E é smoke das rotas), F9-7 (README sem GIFs).
-Pendentes: F3-9 (upload), F7-11, G-14, G-16.
+Pendentes: F3-9 (upload), G-14, G-16.
 
 ### Próximas tarefas — ordem de implementação
 
-1. **F7-11** — múltiplos andares ligados por escadas/portais.
-2. **G-14** — encontro rápido avulso no mapa atual.
-3. **F5-7** — completar ações padrão com Esconder.
-4. **F3-9** — upload de imagem própria para tokens.
-5. **G-16** — texto por IA com chave do Mestre, opcional.
-6. **F9-7** — adicionar GIFs ao README.
+1. **G-14** — encontro rápido avulso no mapa atual.
+2. **F5-7** — completar ações padrão com Esconder.
+3. **F3-9** — upload de imagem própria para tokens.
+4. **G-16** — texto por IA com chave do Mestre, opcional.
+5. **F9-7** — adicionar GIFs ao README.
 
 ## 1. Visão e escopo
 
@@ -222,7 +221,7 @@ Legenda: **P0** essencial (MVP) · **P1** importante · **P2** desejável. Estim
 | ✅ F7-8 | Linha de visão e visão no escuro (ray-casting contra paredes) | P1 | L | Fog dinâmico por token de jogador |
 | ✅ F7-9 | Áreas de efeito (cone, esfera, linha, cubo) | P1 | M | Destaca alvos afetados |
 | ✅ F7-10 | Notas secretas do Mestre (por sala, monstro, mapa) | P1 | S | Nunca entram na projeção do jogador |
-| F7-11 | Múltiplos andares/mapas ligados (escadas, portais) | P2 | M | Grupo transita entre mapas |
+| ✅ F7-11 | Múltiplos andares/mapas ligados (escadas, portais) | P2 | M | Grupo transita entre mapas |
 | ✅ F7-12 | Biblioteca de dungeons + duplicar/exportar/importar | P1 | M | Lista com thumbnail; JSON |
 | ✅ F7-14 | Pincel de **texturas** no editor (conjuntos por tema; variação aleatória de ladrilho para não repetir padrão) | P1 | M | Mesmo tileset usado pelo gerador (G-5) |
 

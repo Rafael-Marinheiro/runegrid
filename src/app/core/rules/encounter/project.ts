@@ -77,6 +77,7 @@ export function project(state: EncounterState, role: Role): EncounterState {
     ...state,
     creatures,
     tokens: state.tokens.filter((t) => known(t.creatureId)),
+    floors: [],
     log: state.log.filter((e) => !e.secret),
     map: {
       ...map,

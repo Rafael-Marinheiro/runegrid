@@ -1,8 +1,10 @@
 import { ConditionName, Creature, DamageType } from '../../models/creature';
+import { MapFloor } from '../../models/encounter';
 import {
   GridMap,
   MapBackground,
   MapVision,
+  Portal,
   Pos,
   Room,
   Terrain,
@@ -26,6 +28,18 @@ export type Command =
   | { type: 'setTexture'; texture: Texture }
   | { type: 'setMapBackground'; background?: MapBackground }
   | { type: 'setVision'; vision: MapVision }
+  | { type: 'addFloor'; id: string; name: string; map: GridMap }
+  | { type: 'removeFloor'; id: string }
+  | { type: 'switchFloor'; id: string }
+  | {
+      type: 'setFloors';
+      floorId: string;
+      floorName: string;
+      floors: Pick<MapFloor, 'id' | 'name' | 'map'>[];
+    }
+  | { type: 'upsertPortal'; portal: Portal }
+  | { type: 'removePortal'; id: string }
+  | { type: 'travelPortal'; id: string }
   | { type: 'upsertRoom'; room: Room }
   | { type: 'removeRoom'; id: string }
   /** Revela (ou oculta) toda a sala e publica o texto de leitura. */

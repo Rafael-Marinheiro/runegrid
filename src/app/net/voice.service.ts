@@ -56,6 +56,8 @@ export class VoiceService {
   private attached: unknown = null;
   private readonly calls = new Map<string, MediaConnection>();
   private readonly active = new Map<string, MediaConnection>();
+  /** Para quem já mandamos o nosso áudio (chamada nossa, ou resposta com stream) — evita ficar mudo pro outro lado. */
+  private readonly sentTo = new Set<string>();
   private readonly audios = new Map<string, HTMLAudioElement>();
   private readonly analysers = new Map<string, AnalyserNode>();
   private timer: ReturnType<typeof setInterval> | null = null;
@@ -88,6 +90,8 @@ export class VoiceService {
     peer.on('call', (call) => {
       call.answer(this.local ?? undefined); // sem microfone, só ouve
       this.watch(call);
+      // Respondida com o nosso stream: já mandamos o áudio, não precisa de uma chamada extra depois.
+      if (this.local) this.sentTo.add(call.peer);
     });
   }
 
@@ -111,6 +115,7 @@ export class VoiceService {
   disable(): void {
     this.local?.getTracks().forEach((t) => t.stop());
     this.local = null;
+    this.sentTo.clear();
     this.analysers.delete('me');
     this.enabled.set(false);
     this.meSpeaking.set(false);
@@ -154,8 +159,9 @@ export class VoiceService {
     const targets = new Set(ids);
     if (!this.room.isHost() && this.room.code()) targets.add(peerIdFor(this.room.code()));
     for (const id of targets) {
-      if (id === me || this.calls.get(id)?.open) continue;
+      if (id === me || this.sentTo.has(id)) continue;
       this.watch(peer.call(id, this.local));
+      this.sentTo.add(id);
     }
   }
 

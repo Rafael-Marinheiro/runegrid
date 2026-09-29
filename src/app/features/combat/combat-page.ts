@@ -134,8 +134,15 @@ export class CombatPage {
   protected readonly spellsOpen = signal(false);
   /** Célula sob o cursor (para a prévia de área). */
   protected readonly hover = signal<Pos | null>(null);
+  /** Nocaute (SRD 2024): declarado junto com o próximo ataque corpo a corpo. */
+  protected readonly knockOut = signal(false);
 
   protected readonly active = computed(() => this.creature(this.combat().turn?.actorId));
+  /** SRD 2024 e a arma escolhida é corpo a corpo: dá para oferecer o nocaute. */
+  protected readonly canKnockOut = computed(() => {
+    const weapon = this.active()?.attacks[this.attackIndex()];
+    return this.ui.ruleset() === '2024' && !!weapon && weapon.range <= 5;
+  });
   /** Quem está na vez é controlado por quem está usando? */
   protected readonly canAct = computed(() => {
     const a = this.active();
@@ -429,8 +436,17 @@ export class CombatPage {
     const m = this.mode();
     const a = this.active();
     if (m.kind === 'attack' && a && id !== a.id) {
-      if (this.store.send({ type: 'attack', actorId: a.id, targetId: id, attackIndex: m.index })) {
+      if (
+        this.store.send({
+          type: 'attack',
+          actorId: a.id,
+          targetId: id,
+          attackIndex: m.index,
+          knockOut: this.canKnockOut() && this.knockOut(),
+        })
+      ) {
         this.mode.set({ kind: 'move' });
+        this.knockOut.set(false);
       }
       return;
     }

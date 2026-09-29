@@ -41,9 +41,11 @@ export const notes = (r: {
     ? ' — morte instantânea'
     : r.creature.status === 'dead'
       ? ' — morreu'
-      : r.dropped
-        ? ' — caiu a 0 PV'
-        : '';
+      : r.creature.status === 'stable'
+        ? ' — nocauteado(a), inconsciente'
+        : r.dropped
+          ? ' — caiu a 0 PV'
+          : '';
 
 /** Termina o combate quando um dos lados não tem mais ninguém vivo. */
 export function checkOutcome(state: EncounterState): EncounterState {

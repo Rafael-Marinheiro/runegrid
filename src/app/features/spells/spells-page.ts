@@ -57,7 +57,13 @@ export class SpellsPage implements OnInit {
   );
 
   ngOnInit(): void {
-    void this.srd.loadSpells();
+    void this.srd.loadSpells(this.ui.ruleset());
+  }
+
+  protected setRuleset(value: string): void {
+    const ruleset = value === '2024' ? '2024' : '2014';
+    this.ui.ruleset.set(ruleset);
+    void this.srd.loadSpells(ruleset);
   }
 
   protected setLevel(value: string): void {

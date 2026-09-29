@@ -755,6 +755,7 @@ function attack(
       dist,
       extra,
       ctx.rng,
+      cmd.knockOut,
     ),
     actor.id,
   );
@@ -776,6 +777,7 @@ function strike(
   dist: number,
   extra: AdvMode[],
   rng: Rng,
+  knockOut = false,
 ): EncounterState {
   const weapon = actor.attacks[attackIndex];
   const from = tokenOf(state, actor.id)!;
@@ -809,7 +811,11 @@ function strike(
 
   const expr = parseDice(weapon.damage);
   const dmg = roll(crit ? criticalExpr(expr) : expr, rng);
-  const r = applyDamage(target, Math.max(0, dmg.total), { type: weapon.type, crit });
+  const r = applyDamage(target, Math.max(0, dmg.total), {
+    type: weapon.type,
+    crit,
+    knockOut: knockOut && weapon.range <= 5,
+  });
   let next = withCreature(state, r.creature);
   next = addLog(
     next,

@@ -1,7 +1,7 @@
 <h1>{{ ui.text('Bestiário', 'Bestiary') }}</h1>
 <p class="sub">
-  SRD 5.1 · {{ filtered().length }} {{ ui.text('de', 'of') }} {{ srd.monsters().length }}
-  {{ ui.text('criaturas (nomes em inglês)', 'creatures') }}
+  SRD {{ ui.ruleset() }} · {{ filtered().length }} {{ ui.text('de', 'of') }}
+  {{ srd.monsters().length }} {{ ui.text('criaturas (nomes em inglês)', 'creatures') }}
 </p>
 
 <div class="layout">
@@ -15,6 +15,13 @@
           placeholder="Goblin, dragon…"
           (input)="query.set(q.value); resetPage()"
         />
+      </label>
+      <label class="field">
+        {{ ui.text('Versão das regras', 'Ruleset') }}
+        <select #rs (change)="setRuleset(rs.value)">
+          <option value="2014" [selected]="ui.ruleset() === '2014'">SRD 2014</option>
+          <option value="2024" [selected]="ui.ruleset() === '2024'">SRD 2024</option>
+        </select>
       </label>
       <label class="field">
         {{ ui.text('Tipo', 'Type') }}

@@ -1,7 +1,7 @@
 <h1>{{ ui.text('Magias', 'Spells') }}</h1>
 <p class="sub">
-  SRD 5.1 · {{ filtered().length }} {{ ui.text('de', 'of') }} {{ srd.spells().length }}
-  {{ ui.text('magias (textos em inglês)', 'spells') }}
+  SRD {{ ui.ruleset() }} · {{ filtered().length }} {{ ui.text('de', 'of') }}
+  {{ srd.spells().length }} {{ ui.text('magias (textos em inglês)', 'spells') }}
 </p>
 
 <div class="layout">
@@ -15,6 +15,13 @@
           placeholder="Fireball, cure…"
           (input)="query.set(q.value); reset()"
         />
+      </label>
+      <label class="field">
+        {{ ui.text('Versão das regras', 'Ruleset') }}
+        <select #rs (change)="setRuleset(rs.value)">
+          <option value="2014" [selected]="ui.ruleset() === '2014'">SRD 2014</option>
+          <option value="2024" [selected]="ui.ruleset() === '2024'">SRD 2024</option>
+        </select>
       </label>
       <label class="field">
         {{ ui.text('Nível', 'Level') }}

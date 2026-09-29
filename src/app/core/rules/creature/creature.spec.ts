@@ -102,6 +102,27 @@ describe('dano e cura', () => {
     expect(r.creature.status).toBe('dead');
   });
 
+  it('nocaute (SRD 2024): deixa com 1 PV e estável em vez de derrubar', () => {
+    const r = applyDamage(pc(), 25, { knockOut: true });
+    expect(r.creature.hp.current).toBe(1);
+    expect(r.creature.status).toBe('stable');
+    expect(r.dropped).toBe(true);
+    expect(r.instantDeath).toBe(false);
+  });
+
+  it('nocaute também evita a morte instantânea de um monstro', () => {
+    const m = newCreature('monster', { hp: { max: 13, current: 13, temp: 0 } });
+    const r = applyDamage(m, 40, { knockOut: true });
+    expect(r.creature.status).toBe('stable');
+    expect(r.creature.hp.current).toBe(1);
+  });
+
+  it('nocaute não se aplica se o golpe não derruba (PV positivos, sem efeito extra)', () => {
+    const r = applyDamage(pc(), 5, { knockOut: true });
+    expect(r.creature.hp.current).toBe(15);
+    expect(r.creature.status).toBe('alive');
+  });
+
   it('resistência divide (arredonda para baixo), vulnerabilidade dobra, imunidade zera', () => {
     const c = pc({ resistances: ['fire'], vulnerabilities: ['cold'], immunities: ['poison'] });
     expect(applyDamage(c, 7, { type: 'fire' }).dealt).toBe(3);

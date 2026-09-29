@@ -198,7 +198,7 @@ export class GeneratorPage implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
-    await this.srd.loadMonsters();
+    await this.srd.loadMonsters(this.ui.ruleset());
     const q = this.route.snapshot.queryParamMap;
     if (q.has('seed')) {
       this.params.update((p) => ({

@@ -108,7 +108,13 @@ export class BestiaryPage implements OnInit {
   );
 
   ngOnInit(): void {
-    void this.srd.loadMonsters();
+    void this.srd.loadMonsters(this.ui.ruleset());
+  }
+
+  protected setRuleset(value: string): void {
+    const ruleset = value === '2024' ? '2024' : '2014';
+    this.ui.ruleset.set(ruleset);
+    void this.srd.loadMonsters(ruleset);
   }
 
   protected setNumber(sig: { set(v: number): void }, value: string): void {

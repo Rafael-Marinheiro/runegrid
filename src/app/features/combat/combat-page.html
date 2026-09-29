@@ -460,6 +460,22 @@
                 )
               }}
             </p>
+            @if (canKnockOut()) {
+              <label class="toggle">
+                <input
+                  #ko
+                  type="checkbox"
+                  [checked]="knockOut()"
+                  (change)="knockOut.set(ko.checked)"
+                />
+                {{
+                  ui.text(
+                    'Nocaute (SRD 2024): em vez de derrubar, deixa inconsciente com 1 PV',
+                    'Knock out (2024 SRD): instead of dropping, leaves them unconscious at 1 HP'
+                  )
+                }}
+              </label>
+            }
           } @else if (mode().kind === 'help') {
             <p class="hint">
               {{

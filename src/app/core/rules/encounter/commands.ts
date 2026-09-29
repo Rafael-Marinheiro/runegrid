@@ -63,7 +63,15 @@ export type Command =
   | { type: 'removeCondition'; targetId: string; condition: ConditionName }
   // Ações de turno (jogador dono da criatura ou Mestre)
   | { type: 'move'; actorId: string; to: Pos }
-  | { type: 'attack'; actorId: string; targetId: string; attackIndex: number; mode?: AdvMode }
+  | {
+      type: 'attack';
+      actorId: string;
+      targetId: string;
+      attackIndex: number;
+      mode?: AdvMode;
+      /** Nocaute (SRD 2024): corpo a corpo que derrubaria o alvo o deixa com 1 PV, inconsciente. */
+      knockOut?: boolean;
+    }
   | {
       type: 'cast';
       actorId: string;

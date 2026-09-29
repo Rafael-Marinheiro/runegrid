@@ -21,11 +21,11 @@ Feito em **Angular 22** (standalone, signals, zoneless, OnPush). Plano e backlog
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Regras 5e   | Movimento (terreno difícil, diagonais, cantos, criaturas grandes), iniciativa, ações, ataques (crítico, vantagem, Ataque Extra), 14 condições, concentração, magias (espaços, upcast, áreas, salvaguardas), ataques de oportunidade, armadilhas, portas, névoa de guerra |
 | Dados       | Parser `NdM`/`kh`/`kl`/`d%`, RNG com semente, rolagem **3D** (three.js + cannon-es, carregada sob demanda) com o resultado sempre lido na face de cima, fallback 2D, cor por tipo de dado                                                                                |
-| Mestre      | Estúdio de mapas (pincel, salas, armadilhas, texturas), biblioteca de dungeons, gerador de aventuras reproduzível por semente e texto por IA opcional, bestiário e magias do SRD (322 monstros, 319 magias)                                                              |
+| Mestre      | Estúdio de mapas (pincel, salas, armadilhas, texturas), biblioteca de dungeons, gerador de aventuras reproduzível por semente e texto por IA opcional, bestiário e magias do SRD 2014 (322/319) ou SRD 2024 (331/339), à escolha                                         |
 | Jogadores   | Controlam só as próprias criaturas, dentro das regras; o Mestre valida tudo                                                                                                                                                                                              |
 | Multiplayer | WebRTC via PeerJS (host = Mestre, código de 6 letras), chat, sussurro, chat de voz (mudo, push-to-talk, volume por pessoa)                                                                                                                                               |
 | Itens       | Catálogo do SRD, equipar armadura/escudo/arma altera CA e ataques, peso, poções que gastam a ação                                                                                                                                                                        |
-| Qualidade   | 343 testes, Lighthouse 100 (acessibilidade/boas práticas/SEO), modo alto contraste, PWA instalável e offline                                                                                                                                                             |
+| Qualidade   | 355 testes, Lighthouse 100 (acessibilidade/boas práticas/SEO), modo alto contraste, PWA instalável e offline                                                                                                                                                             |
 
 ## Arquitetura
 
@@ -46,7 +46,7 @@ Fluxo central: toda mudança é um **Comando** → `dispatch(state, cmd, {rng, r
 3. **Mestre autoritativo, sem servidor.** O host valida todo comando (`authorize`) e envia a cada jogador uma **projeção** (`project`) do estado: tokens ocultos, névoa, log secreto e PV inimigo (só em %) nunca saem do host. Trocou Supabase por PeerJS: custo zero e sem conta. _Custo:_ a sala pausa se o Mestre sai e os jogadores reconectam após ele restaurar o snapshot; NAT restritivo depende do TURN público.
 4. **Dados 3D reproduzíveis.** A física roda uma vez (cannon-es), grava os quadros e reproduz; as faces são renomeadas para que a de cima seja o valor do motor. O resultado nunca depende da animação, e todos veem a mesma rolagem.
 5. **Bundle pequeno.** three, cannon-es e PeerJS são `import()` dinâmicos; o shell fica ~250 kB.
-6. **Conteúdo do SRD 5.1 (CC-BY-4.0)** importado por script versionado (`scripts/import-srd.mjs`), não em runtime.
+6. **Conteúdo do SRD (CC-BY-4.0)** importado por scripts versionados, não em runtime: `scripts/import-srd.mjs` (2014, API v1) e `scripts/import-srd-2024.mjs` (2024, API v2). O Mestre escolhe a versão no Bestiário/Magias; o padrão é 2014, para não mudar campanhas existentes.
 7. **Signals + zoneless + OnPush** em todos os componentes; `@let` e control flow nativo.
 8. **IA somente opt-in e BYOK.** O gerador pode reescrever gancho e descrições, e o Estúdio sugere cenas e intenções de PNJ via Responses API. A chave informada pelo Mestre permanece apenas no campo da página, nunca vai para storage, e a requisição usa `store: false`; sugestões só são aplicadas por ação explícita do Mestre.
 9. **Interoperabilidade VTT.** O Estúdio importa e exporta o subconjunto de cenas Foundry v13 [documentado aqui](docs/FOUNDRY-VTT.md).
@@ -70,4 +70,4 @@ Multiplayer: abra `/mesa`, clique em "Criar sala" e passe o código; outros abre
 
 - Áudio de voz depende de microfone/permissão e de rede que permita WebRTC.
 
-Conteúdo baseado no SRD 5.1 da Wizards of the Coast, licenciado sob CC-BY-4.0.
+Conteúdo baseado no SRD 5.1 e no SRD 5.2 da Wizards of the Coast, licenciados sob CC-BY-4.0.

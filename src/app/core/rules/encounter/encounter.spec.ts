@@ -252,6 +252,29 @@ describe('ataques', () => {
     expect(s.log.at(-1)?.text).toContain('CRÍTICO');
   });
 
+  it('nocaute (SRD 2024): corpo a corpo que derrubaria deixa o alvo inconsciente com 1 PV', () => {
+    let s = started({ ...adjacent, foe: { hp: { max: 5, current: 5, temp: 0 } } });
+    s = run(
+      s,
+      { type: 'attack', actorId: 'hero', targetId: 'foe', attackIndex: 0, knockOut: true },
+      dice([20, 20], [8, 5], [8, 6]), // crítico: bem mais que os 5 PV do goblin
+    );
+    const goblin = s.creatures.find((c) => c.id === 'foe')!;
+    expect(goblin.hp.current).toBe(1);
+    expect(goblin.status).toBe('stable');
+    expect(s.log.at(-1)?.text).toContain('nocauteado');
+  });
+
+  it('nocaute não vale para ataque à distância', () => {
+    let s = started({ foePos: { x: 0, y: 4 }, foe: { hp: { max: 5, current: 5, temp: 0 } } }); // arco alcança (20 ft)
+    s = run(
+      s,
+      { type: 'attack', actorId: 'hero', targetId: 'foe', attackIndex: 1, knockOut: true },
+      dice([20, 20], [8, 5], [8, 6]),
+    );
+    expect(s.creatures.find((c) => c.id === 'foe')?.status).toBe('dead'); // monstro morre a 0 PV normalmente
+  });
+
   it('Ataque Extra: o segundo ataque não gasta outra ação; o terceiro é recusado', () => {
     let s = started(adjacent);
     const hit = () => dice([20, 15], [8, 1]);

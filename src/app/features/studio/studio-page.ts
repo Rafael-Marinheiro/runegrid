@@ -219,7 +219,7 @@ export class StudioPage implements OnInit {
   });
 
   ngOnInit(): void {
-    void this.srd.loadMonsters();
+    void this.srd.loadMonsters(this.ui.ruleset());
   }
 
   protected pick(id: string): void {

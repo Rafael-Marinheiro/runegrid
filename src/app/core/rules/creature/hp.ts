@@ -18,6 +18,11 @@ export interface DamageOptions {
   type?: DamageType;
   /** Acerto crítico contra criatura a 0 PV vale 2 falhas de morte. */
   crit?: boolean;
+  /**
+   * Nocaute (regra do SRD 2024, "Knocking Out a Creature"): em vez de derrubar a 0 PV,
+   * o ataque corpo a corpo deixa a criatura com 1 PV e inconsciente, sem risco de morte.
+   */
+  knockOut?: boolean;
 }
 
 const nonNeg = (n: number, what: string): number => {
@@ -74,6 +79,22 @@ export function applyDamage(c: Creature, amount: number, opts: DamageOptions = {
   const current = c.hp.current - hpLost;
   const instantDeath = current === 0 && overflow >= c.hp.max;
   const dropped = current === 0;
+  // Nocaute: em vez de cair a 0 PV, a criatura fica com 1 PV e inconsciente (estável).
+  if (dropped && opts.knockOut) {
+    return {
+      creature: {
+        ...c,
+        hp: { ...c.hp, current: 1, temp: c.hp.temp - absorbedByTemp },
+        status: 'stable',
+        deathSaves: { successes: 0, failures: 0 },
+      },
+      dealt,
+      absorbedByTemp,
+      hpLost: hpLost - 1,
+      dropped: true,
+      instantDeath: false,
+    };
+  }
 
   const status =
     instantDeath || (dropped && c.kind === 'monster') ? 'dead' : dropped ? 'dying' : c.status;

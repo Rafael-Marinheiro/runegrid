@@ -34,12 +34,14 @@ import {
   openDoor,
   paint,
   removeRoom,
+  removeItem,
   removeTrap,
   revealRoom,
   setFog,
   setMap,
   triggerTrap,
   upsertRoom,
+  upsertItem,
   upsertTrap,
 } from './mapedit';
 import { Command, PLAYER_COMMANDS } from './commands';
@@ -167,6 +169,10 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       return upsertTrap(state, cmd.trap);
     case 'removeTrap':
       return removeTrap(state, cmd.id);
+    case 'upsertItem':
+      return upsertItem(state, cmd.item);
+    case 'removeItem':
+      return removeItem(state, cmd.id);
     case 'openDoor':
       return openDoor(state, cmd.actorId, cmd.pos);
     case 'rollInitiative':

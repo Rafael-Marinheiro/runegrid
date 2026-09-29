@@ -45,6 +45,16 @@ export interface Trap {
   triggered: boolean;
 }
 
+/** Item solto no mapa; não entra no inventário até o Mestre entregá-lo. */
+export interface PlacedItem {
+  id: string;
+  ref: string;
+  name: string;
+  qty: number;
+  pos: Pos;
+  hidden: boolean;
+}
+
 export interface Pos {
   x: number;
   y: number;
@@ -89,6 +99,7 @@ export interface GridMap {
   fog?: boolean[];
   rooms?: Room[];
   traps?: Trap[];
+  items?: PlacedItem[];
   /** Textura do piso (só aparência; nunca muda regras). */
   texture?: Texture;
   background?: MapBackground;
@@ -171,6 +182,18 @@ export function isGridMap(v: unknown): v is GridMap {
     isMapBackground(m.background) &&
     (m.vision === undefined ||
       (typeof m.vision.enabled === 'boolean' && typeof m.vision.darkness === 'boolean')) &&
+    (m.items === undefined ||
+      (Array.isArray(m.items) &&
+        m.items.every(
+          (item) =>
+            typeof item.id === 'string' &&
+            typeof item.ref === 'string' &&
+            typeof item.name === 'string' &&
+            Number.isInteger(item.qty) &&
+            item.qty > 0 &&
+            typeof item.hidden === 'boolean' &&
+            inBounds(m, item.pos),
+        ))) &&
     (m.portals === undefined ||
       (Array.isArray(m.portals) &&
         m.portals.every(

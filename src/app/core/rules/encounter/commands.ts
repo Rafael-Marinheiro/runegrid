@@ -4,6 +4,7 @@ import {
   GridMap,
   MapBackground,
   MapVision,
+  PlacedItem,
   Portal,
   Pos,
   Room,
@@ -46,6 +47,8 @@ export type Command =
   | { type: 'revealRoom'; id: string; hidden?: boolean }
   | { type: 'upsertTrap'; trap: Trap }
   | { type: 'removeTrap'; id: string }
+  | { type: 'upsertItem'; item: PlacedItem }
+  | { type: 'removeItem'; id: string }
   | { type: 'rollInitiative' }
   | { type: 'setInitiative'; id: string; value: number }
   /** Rolagem do Mestre que os jogadores não veem (só o Mestre pode enviar). */

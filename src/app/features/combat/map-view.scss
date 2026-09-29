@@ -305,6 +305,26 @@
   fill: var(--muted);
 }
 
+.map-item {
+  pointer-events: none;
+
+  rect {
+    fill: #171009;
+    stroke: var(--gold);
+    stroke-width: 2;
+  }
+
+  path {
+    fill: none;
+    stroke: var(--gold);
+    stroke-width: 2;
+  }
+
+  &.hid {
+    opacity: 0.55;
+  }
+}
+
 .texture {
   pointer-events: none;
   opacity: 0.9;

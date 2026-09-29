@@ -3,6 +3,7 @@ import {
   GridMap,
   IMPASSABLE,
   inBounds,
+  PlacedItem,
   Pos,
   Room,
   Terrain,
@@ -121,6 +122,26 @@ export function removeTrap(state: EncounterState, id: string): EncounterState {
   return {
     ...state,
     map: { ...state.map, traps: (state.map.traps ?? []).filter((t) => t.id !== id) },
+  };
+}
+
+export function upsertItem(state: EncounterState, item: PlacedItem): EncounterState {
+  checkBounds(state.map, [item.pos]);
+  if (!item.name.trim() || item.qty < 1 || !Number.isInteger(item.qty))
+    throw new RuleError('Item inválido.');
+  if (IMPASSABLE.includes(terrainAt(state.map, item.pos)))
+    throw new RuleError('O item precisa ficar num piso.');
+  const items = state.map.items ?? [];
+  const next = items.some((placed) => placed.id === item.id)
+    ? items.map((placed) => (placed.id === item.id ? item : placed))
+    : [...items, item];
+  return { ...state, map: { ...state.map, items: next } };
+}
+
+export function removeItem(state: EncounterState, id: string): EncounterState {
+  return {
+    ...state,
+    map: { ...state.map, items: (state.map.items ?? []).filter((item) => item.id !== id) },
   };
 }
 

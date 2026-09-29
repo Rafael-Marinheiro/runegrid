@@ -220,6 +220,25 @@
       </g>
     }
 
+    @for (item of map().items ?? []; track item.id) {
+      @if (dm() || !item.hidden) {
+        <g class="map-item" [class.hid]="item.hidden" aria-hidden="true">
+          <rect
+            [attr.x]="item.pos.x * C + 11"
+            [attr.y]="item.pos.y * C + 13"
+            [attr.width]="C - 22"
+            [attr.height]="C - 25"
+            rx="3"
+          />
+          <path
+            [attr.d]="
+              'M' + (item.pos.x * C + 16) + ' ' + (item.pos.y * C + 18) + 'h16v18h-16zm0 6h16'
+            "
+          />
+        </g>
+      }
+    }
+
     @if (sphere(); as sp) {
       <circle class="aoe" [attr.cx]="sp.cx" [attr.cy]="sp.cy" [attr.r]="sp.r" />
     }

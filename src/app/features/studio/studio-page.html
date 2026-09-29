@@ -83,16 +83,41 @@
       (strokeMove)="onMove($event)"
       (strokeEnd)="onEnd()"
       (cellClick)="onStart($event)"
+      (tokenClick)="selectCreature($event)"
+      (tokenMove)="moveToken($event)"
     />
     <p class="legend">
       <span><i class="sw fog"></i> {{ ui.text('névoa (só o Mestre vê)', 'fog (GM only)') }}</span>
       <span><i class="sw trap"></i> {{ ui.text('armadilha', 'trap') }}</span>
       <span><i class="sw room"></i> {{ ui.text('sala', 'room') }}</span>
       <span><i class="sw portal"></i> {{ ui.text('portal', 'portal') }}</span>
+      <span><i class="sw item"></i> {{ ui.text('item', 'item') }}</span>
     </p>
   </section>
 
   <aside class="side">
+    @if (selectedCreature(); as selected) {
+      <section
+        class="panel"
+        [attr.aria-label]="ui.text('Criatura selecionada', 'Selected creature')"
+      >
+        <h2>{{ selected.creature.name }}</h2>
+        <label class="check">
+          <input
+            #creatureHidden
+            type="checkbox"
+            [checked]="selected.token.hidden"
+            [disabled]="!editable()"
+            (change)="setCreatureHidden(creatureHidden.checked)"
+          />
+          {{ ui.text('Oculta dos jogadores', 'Hidden from players') }}
+        </label>
+        <button type="button" class="danger" [disabled]="!editable()" (click)="removeCreature()">
+          {{ ui.text('Remover criatura', 'Remove creature') }}
+        </button>
+      </section>
+    }
+
     @if (selectedRoom(); as r) {
       <section class="panel" [attr.aria-label]="ui.text('Sala selecionada', 'Selected room')">
         <h2>{{ ui.text('Sala', 'Room') }}</h2>
@@ -291,6 +316,88 @@
         </div>
       </section>
     }
+
+    <section class="panel" [attr.aria-label]="ui.text('Posicionar', 'Place')">
+      <h2>{{ ui.text('Posicionar', 'Place') }}</h2>
+      <label class="field">
+        {{ ui.text('Criatura ou PNJ', 'Creature or NPC') }}
+        <select
+          #creatureSelect
+          [value]="creatureSource()"
+          [disabled]="!editable()"
+          (change)="creatureSource.set(creatureSelect.value)"
+        >
+          <optgroup [label]="ui.text('Grupo e PNJs', 'Party and NPCs')">
+            @for (creature of party.creatures(); track creature.id) {
+              <option [value]="'party:' + creature.id">{{ creature.name }}</option>
+            }
+          </optgroup>
+          <optgroup [label]="ui.text('Bestiário SRD', 'SRD bestiary')">
+            @for (monster of srd.monsters(); track monster.id) {
+              <option [value]="'srd:' + monster.id">{{ monster.name }}</option>
+            }
+          </optgroup>
+        </select>
+      </label>
+      <label class="field">
+        {{ ui.text('Item', 'Item') }}
+        <select
+          #itemSelect
+          [value]="itemRef()"
+          [disabled]="!editable()"
+          (change)="itemRef.set(itemSelect.value)"
+        >
+          @for (item of catalog; track item.id) {
+            <option [value]="item.id">{{ item.name }}</option>
+          }
+        </select>
+      </label>
+      <label class="check">
+        <input
+          #placementSecret
+          type="checkbox"
+          [checked]="placementHidden()"
+          [disabled]="!editable()"
+          (change)="placementHidden.set(placementSecret.checked)"
+        />
+        {{ ui.text('Começar oculto dos jogadores', 'Start hidden from players') }}
+      </label>
+      <p class="hint">
+        {{
+          ui.text(
+            'Escolha a ferramenta Criatura ou Item e clique na célula de destino.',
+            'Choose the Creature or Item tool and click the target cell.'
+          )
+        }}
+      </p>
+      @if (placedItems().length) {
+        <ul class="placed-items">
+          @for (item of placedItems(); track item.id) {
+            <li>
+              <span>{{ item.name }}</span>
+              <label class="check">
+                <input
+                  #itemHidden
+                  type="checkbox"
+                  [checked]="item.hidden"
+                  [disabled]="!editable()"
+                  (change)="editItem(item, { hidden: itemHidden.checked })"
+                />
+                {{ ui.text('Oculto', 'Hidden') }}
+              </label>
+              <button
+                type="button"
+                class="danger"
+                [disabled]="!editable()"
+                (click)="removeItem(item)"
+              >
+                {{ ui.text('Remover', 'Remove') }}
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </section>
 
     <section class="panel" [attr.aria-label]="ui.text('Mapa', 'Map')">
       <h2>{{ ui.text('Mapa', 'Map') }}</h2>

@@ -43,16 +43,12 @@ export function project(state: EncounterState, role: Role): EncounterState {
     const i = y * map.width + x;
     return fog?.[i] === true || (sight !== null && !sight.has(i));
   };
-  const viewerTeams = new Set(
-    state.creatures.filter((c) => role.owns.includes(c.id)).map((c) => teamOf(c)),
-  );
-
   // criatura na névoa não é vista (a menos que seja do próprio jogador)
   const visible = new Set(
     state.tokens
       .filter((t) => {
         const c = state.creatures.find((x) => x.id === t.creatureId);
-        if (t.hidden && (!c || !viewerTeams.has(teamOf(c)))) return false;
+        if (t.hidden && !role.owns.includes(t.creatureId)) return false;
         const size = c ? sizeOf(c) : 1;
         return !footprint(t.pos, size).some((p) => fogged(p.x, p.y));
       })
@@ -90,6 +86,7 @@ export function project(state: EncounterState, role: Role): EncounterState {
       fog: undefined,
       rooms: openRooms,
       traps: (map.traps ?? []).filter((t) => !t.hidden || t.triggered),
+      items: (map.items ?? []).filter((item) => !item.hidden && !fogged(item.pos.x, item.pos.y)),
     },
     combat: {
       ...state.combat,

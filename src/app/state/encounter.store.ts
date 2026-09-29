@@ -160,13 +160,18 @@ export class EncounterStore {
   }
 
   /** Coloca uma cópia da criatura do grupo no encontro (monstros repetidos ganham numeração). */
-  addFromRoster(source: Creature): string {
+  addFromRoster(source: Creature, pos?: { x: number; y: number }, hidden = false): string {
     const base = source.name.replace(/ \d+$/, '');
     const same = this.state().creatures.filter((c) => c.name.replace(/ \d+$/, '') === base);
     const name =
       source.kind === 'monster' && same.length ? `${base} ${same.length + 1}` : source.name;
     const id = crypto.randomUUID();
-    this.send({ type: 'addCreature', creature: { ...structuredClone(source), id, name } });
+    this.send({
+      type: 'addCreature',
+      creature: { ...structuredClone(source), id, name },
+      pos,
+      hidden,
+    });
     return id;
   }
 

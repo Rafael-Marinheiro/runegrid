@@ -1,10 +1,18 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { DAMAGE_LABEL, DAMAGE_TYPES, DamageType } from '@core/models/creature';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
+import { Creature, DAMAGE_LABEL, DAMAGE_TYPES, DamageType } from '@core/models/creature';
 import {
   blankMap,
   IMPASSABLE,
   MapBackground,
   MapVision,
+  PlacedItem,
   Portal,
   Pos,
   Room,
@@ -14,11 +22,15 @@ import {
   Trap,
 } from '@core/models/grid';
 import { project, sizeOf, teamOf } from '@core/rules/encounter';
+import { CATALOG } from '@core/rules/inventory/catalog';
+import { monsterToCreature } from '@core/rules/srd/convert';
 import { MapView, TokenView } from '@features/combat/map-view';
 import { iconFor, tokenImageFor } from '@features/combat/token-icons';
 import { UiPrefs } from '@state/ui-prefs';
 import { DungeonLibrary, SavedDungeon } from '@state/dungeon-library';
 import { EncounterStore } from '@state/encounter.store';
+import { PartyStore } from '@state/party.store';
+import { SrdStore } from '@state/srd.store';
 
 type Tool =
   | { kind: 'select' }
@@ -26,6 +38,8 @@ type Tool =
   | { kind: 'room' }
   | { kind: 'trap' }
   | { kind: 'portal' }
+  | { kind: 'creature' }
+  | { kind: 'item' }
   | { kind: 'fog'; hidden: boolean };
 
 interface ToolButton {
@@ -46,6 +60,8 @@ const TOOLS: ToolButton[] = [
   { id: 'room', label: 'Sala', tool: { kind: 'room' } },
   { id: 'trap', label: 'Armadilha', tool: { kind: 'trap' } },
   { id: 'portal', label: 'Portal', tool: { kind: 'portal' } },
+  { id: 'creature', label: 'Criatura', tool: { kind: 'creature' } },
+  { id: 'item', label: 'Item', tool: { kind: 'item' } },
   { id: 'fog-on', label: 'Ocultar', tool: { kind: 'fog', hidden: true } },
   { id: 'fog-off', label: 'Revelar', tool: { kind: 'fog', hidden: false } },
 ];
@@ -57,10 +73,13 @@ const TOOLS: ToolButton[] = [
   styleUrl: './studio-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class StudioPage {
+export class StudioPage implements OnInit {
   protected readonly store = inject(EncounterStore);
   protected readonly library = inject(DungeonLibrary);
   protected readonly ui = inject(UiPrefs);
+  protected readonly party = inject(PartyStore);
+  protected readonly srd = inject(SrdStore);
+  protected readonly catalog = CATALOG;
   protected readonly textures = TEXTURES;
   protected readonly textureLabel: Record<Texture, string> = {
     none: 'Sem textura',
@@ -80,6 +99,10 @@ export class StudioPage {
   protected readonly selectedRoomId = signal<string | null>(null);
   protected readonly selectedTrapId = signal<string | null>(null);
   protected readonly selectedPortalId = signal<string | null>(null);
+  protected readonly selectedCreatureId = signal<string | null>(null);
+  protected readonly creatureSource = signal(`party:${this.party.creatures()[0]?.id ?? ''}`);
+  protected readonly itemRef = signal(CATALOG[0].id);
+  protected readonly placementHidden = signal(true);
   protected readonly message = signal('');
 
   protected toolLabel(tool: ToolButton): string {
@@ -95,6 +118,8 @@ export class StudioPage {
       room: 'Room',
       trap: 'Trap',
       portal: 'Portal',
+      creature: 'Creature',
+      item: 'Item',
       'fog-on': 'Hide',
       'fog-off': 'Reveal',
     };
@@ -130,7 +155,7 @@ export class StudioPage {
   protected readonly shown = computed(() => {
     const s = this.state();
     if (!this.asPlayer()) return s;
-    const owns = s.creatures.filter((c) => c.kind !== 'monster').map((c) => c.id);
+    const owns = s.creatures.filter((c) => c.kind === 'pc').map((c) => c.id);
     return project(s, { kind: 'player', owns });
   });
 
@@ -153,6 +178,13 @@ export class StudioPage {
   protected readonly selectedPortal = computed(() =>
     this.portals().find((portal) => portal.id === this.selectedPortalId()),
   );
+  protected readonly selectedCreature = computed(() => {
+    const id = this.selectedCreatureId();
+    const creature = this.state().creatures.find((item) => item.id === id);
+    const token = this.state().tokens.find((item) => item.creatureId === id);
+    return creature && token ? { creature, token } : undefined;
+  });
+  protected readonly placedItems = computed(() => this.state().map.items ?? []);
 
   protected readonly tokens = computed<TokenView[]>(() => {
     const s = this.shown();
@@ -171,7 +203,7 @@ export class StudioPage {
           hidden: !!t.hidden,
           dead: c.status === 'dead',
           active: false,
-          selected: false,
+          selected: c.id === this.selectedCreatureId(),
           targetable: false,
           icon: iconFor(c),
           image: tokenImageFor(c),
@@ -181,6 +213,10 @@ export class StudioPage {
       ];
     });
   });
+
+  ngOnInit(): void {
+    void this.srd.loadMonsters();
+  }
 
   protected pick(id: string): void {
     this.toolId.set(id);
@@ -197,6 +233,8 @@ export class StudioPage {
     else if (t.kind === 'room') this.draft.set({ a: pos, b: pos });
     else if (t.kind === 'trap') this.addTrap(pos);
     else if (t.kind === 'portal') this.addPortal(pos);
+    else if (t.kind === 'creature') this.addCreature(pos);
+    else if (t.kind === 'item') this.addItem(pos);
     else this.inspect(pos);
   }
 
@@ -279,6 +317,73 @@ export class StudioPage {
     if (this.send({ type: 'upsertPortal', portal })) this.selectedPortalId.set(portal.id);
   }
 
+  private creatureForPlacement(): Creature | undefined {
+    const [source, id] = this.creatureSource().split(':', 2);
+    if (source === 'party') return this.party.creatures().find((creature) => creature.id === id);
+    const monster = this.srd.monsters().find((creature) => creature.id === id);
+    return monster ? monsterToCreature(monster) : undefined;
+  }
+
+  private addCreature(pos: Pos): void {
+    const source = this.creatureForPlacement();
+    if (!source) {
+      this.message.set(this.ui.text('Escolha uma criatura.', 'Choose a creature.'));
+      return;
+    }
+    const id = this.store.addFromRoster(source, pos, this.placementHidden());
+    if (this.state().tokens.some((token) => token.creatureId === id)) {
+      this.selectedCreatureId.set(id);
+      this.message.set('');
+    } else {
+      this.message.set(this.store.message());
+    }
+  }
+
+  private addItem(pos: Pos): void {
+    const definition = CATALOG.find((item) => item.id === this.itemRef());
+    if (!definition) return;
+    const item: PlacedItem = {
+      id: crypto.randomUUID(),
+      ref: definition.id,
+      name: definition.name,
+      qty: 1,
+      pos,
+      hidden: this.placementHidden(),
+    };
+    this.send({ type: 'upsertItem', item });
+  }
+
+  protected moveToken(event: { id: string; pos: Pos }): void {
+    if (this.editable() && !this.asPlayer())
+      this.send({ type: 'placeToken', id: event.id, pos: event.pos });
+  }
+
+  protected selectCreature(id: string): void {
+    this.selectedCreatureId.set(id);
+    this.selectedRoomId.set(null);
+    this.selectedTrapId.set(null);
+    this.selectedPortalId.set(null);
+  }
+
+  protected setCreatureHidden(hidden: boolean): void {
+    const selected = this.selectedCreature();
+    if (selected) this.send({ type: 'setHidden', id: selected.creature.id, hidden });
+  }
+
+  protected removeCreature(): void {
+    const selected = this.selectedCreature();
+    if (selected && this.send({ type: 'removeCreature', id: selected.creature.id }))
+      this.selectedCreatureId.set(null);
+  }
+
+  protected editItem(item: PlacedItem, changes: Partial<PlacedItem>): void {
+    this.send({ type: 'upsertItem', item: { ...item, ...changes } });
+  }
+
+  protected removeItem(item: PlacedItem): void {
+    this.send({ type: 'removeItem', id: item.id });
+  }
+
   private inspect(pos: Pos): void {
     const trap = this.traps().find((t) => t.pos.x === pos.x && t.pos.y === pos.y);
     const portal = this.portals().find((item) => item.pos.x === pos.x && item.pos.y === pos.y);
@@ -288,6 +393,7 @@ export class StudioPage {
     this.selectedTrapId.set(trap?.id ?? null);
     this.selectedPortalId.set(portal?.id ?? null);
     this.selectedRoomId.set(room?.id ?? null);
+    this.selectedCreatureId.set(null);
   }
 
   private send(cmd: Parameters<EncounterStore['send']>[0]): boolean {
@@ -374,6 +480,7 @@ export class StudioPage {
     this.selectedRoomId.set(null);
     this.selectedTrapId.set(null);
     this.selectedPortalId.set(null);
+    this.selectedCreatureId.set(null);
   }
 
   protected damageType(value: string): DamageType {

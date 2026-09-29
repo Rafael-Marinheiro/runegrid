@@ -1,7 +1,7 @@
 import { Creature } from '../../models/creature';
 import { newCreature } from '../../models/creature-factory';
 import { EncounterState, Role } from '../../models/encounter';
-import { GridMap, mapFromAscii, Room, Trap } from '../../models/grid';
+import { GridMap, mapFromAscii, PlacedItem, Room, Trap } from '../../models/grid';
 import { RuleError } from '../creature';
 import { Command, dispatch, ForbiddenError, newEncounter, project, tokenOf } from './index';
 
@@ -113,6 +113,38 @@ describe('pintura do mapa', () => {
     expect(() =>
       run(scene(['..d..', '#####']), { type: 'move', actorId: 'hero', to: { x: 3, y: 0 } }),
     ).toThrow(/alcance/);
+  });
+});
+
+describe('criaturas e itens posicionados', () => {
+  const player: Role = { kind: 'player', owns: ['hero'] };
+  const item = (over: Partial<PlacedItem> = {}): PlacedItem => ({
+    id: 'item-1',
+    ref: 'healing-potion',
+    name: 'Poção de cura',
+    qty: 1,
+    pos: { x: 1, y: 1 },
+    hidden: true,
+    ...over,
+  });
+
+  it('projeta apenas itens revelados e valida a posição', () => {
+    let s = run(scene(), { type: 'upsertItem', item: item() });
+    expect(project(s, player).map.items).toEqual([]);
+    s = run(s, { type: 'upsertItem', item: item({ hidden: false }) });
+    expect(project(s, player).map.items).toEqual([item({ hidden: false })]);
+    expect(() => run(s, { type: 'upsertItem', item: item({ qty: 0 }) })).toThrow(RuleError);
+  });
+
+  it('não revela PNJ oculto só por estar no time do grupo', () => {
+    const npc = newCreature('npc', { id: 'npc', name: 'Guia' });
+    const s = run(scene(), {
+      type: 'addCreature',
+      creature: npc,
+      pos: { x: 1, y: 0 },
+      hidden: true,
+    });
+    expect(project(s, player).creatures.some((creature) => creature.id === 'npc')).toBe(false);
   });
 });
 

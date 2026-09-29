@@ -16,23 +16,22 @@ Tático de combate em grid para D&D 5e, feito em Angular. Projeto de portfólio:
 - **Macros e armas (F1-7, F5-8):** rolagens salvas na página de dados; armas versáteis usam o dano maior sem escudo.
 - **PWA:** instalável e offline (service worker do Angular, SRD em cache).
 - **Fase 6:** F6-1 (script `scripts/import-srd.mjs` gera 322 monstros e 319 magias do SRD em JSON versionado), F6-2 (bestiário com busca e filtros), F6-3 (monstro do SRD vira criatura de combate e é posicionado no mapa), F6-4 (compêndio de magias) e F6-7 (construtor de encontro por XP, com dificuldade do DMG) concluídos; `joinCombat` traz criaturas para um combate em andamento. F6-5 e F6-6 concluídos (catálogo SRD, equipar armadura/escudo recalcula a CA, arma equipada vira ataque, peso/carga, poções e antídoto usam a ação via comando `useItem`). F6-8 já coberto pelo gerador (tesouro por sala, escala com nível e chefe).
-- **Fase 7:** F7-1 a F7-3 e F7-5 a F7-14 concluídos (editor, portas, salas, névoa, armadilhas, imagem calibrada, linha de visão/visão no escuro, áreas, notas, biblioteca, andares ligados por portais e texturas). F7-4 parcial.
+- **Fase 7:** F7-1 a F7-14 concluídos (editor, portas, salas, posicionamento oculto de criaturas/itens, névoa, armadilhas, imagem calibrada, linha de visão/visão no escuro, áreas, notas, biblioteca, andares ligados por portais e texturas).
 - **Fase 7B (gerador):** G-1 a G-16 concluídos: 7 temas, layouts reproduzíveis, povoamento por XP, perigos, tesouro, narrativa, regeneração parcial, encontro rápido no mapa atual, integração com o Estúdio e texto por IA opt-in com chave efêmera do Mestre.
 - **Fase 8 (multiplayer):** F8-3 a F8-11 e F8-13 a F8-20 concluídos ou cobertos, **sem servidor próprio** (PeerJS); F8-1/F8-2/F8-12 estão fora do escopo pela decisão P2P. A sala pausa quando o Mestre sai, salva encontro/código/atribuições e pode ser retomada no mesmo código. A parte de áudio ainda precisa de teste manual com microfone em dois navegadores reais.
 - **Fase 9:** F9-2 a F9-5 e F9-7 a F9-9 concluídos; F9-1 e F9-6 parciais. O mapa prioriza a área de jogo em 768 px, arrasta tokens por toque e aceita pan/pinça com dois dedos. `Ctrl+K` abre a paleta global e `Alt+1…8` navega entre ferramentas. A interface principal alterna entre pt-BR/en em runtime e persiste a escolha; o README traz demos animadas dos fluxos centrais.
 
 **Legenda do backlog (colunas de ID nas tabelas das fases):** ✅ concluído · 🟡 parcial · ⛔ fora do escopo (decisão P2P, sem servidor) · sem marca = pendente.
-Parciais: F0-2 (sem hook de commit), F7-4 (posicionar oculto só via gerador/ficha), F9-1 (persistência local; falta exportar sessão), F9-6 (E2E é smoke das rotas).
-Pendente: concluir os quatro itens parciais antes de iniciar a Fase 10.
+Parciais: F0-2 (sem hook de commit), F9-1 (persistência local; falta exportar sessão), F9-6 (E2E é smoke das rotas).
+Pendente: concluir os três itens parciais antes de iniciar a Fase 10.
 
 ### Próximas tarefas — ordem de implementação
 
-1. **F7-4 — posicionamento completo no Estúdio:** adicionar criaturas, NPCs e itens diretamente ao mapa, com opção de começar oculto e garantia de que a projeção do jogador não recebe o token.
-2. **F9-1 — exportar/importar a sessão:** completar a persistência atual com JSON versionado do encontro, validação antes de substituir o estado e recuperação sem perda do snapshot local.
-3. **F9-6 — fluxo E2E completo:** cobrir no Playwright a criação de encontro, início do combate, ação, passagem de turno e tela final. Depende de F7-4 e F9-1 estarem estáveis.
-4. **F0-2 — automação local de qualidade:** concluir o item com hook leve de pre-commit para formatação e lint; a suíte completa continua obrigatória antes do commit e no CI quando a cobrança da conta for liberada.
-5. **F10-1 — interoperabilidade VTT:** importar/exportar um JSON simplificado e documentado, começando por Foundry. Depende do formato nativo versionado de F9-1.
-6. **F10-2 — assistente narrativo por IA:** reutilizar o BYOK de G-16 para sugestões de cena e intenção de NPC, sempre como recomendação aprovada pelo Mestre, nunca como mutação autônoma das regras.
+1. **F9-1 — exportar/importar a sessão:** completar a persistência atual com JSON versionado do encontro, validação antes de substituir o estado e recuperação sem perda do snapshot local.
+2. **F9-6 — fluxo E2E completo:** cobrir no Playwright a criação de encontro, início do combate, ação, passagem de turno e tela final. Depende de F9-1 estar estável.
+3. **F0-2 — automação local de qualidade:** concluir o item com hook leve de pre-commit para formatação e lint; a suíte completa continua obrigatória antes do commit e no CI quando a cobrança da conta for liberada.
+4. **F10-1 — interoperabilidade VTT:** importar/exportar um JSON simplificado e documentado, começando por Foundry. Depende do formato nativo versionado de F9-1.
+5. **F10-2 — assistente narrativo por IA:** reutilizar o BYOK de G-16 para sugestões de cena e intenção de NPC, sempre como recomendação aprovada pelo Mestre, nunca como mutação autônoma das regras.
 
 **Depois, somente mediante decisão de escopo:** SRD 5.2/regras de 2024, grid hexagonal e migração da voz para SFU/vídeo. Restam também duas validações que dependem do usuário: áudio de voz em dois navegadores reais e tornar ou não o repositório público.
 
@@ -217,7 +216,7 @@ Legenda: **P0** essencial (MVP) · **P1** importante · **P2** desejável. Estim
 | ✅ F7-1 | Editor de mapa: pincel de piso, paredes, terreno difícil, água/lava | P0 | L | Desenhar, desfazer, salvar |
 | ✅ F7-2 | Portas (aberta/fechada/trancada/secreta) e estados | P0 | M | Jogador só abre porta destrancada, dentro da regra |
 | ✅ F7-3 | Salas/áreas nomeadas com descrição (texto lido aos jogadores) | P0 | M | Revelar sala exibe descrição |
-| 🟡 F7-4 | Posicionar monstros/NPCs/itens no mapa (ocultos até revelar) | P0 | M | Token oculto não aparece na projeção do jogador |
+| ✅ F7-4 | Posicionar monstros/NPCs/itens no mapa (ocultos até revelar) | P0 | M | Token oculto não aparece na projeção do jogador |
 | ✅ F7-5 | Fog of war por célula/sala (revelar/ocultar) | P0 | L | Mestre revela; jogador só vê o revelado |
 | ✅ F7-6 | Armadilhas e gatilhos (célula → efeito: dano, salvaguarda, condição) | P1 | L | Pisar dispara salvaguarda + dano automático |
 | ✅ F7-7 | Imagem de fundo + calibragem do grid | P1 | M | Alinha imagem à célula |

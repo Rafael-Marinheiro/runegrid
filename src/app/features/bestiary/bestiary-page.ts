@@ -14,6 +14,7 @@ import { crLabel, monsterToCreature } from '@core/rules/srd/convert';
 import { monsterNamePt } from '@core/rules/srd/names-pt';
 import { DIFFICULTY_LABEL, estimateEncounter, xpForCr } from '@core/rules/srd/xp';
 import { EncounterStore } from '@state/encounter.store';
+import { MonsterArtStore } from '@state/monster-art.store';
 import { PartyStore } from '@state/party.store';
 import { SrdStore } from '@state/srd.store';
 import { UiPrefs } from '@state/ui-prefs';
@@ -29,6 +30,7 @@ const CRS = [0, 0.125, 0.25, 0.5, ...Array.from({ length: 30 }, (_, i) => i + 1)
 })
 export class BestiaryPage implements OnInit {
   protected readonly srd = inject(SrdStore);
+  protected readonly art = inject(MonsterArtStore);
   protected readonly ui = inject(UiPrefs);
   private readonly encounter = inject(EncounterStore);
   private readonly party = inject(PartyStore);
@@ -110,6 +112,12 @@ export class BestiaryPage implements OnInit {
 
   ngOnInit(): void {
     void this.srd.loadMonsters(this.ui.ruleset());
+    void this.art.load();
+  }
+
+  /** Miniatura do monstro (F11-5), quando o pacote de arte tiver uma para o id. */
+  protected artUrl(m: SrdMonster): string | null {
+    return this.art.urlFor(m.id);
   }
 
   protected setRuleset(value: string): void {

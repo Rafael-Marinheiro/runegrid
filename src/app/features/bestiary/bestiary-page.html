@@ -62,11 +62,16 @@
       @for (m of visible(); track m.id) {
         <li [class.active]="m.id === selectedId()">
           <button type="button" class="pick" (click)="selectedId.set(m.id)">
-            <span class="nm">{{ name(m) }}</span>
-            <span class="meta"
-              >{{ m.type }} · {{ ui.text('ND', 'CR') }} {{ cr(m.cr) }} · {{ ui.text('CA', 'AC') }}
-              {{ m.ac }} · {{ m.hp }} {{ ui.text('PV', 'HP') }}</span
-            >
+            @if (artUrl(m); as url) {
+              <img class="thumb" [src]="url" alt="" loading="lazy" />
+            }
+            <span class="info">
+              <span class="nm">{{ name(m) }}</span>
+              <span class="meta"
+                >{{ m.type }} · {{ ui.text('ND', 'CR') }} {{ cr(m.cr) }} · {{ ui.text('CA', 'AC') }}
+                {{ m.ac }} · {{ m.hp }} {{ ui.text('PV', 'HP') }}</span
+              >
+            </span>
           </button>
           <button
             type="button"
@@ -99,6 +104,9 @@
     [attr.aria-label]="ui.text('Ficha do monstro', 'Monster stat block')"
   >
     @if (selected(); as m) {
+      @if (artUrl(m); as url) {
+        <img class="portrait" [src]="url" [alt]="name(m)" />
+      }
       <div class="bhead">
         <h2>{{ name(m) }}</h2>
         <span class="muted">{{ m.size }} · {{ m.type }}</span>

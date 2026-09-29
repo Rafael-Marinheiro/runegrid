@@ -58,14 +58,30 @@ h1 {
 
 .pick {
   flex: 1;
-  display: grid;
-  gap: 2px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   min-width: 0;
   padding: var(--space-2);
   text-align: left;
   font-weight: 400;
   border: 0;
   background: transparent;
+}
+
+.info {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.thumb {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--panel-2);
 }
 
 .nm {
@@ -113,6 +129,17 @@ h1 {
     margin: 0 0 var(--space-2);
     font-size: 0.95rem;
   }
+}
+
+.portrait {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 1;
+  margin: 0 auto var(--space-3);
+  border-radius: var(--radius, 8px);
+  object-fit: contain;
+  background: var(--panel-2);
 }
 
 .bhead {

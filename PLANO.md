@@ -20,15 +20,15 @@ Tático de combate em grid para D&D 5e, feito em Angular. Projeto de portfólio:
 - **Fase 7B (gerador):** G-1 a G-16 concluídos: 7 temas, layouts reproduzíveis, povoamento por XP, perigos, tesouro, narrativa, regeneração parcial, encontro rápido no mapa atual, integração com o Estúdio e texto por IA opt-in com chave efêmera do Mestre.
 - **Fase 8 (multiplayer):** F8-3 a F8-11 e F8-13 a F8-20 concluídos ou cobertos, **sem servidor próprio** (PeerJS); F8-1/F8-2/F8-12 estão fora do escopo pela decisão P2P. A sala pausa quando o Mestre sai, salva encontro/código/atribuições e pode ser retomada no mesmo código. A parte de áudio ainda precisa de teste manual com microfone em dois navegadores reais.
 - **Fase 9:** F9-1 a F9-9 concluídos. A sessão persiste localmente e pode ser exportada/importada em JSON versionado e validado; o Playwright cobre o fluxo completo do encontro ao resumo. O mapa prioriza a área de jogo em 768 px, arrasta tokens por toque e aceita pan/pinça com dois dedos. `Ctrl+K` abre a paleta global e `Alt+1…8` navega entre ferramentas. A interface principal alterna entre pt-BR/en em runtime e persiste a escolha; o README traz demos animadas dos fluxos centrais.
-- **Fase 10:** F10-1 concluído com importação/exportação de cenas Foundry VTT v13; F10-2 pendente. F10-3 a F10-5 dependem de decisão de escopo.
+- **Fase 10:** F10-1 e F10-2 concluídos: cenas Foundry VTT v13 e assistente narrativo consultivo, opt-in e BYOK. F10-3 a F10-5 dependem de decisão de escopo.
 
 **Legenda do backlog (colunas de ID nas tabelas das fases):** ✅ concluído · 🟡 parcial · ⛔ fora do escopo (decisão P2P, sem servidor) · sem marca = pendente.
 Parciais: nenhum.
-Pendente: F10-2 antes das decisões de expansão de escopo.
+Pendente de decisão: F10-3 (SRD 5.2/regras de 2024), F10-4 (grid hexagonal) e F10-5 (SFU/vídeo).
 
 ### Próximas tarefas — ordem de implementação
 
-1. **F10-2 — assistente narrativo por IA:** reutilizar o BYOK de G-16 para sugestões de cena e intenção de NPC, sempre como recomendação aprovada pelo Mestre, nunca como mutação autônoma das regras.
+Não há item desbloqueado na fila. Os próximos itens exigem decisão de escopo do usuário.
 
 **Depois, somente mediante decisão de escopo:** SRD 5.2/regras de 2024, grid hexagonal e migração da voz para SFU/vídeo. Restam também duas validações que dependem do usuário: áudio de voz em dois navegadores reais e tornar ou não o repositório público.
 
@@ -299,7 +299,7 @@ O Mestre escolhe **tema, terreno, tamanho** (e nível/tamanho do grupo, dificuld
 | ID | Item | Pri | Est | Critério de aceite |
 |---|---|---|---|---|
 | ✅ F10-1 | Importar/exportar formato VTT simplificado, começando por Foundry | P2 | M | Round-trip preserva mapa, paredes, portas e tokens suportados |
-| F10-2 | Assistente por IA para cenas e intenções de NPC (opt-in, BYOK) | P2 | M | Só produz sugestão; Mestre aprova antes de qualquer efeito |
+| ✅ F10-2 | Assistente por IA para cenas e intenções de NPC (opt-in, BYOK) | P2 | M | Só produz sugestão; Mestre aprova antes de qualquer efeito |
 | F10-3 | Regras de 2024 e conteúdo do SRD 5.2 | P2 | L | Versão de regras selecionável sem quebrar campanhas 5.1 |
 | F10-4 | Grid hexagonal | P2 | L | Movimento, distância, área e pathfinding testados no novo grid |
 | F10-5 | Voz via SFU (LiveKit) e vídeo opcional | P2 | L | Mesa com mais de 8 participantes sem malha completa |

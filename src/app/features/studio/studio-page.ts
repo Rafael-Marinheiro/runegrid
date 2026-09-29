@@ -27,6 +27,7 @@ import { monsterToCreature } from '@core/rules/srd/convert';
 import { exportFoundryScene, importFoundryScene } from '@core/rules/vtt/foundry';
 import { MapView, TokenView } from '@features/combat/map-view';
 import { iconFor, tokenImageFor } from '@features/combat/token-icons';
+import { SceneSuggestion, suggestSceneText } from '@net/ai-text';
 import { UiPrefs } from '@state/ui-prefs';
 import { DungeonLibrary, SavedDungeon } from '@state/dungeon-library';
 import { EncounterStore } from '@state/encounter.store';
@@ -104,6 +105,8 @@ export class StudioPage implements OnInit {
   protected readonly creatureSource = signal(`party:${this.party.creatures()[0]?.id ?? ''}`);
   protected readonly itemRef = signal(CATALOG[0].id);
   protected readonly placementHidden = signal(true);
+  protected readonly suggesting = signal(false);
+  protected readonly aiSuggestion = signal<(SceneSuggestion & { roomId?: string }) | null>(null);
   protected readonly message = signal('');
 
   protected toolLabel(tool: ToolButton): string {
@@ -634,6 +637,53 @@ export class StudioPage implements OnInit {
     this.store.load(state);
     this.clearSelection();
     this.message.set(this.ui.text('Cena Foundry importada.', 'Foundry scene imported.'));
+  }
+
+  protected async suggestScene(apiKey: string): Promise<void> {
+    if (!apiKey.trim()) {
+      this.message.set(this.ui.text('Informe sua chave da OpenAI.', 'Enter your OpenAI API key.'));
+      return;
+    }
+    const room = this.selectedRoom();
+    const selected = this.selectedCreature()?.creature;
+    const npc = selected && selected.kind !== 'pc' ? selected : undefined;
+    this.suggesting.set(true);
+    this.message.set('');
+    try {
+      const suggestion = await suggestSceneText(
+        {
+          encounter: this.state().name,
+          room: room ? { name: room.name, description: room.description } : undefined,
+          npc: npc
+            ? {
+                name: npc.name,
+                kind: npc.kind,
+                status: npc.status,
+                conditions: npc.conditions.map((condition) => condition.name),
+              }
+            : undefined,
+        },
+        apiKey,
+        this.ui.locale(),
+      );
+      this.aiSuggestion.set({ ...suggestion, roomId: room?.id });
+    } catch (error) {
+      this.message.set(
+        error instanceof Error
+          ? error.message
+          : this.ui.text('Não foi possível gerar a sugestão.', 'Could not generate suggestion.'),
+      );
+    } finally {
+      this.suggesting.set(false);
+    }
+  }
+
+  protected applySceneSuggestion(): void {
+    const suggestion = this.aiSuggestion();
+    const room = this.selectedRoom();
+    if (!suggestion || !room || suggestion.roomId !== room.id || !this.editable()) return;
+    this.editRoom({ description: suggestion.scene });
+    this.message.set(this.ui.text('Sugestão aplicada à sala.', 'Suggestion applied to room.'));
   }
 }
 

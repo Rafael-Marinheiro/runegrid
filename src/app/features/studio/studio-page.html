@@ -399,6 +399,55 @@
       }
     </section>
 
+    <section
+      class="panel"
+      [attr.aria-label]="ui.text('Assistente narrativo', 'Narrative assistant')"
+    >
+      <h2>{{ ui.text('Assistente narrativo', 'Narrative assistant') }}</h2>
+      <label class="field">
+        {{ ui.text('Chave da API OpenAI', 'OpenAI API key') }}
+        <input
+          #narrativeKey
+          type="password"
+          autocomplete="off"
+          placeholder="sk-..."
+          [disabled]="suggesting() || store.role().kind !== 'dm'"
+        />
+      </label>
+      <button
+        type="button"
+        [disabled]="suggesting() || store.role().kind !== 'dm'"
+        (click)="suggestScene(narrativeKey.value)"
+      >
+        {{
+          suggesting()
+            ? ui.text('Gerando...', 'Generating...')
+            : ui.text('Sugerir cena e intenção', 'Suggest scene and intention')
+        }}
+      </button>
+      <small class="muted">
+        {{
+          ui.text(
+            'A chave não é salva e é enviada diretamente à OpenAI.',
+            'The key is not saved and is sent directly to OpenAI.'
+          )
+        }}
+      </small>
+      @if (aiSuggestion(); as suggestion) {
+        <div class="ai-suggestion" aria-live="polite">
+          <h3>{{ ui.text('Cena', 'Scene') }}</h3>
+          <p>{{ suggestion.scene }}</p>
+          <h3>{{ ui.text('Intenção do PNJ', 'NPC intention') }}</h3>
+          <p>{{ suggestion.npcIntention }}</p>
+          @if (selectedRoom()?.id === suggestion.roomId) {
+            <button type="button" [disabled]="!editable()" (click)="applySceneSuggestion()">
+              {{ ui.text('Usar como descrição da sala', 'Use as room description') }}
+            </button>
+          }
+        </div>
+      }
+    </section>
+
     <section class="panel" [attr.aria-label]="ui.text('Mapa', 'Map')">
       <h2>{{ ui.text('Mapa', 'Map') }}</h2>
       <h3>{{ ui.text('Andares', 'Floors') }}</h3>

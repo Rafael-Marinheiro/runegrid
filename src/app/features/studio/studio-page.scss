@@ -233,6 +233,17 @@
   }
 }
 
+.ai-suggestion {
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-soft);
+
+  h3,
+  p {
+    margin: 0 0 var(--space-2);
+  }
+}
+
 .floor-list {
   display: flex;
   flex-wrap: wrap;

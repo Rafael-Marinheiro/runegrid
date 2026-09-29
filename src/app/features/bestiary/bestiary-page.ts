@@ -11,6 +11,7 @@ import { ABILITIES, ABILITY_LABEL } from '@core/models/creature';
 import { SrdMonster } from '@core/models/srd';
 import { abilityMod, fmtBonus } from '@core/rules/creature';
 import { crLabel, monsterToCreature } from '@core/rules/srd/convert';
+import { monsterNamePt } from '@core/rules/srd/names-pt';
 import { DIFFICULTY_LABEL, estimateEncounter, xpForCr } from '@core/rules/srd/xp';
 import { EncounterStore } from '@state/encounter.store';
 import { PartyStore } from '@state/party.store';
@@ -152,11 +153,16 @@ export class BestiaryPage implements OnInit {
       .join(', ');
   }
 
+  /** Nome do monstro em pt-BR se a interface estiver nesse idioma (glossário próprio, F11-6). */
+  protected name(m: SrdMonster): string {
+    return this.ui.text(monsterNamePt(m.name), m.name);
+  }
+
   /** Leva os escolhidos para o encontro (montagem) e abre o mapa. */
   protected toEncounter(): void {
     for (const { m, n } of this.pickedList()) {
       for (let i = 0; i < n; i++)
-        this.encounter.autoPlace(this.encounter.addFromRoster(monsterToCreature(m)));
+        this.encounter.autoPlace(this.encounter.addFromRoster(monsterToCreature(m, this.name(m))));
     }
     this.picked.set({});
     void this.router.navigate(['/combate']);
@@ -164,6 +170,6 @@ export class BestiaryPage implements OnInit {
 
   /** Guarda o monstro entre as criaturas para reutilizar. */
   protected toParty(m: SrdMonster): void {
-    this.party.creatures.update((l) => [...l, monsterToCreature(m)]);
+    this.party.creatures.update((l) => [...l, monsterToCreature(m, this.name(m))]);
   }
 }

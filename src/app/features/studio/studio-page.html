@@ -334,7 +334,7 @@
           </optgroup>
           <optgroup [label]="ui.text('Bestiário SRD', 'SRD bestiary')">
             @for (monster of srd.monsters(); track monster.id) {
-              <option [value]="'srd:' + monster.id">{{ monster.name }}</option>
+              <option [value]="'srd:' + monster.id">{{ monsterName(monster) }}</option>
             }
           </optgroup>
         </select>

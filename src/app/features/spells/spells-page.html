@@ -1,7 +1,7 @@
 <h1>{{ ui.text('Magias', 'Spells') }}</h1>
 <p class="sub">
   SRD {{ ui.ruleset() }} · {{ filtered().length }} {{ ui.text('de', 'of') }}
-  {{ srd.spells().length }} {{ ui.text('magias (textos em inglês)', 'spells') }}
+  {{ srd.spells().length }} {{ ui.text('magias (descrição em inglês)', 'spells') }}
 </p>
 
 <div class="layout">
@@ -66,7 +66,7 @@
       @for (s of visible(); track s.id) {
         <li [class.active]="s.id === selectedId()">
           <button type="button" class="pick" (click)="selectedId.set(s.id)">
-            <span class="nm">{{ s.name }}</span>
+            <span class="nm">{{ name(s) }}</span>
             <span class="meta">
               {{ levelLabel(s) }} · {{ s.school }}
               @if (inCombat(s)) {
@@ -86,7 +86,7 @@
 
   <section class="panel detail" [attr.aria-label]="ui.text('Detalhes da magia', 'Spell details')">
     @if (selected(); as s) {
-      <h2>{{ s.name }}</h2>
+      <h2>{{ name(s) }}</h2>
       <p class="muted">{{ levelLabel(s) }} · {{ s.school }}{{ s.ritual ? ' · ritual' : '' }}</p>
       <dl>
         <div>

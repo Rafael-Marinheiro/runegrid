@@ -31,6 +31,7 @@ import {
 } from '@core/rules/generator';
 import { teamOf } from '@core/rules/encounter';
 import { monsterToCreature } from '@core/rules/srd/convert';
+import { monsterNamePt } from '@core/rules/srd/names-pt';
 import { DIFFICULTY_LABEL } from '@core/rules/srd/xp';
 import { MapView, TokenView } from '@features/combat/map-view';
 import { iconFor } from '@features/combat/token-icons';
@@ -274,7 +275,9 @@ export class GeneratorPage implements OnInit {
       const monster = byId.get(group.monsterId);
       if (!monster) continue;
       for (let i = 0; i < group.count; i++) {
-        const id = this.encounter.addFromRoster(monsterToCreature(monster));
+        const id = this.encounter.addFromRoster(
+          monsterToCreature(monster, this.ui.text(monsterNamePt(monster.name), monster.name)),
+        );
         this.encounter.autoPlace(id);
       }
     }

@@ -1,7 +1,7 @@
 <h1>{{ ui.text('Bestiário', 'Bestiary') }}</h1>
 <p class="sub">
   SRD {{ ui.ruleset() }} · {{ filtered().length }} {{ ui.text('de', 'of') }}
-  {{ srd.monsters().length }} {{ ui.text('criaturas (nomes em inglês)', 'creatures') }}
+  {{ srd.monsters().length }} {{ ui.text('criaturas (ficha detalhada em inglês)', 'creatures') }}
 </p>
 
 <div class="layout">
@@ -62,7 +62,7 @@
       @for (m of visible(); track m.id) {
         <li [class.active]="m.id === selectedId()">
           <button type="button" class="pick" (click)="selectedId.set(m.id)">
-            <span class="nm">{{ m.name }}</span>
+            <span class="nm">{{ name(m) }}</span>
             <span class="meta"
               >{{ m.type }} · {{ ui.text('ND', 'CR') }} {{ cr(m.cr) }} · {{ ui.text('CA', 'AC') }}
               {{ m.ac }} · {{ m.hp }} {{ ui.text('PV', 'HP') }}</span
@@ -72,7 +72,7 @@
             type="button"
             class="plus"
             [attr.aria-label]="
-              ui.text('Adicionar ', 'Add ') + m.name + ui.text(' ao encontro', ' to encounter')
+              ui.text('Adicionar ', 'Add ') + name(m) + ui.text(' ao encontro', ' to encounter')
             "
             (click)="add(m)"
           >
@@ -100,7 +100,7 @@
   >
     @if (selected(); as m) {
       <div class="bhead">
-        <h2>{{ m.name }}</h2>
+        <h2>{{ name(m) }}</h2>
         <span class="muted">{{ m.size }} · {{ m.type }}</span>
       </div>
       <dl class="core">
@@ -208,20 +208,20 @@
     @for (p of pickedList(); track p.m.id) {
       <div class="line">
         <span
-          >{{ p.n }}× {{ p.m.name }}
+          >{{ p.n }}× {{ name(p.m) }}
           <small class="muted">{{ ui.text('ND', 'CR') }} {{ cr(p.m.cr) }}</small></span
         >
         <span class="steps">
           <button
             type="button"
-            [attr.aria-label]="ui.text('Menos um ', 'Remove one ') + p.m.name"
+            [attr.aria-label]="ui.text('Menos um ', 'Remove one ') + name(p.m)"
             (click)="add(p.m, -1)"
           >
             −
           </button>
           <button
             type="button"
-            [attr.aria-label]="ui.text('Mais um ', 'Add one ') + p.m.name"
+            [attr.aria-label]="ui.text('Mais um ', 'Add one ') + name(p.m)"
             (click)="add(p.m)"
           >
             +

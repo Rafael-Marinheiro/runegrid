@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { SrdSpell } from '@core/models/srd';
 import { getSpell } from '@core/rules/spells/data';
+import { spellNamePt } from '@core/rules/srd/names-pt';
 import { SrdStore } from '@state/srd.store';
 import { UiPrefs } from '@state/ui-prefs';
 
@@ -64,6 +65,11 @@ export class SpellsPage implements OnInit {
     const ruleset = value === '2024' ? '2024' : '2014';
     this.ui.ruleset.set(ruleset);
     void this.srd.loadSpells(ruleset);
+  }
+
+  /** Nome da magia em pt-BR se a interface estiver nesse idioma (glossário próprio, F11-6). */
+  protected name(s: SrdSpell): string {
+    return this.ui.text(spellNamePt(s.name), s.name);
   }
 
   protected setLevel(value: string): void {

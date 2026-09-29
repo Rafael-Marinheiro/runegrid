@@ -24,6 +24,7 @@ import {
 import { project, sizeOf, teamOf } from '@core/rules/encounter';
 import { CATALOG } from '@core/rules/inventory/catalog';
 import { monsterToCreature } from '@core/rules/srd/convert';
+import { monsterNamePt } from '@core/rules/srd/names-pt';
 import { exportFoundryScene, importFoundryScene } from '@core/rules/vtt/foundry';
 import { MapView, TokenView } from '@features/combat/map-view';
 import { iconFor, tokenImageFor } from '@features/combat/token-icons';
@@ -321,11 +322,16 @@ export class StudioPage implements OnInit {
     if (this.send({ type: 'upsertPortal', portal })) this.selectedPortalId.set(portal.id);
   }
 
+  /** Nome do monstro em pt-BR se a interface estiver nesse idioma (glossário próprio, F11-6). */
+  protected monsterName(m: { name: string }): string {
+    return this.ui.text(monsterNamePt(m.name), m.name);
+  }
+
   private creatureForPlacement(): Creature | undefined {
     const [source, id] = this.creatureSource().split(':', 2);
     if (source === 'party') return this.party.creatures().find((creature) => creature.id === id);
     const monster = this.srd.monsters().find((creature) => creature.id === id);
-    return monster ? monsterToCreature(monster) : undefined;
+    return monster ? monsterToCreature(monster, this.monsterName(monster)) : undefined;
   }
 
   private addCreature(pos: Pos): void {

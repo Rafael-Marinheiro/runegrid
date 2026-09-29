@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { Creature } from '@core/models/creature';
+import { ItemKind } from '@core/models/item';
 import { RuleError } from '@core/rules/creature';
 import { CATALOG, getItem } from '@core/rules/inventory/catalog';
 import {
@@ -11,8 +12,9 @@ import {
 } from '@core/rules/inventory/inventory';
 import { PartyStore } from '@state/party.store';
 import { UiPrefs } from '@state/ui-prefs';
+import { ITEM_ICON_LABEL, itemIconFor } from './item-icons';
 
-const GROUPS: { kind: string; label: string }[] = [
+const GROUPS: { kind: ItemKind; label: string }[] = [
   { kind: 'weapon', label: 'Armas' },
   { kind: 'armor', label: 'Armaduras' },
   { kind: 'shield', label: 'Escudos' },
@@ -38,6 +40,21 @@ const GROUPS: { kind: string; label: string }[] = [
         @for (i of c.inventory ?? []; track i.id) {
           @let d = def(i.ref);
           <li>
+            @if (d) {
+              <svg
+                class="item-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                role="img"
+                [attr.aria-label]="iconLabel[d.kind]"
+              >
+                <path [attr.d]="iconFor(d.kind)" />
+              </svg>
+            }
             <span class="name"
               >{{ d?.name }}
               @if (i.qty > 1) {
@@ -101,6 +118,11 @@ const GROUPS: { kind: string; label: string }[] = [
     .name {
       flex: 1;
     }
+    .item-icon {
+      width: 1.5rem;
+      height: 1.5rem;
+      flex: 0 0 auto;
+    }
     .over {
       color: var(--danger, #c0392b);
     }
@@ -114,11 +136,13 @@ export class InventoryPanel {
   protected readonly catalog = CATALOG;
   protected readonly groups = GROUPS;
   protected readonly def = getItem;
+  protected readonly iconFor = itemIconFor;
+  protected readonly iconLabel = ITEM_ICON_LABEL;
   protected readonly weight = computed(() => carriedWeight(this.creature()));
   protected readonly capacity = computed(() => carryCapacity(this.creature()));
   protected readonly error = signal('');
 
-  protected groupName(group: { kind: string; label: string }): string {
+  protected groupName(group: { kind: ItemKind; label: string }): string {
     const labels: Record<string, string> = {
       weapon: 'Weapons',
       armor: 'Armor',

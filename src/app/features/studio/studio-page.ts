@@ -24,6 +24,7 @@ import {
 import { project, sizeOf, teamOf } from '@core/rules/encounter';
 import { CATALOG } from '@core/rules/inventory/catalog';
 import { monsterToCreature } from '@core/rules/srd/convert';
+import { exportFoundryScene, importFoundryScene } from '@core/rules/vtt/foundry';
 import { MapView, TokenView } from '@features/combat/map-view';
 import { iconFor, tokenImageFor } from '@features/combat/token-icons';
 import { UiPrefs } from '@state/ui-prefs';
@@ -609,6 +610,30 @@ export class StudioPage implements OnInit {
     });
     this.clearSelection();
     this.message.set(`"${parsed.name}" ${this.ui.text('importado.', 'imported.')}`);
+  }
+
+  protected exportFoundry(): void {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(
+      new Blob([exportFoundryScene(this.state())], { type: 'application/json' }),
+    );
+    a.download = `${this.state().name.replace(/[^\w-]+/g, '-') || 'cena'}.foundry-v13.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  protected async importFoundry(input: HTMLInputElement): Promise<void> {
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    const state = importFoundryScene(await file.text());
+    if (!state)
+      return void this.message.set(
+        this.ui.text('Cena Foundry inválida.', 'Invalid Foundry scene.'),
+      );
+    this.store.load(state);
+    this.clearSelection();
+    this.message.set(this.ui.text('Cena Foundry importada.', 'Foundry scene imported.'));
   }
 }
 

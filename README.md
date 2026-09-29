@@ -49,6 +49,7 @@ Fluxo central: toda mudança é um **Comando** → `dispatch(state, cmd, {rng, r
 6. **Conteúdo do SRD 5.1 (CC-BY-4.0)** importado por script versionado (`scripts/import-srd.mjs`), não em runtime.
 7. **Signals + zoneless + OnPush** em todos os componentes; `@let` e control flow nativo.
 8. **IA somente opt-in e BYOK.** O gerador pode reescrever gancho e descrições via Responses API. A chave informada pelo Mestre permanece apenas no campo da página, nunca vai para storage, e a requisição usa `store: false`.
+9. **Interoperabilidade VTT.** O Estúdio importa e exporta o subconjunto de cenas Foundry v13 [documentado aqui](docs/FOUNDRY-VTT.md).
 
 ## Rodando
 

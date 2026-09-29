@@ -577,6 +577,22 @@
           />
         </label>
       </div>
+      <h3>Foundry VTT</h3>
+      <div class="row">
+        <button type="button" [disabled]="!editable()" (click)="exportFoundry()">
+          {{ ui.text('Exportar cena', 'Export scene') }}
+        </button>
+        <label class="file">
+          {{ ui.text('Importar cena', 'Import scene') }}
+          <input
+            #foundryFile
+            type="file"
+            accept="application/json,.json"
+            [disabled]="!editable()"
+            (change)="importFoundry(foundryFile)"
+          />
+        </label>
+      </div>
       <ul class="lib">
         @for (d of library.items(); track d.id) {
           <li>

@@ -11,7 +11,7 @@ Tático de combate em grid para D&D 5e, feito em Angular. Projeto de portfólio:
 - **Fase 4:** F4-0 (modelo Command/Event com papéis dm/player e `project()`), F4-1 a F4-9 concluídos: iniciativa, turnos e rodadas, orçamento de ação/movimento, ataque com crítico, vantagem/desvantagem, Ataque Extra, Esquiva/Disparada/Desengajar, log, desfazer/refazer, salvaguardas e resumo final com XP opcional.
 - **Fase 5:** F5-1 a F5-8 concluídos, com condições, duração, concentração, magias, ações padrão, ataques de oportunidade, cobertura e armas versáteis.
 - **Acessibilidade:** Lighthouse 100 em combate, gerador, mesa e criaturas (contraste, landmarks, roles, nomes acessíveis).
-- **E2E:** Playwright (`npm run e2e`): smoke das 8 rotas sem erros de página.
+- **E2E:** Playwright (`npm run e2e`): 8 rotas sem erros e fluxo completo de encontro até o resumo final.
 - **Ping (F8-14):** Shift+clique no mapa marca uma célula para todos na mesa (relay pelo Mestre, some em 4 s).
 - **Macros e armas (F1-7, F5-8):** rolagens salvas na página de dados; armas versáteis usam o dano maior sem escudo.
 - **PWA:** instalável e offline (service worker do Angular, SRD em cache).
@@ -19,18 +19,17 @@ Tático de combate em grid para D&D 5e, feito em Angular. Projeto de portfólio:
 - **Fase 7:** F7-1 a F7-14 concluídos (editor, portas, salas, posicionamento oculto de criaturas/itens, névoa, armadilhas, imagem calibrada, linha de visão/visão no escuro, áreas, notas, biblioteca, andares ligados por portais e texturas).
 - **Fase 7B (gerador):** G-1 a G-16 concluídos: 7 temas, layouts reproduzíveis, povoamento por XP, perigos, tesouro, narrativa, regeneração parcial, encontro rápido no mapa atual, integração com o Estúdio e texto por IA opt-in com chave efêmera do Mestre.
 - **Fase 8 (multiplayer):** F8-3 a F8-11 e F8-13 a F8-20 concluídos ou cobertos, **sem servidor próprio** (PeerJS); F8-1/F8-2/F8-12 estão fora do escopo pela decisão P2P. A sala pausa quando o Mestre sai, salva encontro/código/atribuições e pode ser retomada no mesmo código. A parte de áudio ainda precisa de teste manual com microfone em dois navegadores reais.
-- **Fase 9:** F9-1 a F9-5 e F9-7 a F9-9 concluídos; F9-6 parcial. A sessão persiste localmente e pode ser exportada/importada em JSON versionado e validado. O mapa prioriza a área de jogo em 768 px, arrasta tokens por toque e aceita pan/pinça com dois dedos. `Ctrl+K` abre a paleta global e `Alt+1…8` navega entre ferramentas. A interface principal alterna entre pt-BR/en em runtime e persiste a escolha; o README traz demos animadas dos fluxos centrais.
+- **Fase 9:** F9-1 a F9-9 concluídos. A sessão persiste localmente e pode ser exportada/importada em JSON versionado e validado; o Playwright cobre o fluxo completo do encontro ao resumo. O mapa prioriza a área de jogo em 768 px, arrasta tokens por toque e aceita pan/pinça com dois dedos. `Ctrl+K` abre a paleta global e `Alt+1…8` navega entre ferramentas. A interface principal alterna entre pt-BR/en em runtime e persiste a escolha; o README traz demos animadas dos fluxos centrais.
 
 **Legenda do backlog (colunas de ID nas tabelas das fases):** ✅ concluído · 🟡 parcial · ⛔ fora do escopo (decisão P2P, sem servidor) · sem marca = pendente.
-Parciais: F0-2 (sem hook de commit), F9-6 (E2E é smoke das rotas).
-Pendente: concluir os dois itens parciais antes de iniciar a Fase 10.
+Parciais: F0-2 (sem hook de commit).
+Pendente: concluir o item parcial antes de iniciar a Fase 10.
 
 ### Próximas tarefas — ordem de implementação
 
-1. **F9-6 — fluxo E2E completo:** cobrir no Playwright a criação de encontro, início do combate, ação, passagem de turno e tela final.
-2. **F0-2 — automação local de qualidade:** concluir o item com hook leve de pre-commit para formatação e lint; a suíte completa continua obrigatória antes do commit e no CI quando a cobrança da conta for liberada.
-3. **F10-1 — interoperabilidade VTT:** importar/exportar um JSON simplificado e documentado, começando por Foundry. Reutiliza o formato nativo versionado de F9-1.
-4. **F10-2 — assistente narrativo por IA:** reutilizar o BYOK de G-16 para sugestões de cena e intenção de NPC, sempre como recomendação aprovada pelo Mestre, nunca como mutação autônoma das regras.
+1. **F0-2 — automação local de qualidade:** concluir o item com hook leve de pre-commit para formatação e lint; a suíte completa continua obrigatória antes do commit e no CI quando a cobrança da conta for liberada.
+2. **F10-1 — interoperabilidade VTT:** importar/exportar um JSON simplificado e documentado, começando por Foundry. Reutiliza o formato nativo versionado de F9-1.
+3. **F10-2 — assistente narrativo por IA:** reutilizar o BYOK de G-16 para sugestões de cena e intenção de NPC, sempre como recomendação aprovada pelo Mestre, nunca como mutação autônoma das regras.
 
 **Depois, somente mediante decisão de escopo:** SRD 5.2/regras de 2024, grid hexagonal e migração da voz para SFU/vídeo. Restam também duas validações que dependem do usuário: áudio de voz em dois navegadores reais e tornar ou não o repositório público.
 
@@ -292,7 +291,7 @@ O Mestre escolhe **tema, terreno, tamanho** (e nível/tamanho do grupo, dificuld
 | ✅ F9-3 | Responsivo/toque (tablet como mesa) | P1 | M | Usável em 768px |
 | ✅ F9-4 | PWA offline | P2 | S | Instalável, funciona offline |
 | ✅ F9-5 | Performance (OnPush/signals, lazy routes, bundle < 300 kB inicial) | P1 | M | Lighthouse ≥ 90 |
-| 🟡 F9-6 | Testes E2E (criar encontro → combater → fim) | P1 | M | Playwright verde no CI |
+| ✅ F9-6 | Testes E2E (criar encontro → combater → fim) | P1 | M | Playwright verde no CI |
 | ✅ F9-7 | README com GIFs, decisões de arquitetura (ADRs), roadmap | P0 | M | Recrutador entende em 2 min |
 | ✅ F9-8 | i18n pt-BR/en | P2 | M | Troca de idioma em runtime |
 | ✅ F9-9 | Atalhos de teclado + paleta de comandos | P2 | M | `Ctrl+K` |

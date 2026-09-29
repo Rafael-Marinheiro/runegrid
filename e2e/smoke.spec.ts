@@ -74,3 +74,23 @@ test('idioma muda em runtime e persiste', async ({ page }) => {
   await page.keyboard.press('Control+K');
   await expect(page.getByRole('dialog', { name: 'Commands' })).toBeVisible();
 });
+
+test('cria encontro, combate, age, passa o turno e encerra', async ({ page }) => {
+  await page.goto('/gerador');
+  const quick = page.getByRole('button', { name: 'Encontro rápido no mapa atual' });
+  await expect(quick).toBeEnabled();
+  await quick.click();
+  await expect(page).toHaveURL(/\/combate$/);
+
+  await page.getByRole('button', { name: 'Rolar iniciativa' }).click();
+  await page.getByRole('button', { name: 'Iniciar combate' }).click();
+  const dodge = page.getByRole('button', { name: 'Esquivar' });
+  await expect(dodge).toBeEnabled();
+  await dodge.click();
+  await expect(dodge).toBeDisabled();
+  await page.getByRole('button', { name: 'Encerrar turno' }).click();
+
+  await page.getByRole('button', { name: 'Encerrar combate' }).click();
+  await expect(page.getByText('Encontro concluído')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Combate encerrado' })).toBeVisible();
+});

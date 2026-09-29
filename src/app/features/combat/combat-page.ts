@@ -151,6 +151,34 @@ export class CombatPage {
   protected resetCombat(): void {
     if (this.store.send({ type: 'resetCombat' })) this.showXp.set(false);
   }
+
+  protected exportSession(): void {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(
+      new Blob([this.store.exportSession()], { type: 'application/json' }),
+    );
+    a.download = `${this.store.state().name.replace(/[^\w-]+/g, '-') || 'sessao'}.runegrid-session.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  protected async importSession(input: HTMLInputElement): Promise<void> {
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    if (!this.store.importSession(await file.text())) {
+      this.store.message.set(
+        this.ui.text(
+          'Arquivo inválido ou versão de sessão incompatível.',
+          'Invalid file or incompatible session version.',
+        ),
+      );
+      return;
+    }
+    this.selectedId.set(null);
+    this.showXp.set(false);
+    this.store.message.set(this.ui.text('Sessão importada.', 'Session imported.'));
+  }
   protected readonly isProne = computed(
     () => !!this.active()?.conditions.some((c) => c.name === 'prone'),
   );

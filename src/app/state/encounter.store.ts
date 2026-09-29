@@ -1,8 +1,8 @@
 import { computed, effect, inject, Injectable, signal } from '@angular/core';
-import { Creature } from '@core/models/creature';
+import { ABILITIES, Creature, SIZES } from '@core/models/creature';
 import { sampleCreatures } from '@core/models/creature-factory';
 import { EncounterState, Role } from '@core/models/encounter';
-import { mapFromAscii } from '@core/models/grid';
+import { inBounds, isGridMap, mapFromAscii } from '@core/models/grid';
 import { RuleError } from '@core/rules/creature';
 import {
   Command,
@@ -17,6 +17,8 @@ import { canStand } from '@core/rules/grid/movement';
 import { RNG } from './rng.token';
 
 const KEY = 'runegrid.encounter.v2';
+const SESSION_FORMAT = 'runegrid-session';
+const SESSION_VERSION = 1;
 
 /** Ligação com o Mestre quando este navegador é um jogador numa sala. */
 export interface RemoteLink {
@@ -62,6 +64,139 @@ function load(): EncounterState | null {
     return raw?.map?.cells && Array.isArray(raw.creatures) && raw.combat
       ? (raw as EncounterState)
       : null;
+  } catch {
+    return null;
+  }
+}
+
+const record = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+const strings = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.every((item) => typeof item === 'string');
+const finite = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value);
+
+function validCreature(value: unknown): value is Creature {
+  if (!record(value) || !record(value['hp']) || !record(value['abilities'])) return false;
+  const hp = value['hp'];
+  const abilities = value['abilities'];
+  return (
+    typeof value['id'] === 'string' &&
+    typeof value['name'] === 'string' &&
+    ['pc', 'npc', 'monster'].includes(String(value['kind'])) &&
+    SIZES.includes(value['size'] as (typeof SIZES)[number]) &&
+    ['alive', 'dying', 'stable', 'dead'].includes(String(value['status'])) &&
+    ['level', 'speed', 'ac', 'attacksPerAction'].every((key) => finite(value[key])) &&
+    ABILITIES.every((ability) => finite(abilities[ability])) &&
+    ['max', 'current', 'temp'].every((key) => finite(hp[key])) &&
+    [
+      'saveProficiencies',
+      'resources',
+      'attacks',
+      'resistances',
+      'immunities',
+      'vulnerabilities',
+      'conditions',
+    ].every((key) => Array.isArray(value[key])) &&
+    record(value['deathSaves']) &&
+    record(value['spellSlots'])
+  );
+}
+
+function validCombat(value: unknown): boolean {
+  if (!record(value) || !record(value['initiative'])) return false;
+  const turn = value['turn'];
+  return (
+    ['setup', 'running', 'ended'].includes(String(value['phase'])) &&
+    finite(value['round']) &&
+    finite(value['turnIndex']) &&
+    strings(value['order']) &&
+    strings(value['dodging']) &&
+    Object.values(value['initiative']).every(finite) &&
+    (turn === null ||
+      (record(turn) &&
+        typeof turn['actorId'] === 'string' &&
+        ['action', 'bonus', 'reaction', 'dashed', 'disengaged'].every(
+          (key) => typeof turn[key] === 'boolean',
+        ) &&
+        finite(turn['movedFt']) &&
+        finite(turn['attacksLeft'])))
+  );
+}
+
+/** Valida o formato persistido antes que qualquer tela passe a consumi-lo. */
+export function isEncounterState(value: unknown): value is EncounterState {
+  if (!record(value) || !isGridMap(value['map'])) return false;
+  const creatures = value['creatures'];
+  const tokens = value['tokens'];
+  const log = value['log'];
+  const floors = value['floors'];
+  const ids = new Set(
+    Array.isArray(creatures) ? creatures.filter(validCreature).map((creature) => creature.id) : [],
+  );
+  const validToken = (token: unknown, map: unknown = value['map']): boolean =>
+    isGridMap(map) &&
+    record(token) &&
+    record(token['pos']) &&
+    typeof token['creatureId'] === 'string' &&
+    ids.has(token['creatureId']) &&
+    inBounds(map, token['pos'] as { x: number; y: number }) &&
+    (token['hidden'] === undefined || typeof token['hidden'] === 'boolean');
+  return (
+    typeof value['name'] === 'string' &&
+    ['simple', 'alternate'].includes(String(value['rule'])) &&
+    Array.isArray(creatures) &&
+    creatures.length === ids.size &&
+    Array.isArray(tokens) &&
+    tokens.every((token) => validToken(token)) &&
+    validCombat(value['combat']) &&
+    Array.isArray(log) &&
+    log.every(
+      (entry) =>
+        record(entry) &&
+        finite(entry['id']) &&
+        finite(entry['round']) &&
+        typeof entry['text'] === 'string',
+    ) &&
+    finite(value['seq']) &&
+    (floors === undefined ||
+      (Array.isArray(floors) &&
+        floors.every(
+          (floor) =>
+            record(floor) &&
+            typeof floor['id'] === 'string' &&
+            typeof floor['name'] === 'string' &&
+            isGridMap(floor['map']) &&
+            Array.isArray(floor['tokens']) &&
+            floor['tokens'].every((token) => validToken(token, floor['map'])),
+        )))
+  );
+}
+
+export function serializeSession(state: EncounterState): string {
+  return JSON.stringify(
+    {
+      format: SESSION_FORMAT,
+      version: SESSION_VERSION,
+      exportedAt: new Date().toISOString(),
+      state,
+    },
+    null,
+    1,
+  );
+}
+
+export function parseSession(text: string): EncounterState | null {
+  try {
+    const envelope: unknown = JSON.parse(text);
+    if (
+      !record(envelope) ||
+      envelope['format'] !== SESSION_FORMAT ||
+      envelope['version'] !== SESSION_VERSION ||
+      !isEncounterState(envelope['state'])
+    )
+      return null;
+    return envelope['state'];
   } catch {
     return null;
   }
@@ -201,6 +336,17 @@ export class EncounterStore {
     this.future.set([]);
     this.state.set(state);
     this.message.set('');
+  }
+
+  exportSession(): string {
+    return serializeSession(this.state());
+  }
+
+  importSession(text: string): boolean {
+    const state = parseSession(text);
+    if (!state) return false;
+    this.load(state);
+    return true;
   }
 
   reset(): void {

@@ -30,6 +30,28 @@
   gap: var(--space-2);
 }
 
+.session-file {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-weight: 700;
+  cursor: pointer;
+
+  input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+
+  &:focus-within {
+    outline: 2px solid var(--gold);
+  }
+}
+
 .role {
   display: flex;
   flex-direction: column;

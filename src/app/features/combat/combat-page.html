@@ -53,6 +53,20 @@
       <button type="button" [disabled]="!store.canRedo()" (click)="store.redo()">
         {{ ui.text('Refazer', 'Redo') }}
       </button>
+      @if (!isRemote()) {
+        <button type="button" (click)="exportSession()">
+          {{ ui.text('Exportar sessão', 'Export session') }}
+        </button>
+        <label class="session-file">
+          {{ ui.text('Importar sessão', 'Import session') }}
+          <input
+            #sessionFile
+            type="file"
+            accept="application/json,.json"
+            (change)="importSession(sessionFile)"
+          />
+        </label>
+      }
     }
   </div>
 </div>

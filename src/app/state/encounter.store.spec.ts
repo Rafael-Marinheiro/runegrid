@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { EncounterStore } from './encounter.store';
+import { EncounterStore, parseSession, serializeSession } from './encounter.store';
 import { RNG } from './rng.token';
 
 const setup = (rng: () => number = () => 0.5) => {
@@ -53,5 +53,30 @@ describe('EncounterStore', () => {
     s.role.set({ kind: 'player', owns: [pc.id] });
     expect(s.send({ type: 'startCombat' })).toBe(false);
     expect(s.message()).toContain('Mestre');
+  });
+
+  it('exporta e importa a sessão versionada', () => {
+    const s = setup();
+    s.send({ type: 'rollInitiative' });
+    const expected = structuredClone(s.state());
+    const text = s.exportSession();
+    expect(JSON.parse(text)).toMatchObject({ format: 'runegrid-session', version: 1 });
+    s.reset();
+    expect(s.importSession(text)).toBe(true);
+    expect(s.state()).toEqual(expected);
+  });
+
+  it('recusa sessão inválida sem substituir estado nem snapshot local', () => {
+    const s = setup();
+    const before = s.state();
+    TestBed.tick();
+    const saved = localStorage.getItem('runegrid.encounter.v2');
+    expect(s.importSession('{"format":"runegrid-session","version":99,"state":{}}')).toBe(false);
+    const malformed = JSON.parse(serializeSession(before));
+    malformed.state.tokens = [{ creatureId: 'x' }];
+    expect(parseSession(JSON.stringify(malformed))).toBeNull();
+    TestBed.tick();
+    expect(s.state()).toBe(before);
+    expect(localStorage.getItem('runegrid.encounter.v2')).toBe(saved);
   });
 });

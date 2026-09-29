@@ -4,7 +4,7 @@ Tático de combate em grid para D&D 5e, feito em Angular. Projeto de portfólio:
 
 ## Status
 
-- **Fase 0:** F0-1 a F0-8 concluídos ou cobertos, com F0-2 parcial (sem hook de commit). Deploy automático no ar em runegrid-nine.vercel.app; a execução do GitHub Actions segue bloqueada por cobrança/limite da conta, não por código.
+- **Fase 0:** F0-1 a F0-8 concluídos ou cobertos, incluindo hook de pre-commit versionado para Prettier e ESLint. Deploy automático no ar em runegrid-nine.vercel.app; a execução do GitHub Actions segue bloqueada por cobrança/limite da conta, não por código.
 - **Fase 1:** F1-1 a F1-7 concluídos (parser, RNG com semente, vantagem/crítico, rolador, histórico, bandeja, dados 3D com física e cor por tipo, macros e som opcional persistente).
 - **Fase 2:** F2-1, F2-2, F2-3, F2-4, F2-5, F2-6 e F2-7 concluídos: ficha completa (atributos, salvaguardas, perícias, CA, PV com dano/cura/temporários, morte, espaços de magia, recursos, descansos, resistências), lista de criaturas com persistência local e rolagem de testes pela ficha.
 - **Fase 3:** F3-1 a F3-11 concluídos: mapa SVG com zoom/pan, tokens arrastáveis com encaixe, colisão, terreno difícil, diagonais, caminho, régua, criaturas grandes, alcance, navegação por teclado, ícones e imagens próprias nos tokens, texturas e alto contraste.
@@ -22,14 +22,13 @@ Tático de combate em grid para D&D 5e, feito em Angular. Projeto de portfólio:
 - **Fase 9:** F9-1 a F9-9 concluídos. A sessão persiste localmente e pode ser exportada/importada em JSON versionado e validado; o Playwright cobre o fluxo completo do encontro ao resumo. O mapa prioriza a área de jogo em 768 px, arrasta tokens por toque e aceita pan/pinça com dois dedos. `Ctrl+K` abre a paleta global e `Alt+1…8` navega entre ferramentas. A interface principal alterna entre pt-BR/en em runtime e persiste a escolha; o README traz demos animadas dos fluxos centrais.
 
 **Legenda do backlog (colunas de ID nas tabelas das fases):** ✅ concluído · 🟡 parcial · ⛔ fora do escopo (decisão P2P, sem servidor) · sem marca = pendente.
-Parciais: F0-2 (sem hook de commit).
-Pendente: concluir o item parcial antes de iniciar a Fase 10.
+Parciais: nenhum.
+Pendente: iniciar a Fase 10.
 
 ### Próximas tarefas — ordem de implementação
 
-1. **F0-2 — automação local de qualidade:** concluir o item com hook leve de pre-commit para formatação e lint; a suíte completa continua obrigatória antes do commit e no CI quando a cobrança da conta for liberada.
-2. **F10-1 — interoperabilidade VTT:** importar/exportar um JSON simplificado e documentado, começando por Foundry. Reutiliza o formato nativo versionado de F9-1.
-3. **F10-2 — assistente narrativo por IA:** reutilizar o BYOK de G-16 para sugestões de cena e intenção de NPC, sempre como recomendação aprovada pelo Mestre, nunca como mutação autônoma das regras.
+1. **F10-1 — interoperabilidade VTT:** importar/exportar um JSON simplificado e documentado, começando por Foundry. Reutiliza o formato nativo versionado de F9-1.
+2. **F10-2 — assistente narrativo por IA:** reutilizar o BYOK de G-16 para sugestões de cena e intenção de NPC, sempre como recomendação aprovada pelo Mestre, nunca como mutação autônoma das regras.
 
 **Depois, somente mediante decisão de escopo:** SRD 5.2/regras de 2024, grid hexagonal e migração da voz para SFU/vídeo. Restam também duas validações que dependem do usuário: áudio de voz em dois navegadores reais e tornar ou não o repositório público.
 
@@ -121,7 +120,7 @@ Legenda: **P0** essencial (MVP) · **P1** importante · **P2** desejável. Estim
 | ID | Item | Pri | Est | Critério de aceite |
 |---|---|---|---|---|
 | ✅ F0-1 | `ng new` (standalone, zoneless, SCSS, strict) | P0 | S | Build e serve rodam |
-| 🟡 F0-2 | ESLint + Prettier + hook de commit | P0 | S | `npm run lint` limpo |
+| ✅ F0-2 | ESLint + Prettier + hook de commit | P0 | S | `npm run lint` limpo |
 | ✅ F0-3 | Estrutura de pastas + aliases de path (`@core`, `@features`) | P0 | S | Imports por alias funcionam |
 | ✅ F0-4 | Design tokens (cores, espaçamento, tipografia, tema escuro) | P1 | M | Tokens em CSS vars, sem cores hardcoded |
 | ✅ F0-5 | CI (GitHub Actions: lint + test + build) | P0 | S | PR falha se algo quebrar |

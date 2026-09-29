@@ -1,0 +1,12 @@
+#!/usr/bin/env node
+const { spawnSync } = require('node:child_process');
+
+for (const script of ['format:check', 'lint']) {
+  const windows = process.platform === 'win32';
+  const result = spawnSync(
+    windows ? (process.env.ComSpec ?? 'cmd.exe') : 'npm',
+    windows ? ['/d', '/s', '/c', `npm run ${script}`] : ['run', script],
+    { stdio: 'inherit' },
+  );
+  if (result.status !== 0) process.exit(result.status ?? 1);
+}

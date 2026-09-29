@@ -58,14 +58,15 @@ npm start          # http://localhost:4200
 npm run test:ci    # testes (Vitest)
 npm run lint
 npm run build
+npm run e2e
 ```
+
+O `npm install` ativa o hook de pre-commit versionado, que verifica Prettier e ESLint.
 
 Multiplayer: abra `/mesa`, clique em "Criar sala" e passe o código; outros abrem `/mesa` e entram. Deploy: Vercel a partir da `main` (`vercel.json` com rewrite SPA).
 
 ## Limitações conhecidas
 
 - Áudio de voz depende de microfone/permissão e de rede que permita WebRTC.
-- A sessão é persistida localmente, mas ainda não há exportação para arquivo.
-- Os E2E atuais cobrem os fluxos críticos como smoke; a suíte detalhada está nas regras puras.
 
 Conteúdo baseado no SRD 5.1 da Wizards of the Coast, licenciado sob CC-BY-4.0.

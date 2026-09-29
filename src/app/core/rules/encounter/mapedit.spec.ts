@@ -1,7 +1,7 @@
 import { Creature } from '../../models/creature';
 import { newCreature } from '../../models/creature-factory';
 import { EncounterState, Role } from '../../models/encounter';
-import { GridMap, mapFromAscii, PlacedItem, Room, Trap } from '../../models/grid';
+import { GridMap, MapObject, mapFromAscii, PlacedItem, Room, Trap } from '../../models/grid';
 import { RuleError } from '../creature';
 import { Command, dispatch, ForbiddenError, newEncounter, project, tokenOf } from './index';
 
@@ -51,6 +51,16 @@ const trap = (over: Partial<Trap> = {}): Trap => ({
   damageType: 'piercing',
   hidden: true,
   triggered: false,
+  ...over,
+});
+const mapObject = (over: Partial<MapObject> = {}): MapObject => ({
+  id: 'object-1',
+  kind: 'table',
+  pos: { x: 2, y: 0 },
+  rotation: 0,
+  texture: 'wood',
+  blocksMovement: true,
+  blocksSight: true,
   ...over,
 });
 
@@ -145,6 +155,73 @@ describe('criaturas e itens posicionados', () => {
       hidden: true,
     });
     expect(project(s, player).creatures.some((creature) => creature.id === 'npc')).toBe(false);
+  });
+});
+
+describe('objetos de mapa', () => {
+  const player: Role = { kind: 'player', owns: ['hero'] };
+
+  it('bloqueia movimento e visão conforme configurado', () => {
+    let s = run(scene(['.....']), { type: 'upsertMapObject', object: mapObject() });
+    expect(() => run(s, { type: 'move', actorId: 'hero', to: { x: 3, y: 0 } })).toThrow(/alcance/);
+    s = run(s, { type: 'setVision', vision: { enabled: true, darkness: false } });
+    const view = project(s, player);
+    expect(view.map.objects).toEqual([mapObject()]);
+    expect(view.map.cells[4]).toBe('unknown');
+
+    s = run(s, {
+      type: 'upsertMapObject',
+      object: mapObject({ blocksMovement: false, blocksSight: false }),
+    });
+    expect(
+      tokenOf(run(s, { type: 'move', actorId: 'hero', to: { x: 3, y: 0 } }), 'hero')?.pos,
+    ).toEqual({
+      x: 3,
+      y: 0,
+    });
+  });
+
+  it('some sob névoa e não pode ocupar parede, criatura ou outro objeto', () => {
+    let s = run(scene(), { type: 'upsertMapObject', object: mapObject() });
+    s = run(s, { type: 'setFog', cells: [mapObject().pos], hidden: true });
+    expect(project(s, player).map.objects).toEqual([]);
+    expect(() =>
+      run(s, { type: 'upsertMapObject', object: mapObject({ id: 'object-2' }) }),
+    ).toThrow(/objeto/);
+    expect(() =>
+      run(s, { type: 'upsertMapObject', object: mapObject({ pos: { x: 0, y: 0 } }) }),
+    ).toThrow(/criatura/);
+    expect(() =>
+      run(scene(['.#.....', '.......']), {
+        type: 'upsertMapObject',
+        object: mapObject({ pos: { x: 1, y: 0 } }),
+      }),
+    ).toThrow(/piso/);
+  });
+
+  it('valida material e rotação no limite de confiança', () => {
+    expect(() =>
+      run(scene(), {
+        type: 'upsertMapObject',
+        object: mapObject({ rotation: 12 }),
+      }),
+    ).toThrow(/inválido/);
+    expect(() =>
+      run(scene(), {
+        type: 'upsertMapObject',
+        object: mapObject({ texture: 'glass' as MapObject['texture'] }),
+      }),
+    ).toThrow(/inválido/);
+  });
+
+  it('completa material e rotação de objetos legados ao editá-los', () => {
+    const legacy = {
+      ...mapObject(),
+      rotation: undefined,
+      texture: undefined,
+    } as unknown as MapObject;
+    const s = run(scene(), { type: 'upsertMapObject', object: legacy });
+    expect(s.map.objects?.[0]).toMatchObject({ rotation: 0, texture: 'wood' });
   });
 });
 

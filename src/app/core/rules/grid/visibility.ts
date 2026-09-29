@@ -1,12 +1,10 @@
-import { GridMap, IMPASSABLE, Pos, terrainAt } from '../../models/grid';
+import { blocksSightAt, GridMap, Pos } from '../../models/grid';
 
 export interface VisionSource {
   pos: Pos;
   /** Alcance em pés; `Infinity` representa um mapa iluminado. */
   rangeFt: number;
 }
-
-const opaque = (map: GridMap, pos: Pos): boolean => IMPASSABLE.includes(terrainAt(map, pos));
 
 /** Células visíveis pelos centros indicados, bloqueadas por paredes e portas fechadas. */
 export function visibleCells(map: GridMap, sources: VisionSource[]): Set<number> {
@@ -36,7 +34,7 @@ export function hasLineOfSight(map: GridMap, from: Pos, to: Pos): boolean {
       y: Math.floor(from.y + 0.5 + (dy * i) / steps),
     };
     if (pos.x === to.x && pos.y === to.y) continue;
-    if (opaque(map, pos)) return false;
+    if (blocksSightAt(map, pos)) return false;
   }
   return true;
 }

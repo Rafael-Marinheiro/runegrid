@@ -11,6 +11,11 @@ import {
   blankMap,
   IMPASSABLE,
   MapBackground,
+  MapObject,
+  MapObjectKind,
+  MAP_OBJECT_KINDS,
+  MapObjectTexture,
+  MAP_OBJECT_TEXTURES,
   MapVision,
   PlacedItem,
   Portal,
@@ -27,6 +32,12 @@ import { monsterToCreature } from '@core/rules/srd/convert';
 import { monsterNamePt } from '@core/rules/srd/names-pt';
 import { exportFoundryScene, importFoundryScene } from '@core/rules/vtt/foundry';
 import { MapView, TokenView } from '@features/combat/map-view';
+import {
+  MAP_OBJECT_ART,
+  MAP_OBJECT_GROUPS,
+  MAP_OBJECT_TEXTURE_LABEL,
+  MapObjectGroup,
+} from '@features/combat/map-object-art';
 import { iconFor, tokenImageFor } from '@features/combat/token-icons';
 import { SceneSuggestion, suggestSceneText } from '@net/ai-text';
 import { UiPrefs } from '@state/ui-prefs';
@@ -43,6 +54,7 @@ type Tool =
   | { kind: 'portal' }
   | { kind: 'creature' }
   | { kind: 'item' }
+  | { kind: 'object' }
   | { kind: 'fog'; hidden: boolean };
 
 interface ToolButton {
@@ -65,6 +77,7 @@ const TOOLS: ToolButton[] = [
   { id: 'portal', label: 'Portal', tool: { kind: 'portal' } },
   { id: 'creature', label: 'Criatura', tool: { kind: 'creature' } },
   { id: 'item', label: 'Item', tool: { kind: 'item' } },
+  { id: 'object', label: 'Objeto', tool: { kind: 'object' } },
   { id: 'fog-on', label: 'Ocultar', tool: { kind: 'fog', hidden: true } },
   { id: 'fog-off', label: 'Revelar', tool: { kind: 'fog', hidden: false } },
 ];
@@ -83,6 +96,10 @@ export class StudioPage implements OnInit {
   protected readonly party = inject(PartyStore);
   protected readonly srd = inject(SrdStore);
   protected readonly catalog = CATALOG;
+  protected readonly objectKinds = MAP_OBJECT_KINDS;
+  protected readonly objectTextures = MAP_OBJECT_TEXTURES;
+  protected readonly objectGroups = MAP_OBJECT_GROUPS;
+  protected readonly objectAngles = [0, 45, 90, 135, 180, 225, 270, 315] as const;
   protected readonly textures = TEXTURES;
   protected readonly textureLabel: Record<Texture, string> = {
     none: 'Sem textura',
@@ -106,9 +123,15 @@ export class StudioPage implements OnInit {
   protected readonly selectedTrapId = signal<string | null>(null);
   protected readonly selectedPortalId = signal<string | null>(null);
   protected readonly selectedCreatureId = signal<string | null>(null);
+  protected readonly selectedObjectId = signal<string | null>(null);
   protected readonly creatureSource = signal(`party:${this.party.creatures()[0]?.id ?? ''}`);
   protected readonly itemRef = signal(CATALOG[0].id);
   protected readonly placementHidden = signal(true);
+  protected readonly objectKind = signal<MapObjectKind>('table');
+  protected readonly objectTexture = signal<MapObjectTexture>('wood');
+  protected readonly objectRotation = signal(0);
+  protected readonly objectBlocksMovement = signal(true);
+  protected readonly objectBlocksSight = signal(false);
   protected readonly suggesting = signal(false);
   protected readonly aiSuggestion = signal<(SceneSuggestion & { roomId?: string }) | null>(null);
   protected readonly message = signal('');
@@ -128,10 +151,27 @@ export class StudioPage implements OnInit {
       portal: 'Portal',
       creature: 'Creature',
       item: 'Item',
+      object: 'Object',
       'fog-on': 'Hide',
       'fog-off': 'Reveal',
     };
     return this.ui.locale() === 'en' ? labels[tool.id] : tool.label;
+  }
+
+  protected objectName(kind: MapObjectKind): string {
+    return this.ui.text(...MAP_OBJECT_ART[kind].label);
+  }
+
+  protected objectKindsIn(group: MapObjectGroup): readonly MapObjectKind[] {
+    return MAP_OBJECT_KINDS.filter((kind) => MAP_OBJECT_ART[kind].group === group);
+  }
+
+  protected objectGroupName(group: (typeof MAP_OBJECT_GROUPS)[number]): string {
+    return this.ui.text(...group.label);
+  }
+
+  protected objectTextureName(texture: MapObjectTexture): string {
+    return this.ui.text(...MAP_OBJECT_TEXTURE_LABEL[texture]);
   }
 
   protected textureName(texture: Texture): string {
@@ -196,6 +236,9 @@ export class StudioPage implements OnInit {
     return creature && token ? { creature, token } : undefined;
   });
   protected readonly placedItems = computed(() => this.state().map.items ?? []);
+  protected readonly selectedObject = computed(() =>
+    (this.state().map.objects ?? []).find((object) => object.id === this.selectedObjectId()),
+  );
 
   protected readonly tokens = computed<TokenView[]>(() => {
     const s = this.shown();
@@ -246,6 +289,7 @@ export class StudioPage implements OnInit {
     else if (t.kind === 'portal') this.addPortal(pos);
     else if (t.kind === 'creature') this.addCreature(pos);
     else if (t.kind === 'item') this.addItem(pos);
+    else if (t.kind === 'object') this.addMapObject(pos);
     else this.inspect(pos);
   }
 
@@ -369,6 +413,52 @@ export class StudioPage implements OnInit {
     this.send({ type: 'upsertItem', item });
   }
 
+  protected setObjectKind(value: string): void {
+    if (!MAP_OBJECT_KINDS.includes(value as MapObjectKind)) return;
+    const kind = value as MapObjectKind;
+    const defaults = MAP_OBJECT_ART[kind].defaults;
+    this.objectKind.set(kind);
+    this.objectTexture.set(defaults.texture);
+    this.objectBlocksMovement.set(defaults.blocksMovement);
+    this.objectBlocksSight.set(defaults.blocksSight);
+  }
+
+  protected setObjectTexture(value: string): void {
+    if (MAP_OBJECT_TEXTURES.includes(value as MapObjectTexture))
+      this.objectTexture.set(value as MapObjectTexture);
+  }
+
+  protected setObjectRotation(value: string): void {
+    const rotation = Number(value);
+    if (this.objectAngles.includes(rotation as (typeof this.objectAngles)[number]))
+      this.objectRotation.set(rotation);
+  }
+
+  protected editSelectedObjectKind(value: string): void {
+    if (!MAP_OBJECT_KINDS.includes(value as MapObjectKind)) return;
+    const kind = value as MapObjectKind;
+    this.editMapObject({ kind, ...MAP_OBJECT_ART[kind].defaults });
+  }
+
+  protected editSelectedObjectRotation(value: string): void {
+    const rotation = Number(value);
+    if (this.objectAngles.includes(rotation as (typeof this.objectAngles)[number]))
+      this.editMapObject({ rotation });
+  }
+
+  private addMapObject(pos: Pos): void {
+    const object: MapObject = {
+      id: crypto.randomUUID(),
+      kind: this.objectKind(),
+      pos,
+      rotation: this.objectRotation(),
+      texture: this.objectTexture(),
+      blocksMovement: this.objectBlocksMovement(),
+      blocksSight: this.objectBlocksSight(),
+    };
+    if (this.send({ type: 'upsertMapObject', object })) this.selectMapObject(object.id);
+  }
+
   protected moveToken(event: { id: string; pos: Pos }): void {
     if (this.editable() && !this.asPlayer())
       this.send({ type: 'placeToken', id: event.id, pos: event.pos });
@@ -379,6 +469,41 @@ export class StudioPage implements OnInit {
     this.selectedRoomId.set(null);
     this.selectedTrapId.set(null);
     this.selectedPortalId.set(null);
+    this.selectedObjectId.set(null);
+  }
+
+  protected selectMapObject(id: string): void {
+    this.selectedObjectId.set(id);
+    this.selectedCreatureId.set(null);
+    this.selectedRoomId.set(null);
+    this.selectedTrapId.set(null);
+    this.selectedPortalId.set(null);
+  }
+
+  protected moveMapObject(event: { id: string; pos: Pos }): void {
+    const object = (this.state().map.objects ?? []).find((item) => item.id === event.id);
+    if (object && this.editable() && !this.asPlayer())
+      this.send({ type: 'upsertMapObject', object: { ...object, pos: event.pos } });
+  }
+
+  protected nudgeMapObject(event: { id: string; dx: number; dy: number }): void {
+    const object = (this.state().map.objects ?? []).find((item) => item.id === event.id);
+    if (object)
+      this.moveMapObject({
+        id: object.id,
+        pos: { x: object.pos.x + event.dx, y: object.pos.y + event.dy },
+      });
+  }
+
+  protected editMapObject(changes: Partial<MapObject>): void {
+    const object = this.selectedObject();
+    if (object) this.send({ type: 'upsertMapObject', object: { ...object, ...changes } });
+  }
+
+  protected removeMapObject(): void {
+    const object = this.selectedObject();
+    if (object && this.send({ type: 'removeMapObject', id: object.id }))
+      this.selectedObjectId.set(null);
   }
 
   protected setCreatureHidden(hidden: boolean): void {
@@ -403,6 +528,9 @@ export class StudioPage implements OnInit {
   private inspect(pos: Pos): void {
     const trap = this.traps().find((t) => t.pos.x === pos.x && t.pos.y === pos.y);
     const portal = this.portals().find((item) => item.pos.x === pos.x && item.pos.y === pos.y);
+    const object = (this.state().map.objects ?? []).find(
+      (item) => item.pos.x === pos.x && item.pos.y === pos.y,
+    );
     const room = this.rooms().find(
       (r) => pos.x >= r.x && pos.x < r.x + r.w && pos.y >= r.y && pos.y < r.y + r.h,
     );
@@ -410,6 +538,7 @@ export class StudioPage implements OnInit {
     this.selectedPortalId.set(portal?.id ?? null);
     this.selectedRoomId.set(room?.id ?? null);
     this.selectedCreatureId.set(null);
+    this.selectedObjectId.set(object?.id ?? null);
   }
 
   private send(cmd: Parameters<EncounterStore['send']>[0]): boolean {
@@ -497,6 +626,7 @@ export class StudioPage implements OnInit {
     this.selectedTrapId.set(null);
     this.selectedPortalId.set(null);
     this.selectedCreatureId.set(null);
+    this.selectedObjectId.set(null);
   }
 
   protected damageType(value: string): DamageType {

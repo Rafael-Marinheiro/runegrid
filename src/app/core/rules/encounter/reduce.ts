@@ -6,7 +6,7 @@ import {
   RolledDie,
   TurnState,
 } from '../../models/encounter';
-import { inBounds, isMapBackground, Pos } from '../../models/grid';
+import { isMapBackground, Pos } from '../../models/grid';
 import {
   applyDamage,
   heal,
@@ -24,7 +24,7 @@ import {
   skillBonus,
 } from '../creature';
 import { AdvMode, criticalExpr, parseDice, roll, rollD20, Rng } from '../dice';
-import { canStand, distanceFt, findPath, footprint, key, MoveQuery } from '../grid/movement';
+import { canStand, distanceFt, findPath, footprint, MoveQuery } from '../grid/movement';
 import { hasLineOfSight } from '../grid/visibility';
 import { consume, itemDef } from '../inventory/inventory';
 import { cast } from './cast';
@@ -35,6 +35,7 @@ import {
   paint,
   removeRoom,
   removeItem,
+  removeMapObject,
   removeTrap,
   revealRoom,
   setFog,
@@ -42,6 +43,7 @@ import {
   triggerTrap,
   upsertRoom,
   upsertItem,
+  upsertMapObject,
   upsertTrap,
 } from './mapedit';
 import { Command, PLAYER_COMMANDS } from './commands';
@@ -124,13 +126,7 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       };
     }
     case 'setTerrain': {
-      if (!inBounds(state.map, cmd.pos)) throw new RuleError('Fora do mapa.');
-      if (cmd.terrain === 'wall' && occupiedCells(state).has(key(cmd.pos))) {
-        throw new RuleError('Há uma criatura nessa célula.');
-      }
-      const cells = [...state.map.cells];
-      cells[cmd.pos.y * state.map.width + cmd.pos.x] = cmd.terrain;
-      return { ...state, map: { ...state.map, cells } };
+      return paint(state, [cmd.pos], cmd.terrain);
     }
     case 'paint':
       return paint(state, cmd.cells, cmd.terrain);
@@ -173,6 +169,10 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       return upsertItem(state, cmd.item);
     case 'removeItem':
       return removeItem(state, cmd.id);
+    case 'upsertMapObject':
+      return upsertMapObject(state, cmd.object);
+    case 'removeMapObject':
+      return removeMapObject(state, cmd.id);
     case 'openDoor':
       return openDoor(state, cmd.actorId, cmd.pos);
     case 'rollInitiative':

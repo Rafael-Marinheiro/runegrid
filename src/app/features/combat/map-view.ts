@@ -9,8 +9,9 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { GridMap, Pos, Room, Trap } from '@core/models/grid';
+import { GridMap, MapObject, MapObjectTexture, Pos, Room, Trap } from '@core/models/grid';
 import { UiPrefs } from '@state/ui-prefs';
+import { MAP_OBJECT_ART, MAP_OBJECT_TEXTURE_LABEL } from './map-object-art';
 import { ICON_PATH, IconId } from './token-icons';
 
 export const CELL = 48;
@@ -46,6 +47,7 @@ export type AreaPreview =
 
 interface Drag {
   id: string;
+  kind: 'token' | 'object';
   size: number;
   /** Centro do token, em unidades do SVG. */
   cx: number;
@@ -95,6 +97,7 @@ export class MapView {
   readonly rooms = input<Room[]>([]);
   readonly traps = input<Trap[]>([]);
   readonly selectedRoom = input<string | null>(null);
+  readonly selectedObject = input<string | null>(null);
   /** Retângulo sendo desenhado (sala). */
   readonly draft = input<{ a: Pos; b: Pos } | null>(null);
   /** Alto contraste: sem texturas e com anéis mais grossos. */
@@ -111,6 +114,9 @@ export class MapView {
   readonly tokenClick = output<string>();
   readonly tokenMove = output<{ id: string; pos: Pos }>();
   readonly tokenNudge = output<{ id: string; dx: number; dy: number }>();
+  readonly objectClick = output<string>();
+  readonly objectMove = output<{ id: string; pos: Pos }>();
+  readonly objectNudge = output<{ id: string; dx: number; dy: number }>();
   /** Célula sob o cursor (null ao sair do mapa). */
   readonly cellHover = output<Pos | null>();
   readonly strokeStart = output<Pos>();
@@ -119,6 +125,7 @@ export class MapView {
 
   protected readonly C = CELL;
   protected readonly iconPath = ICON_PATH;
+  protected readonly objectArt = MAP_OBJECT_ART;
   protected readonly texture = computed(() =>
     this.highContrast() ? 'none' : (this.map().texture ?? 'none'),
   );
@@ -207,9 +214,34 @@ export class MapView {
   /** Posição de desenho do token (acompanha o dedo/mouse durante o arrasto). */
   protected place(t: TokenView): { x: number; y: number } {
     const d = this.drag();
-    if (d?.id === t.id && d.moved)
+    if (d?.kind === 'token' && d.id === t.id && d.moved)
       return { x: d.cx - (t.size * CELL) / 2, y: d.cy - (t.size * CELL) / 2 };
     return { x: t.pos.x * CELL, y: t.pos.y * CELL };
+  }
+
+  protected placeObject(object: MapObject): { x: number; y: number } {
+    const d = this.drag();
+    if (d?.kind === 'object' && d.id === object.id && d.moved)
+      return { x: d.cx - CELL / 2, y: d.cy - CELL / 2 };
+    return { x: object.pos.x * CELL, y: object.pos.y * CELL };
+  }
+
+  protected objectLabel(object: MapObject): string {
+    const name = MAP_OBJECT_ART[object.kind].label;
+    const material = MAP_OBJECT_TEXTURE_LABEL[this.objectTexture(object)];
+    const rotation = this.objectRotation(object);
+    return this.ui.text(
+      `${name[0]}, ${material[0].toLowerCase()}, orientação ${rotation} graus, coluna ${object.pos.x + 1}, linha ${object.pos.y + 1}.`,
+      `${name[1]}, ${material[1].toLowerCase()}, ${rotation} degree orientation, column ${object.pos.x + 1}, row ${object.pos.y + 1}.`,
+    );
+  }
+
+  protected objectTexture(object: MapObject): MapObjectTexture {
+    return object.texture ?? MAP_OBJECT_ART[object.kind].defaults.texture;
+  }
+
+  protected objectRotation(object: MapObject): number {
+    return object.rotation ?? 0;
   }
 
   protected label(t: TokenView): string {
@@ -263,7 +295,10 @@ export class MapView {
   protected onPointerDown(e: PointerEvent): void {
     if (e.button !== 0 && !(e.button === 1 && this.paintMode())) return;
     const p = this.toSvg(e);
-    const el = (e.target as Element).closest<SVGGElement>('[data-token]');
+    const tokenEl = (e.target as Element).closest<SVGGElement>('[data-token]');
+    const objectEl = this.paintMode()
+      ? (e.target as Element).closest<SVGGElement>('[data-object]')
+      : null;
     this.svg().nativeElement.setPointerCapture(e.pointerId);
     if (e.pointerType === 'touch') {
       this.touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -278,18 +313,36 @@ export class MapView {
         return;
       }
     }
-    if (el) {
-      const t = this.tokens().find((x) => x.id === el.dataset['token']);
+    if (tokenEl) {
+      const t = this.tokens().find((x) => x.id === tokenEl.dataset['token']);
       if (!t) return;
       const cx = t.pos.x * CELL + (t.size * CELL) / 2;
       const cy = t.pos.y * CELL + (t.size * CELL) / 2;
       this.drag.set({
         id: t.id,
+        kind: 'token',
         size: t.size,
         cx,
         cy,
         offX: p.x - cx,
         offY: p.y - cy,
+        startX: e.clientX,
+        startY: e.clientY,
+        moved: false,
+      });
+    } else if (objectEl) {
+      const object = (this.map().objects ?? []).find(
+        (item) => item.id === objectEl.dataset['object'],
+      );
+      if (!object) return;
+      this.drag.set({
+        id: object.id,
+        kind: 'object',
+        size: 1,
+        cx: (object.pos.x + 0.5) * CELL,
+        cy: (object.pos.y + 0.5) * CELL,
+        offX: p.x - (object.pos.x + 0.5) * CELL,
+        offY: p.y - (object.pos.y + 0.5) * CELL,
         startX: e.clientX,
         startY: e.clientY,
         moved: false,
@@ -367,14 +420,16 @@ export class MapView {
     const d = this.drag();
     if (d) {
       this.drag.set(null);
-      if (!d.moved) return void this.tokenClick.emit(d.id);
-      this.tokenMove.emit({
+      if (!d.moved)
+        return void (d.kind === 'token' ? this.tokenClick : this.objectClick).emit(d.id);
+      const moved = {
         id: d.id,
         pos: {
           x: Math.round((d.cx - (d.size * CELL) / 2) / CELL),
           y: Math.round((d.cy - (d.size * CELL) / 2) / CELL),
         },
-      });
+      };
+      (d.kind === 'token' ? this.tokenMove : this.objectMove).emit(moved);
       return;
     }
     if (this.stroking) {
@@ -474,6 +529,23 @@ export class MapView {
     } else if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       this.tokenClick.emit(t.id);
+    }
+  }
+
+  protected onObjectKey(e: KeyboardEvent, object: MapObject): void {
+    const dir: Record<string, [number, number]> = {
+      ArrowUp: [0, -1],
+      ArrowDown: [0, 1],
+      ArrowLeft: [-1, 0],
+      ArrowRight: [1, 0],
+    };
+    const d = dir[e.key];
+    if (d) {
+      e.preventDefault();
+      this.objectNudge.emit({ id: object.id, dx: d[0], dy: d[1] });
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      this.objectClick.emit(object.id);
     }
   }
 }

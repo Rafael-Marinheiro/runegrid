@@ -1,9 +1,9 @@
 import {
+  blocksMovementAt,
   CELL_FT,
   DIFFICULT,
   DiagonalRule,
   GridMap,
-  IMPASSABLE,
   inBounds,
   Pos,
   terrainAt,
@@ -66,12 +66,12 @@ export function canStand(
   blocked: ReadonlySet<string>,
 ): boolean {
   return footprint(p, size).every(
-    (c) => inBounds(map, c) && !IMPASSABLE.includes(terrainAt(map, c)) && !blocked.has(key(c)),
+    (c) => inBounds(map, c) && !blocksMovementAt(map, c) && !blocked.has(key(c)),
   );
 }
 
 const noWalls = (map: GridMap, p: Pos, size: number): boolean =>
-  footprint(p, size).every((c) => inBounds(map, c) && !IMPASSABLE.includes(terrainAt(map, c)));
+  footprint(p, size).every((c) => inBounds(map, c) && !blocksMovementAt(map, c));
 
 const isDifficult = (map: GridMap, p: Pos, size: number): boolean =>
   footprint(p, size).some((c) => DIFFICULT.includes(terrainAt(map, c)));

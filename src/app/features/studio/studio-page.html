@@ -78,6 +78,7 @@
       [rooms]="st.map.rooms ?? []"
       [traps]="st.map.traps ?? []"
       [selectedRoom]="selectedRoomId()"
+      [selectedObject]="selectedObjectId()"
       [draft]="draft()"
       (strokeStart)="onStart($event)"
       (strokeMove)="onMove($event)"
@@ -85,6 +86,9 @@
       (cellClick)="onStart($event)"
       (tokenClick)="selectCreature($event)"
       (tokenMove)="moveToken($event)"
+      (objectClick)="selectMapObject($event)"
+      (objectMove)="moveMapObject($event)"
+      (objectNudge)="nudgeMapObject($event)"
     />
     <p class="legend">
       <span><i class="sw fog"></i> {{ ui.text('névoa (só o Mestre vê)', 'fog (GM only)') }}</span>
@@ -92,6 +96,7 @@
       <span><i class="sw room"></i> {{ ui.text('sala', 'room') }}</span>
       <span><i class="sw portal"></i> {{ ui.text('portal', 'portal') }}</span>
       <span><i class="sw item"></i> {{ ui.text('item', 'item') }}</span>
+      <span><i class="sw object"></i> {{ ui.text('objeto', 'object') }}</span>
     </p>
   </section>
 
@@ -114,6 +119,81 @@
         </label>
         <button type="button" class="danger" [disabled]="!editable()" (click)="removeCreature()">
           {{ ui.text('Remover criatura', 'Remove creature') }}
+        </button>
+      </section>
+    }
+
+    @if (selectedObject(); as object) {
+      <section class="panel" [attr.aria-label]="ui.text('Objeto selecionado', 'Selected object')">
+        <h2>{{ objectName(object.kind) }}</h2>
+        <label class="field">
+          {{ ui.text('Tipo', 'Type') }}
+          <select
+            #selectedObjectKind
+            [disabled]="!editable()"
+            (change)="editSelectedObjectKind(selectedObjectKind.value)"
+          >
+            @for (group of objectGroups; track group.id) {
+              <optgroup [label]="objectGroupName(group)">
+                @for (kind of objectKindsIn(group.id); track kind) {
+                  <option [value]="kind" [selected]="kind === object.kind">
+                    {{ objectName(kind) }}
+                  </option>
+                }
+              </optgroup>
+            }
+          </select>
+        </label>
+        <div class="two">
+          <label class="field">
+            {{ ui.text('Material', 'Material') }}
+            <select
+              #selectedObjectTexture
+              [disabled]="!editable()"
+              (change)="editMapObject({ texture: $any(selectedObjectTexture.value) })"
+            >
+              @for (texture of objectTextures; track texture) {
+                <option [value]="texture" [selected]="texture === object.texture">
+                  {{ objectTextureName(texture) }}
+                </option>
+              }
+            </select>
+          </label>
+          <label class="field">
+            {{ ui.text('Orientação', 'Orientation') }}
+            <select
+              #selectedObjectRotation
+              [disabled]="!editable()"
+              (change)="editSelectedObjectRotation(selectedObjectRotation.value)"
+            >
+              @for (angle of objectAngles; track angle) {
+                <option [value]="angle" [selected]="angle === object.rotation">{{ angle }}°</option>
+              }
+            </select>
+          </label>
+        </div>
+        <label class="check">
+          <input
+            #selectedBlocksMovement
+            type="checkbox"
+            [checked]="object.blocksMovement"
+            [disabled]="!editable()"
+            (change)="editMapObject({ blocksMovement: selectedBlocksMovement.checked })"
+          />
+          {{ ui.text('Bloqueia movimento', 'Blocks movement') }}
+        </label>
+        <label class="check">
+          <input
+            #selectedBlocksSight
+            type="checkbox"
+            [checked]="object.blocksSight"
+            [disabled]="!editable()"
+            (change)="editMapObject({ blocksSight: selectedBlocksSight.checked })"
+          />
+          {{ ui.text('Bloqueia linha de visão', 'Blocks line of sight') }}
+        </label>
+        <button type="button" class="danger" [disabled]="!editable()" (click)="removeMapObject()">
+          {{ ui.text('Remover objeto', 'Remove object') }}
         </button>
       </section>
     }
@@ -352,6 +432,71 @@
           }
         </select>
       </label>
+      <label class="field">
+        {{ ui.text('Objeto de cenário', 'Scenery object') }}
+        <select
+          #objectSelect
+          [value]="objectKind()"
+          [disabled]="!editable()"
+          (change)="setObjectKind(objectSelect.value)"
+        >
+          @for (group of objectGroups; track group.id) {
+            <optgroup [label]="objectGroupName(group)">
+              @for (kind of objectKindsIn(group.id); track kind) {
+                <option [value]="kind">{{ objectName(kind) }}</option>
+              }
+            </optgroup>
+          }
+        </select>
+      </label>
+      <div class="two">
+        <label class="field">
+          {{ ui.text('Material', 'Material') }}
+          <select
+            #objectTextureSelect
+            [value]="objectTexture()"
+            [disabled]="!editable()"
+            (change)="setObjectTexture(objectTextureSelect.value)"
+          >
+            @for (texture of objectTextures; track texture) {
+              <option [value]="texture">{{ objectTextureName(texture) }}</option>
+            }
+          </select>
+        </label>
+        <label class="field">
+          {{ ui.text('Orientação', 'Orientation') }}
+          <select
+            #objectRotationSelect
+            [value]="objectRotation()"
+            [disabled]="!editable()"
+            (change)="setObjectRotation(objectRotationSelect.value)"
+          >
+            @for (angle of objectAngles; track angle) {
+              <option [value]="angle">{{ angle }}°</option>
+            }
+          </select>
+        </label>
+      </div>
+      <label class="check">
+        <input
+          #blocksMovement
+          type="checkbox"
+          [checked]="objectBlocksMovement()"
+          [disabled]="!editable()"
+          (change)="objectBlocksMovement.set(blocksMovement.checked)"
+        />
+        {{ ui.text('Bloqueia movimento', 'Blocks movement') }}
+      </label>
+      <label class="check">
+        <input
+          #blocksSight
+          type="checkbox"
+          [checked]="objectBlocksSight()"
+          [disabled]="!editable()"
+          (change)="objectBlocksSight.set(blocksSight.checked)"
+        />
+        {{ ui.text('Bloqueia linha de visão', 'Blocks line of sight') }}
+      </label>
       <label class="check">
         <input
           #placementSecret
@@ -365,8 +510,8 @@
       <p class="hint">
         {{
           ui.text(
-            'Escolha a ferramenta Criatura ou Item e clique na célula de destino.',
-            'Choose the Creature or Item tool and click the target cell.'
+            'Escolha a ferramenta Criatura, Item ou Objeto e clique na célula de destino.',
+            'Choose the Creature, Item, or Object tool and click the target cell.'
           )
         }}
       </p>

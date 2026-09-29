@@ -62,6 +62,31 @@
         <path d="M0 24h96M0 48h96M0 72h96M28 0v24M68 24v24M40 48v24M78 72v24" class="tx-wood" />
         <path d="M8 12c8-8 16 8 24 0M50 60c8-8 16 8 24 0" class="tx-wood grain" />
       </pattern>
+      <pattern id="object-wood" width="10" height="10" patternUnits="userSpaceOnUse">
+        <rect width="10" height="10" class="object-wood-base" />
+        <path d="M0 2h10M0 7h10M3 2v5M8 7v3" class="object-texture-line" />
+      </pattern>
+      <pattern id="object-stone" width="12" height="12" patternUnits="userSpaceOnUse">
+        <rect width="12" height="12" class="object-stone-base" />
+        <path d="M0 4h7l2 3h3M3 12V8M9 0v4" class="object-texture-line" />
+      </pattern>
+      <pattern id="object-metal" width="8" height="8" patternUnits="userSpaceOnUse">
+        <rect width="8" height="8" class="object-metal-base" />
+        <path d="M-2 8L8-2M2 10L10 2" class="object-texture-line" />
+      </pattern>
+      <pattern id="object-fabric" width="8" height="8" patternUnits="userSpaceOnUse">
+        <rect width="8" height="8" class="object-fabric-base" />
+        <path d="M0 0l8 8M8 0L0 8" class="object-texture-line fine" />
+      </pattern>
+      <pattern id="object-foliage" width="12" height="12" patternUnits="userSpaceOnUse">
+        <rect width="12" height="12" class="object-foliage-base" />
+        <path d="M1 7c2-5 5-5 6 0 2-4 4-3 4 1M4 2l4 8" class="object-texture-line" />
+      </pattern>
+      <pattern id="object-earth" width="10" height="10" patternUnits="userSpaceOnUse">
+        <rect width="10" height="10" class="object-earth-base" />
+        <circle cx="2" cy="3" r="1" class="object-texture-dot" />
+        <circle cx="8" cy="7" r="1.3" class="object-texture-dot" />
+      </pattern>
     </defs>
     <rect [attr.width]="width()" [attr.height]="height()" class="bg" />
     @if (map().background; as image) {
@@ -286,6 +311,37 @@
         <text [attr.x]="pg.pos.x * C + C / 2" [attr.y]="pg.pos.y * C - 4" text-anchor="middle">
           {{ pg.from }}
         </text>
+      </g>
+    }
+
+    @for (object of map().objects ?? []; track object.id) {
+      <g
+        class="map-object"
+        [class.sel]="object.id === selectedObject()"
+        [class.blocking]="object.blocksMovement || object.blocksSight"
+        [attr.transform]="'translate(' + placeObject(object).x + ' ' + placeObject(object).y + ')'"
+        [attr.data-object]="object.id"
+        [attr.tabindex]="paintMode() ? 0 : null"
+        [attr.role]="paintMode() ? 'button' : 'img'"
+        [attr.aria-label]="objectLabel(object)"
+        (keydown)="onObjectKey($event, object)"
+      >
+        <g [attr.transform]="'rotate(' + objectRotation(object) + ' 24 24)'">
+          <rect
+            class="object-body"
+            x="5"
+            y="5"
+            width="38"
+            height="38"
+            rx="6"
+            [attr.fill]="'url(#object-' + objectTexture(object) + ')'"
+          />
+          <path
+            class="object-icon"
+            [attr.d]="objectArt[object.kind].icon"
+            transform="translate(7 7) scale(1.42)"
+          />
+        </g>
       </g>
     }
 

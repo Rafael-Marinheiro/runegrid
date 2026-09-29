@@ -87,6 +87,7 @@ export function project(state: EncounterState, role: Role): EncounterState {
       rooms: openRooms,
       traps: (map.traps ?? []).filter((t) => !t.hidden || t.triggered),
       items: (map.items ?? []).filter((item) => !item.hidden && !fogged(item.pos.x, item.pos.y)),
+      objects: (map.objects ?? []).filter((object) => !fogged(object.pos.x, object.pos.y)),
     },
     combat: {
       ...state.combat,

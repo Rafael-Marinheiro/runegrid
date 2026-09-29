@@ -325,6 +325,66 @@
   }
 }
 
+.map-object {
+  cursor: pointer;
+  outline: none;
+
+  .object-body {
+    stroke: var(--gold-dim);
+    stroke-width: 2;
+  }
+
+  .object-icon {
+    fill: none;
+    stroke: var(--text);
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+  }
+
+  &.blocking .object-body {
+    stroke-dasharray: 5 3;
+  }
+
+  &.sel .object-body,
+  &:focus-visible .object-body {
+    stroke: var(--info-text);
+    stroke-width: 4;
+  }
+}
+
+.object-wood-base {
+  fill: #68482c;
+}
+.object-stone-base {
+  fill: #5c5a57;
+}
+.object-metal-base {
+  fill: #5d6870;
+}
+.object-fabric-base {
+  fill: #713f4d;
+}
+.object-foliage-base {
+  fill: #36583b;
+}
+.object-earth-base {
+  fill: #533a2d;
+}
+.object-texture-line {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.2);
+  stroke-width: 1;
+
+  &.fine {
+    stroke-width: 0.6;
+  }
+}
+.object-texture-dot {
+  fill: rgb(0 0 0 / 0.35);
+}
+
 .texture {
   pointer-events: none;
   opacity: 0.9;
@@ -460,4 +520,9 @@
 
 .hc .token .body {
   stroke-width: 6;
+}
+
+.hc .map-object .object-body {
+  fill: var(--panel-2);
+  stroke-width: 5;
 }

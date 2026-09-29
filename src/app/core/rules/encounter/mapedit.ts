@@ -1,8 +1,12 @@
 import { EncounterState } from '../../models/encounter';
 import {
+  blocksMovementAt,
   GridMap,
   IMPASSABLE,
   inBounds,
+  MapObject,
+  MAP_OBJECT_KINDS,
+  MAP_OBJECT_TEXTURES,
   PlacedItem,
   Pos,
   Room,
@@ -28,6 +32,14 @@ export function paint(state: EncounterState, cells: Pos[], terrain: Terrain): En
     const occupied = occupiedCells(state);
     if (cells.some((c) => occupied.has(key(c))))
       throw new RuleError('Há uma criatura nessa célula.');
+    if (
+      cells.some((cell) =>
+        (state.map.objects ?? []).some(
+          (object) => object.pos.x === cell.x && object.pos.y === cell.y,
+        ),
+      )
+    )
+      throw new RuleError('Há um objeto nessa célula.');
   }
   const next = [...state.map.cells];
   for (const c of cells) next[c.y * state.map.width + c.x] = terrain;
@@ -53,7 +65,7 @@ export function setMap(state: EncounterState, map: GridMap): EncounterState {
   for (const t of state.tokens) {
     const c = creatureOf(state, t.creatureId);
     const fits = footprint(t.pos, sizeOf(c)).every(
-      (p) => inBounds(map, p) && !IMPASSABLE.includes(terrainAt(map, p)),
+      (p) => inBounds(map, p) && !blocksMovementAt(map, p),
     );
     if (fits) s = { ...s, tokens: [...s.tokens, t] };
   }
@@ -142,6 +154,49 @@ export function removeItem(state: EncounterState, id: string): EncounterState {
   return {
     ...state,
     map: { ...state.map, items: (state.map.items ?? []).filter((item) => item.id !== id) },
+  };
+}
+
+export function upsertMapObject(state: EncounterState, object: MapObject): EncounterState {
+  const normalized = {
+    ...object,
+    rotation: object.rotation ?? 0,
+    texture: object.texture ?? 'wood',
+  };
+  checkBounds(state.map, [normalized.pos]);
+  if (
+    !MAP_OBJECT_KINDS.includes(normalized.kind) ||
+    !MAP_OBJECT_TEXTURES.includes(normalized.texture) ||
+    !Number.isInteger(normalized.rotation) ||
+    normalized.rotation < 0 ||
+    normalized.rotation >= 360 ||
+    normalized.rotation % 45 !== 0
+  )
+    throw new RuleError('Objeto inválido.');
+  if (IMPASSABLE.includes(terrainAt(state.map, normalized.pos)))
+    throw new RuleError('O objeto precisa ficar num piso.');
+  if (normalized.blocksMovement && occupiedCells(state).has(key(normalized.pos)))
+    throw new RuleError('Há uma criatura nessa célula.');
+  const objects = state.map.objects ?? [];
+  if (
+    objects.some(
+      (placed) =>
+        placed.id !== normalized.id &&
+        placed.pos.x === normalized.pos.x &&
+        placed.pos.y === normalized.pos.y,
+    )
+  )
+    throw new RuleError('Já existe um objeto nessa célula.');
+  const next = objects.some((placed) => placed.id === normalized.id)
+    ? objects.map((placed) => (placed.id === normalized.id ? normalized : placed))
+    : [...objects, normalized];
+  return { ...state, map: { ...state.map, objects: next } };
+}
+
+export function removeMapObject(state: EncounterState, id: string): EncounterState {
+  return {
+    ...state,
+    map: { ...state.map, objects: (state.map.objects ?? []).filter((object) => object.id !== id) },
   };
 }
 

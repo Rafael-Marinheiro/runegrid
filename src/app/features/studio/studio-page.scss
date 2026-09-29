@@ -210,6 +210,10 @@
     background: var(--warning);
     border: 1px solid var(--ink);
   }
+  &.object {
+    border: 2px dashed var(--gold-dim);
+    border-radius: 50%;
+  }
 }
 
 .placed-items {

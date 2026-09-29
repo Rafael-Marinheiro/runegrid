@@ -55,6 +55,62 @@ export interface PlacedItem {
   hidden: boolean;
 }
 
+export const MAP_OBJECT_KINDS = [
+  'table',
+  'chair',
+  'bench',
+  'bed',
+  'bookshelf',
+  'cabinet',
+  'chest',
+  'barrel',
+  'crate',
+  'pillar',
+  'broken-column',
+  'statue',
+  'altar',
+  'fountain',
+  'well',
+  'bridge',
+  'stairs',
+  'rug',
+  'throne',
+  'tree',
+  'bush',
+  'stump',
+  'rock',
+  'boulder',
+  'campfire',
+  'tent',
+  'cart',
+  'anvil',
+  'brazier',
+  'weapon-rack',
+  'cauldron',
+] as const;
+export type MapObjectKind = (typeof MAP_OBJECT_KINDS)[number];
+export const MAP_OBJECT_TEXTURES = [
+  'wood',
+  'stone',
+  'metal',
+  'fabric',
+  'foliage',
+  'earth',
+] as const;
+export type MapObjectTexture = (typeof MAP_OBJECT_TEXTURES)[number];
+
+/** Objeto de cenário independente do terreno e dos itens coletáveis. */
+export interface MapObject {
+  id: string;
+  kind: MapObjectKind;
+  pos: Pos;
+  /** Rotação do símbolo visto de cima, em incrementos de 45°. */
+  rotation: number;
+  texture: MapObjectTexture;
+  blocksMovement: boolean;
+  blocksSight: boolean;
+}
+
 export interface Pos {
   x: number;
   y: number;
@@ -100,6 +156,7 @@ export interface GridMap {
   rooms?: Room[];
   traps?: Trap[];
   items?: PlacedItem[];
+  objects?: MapObject[];
   /** Textura do piso (só aparência; nunca muda regras). */
   texture?: Texture;
   background?: MapBackground;
@@ -152,6 +209,18 @@ export const inBounds = (m: GridMap, p: Pos): boolean =>
   p.x >= 0 && p.y >= 0 && p.x < m.width && p.y < m.height;
 export const terrainAt = (m: GridMap, p: Pos): Terrain => m.cells[p.y * m.width + p.x];
 
+export const blocksMovementAt = (m: GridMap, p: Pos): boolean =>
+  IMPASSABLE.includes(terrainAt(m, p)) ||
+  (m.objects ?? []).some(
+    (object) => object.blocksMovement && object.pos.x === p.x && object.pos.y === p.y,
+  );
+
+export const blocksSightAt = (m: GridMap, p: Pos): boolean =>
+  IMPASSABLE.includes(terrainAt(m, p)) ||
+  (m.objects ?? []).some(
+    (object) => object.blocksSight && object.pos.x === p.x && object.pos.y === p.y,
+  );
+
 /** Mapa novo: piso com borda de parede. */
 export function blankMap(width: number, height: number): GridMap {
   const w = Math.max(3, Math.min(60, Math.floor(width)));
@@ -193,6 +262,21 @@ export function isGridMap(v: unknown): v is GridMap {
             item.qty > 0 &&
             typeof item.hidden === 'boolean' &&
             inBounds(m, item.pos),
+        ))) &&
+    (m.objects === undefined ||
+      (Array.isArray(m.objects) &&
+        m.objects.every(
+          (object) =>
+            typeof object.id === 'string' &&
+            MAP_OBJECT_KINDS.includes(object.kind) &&
+            Number.isInteger(object.rotation) &&
+            object.rotation >= 0 &&
+            object.rotation < 360 &&
+            object.rotation % 45 === 0 &&
+            MAP_OBJECT_TEXTURES.includes(object.texture) &&
+            typeof object.blocksMovement === 'boolean' &&
+            typeof object.blocksSight === 'boolean' &&
+            inBounds(m, object.pos),
         ))) &&
     (m.portals === undefined ||
       (Array.isArray(m.portals) &&

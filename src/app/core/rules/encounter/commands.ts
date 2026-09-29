@@ -3,6 +3,7 @@ import { MapFloor } from '../../models/encounter';
 import {
   GridMap,
   MapBackground,
+  MapObject,
   MapVision,
   PlacedItem,
   Portal,
@@ -49,6 +50,8 @@ export type Command =
   | { type: 'removeTrap'; id: string }
   | { type: 'upsertItem'; item: PlacedItem }
   | { type: 'removeItem'; id: string }
+  | { type: 'upsertMapObject'; object: MapObject }
+  | { type: 'removeMapObject'; id: string }
   | { type: 'rollInitiative' }
   | { type: 'setInitiative'; id: string; value: number }
   /** Rolagem do Mestre que os jogadores não veem (só o Mestre pode enviar). */

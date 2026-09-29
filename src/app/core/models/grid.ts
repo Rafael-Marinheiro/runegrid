@@ -60,7 +60,7 @@ export interface Pos {
   y: number;
 }
 
-export const TEXTURES = ['none', 'stone', 'cave', 'grass', 'mud'] as const;
+export const TEXTURES = ['none', 'stone', 'cave', 'grass', 'mud', 'ice', 'sand', 'wood'] as const;
 export type Texture = (typeof TEXTURES)[number];
 
 export interface MapBackground {

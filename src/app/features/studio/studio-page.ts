@@ -90,6 +90,9 @@ export class StudioPage implements OnInit {
     cave: 'Caverna',
     grass: 'Grama',
     mud: 'Lama',
+    ice: 'Gelo e neve',
+    sand: 'Areia',
+    wood: 'Madeira',
   };
 
   protected readonly tools = TOOLS;
@@ -138,6 +141,9 @@ export class StudioPage implements OnInit {
       cave: 'Cave',
       grass: 'Grass',
       mud: 'Mud',
+      ice: 'Ice and snow',
+      sand: 'Sand',
+      wood: 'Wood',
     };
     return this.ui.locale() === 'en' ? labels[texture] : this.textureLabel[texture];
   }

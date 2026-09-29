@@ -45,6 +45,23 @@
         <circle cx="80" cy="18" r="2.5" class="tx-dot" />
         <circle cx="12" cy="58" r="2" class="tx-dot" />
       </pattern>
+      <pattern id="tex-ice" width="96" height="96" patternUnits="userSpaceOnUse">
+        <path
+          d="M8 20l14 12 16-8 12 18 20-9 18 15M4 78l20-12 18 8 16-18 15 10 19-8"
+          class="tx-ice"
+        />
+        <path d="M22 32l-4 16M50 42l12 9M42 74l-8 14M73 66l11 15" class="tx-ice fine" />
+      </pattern>
+      <pattern id="tex-sand" width="96" height="96" patternUnits="userSpaceOnUse">
+        <path d="M0 28q24-16 48 0t48 0M0 72q24-16 48 0t48 0" class="tx-sand" />
+        <circle cx="18" cy="50" r="1.5" class="tx-sand-dot" />
+        <circle cx="62" cy="12" r="1.5" class="tx-sand-dot" />
+        <circle cx="80" cy="54" r="1.5" class="tx-sand-dot" />
+      </pattern>
+      <pattern id="tex-wood" width="96" height="96" patternUnits="userSpaceOnUse">
+        <path d="M0 24h96M0 48h96M0 72h96M28 0v24M68 24v24M40 48v24M78 72v24" class="tx-wood" />
+        <path d="M8 12c8-8 16 8 24 0M50 60c8-8 16 8 24 0" class="tx-wood grain" />
+      </pattern>
     </defs>
     <rect [attr.width]="width()" [attr.height]="height()" class="bg" />
     @if (map().background; as image) {

@@ -355,6 +355,40 @@
   fill: rgb(20 10 0 / 0.22);
 }
 
+.tx-ice,
+.tx-sand,
+.tx-wood {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.tx-ice {
+  stroke: rgb(185 225 235 / 0.35);
+  stroke-width: 1.5;
+
+  &.fine {
+    stroke-width: 1;
+  }
+}
+
+.tx-sand {
+  stroke: rgb(202 166 95 / 0.3);
+  stroke-width: 1.5;
+}
+
+.tx-sand-dot {
+  fill: rgb(231 202 138 / 0.28);
+}
+
+.tx-wood {
+  stroke: rgb(116 70 37 / 0.34);
+  stroke-width: 1.4;
+
+  &.grain {
+    stroke-width: 1;
+  }
+}
+
 .icon path {
   fill: none;
   stroke: var(--text);

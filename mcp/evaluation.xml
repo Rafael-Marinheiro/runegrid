@@ -1,0 +1,42 @@
+<evaluation>
+  <qa_pair>
+    <question>Using the RuneGrid tools, find the beast with the highest armor class among SRD 2014 monsters of challenge rating 1 or lower (there is a single top value). What is that creature's walking speed in feet? Answer with just the number.</question>
+    <answer>30</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>In the SRD 2014 bestiary, how many monsters of type dragon have a challenge rating between 5 and 10 inclusive? Answer with just the number.</question>
+    <answer>11</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>In the SRD 2024 (5.2) bestiary, how many fiends have a challenge rating of 10 or higher? Answer with just the number.</question>
+    <answer>8</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>How many level-3 spells in the SRD 2014 list the Wizard among their classes? Answer with just the number.</question>
+    <answer>28</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Find the SRD 2014 monster with the highest challenge rating. How many hit points does it have? Answer with just the number.</question>
+    <answer>676</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>How many level-9 spells exist in the SRD 2014 spell list? Answer with just the number.</question>
+    <answer>15</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Of the spells that the RuneGrid combat engine resolves automatically (marked as engine-resolved), which one is a level-3 spell? Answer with its id.</question>
+    <answer>fireball</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>In the equipment catalog used by character creation, which finesse weapon has the largest damage die? Answer with its catalog id.</question>
+    <answer>rapier</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Among SRD 2014 humanoids with challenge rating 2 or lower, what is the highest hit point total of any single monster? Answer with just the number.</question>
+    <answer>67</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>How many more challenge-rating-0 monsters does the SRD 2024 bestiary contain than the SRD 2014 bestiary? Answer with just the number.</question>
+    <answer>1</answer>
+  </qa_pair>
+</evaluation>

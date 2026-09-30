@@ -343,29 +343,68 @@ export function resolveSpell(
       spell.cure ||
       spell.dispel ||
       spell.revive ||
+      spell.kill ||
+      spell.table ||
       spell.push
     ) {
-      if (spell.resolution.kind === 'pool')
-        s = spellPool(s, caster, targets, spell, slot, ctx.rng, ability, dc, origin);
-      else if (spell.resolution.kind === 'attack') {
-        s = spellAttacks(
-          s,
-          caster,
-          targets,
-          spell,
-          slot,
-          level,
-          ctx.rng,
-          ability,
-          dc,
-          origin,
-          cmd.ruleset,
-        );
-        if (spell.splash && targets[0])
-          s = splashArea(s, caster, targets[0].id, spell, slot, level, ctx.rng, ability, dc);
-      } else if (spell.resolution.kind === 'save')
-        s = spellSave(s, caster, targets, spell, slot, level, ctx.rng, ability, dc, origin);
-      else s = spellAuto(s, caster, targets, spell, slot, level, ctx.rng, ability, dc, origin);
+      // Palavra de Poder: só quem tem PV de menos é afetado
+      let list = targets;
+      if (spell.ifHpAtMost !== undefined) {
+        list = targets.filter((t) => t.hp.current <= spell.ifHpAtMost!);
+        for (const t of targets.filter((x) => !list.includes(x)))
+          s = addLog(
+            s,
+            `${t.name} tem PV demais (${t.hp.current} > ${spell.ifHpAtMost}): sem efeito.`,
+            [caster.id, t.id],
+          );
+      }
+      const run = (who: Creature[], sp: Spell): EncounterState => {
+        if (sp.resolution.kind === 'pool')
+          return spellPool(s, caster, who, sp, slot, ctx.rng, ability, dc, origin);
+        if (sp.resolution.kind === 'attack') {
+          let out = spellAttacks(
+            s,
+            caster,
+            who,
+            sp,
+            slot,
+            level,
+            ctx.rng,
+            ability,
+            dc,
+            origin,
+            cmd.ruleset,
+          );
+          if (sp.splash && who[0])
+            out = splashArea(out, caster, who[0].id, sp, slot, level, ctx.rng, ability, dc);
+          return out;
+        }
+        if (sp.resolution.kind === 'save')
+          return spellSave(s, caster, who, sp, slot, level, ctx.rng, ability, dc, origin);
+        return spellAuto(s, caster, who, sp, slot, level, ctx.rng, ability, dc, origin);
+      };
+      if (spell.table) {
+        const tb = spell.table;
+        for (const t of list) {
+          const cur = creatureOf(s, t.id);
+          const v = tb.by === 'hp' ? cur.hp.current : roll(`1d${tb.die ?? 8}`, ctx.rng).total;
+          const row = tb.rows.find((r) => v >= r.from && v <= r.to);
+          if (!row) {
+            s = addLog(
+              s,
+              `${spell.name}: ${cur.name} não sofre efeito (${tb.by === 'hp' ? 'PV' : 'd' + tb.die} ${v}).`,
+              [caster.id, cur.id],
+            );
+            continue;
+          }
+          s = addLog(
+            s,
+            `${spell.name}: ${cur.name} (${tb.by === 'hp' ? 'PV' : 'd' + tb.die} ${v}).`,
+            [caster.id, cur.id],
+          );
+          s = run([cur], { ...spell, table: undefined, ...row.patch });
+        }
+      } else if (list.length || targets.length === 0) s = run(list, spell);
     } else if (
       !spell.push &&
       !spell.zone &&
@@ -617,6 +656,7 @@ function spellAuto(
   // dardos automáticos (Mísseis Mágicos): um dado por dardo, repartidos entre os alvos
   const darts = spell.damage?.instances ? rayCount(spell, slot, level) : 0;
   const perTarget = new Map<string, number>();
+  let pool = spell.heal?.pool ? Math.max(0, flatHeal(spell, slot)) : 0;
   if (darts && spell.damage && targets.length) {
     const expr = partExpression(spell.damage, spell.level, slot, level);
     for (let i = 0; i < darts; i++) {
@@ -628,22 +668,27 @@ function spellAuto(
   for (const original of targets) {
     const t = creatureOf(s, original.id);
     if (spell.revive && t.status === 'dead') {
+      const back = spell.revive === 'full' ? t.hp.max : 1;
       s = withCreature(s, {
         ...t,
         status: 'alive',
-        hp: { ...t.hp, current: 1 },
+        hp: { ...t.hp, current: back },
         deathSaves: { successes: 0, failures: 0 },
       });
-      s = addLog(s, `${t.name} volta à vida com 1 PV.`, [caster.id, t.id]);
+      s = addLog(s, `${t.name} volta à vida com ${back} PV.`, [caster.id, t.id]);
+      s = applyRiders(s, caster, t.id, spell, slot, dc, ability, rng, point);
       continue;
     }
     if (spell.heal) {
-      const amount = Math.max(
+      const total = Math.max(
         0,
         (spell.heal.dice ? roll(healExpression(spell, slot), rng).total : 0) +
           flatHeal(spell, slot) +
           (spell.heal.addModifier ? mod : 0),
       );
+      // reserva dividida (Cura Completa em Massa): cada alvo recebe só o que lhe falta, até acabar
+      const amount = spell.heal.pool ? Math.min(total, pool, t.hp.max - t.hp.current) : total;
+      if (spell.heal.pool) pool -= amount;
       const healed = heal(t, amount);
       s = withCreature(s, healed);
       s = addLog(s, `${t.name} recupera ${healed.hp.current - t.hp.current} PV.`, [

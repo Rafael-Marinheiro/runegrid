@@ -46,6 +46,8 @@ export interface EffectMods {
   dotStart?: { dice: string; type: DamageType };
   /** No fim do turno de quem carrega: sofre dano (Flecha Ácida). */
   dotEnd?: { dice: string; type: DamageType };
+  /** Proteção contra a morte: a primeira vez que cairia a 0 PV fica com 1 PV e o efeito acaba (Proteção contra a Morte). */
+  deathWard?: boolean;
   /** Quem carrega não pode reagir (Toque Chocante). */
   noReactions?: boolean;
   /** Quem carrega não recupera PV (Toque Gélido). */

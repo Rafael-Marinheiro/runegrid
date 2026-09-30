@@ -62,6 +62,7 @@ const MODS = new Set([
   'halfWeaponDamage',
   'maxHp',
   'images',
+  'deathWard',
   'imagesD6',
   'damageDie',
   'onHit',
@@ -79,7 +80,7 @@ const sets: { name: '2014' | '2024'; srd: SrdSpell[]; rules: SpellRules }[] = [
 ];
 
 /** Nível máximo já conferido pela cobertura; sobe a cada lote até o 9 (ver PLANO.md, F12). */
-const DONE_LEVEL = { '2014': 3, '2024': 3 };
+const DONE_LEVEL = { '2014': 9, '2024': 3 };
 
 const dice = (d: string) => expect(() => parseDice(d), d).not.toThrow();
 
@@ -135,6 +136,8 @@ function checkSpell(s: Spell) {
       s.cure ||
       s.dispel ||
       s.revive ||
+      s.kill ||
+      s.table ||
       s.teleport ||
       s.zone ||
       s.sustain;
@@ -234,7 +237,8 @@ describe('fumaça: conjurar cada magia mecanizada não quebra o motor', () => {
           targetIds: (sp.range <= 5 ? ['ally'] : ['m0', 'm1']).slice(
             0,
             sp.target.kind === 'creature'
-              ? (sp.target.max ?? 1) + (sp.target.perLevel ?? 0) * 4
+              ? (sp.target.max ?? 1) +
+                  (sp.target.perLevel ?? 0) * Math.max(0, Math.max(sp.level, 5) - sp.level)
               : 1,
           ),
           point: sp.teleport ? { x: 5, y: 9 } : { x: 8, y: 5 },

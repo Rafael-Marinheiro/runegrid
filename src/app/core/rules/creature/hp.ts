@@ -1,6 +1,6 @@
 import { Creature, DamageType } from '../../models/creature';
 import { Rng } from '../dice';
-import { cannotHeal, extraResist } from './effects';
+import { cannotHeal, effectsOf, extraResist, removeEffects } from './effects';
 import { RuleError } from './stats';
 
 export interface DamageResult {
@@ -81,6 +81,18 @@ export function applyDamage(c: Creature, amount: number, opts: DamageOptions = {
   const current = c.hp.current - hpLost;
   const instantDeath = current === 0 && overflow >= c.hp.max;
   const dropped = current === 0;
+  // Proteção contra a Morte: em vez de cair a 0 PV, fica com 1 PV e a magia acaba.
+  if (dropped && effectsOf(c).some((e) => e.mods.deathWard)) {
+    const warded = removeEffects(c, (e) => !!e.mods.deathWard);
+    return {
+      creature: { ...warded, hp: { ...c.hp, current: 1, temp: c.hp.temp - absorbedByTemp } },
+      dealt,
+      absorbedByTemp,
+      hpLost: hpLost - 1,
+      dropped: false,
+      instantDeath: false,
+    };
+  }
   // Nocaute: em vez de cair a 0 PV, a criatura fica com 1 PV e inconsciente (estável).
   if (dropped && opts.knockOut) {
     return {

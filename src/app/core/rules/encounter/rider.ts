@@ -15,6 +15,7 @@ import { roll, rollD20, Rng } from '../dice';
 import { canStand } from '../grid/movement';
 import { allSpells, getSpell } from '../spells/data';
 import { flatTemp } from '../spells/scaling';
+import { aftermath } from './helpers';
 import { addLog, creatureOf, occupiedCells, sizeOf, tokenOf, withCreature } from './state';
 
 const asList = (c: Spell['condition']): SpellCondition[] => (!c ? [] : Array.isArray(c) ? c : [c]);
@@ -72,10 +73,9 @@ export function applyRiders(
   let t = creatureOf(s, targetId);
 
   for (const c of asList(spell.condition)) {
-    const rep =
-      c.repeatSave && spell.resolution.kind === 'save'
-        ? { repeatSave: { ability: spell.resolution.ability, dc } }
-        : {};
+    const repAbility =
+      c.repeatAbility ?? (spell.resolution.kind === 'save' ? spell.resolution.ability : undefined);
+    const rep = c.repeatSave && repAbility ? { repeatSave: { ability: repAbility, dc } } : {};
     const before = t;
     t = addCondition(t, c.name, c.rounds, {
       spell: spell.name,
@@ -93,6 +93,15 @@ export function applyRiders(
         : `${t.name} ficou sob efeito de ${spell.name}.`,
       [t.id],
     );
+  }
+
+  if (spell.kill) {
+    const cur = creatureOf(s, t.id);
+    if (cur.status !== 'dead') {
+      s = withCreature(s, { ...cur, status: 'dead', hp: { ...cur.hp, current: 0 } });
+      s = addLog(s, `${cur.name} morre na hora (${spell.name}).`, [caster.id, cur.id]);
+      s = aftermath(s, cur.id, 0, rng);
+    }
   }
 
   if (spell.dispel) s = dispelOn(s, caster, t.id, slot, ability, rng);

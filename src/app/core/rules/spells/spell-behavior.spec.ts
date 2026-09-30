@@ -52,6 +52,15 @@ const ALL = [
   'searing-smite',
   'counterspell',
   'magic-missile',
+  'death-ward',
+  'power-word-kill',
+  'power-word-stun',
+  'prismatic-spray',
+  'divine-word',
+  'mass-heal',
+  'weird',
+  'raise-dead',
+  'cone-of-cold',
 ];
 
 function scene(foes: Partial<Creature>[] = [{}], withAlly = false) {
@@ -68,7 +77,7 @@ function scene(foes: Partial<Creature>[] = [{}], withAlly = false) {
       ac: 12,
       hp: { max: 40, current: 20, temp: 0 },
       abilities: { str: 10, dex: 14, con: 14, int: 18, wis: 10, cha: 10 },
-      spellSlots: fullCasterSlots(9),
+      spellSlots: fullCasterSlots(17),
       spellcasting: { ability: 'int', spells: ALL },
     }),
     3,
@@ -230,6 +239,92 @@ describe('magias do SRD com os dados reais (F12)', () => {
     let s = scene([{ ac: 5, hp: { max: 100, current: 100, temp: 0 } }]);
     s = run(s, cast('scorching-ray', { targetId: 'f0', slotLevel: 4 }));
     expect(s.log.filter((e) => e.text.includes('raio ')).length).toBe(5);
+  });
+});
+
+describe('magias de 4º ao 9º nível do SRD 2014 (F12)', () => {
+  it('Proteção contra a Morte: a primeira queda a 0 PV vira 1 PV e a magia acaba', () => {
+    let s = scene([{}]);
+    s = run(s, cast('death-ward', { targetId: 'w', slotLevel: 4 }));
+    s = run(s, { type: 'damage', targetId: 'w', amount: 99 });
+    expect(get(s, 'w').hp.current).toBe(1);
+    expect(get(s, 'w').status).toBe('alive');
+    expect(get(s, 'w').effects).toBeUndefined();
+  });
+
+  it('Palavra de Poder: Matar só mata quem tem 100 PV ou menos', () => {
+    let big = scene([{ hp: { max: 200, current: 150, temp: 0 } }]);
+    big = run(big, cast('power-word-kill', { targetId: 'f0', slotLevel: 9 }));
+    expect(get(big, 'f0').status).toBe('alive');
+    let small = scene([{ hp: { max: 80, current: 80, temp: 0 } }]);
+    small = run(small, cast('power-word-kill', { targetId: 'f0', slotLevel: 9 }));
+    expect(get(small, 'f0').status).toBe('dead');
+  });
+
+  it('Palavra de Poder: Atordoar, com salvaguarda de Constituição a cada turno', () => {
+    let s = scene([{ hp: { max: 100, current: 100, temp: 0 } }]);
+    s = run(s, cast('power-word-stun', { targetId: 'f0', slotLevel: 8 }));
+    expect(get(s, 'f0').conditions[0].name).toBe('stunned');
+    expect(get(s, 'f0').conditions[0].repeatSave?.ability).toBe('con');
+  });
+
+  it('Raio Prismático: cada alvo rola o seu d8 e leva o raio dele', () => {
+    let s = scene([{}, {}]);
+    s = run(s, cast('prismatic-spray', { point: { x: 5, y: 3 }, slotLevel: 7 }), () => 0.01);
+    expect(s.log.filter((e) => /\(d8 \d\)/.test(e.text)).length).toBe(2);
+    expect(get(s, 'f0').hp.current).toBeLessThan(20);
+  });
+
+  it('Palavra Divina: o efeito depende dos PV atuais do alvo', () => {
+    let s = scene([
+      { hp: { max: 40, current: 15, temp: 0 } },
+      { hp: { max: 60, current: 35, temp: 0 } },
+    ]);
+    s = run(s, cast('divine-word', { targetIds: ['f0', 'f1'], slotLevel: 7 }), () => 0.01);
+    expect(get(s, 'f0').status).toBe('dead'); // 20 PV ou menos: morte
+    expect(
+      get(s, 'f1')
+        .conditions.map((c) => c.name)
+        .sort(),
+    ).toEqual(['blinded', 'deafened']);
+  });
+
+  it('Cura Completa em Massa: a reserva de 700 PV se divide conforme o que falta a cada alvo', () => {
+    let s = scene([{}]);
+    const w = get(s, 'w');
+    s = {
+      ...s,
+      creatures: s.creatures.map((c) =>
+        c.id === 'w'
+          ? { ...w, hp: { ...w.hp, max: 100, current: 10 } }
+          : c.id === 'f0'
+            ? { ...c, hp: { ...c.hp, max: 100, current: 50 } }
+            : c,
+      ),
+    };
+    s = run(s, cast('mass-heal', { targetIds: ['w', 'f0'], slotLevel: 9 }));
+    expect(get(s, 'w').hp.current).toBe(100);
+    expect(get(s, 'f0').hp.current).toBe(100);
+  });
+
+  it('Fantasma Assassino/Sussurro: passar na salvaguarda repetida encerra a condição e o dano', () => {
+    let s = scene([{ hp: { max: 100, current: 100, temp: 0 } }]);
+    s = run(s, cast('weird', { point: { x: 5, y: 3 }, slotLevel: 9 }), () => 0.01);
+    expect(get(s, 'f0').conditions.some((c) => c.name === 'frightened')).toBe(true);
+    expect(get(s, 'f0').effects?.length).toBe(1);
+    s = next(s, 'w');
+    s = run(s, { type: 'endTurn', actorId: 'f0' }, () => 0.99); // passa na salvaguarda
+    expect(get(s, 'f0').conditions.length).toBe(0);
+    expect(get(s, 'f0').effects).toBeUndefined();
+  });
+
+  it('Reviver os Mortos: volta com 1 PV e −4 nas jogadas', () => {
+    let s = scene([{}]);
+    s = run(s, { type: 'move', actorId: 'w', to: { x: 4, y: 3 } });
+    s = run(s, { type: 'damage', targetId: 'f0', amount: 99 });
+    s = run(s, cast('raise-dead', { targetId: 'f0', slotLevel: 5 }));
+    expect(get(s, 'f0').status).toBe('alive');
+    expect(get(s, 'f0').effects?.[0].mods.attackDie).toBe('-4');
   });
 });
 

@@ -59,6 +59,8 @@ export interface SpellCondition {
   rounds: number;
   /** Repete a salvaguarda no fim de cada turno do alvo; passar encerra (Imobilizar Pessoa). */
   repeatSave?: boolean;
+  /** Atributo da salvaguarda repetida quando a magia em si não tem salvaguarda (Palavra de Poder: Atordoar). */
+  repeatAbility?: Ability;
   /** Acaba quando quem a tem sofre dano (Sono). */
   endsOnDamage?: boolean;
   /** Acaba quando quem a tem ataca ou conjura (Invisibilidade). */
@@ -143,6 +145,27 @@ export interface Spell {
     flat?: number;
     flatPerLevel?: number;
     addModifier?: boolean;
+    /** O valor fixo é uma reserva dividida entre os alvos, na ordem (Cura Completa em Massa). */
+    pool?: boolean;
+  };
+  /** Só afeta quem tem esses PV atuais ou menos (Palavra de Poder: Matar); os demais ficam ilesos. */
+  ifHpAtMost?: number;
+  /** Mata o alvo na hora (Palavra de Poder: Matar, Palavra Divina). */
+  kill?: boolean;
+  /**
+   * Efeito que depende de um número por alvo: um dado (Raio Prismático: d8) ou os PV atuais
+   * (Palavra Divina). A linha que cobre o valor troca campos da magia para aquele alvo.
+   */
+  table?: {
+    by: 'die' | 'hp';
+    die?: number;
+    rows: {
+      from: number;
+      to: number;
+      patch: Partial<
+        Pick<Spell, 'damage' | 'extraDamage' | 'condition' | 'effect' | 'kill' | 'manual'>
+      >;
+    }[];
   };
   /** Depois do ataque, acerte ou erre: explode no alvo e nas criaturas a até `radius` ft dele (Faca de Gelo). */
   splash?: { radius: number; ability: Ability; onSave: 'half' | 'none'; damage: SpellDamage };
@@ -151,7 +174,7 @@ export interface Spell {
   /** Escolhas da conjuração (Proteção contra Energia: tipo de dano); `patch` substitui campos da magia. */
   options?: SpellOption[];
   /** Traz de volta quem morreu há pouco, com 1 PV (Reviver). */
-  revive?: boolean;
+  revive?: boolean | 'full';
   /** Encerra condições do alvo (Restauração Menor): uma, ou todas as listadas com `all`. */
   cure?: { conditions?: ConditionName[]; all?: boolean; spells?: string[] };
   /** Estabiliza quem está morrendo (Poupar os Moribundos). */

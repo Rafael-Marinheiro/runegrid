@@ -168,7 +168,10 @@ export function endUpkeep(state: EncounterState, actorId: string, ctx: Context):
       if (ok) {
         cur = creatureOf(s, actorId);
         const same = (x: typeof k) => `${x.by}:${x.spell ?? x.name}` === key;
-        cur = { ...cur, conditions: cur.conditions.filter((x) => !same(x)) };
+        cur = removeEffects(
+          { ...cur, conditions: cur.conditions.filter((x) => !same(x)) },
+          (e) => `${e.by}:${e.name}` === key,
+        );
         s = withCreature(s, cur);
       }
     }
@@ -183,7 +186,15 @@ export function endUpkeep(state: EncounterState, actorId: string, ctx: Context):
         [cur.id],
       );
       if (ok) {
-        cur = removeEffects(creatureOf(s, actorId), (x) => x.id === e.id);
+        cur = removeEffects(
+          {
+            ...creatureOf(s, actorId),
+            conditions: creatureOf(s, actorId).conditions.filter(
+              (k) => !(k.spell === e.name && k.by === e.by),
+            ),
+          },
+          (x) => x.id === e.id,
+        );
         s = withCreature(s, cur);
       }
     }

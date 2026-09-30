@@ -1,5 +1,6 @@
 import { Creature, DamageType } from '../../models/creature';
 import { Rng } from '../dice';
+import { cannotHeal, extraResist } from './effects';
 import { RuleError } from './stats';
 
 export interface DamageResult {
@@ -32,9 +33,10 @@ const nonNeg = (n: number, what: string): number => {
 
 function adjust(c: Creature, amount: number, type?: DamageType): number {
   if (!type) return amount;
-  if (c.immunities.includes(type)) return 0;
-  const resisted = c.resistances.includes(type);
-  const vulnerable = c.vulnerabilities.includes(type);
+  const extra = extraResist(c, type);
+  if (c.immunities.includes(type) || extra === 'immune') return 0;
+  const resisted = c.resistances.includes(type) || extra === 'resist';
+  const vulnerable = c.vulnerabilities.includes(type) || extra === 'vulnerable';
   if (resisted && !vulnerable) return Math.floor(amount / 2);
   if (vulnerable && !resisted) return amount * 2;
   return amount; // resistência e vulnerabilidade se anulam
@@ -115,7 +117,7 @@ export function applyDamage(c: Creature, amount: number, opts: DamageOptions = {
 
 export function heal(c: Creature, amount: number): Creature {
   const n = nonNeg(amount, 'Cura');
-  if (c.status === 'dead' || n === 0) return c;
+  if (c.status === 'dead' || n === 0 || cannotHeal(c)) return c;
   const current = Math.min(c.hp.max, c.hp.current + n);
   return {
     ...c,

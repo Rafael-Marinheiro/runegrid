@@ -69,8 +69,13 @@
             <span class="nm">{{ name(s) }}</span>
             <span class="meta">
               {{ levelLabel(s) }} · {{ s.school }}
-              @if (inCombat(s)) {
-                · <span class="live">{{ ui.text('resolvida no combate', 'combat-ready') }}</span>
+              @if (kind(s); as k) {
+                ·
+                <span class="live">{{
+                  k === 'narrative'
+                    ? ui.text('narrativa', 'narrative')
+                    : ui.text('resolvida no combate', 'combat-ready')
+                }}</span>
               }
             </span>
           </button>
@@ -119,15 +124,23 @@
           <b>{{ ui.text('Em níveis superiores.', 'At higher levels.') }}</b> {{ s.higher }}
         </p>
       }
-      @if (inCombat(s)) {
+      @if (kind(s); as k) {
         <p class="live">
           {{
-            ui.text(
-              'Esta magia já é resolvida pelo motor de combate.',
-              'This spell is supported by the combat engine.'
-            )
+            k === 'narrative'
+              ? ui.text(
+                  'Conjurável no combate (gasta espaço e concentração), mas o efeito é narrativo: o Mestre conduz.',
+                  'Castable in combat (spends the slot and concentration), but the effect is narrative: the DM runs it.'
+                )
+              : ui.text(
+                  'Esta magia já é resolvida pelo motor de combate.',
+                  'This spell is supported by the combat engine.'
+                )
           }}
         </p>
+        @if (manual(s); as m) {
+          <p class="desc">{{ m }}</p>
+        }
       }
     } @else {
       <p class="muted">

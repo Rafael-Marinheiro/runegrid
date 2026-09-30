@@ -3,6 +3,7 @@ import { EncounterState } from '../../models/encounter';
 import { Fx, FxColor, FxPoint } from '../../models/fx';
 import { Pos } from '../../models/grid';
 import { Spell } from '../../models/spell';
+import { rayCount } from '../spells/scaling';
 import { creatureOf, sizeOf, tokenOf } from './state';
 
 const DAMAGE_COLOR: Partial<Record<DamageType, FxColor>> = {
@@ -58,32 +59,73 @@ export function spellFx(
   if (!v || !from) return [];
   const tos = targetIds.flatMap((id) => centerOf(state, id) ?? []);
   const cell = point ? { x: point.x + 0.5, y: point.y + 0.5 } : null;
+  const t = spell.target;
   const out: Fx[] = [];
   switch (v.kind) {
     case 'bolts': {
-      const i = spell.damage?.instances;
-      const count = i ? i.base + i.perLevel * Math.max(0, slotLevel - spell.level) : 1;
-      for (const to of tos) out.push({ kind: 'bolts', from, to, count, color: v.color });
+      const caster = creatureOf(state, casterId);
+      const level =
+        caster.kind === 'monster' ? Math.max(1, Math.ceil(caster.cr ?? 1)) : caster.level;
+      const total =
+        spell.damage?.instances || spell.damage?.beams ? rayCount(spell, slotLevel, level) : 1;
+      // os dardos/raios se repartem entre os alvos, como no motor
+      tos.forEach((to, i) => {
+        const count = Math.max(
+          1,
+          Math.floor(total / tos.length) + (i < total % tos.length ? 1 : 0),
+        );
+        out.push({ kind: 'bolts', from, to, count: total === 1 ? 1 : count, color: v.color });
+      });
       break;
     }
     case 'ray':
-      for (const to of tos) out.push({ kind: 'ray', from, to, color: v.color });
-      break;
-    case 'glow':
-      for (const at of tos) out.push({ kind: 'glow', at, color: v.color });
-      break;
-    case 'burst':
-      if (spell.target.kind === 'sphere')
+      if (t.kind === 'line' && cell) {
+        const dx = cell.x - from.x;
+        const dy = cell.y - from.y;
+        const len = Math.hypot(dx, dy) || 1;
+        const reach = t.length / 5;
         out.push({
-          kind: 'burst',
-          at: cell ?? from,
-          radius: spell.target.radius / 5,
+          kind: 'ray',
+          from,
+          to: { x: from.x + (dx / len) * reach, y: from.y + (dy / len) * reach },
           color: v.color,
         });
+      } else for (const to of tos) out.push({ kind: 'ray', from, to, color: v.color });
       break;
+    case 'glow':
+      if (spell.teleport && cell) {
+        out.push(
+          { kind: 'glow', at: from, color: v.color },
+          { kind: 'glow', at: cell, color: v.color },
+        );
+      } else if (t.kind === 'point' && cell) out.push({ kind: 'glow', at: cell, color: v.color });
+      else
+        for (const at of tos.length ? tos : [from]) out.push({ kind: 'glow', at, color: v.color });
+      break;
+    case 'burst': {
+      const areaFt =
+        t.kind === 'sphere'
+          ? t.radius
+          : t.kind === 'cube'
+            ? t.self
+              ? t.size
+              : t.size / 2
+            : (v.radius ?? 10);
+      const selfOrigin = (t.kind === 'sphere' || t.kind === 'cube') && t.self;
+      const at = !cell || selfOrigin || t.kind === 'self' ? from : cell;
+      out.push({ kind: 'burst', at, radius: (v.radius ?? areaFt) / 5, color: v.color });
+      break;
+    }
     case 'cone':
-      if (spell.target.kind === 'cone' && cell)
-        out.push({ kind: 'cone', from, to: cell, length: spell.target.length / 5, color: v.color });
+      if (cell)
+        out.push({
+          kind: 'cone',
+          from,
+          to: cell,
+          length:
+            (t.kind === 'cone' ? t.length : t.kind === 'cube' ? t.size : (v.radius ?? 15)) / 5,
+          color: v.color,
+        });
       break;
   }
   if (v.impact) for (const at of tos) out.push({ kind: 'glow', at, color: v.impact });

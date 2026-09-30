@@ -17,7 +17,7 @@ import {
 import type { AdvMode } from '@core/rules/dice';
 import { canStand, distanceFt, reachable } from '@core/rules/grid/movement';
 import { getItem } from '@core/rules/inventory/catalog';
-import { SPELLS } from '@core/rules/spells/data';
+import { allSpells } from '@core/rules/spells/data';
 import { monsterNamePt } from '@core/rules/srd/names-pt';
 import type { Game, Ruleset } from './campaign';
 import { monstersOf } from './data';
@@ -193,6 +193,8 @@ export interface Act {
   mode?: AdvMode;
   knock_out?: boolean;
   spell?: string;
+  targets?: string[];
+  sustain?: boolean;
   slot_level?: number;
   to?: Pos;
   adjacent_to?: string;
@@ -220,11 +222,12 @@ function attackIndex(actor: Creature, ref: string | number | undefined): number 
 }
 
 export function spellOf(ref: string) {
-  const r = plain(ref);
-  const s = SPELLS.find((x) => x.id === r.replace(/\s+/g, '-') || plain(x.name) === r);
+  const r = plain(ref).replace(/^srd-2024_/, '');
+  const all = allSpells('2024');
+  const s = all.find((x) => x.id === r.replace(/\s+/g, '-') || plain(x.name) === r);
   if (!s)
     throw new GameError(
-      `Spell "${ref}" is not implemented by the engine. Engine spells: ${SPELLS.map((x) => x.id).join(', ')}. Adjudicate others by hand (rg_dm_command damage/heal/add_condition) and spend the slot with rg_character_update.`,
+      `Spell "${ref}" is not in the engine. Use rg_srd_search kind=spell for the ids (every SRD spell is implemented: mechanics, or narrative with the official text).`,
     );
   return s;
 }
@@ -270,13 +273,16 @@ export function toCommand(g: Game, actorRef: string, a: Act): Command {
     case 'cast': {
       const spell = spellOf(need(a.spell, 'spell', 'cast'));
       const point = a.point ?? (a.at ? tokenOf(g.scene, who(g, a.at).id)?.pos : undefined);
+      const targetIds = (a.targets ?? []).map((t) => who(g, t).id);
       return {
         type: 'cast',
         actorId,
         spellId: spell.id,
+        ruleset: g.ruleset,
         ...(a.slot_level ? { slotLevel: a.slot_level } : {}),
-        ...(a.target ? { targetId: target() } : {}),
+        ...(targetIds.length ? { targetIds } : a.target ? { targetId: target() } : {}),
         ...(point ? { point } : {}),
+        ...(a.sustain ? { sustain: true } : {}),
       };
     }
     case 'help':
@@ -294,8 +300,20 @@ export function toCommand(g: Game, actorRef: string, a: Act): Command {
     }
     case 'open_door':
       return { type: 'openDoor', actorId, pos: need(a.point ?? a.to, 'point', 'open_door') };
-    case 'reaction':
-      return { type: 'reaction', actorId, use: a.use ?? true };
+    case 'reaction': {
+      const spell = a.spell ? spellOf(a.spell) : undefined;
+      const point = a.point ?? (a.at ? tokenOf(g.scene, who(g, a.at).id)?.pos : undefined);
+      const targetIds = (a.targets ?? []).map((t) => who(g, t).id);
+      return {
+        type: 'reaction',
+        actorId,
+        use: a.use ?? true,
+        ...(spell ? { spellId: spell.id, ruleset: g.ruleset } : {}),
+        ...(a.slot_level ? { slotLevel: a.slot_level } : {}),
+        ...(targetIds.length ? { targetIds } : a.target ? { targetId: target() } : {}),
+        ...(point ? { point } : {}),
+      };
+    }
     case 'stand_up':
       return { type: 'standUp', actorId };
     case 'death_save':

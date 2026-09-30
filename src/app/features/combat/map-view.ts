@@ -12,6 +12,7 @@ import {
 import { GridMap, MapObject, MapObjectTexture, Pos, Room, Trap } from '@core/models/grid';
 import { UiPrefs } from '@state/ui-prefs';
 import { FxLayer, FxView } from './fx-layer';
+import { ZoneLayer, ZoneView } from './zone-layer';
 import { MAP_OBJECT_ART, MAP_OBJECT_TEXTURE_LABEL } from './map-object-art';
 import { ICON_PATH, IconId } from './token-icons';
 
@@ -44,6 +45,15 @@ export interface TokenView {
 
 export type AreaPreview =
   | { kind: 'sphere'; center: Pos; radiusFt: number }
+  | { kind: 'cube'; center: Pos; sizeFt: number }
+  | {
+      kind: 'line';
+      origin: Pos;
+      originSize: number;
+      toward: Pos;
+      lengthFt: number;
+      widthFt: number;
+    }
   | { kind: 'cone'; origin: Pos; originSize: number; toward: Pos; lengthFt: number };
 
 interface Drag {
@@ -78,7 +88,7 @@ const MAX_ZOOM = 3;
 
 @Component({
   selector: 'app-map-view',
-  imports: [FxLayer],
+  imports: [FxLayer, ZoneLayer],
   templateUrl: './map-view.html',
   styleUrl: './map-view.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -91,6 +101,8 @@ export class MapView {
   readonly reach = input<Pos[]>([]);
   /** Área de magia em preparo, desenhada sobre o mapa. */
   readonly preview = input<AreaPreview | null>(null);
+  /** Áreas de magia ativas (Teia, Névoa…), já em pixels. */
+  readonly zones = input<ZoneView[]>([]);
   /** Modo pincel (Estúdio): arrastar no fundo desenha em vez de mover o mapa (Shift ou botão do meio move). */
   readonly paintMode = input(false);
   /** Visão do Mestre: mostra a névoa e as armadilhas escondidas. */
@@ -187,6 +199,26 @@ export class MapView {
     const half = Math.atan(0.5); // a largura do cone é igual ao comprimento
     const pt = (a: number) => `${ox + len * Math.cos(a)},${oy + len * Math.sin(a)}`;
     return `${ox},${oy} ${pt(ang - half)} ${pt(ang + half)}`;
+  });
+
+  /** Cubo e linha em preparo, como polígono. */
+  protected readonly poly = computed(() => {
+    const p = this.preview();
+    if (p?.kind === 'cube') {
+      const h = (p.sizeFt / 10) * CELL;
+      const cx = (p.center.x + 0.5) * CELL;
+      const cy = (p.center.y + 0.5) * CELL;
+      return `${cx - h},${cy - h} ${cx + h},${cy - h} ${cx + h},${cy + h} ${cx - h},${cy + h}`;
+    }
+    if (p?.kind !== 'line') return null;
+    const ox = (p.origin.x + p.originSize / 2) * CELL;
+    const oy = (p.origin.y + p.originSize / 2) * CELL;
+    const ang = Math.atan2((p.toward.y + 0.5) * CELL - oy, (p.toward.x + 0.5) * CELL - ox);
+    const len = (p.lengthFt / 5) * CELL;
+    const w = (p.widthFt / 10) * CELL;
+    const [c, s] = [Math.cos(ang), Math.sin(ang)];
+    const pt = (a: number, b: number) => `${ox + a * c - b * s},${oy + a * s + b * c}`;
+    return `${pt(0, -w)} ${pt(len, -w)} ${pt(len, w)} ${pt(0, w)}`;
   });
 
   /** Células sob névoa (só desenhadas na visão do Mestre). */

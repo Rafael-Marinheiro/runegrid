@@ -61,7 +61,7 @@ export function rest(c: Creature, kind: 'short' | 'long'): Creature {
   const resources = c.resources.map((r) =>
     kind === 'long' || r.recharge === 'short' ? { ...r, used: 0 } : r,
   );
-  if (kind === 'short') return { ...c, resources };
+  if (kind === 'short') return { ...c, resources, effects: keepLong(c) };
 
   const spellSlots = Object.fromEntries(
     Object.entries(c.spellSlots).map(([lv, s]) => [lv, { ...s, used: 0 }]),
@@ -69,9 +69,18 @@ export function rest(c: Creature, kind: 'short' | 'long'): Creature {
   return {
     ...c,
     resources,
+    effects: undefined,
+    sustained: undefined,
+    concentration: undefined,
     spellSlots,
     hp: { ...c.hp, current: c.hp.max },
     status: 'alive',
     deathSaves: { successes: 0, failures: 0 },
   };
+}
+
+/** Descanso curto encerra o que dura até 1 hora (10 minutos = 100 rodadas); durações longas ficam. */
+function keepLong(c: Creature): Creature['effects'] {
+  const keep = (c.effects ?? []).filter((e) => e.rounds === undefined || e.rounds > 600);
+  return keep.length ? keep : undefined;
 }

@@ -10,6 +10,7 @@ import {
 import { Creature } from '@core/models/creature';
 import { Spell } from '@core/models/spell';
 import { getSpell } from '@core/rules/spells/data';
+import { SpellStore } from '@state/spell.store';
 import { UiPrefs } from '@state/ui-prefs';
 
 /** Escolha da magia e do espaço de magia; o alvo/área é escolhido depois, no mapa. */
@@ -24,7 +25,7 @@ import { UiPrefs } from '@state/ui-prefs';
           type="button"
           class="spell"
           [class.active]="picked()?.id === sp.id"
-          [disabled]="!available(sp).length"
+          [disabled]="!available(sp).length || !!sp.react || sp.castTime === 'long'"
           [attr.title]="sp.description"
           (click)="pick(sp)"
         >
@@ -34,17 +35,58 @@ import { UiPrefs } from '@state/ui-prefs';
               ? ui.text('Truque', 'Cantrip')
               : ui.text(sp.level + 'º', 'Level ' + sp.level)
           }}</span>
+          @if (sp.narrative) {
+            <span
+              class="tag"
+              [attr.title]="
+                ui.text('Efeito narrativo: o Mestre conduz', 'Narrative effect: the DM runs it')
+              "
+              >{{ ui.text('narrativa', 'narrative') }}</span
+            >
+          } @else if (sp.castTime === 'reaction') {
+            <span class="tag">{{ ui.text('reação', 'reaction') }}</span>
+          } @else if (sp.castTime === 'bonus') {
+            <span class="tag">{{ ui.text('bônus', 'bonus') }}</span>
+          }
         </button>
       } @empty {
         <p class="none">
           {{ c.name }} {{ ui.text('não conhece magias.', 'does not know any spells.') }}
         </p>
       }
+      @for (x of kept(); track x.spellId) {
+        <button
+          type="button"
+          class="spell"
+          [class.active]="picked()?.id === x.spell.id && sustainPick()"
+          (click)="pickSustained(x.spell, x.slotLevel)"
+        >
+          <span class="name">↻ {{ x.spell.name }}</span>
+          <span class="tag">{{
+            x.spell.sustain?.cost === 'bonus'
+              ? ui.text('bônus', 'bonus')
+              : ui.text('ação', 'action')
+          }}</span>
+        </button>
+      }
     </div>
     @if (picked(); as sp) {
       <div class="detail">
-        <p>{{ sp.description }}</p>
-        @if (sp.level > 0) {
+        <p class="desc">{{ sp.description }}</p>
+        @if (sp.manual) {
+          <p class="note">{{ sp.manual }}</p>
+        }
+        @if (sp.castTime === 'reaction') {
+          <p class="note">
+            {{
+              ui.text(
+                'Reação: aparece como pergunta quando o gatilho acontece.',
+                'Reaction: you are asked when the trigger happens.'
+              )
+            }}
+          </p>
+        }
+        @if (sp.level > 0 && !sustainPick()) {
           <label class="slot">
             {{ ui.text('Espaço', 'Slot') }}
             <select #sel (change)="setSlot(+sel.value)">
@@ -56,15 +98,7 @@ import { UiPrefs } from '@state/ui-prefs';
             </select>
           </label>
         }
-        <p class="hint">
-          {{
-            sp.target.kind === 'creature'
-              ? ui.text('Clique no alvo no mapa.', 'Click the target on the map.')
-              : sp.target.kind === 'sphere'
-                ? ui.text('Clique no ponto central da esfera.', 'Click the center of the sphere.')
-                : ui.text('Clique na direção do cone.', 'Click the cone direction.')
-          }}
-        </p>
+        <p class="hint">{{ hint(sp) }}</p>
       </div>
     }
   `,
@@ -106,6 +140,17 @@ import { UiPrefs } from '@state/ui-prefs';
       font-size: 0.85rem;
       color: var(--muted);
     }
+    .tag {
+      font-size: 0.7rem;
+      padding: 0 var(--space-2);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius);
+      color: var(--info-text);
+    }
+    .note {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
     .hint,
     .none {
       color: var(--muted);
@@ -117,14 +162,63 @@ export class SpellPanel {
   readonly caster = input.required<Creature>();
   readonly picked = signal<Spell | null>(null);
   readonly slot = signal(0);
-  readonly chosen = output<{ spell: Spell; slot: number } | null>();
+  readonly sustainPick = signal(false);
+  readonly chosen = output<{ spell: Spell; slot: number; sustain?: boolean } | null>();
+  private readonly spellStore = inject(SpellStore);
 
-  protected readonly known = computed(() =>
-    (this.caster().spellcasting?.spells ?? [])
-      .map(getSpell)
+  protected readonly known = computed(() => {
+    this.spellStore.version(); // recalcula quando a mecânica do SRD termina de carregar
+    const rs = this.ui.ruleset();
+    return (this.caster().spellcasting?.spells ?? [])
+      .map((id) => getSpell(id, rs))
       .filter((s): s is Spell => !!s)
-      .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name)),
-  );
+      .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
+  });
+
+  /** Magias mantidas (Arma Espiritual…) que dão uma ação a cada turno. */
+  protected readonly kept = computed(() => {
+    this.spellStore.version();
+    const rs = this.ui.ruleset();
+    return (this.caster().sustained ?? []).flatMap((x) => {
+      const spell = getSpell(x.spellId, rs);
+      return spell?.sustain ? [{ ...x, spell }] : [];
+    });
+  });
+
+  protected hint(sp: Spell): string {
+    const t = sp.target;
+    const kind =
+      this.sustainPick() && sp.sustain?.use?.target ? sp.sustain.use.target.kind : t.kind;
+    const max =
+      t.kind === 'creature'
+        ? (t.max ?? 1) + (t.perLevel ?? 0) * Math.max(0, this.slot() - sp.level)
+        : 1;
+    switch (kind) {
+      case 'creature':
+        return max > 1
+          ? this.ui.text(
+              `Clique em até ${max} alvos e confirme em "Conjurar".`,
+              `Click up to ${max} targets, then press "Cast".`,
+            )
+          : this.ui.text('Clique no alvo no mapa.', 'Click the target on the map.');
+      case 'self':
+        return this.ui.text('Afeta você: use "Conjurar".', 'Affects you: press "Cast".');
+      case 'sphere':
+        return t.kind === 'sphere' && t.self
+          ? this.ui.text('Nasce em você: use "Conjurar".', 'Starts on you: press "Cast".')
+          : this.ui.text('Clique no ponto central da esfera.', 'Click the center of the sphere.');
+      case 'cube':
+        return t.kind === 'cube' && t.self
+          ? this.ui.text('Clique na direção do cubo.', 'Click the cube direction.')
+          : this.ui.text('Clique no centro do cubo.', 'Click the center of the cube.');
+      case 'point':
+        return this.ui.text('Clique no ponto de destino.', 'Click the destination.');
+      case 'line':
+        return this.ui.text('Clique na direção da linha.', 'Click the line direction.');
+      default:
+        return this.ui.text('Clique na direção do cone.', 'Click the cone direction.');
+    }
+  }
 
   /** Níveis de espaço disponíveis para a magia (truques não usam espaço). */
   protected available(sp: Spell): number[] {
@@ -135,7 +229,21 @@ export class SpellPanel {
       .sort((a, b) => a - b);
   }
 
+  protected pickSustained(sp: Spell, slotLevel: number): void {
+    if (this.picked()?.id === sp.id && this.sustainPick()) {
+      this.picked.set(null);
+      this.sustainPick.set(false);
+      this.chosen.emit(null);
+      return;
+    }
+    this.sustainPick.set(true);
+    this.picked.set(sp);
+    this.slot.set(slotLevel);
+    this.chosen.emit({ spell: sp, slot: slotLevel, sustain: true });
+  }
+
   protected pick(sp: Spell): void {
+    this.sustainPick.set(false);
     if (this.picked()?.id === sp.id) {
       this.picked.set(null);
       this.chosen.emit(null);

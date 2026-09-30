@@ -1,4 +1,5 @@
-import { Fx } from './fx';
+import { Fx, FxColor } from './fx';
+import { SpellTarget } from './spell';
 import { Creature } from './creature';
 import { DiagonalRule, GridMap, Pos } from './grid';
 
@@ -29,16 +30,74 @@ export interface TurnState {
   attacksLeft: number;
 }
 
-/** Uma reação à espera de decisão (por enquanto: ataque de oportunidade). */
+/** Uma reação à espera de decisão: ataque de oportunidade ou magia de reação (ver `encounter/reactions`). */
 export interface PendingReaction {
   id: number;
-  kind: 'opportunity';
+  kind: 'opportunity' | 'spell';
   reactorId: string;
+  /** Ataque de oportunidade: quem saiu do alcance. Magia: quem provocou a reação. */
   targetId: string;
   /** Índice do ataque corpo a corpo do reator. */
   attackIndex: number;
   /** Alcance (ft) do ataque no momento em que o alvo saiu dele. */
   reach: number;
+  /** Magia de reação: o gatilho e o que fica suspenso até a decisão. */
+  spell?: PendingSpellReaction;
+}
+
+/** Golpe que acertou e aguarda a decisão de quem pode reagir (o dano só é aplicado depois). */
+export interface HeldHit {
+  attackerId: string;
+  targetId: string;
+  /** Linha do registro com a jogada (sem o desfecho). */
+  head: string;
+  /** Jogada total e CA contra a qual ela acertou (já com cobertura e bônus). */
+  total: number;
+  ac: number;
+  nat20: boolean;
+  crit: boolean;
+  /** Dano já rolado (dobrado se crítico), por tipo, antes de resistências. */
+  parts: { amount: number; type: string }[];
+  knockOut?: boolean;
+  /** Ataque de magia: consequências além do dano (condições, efeitos) aplicadas ao acertar. */
+  rider?: {
+    spellId: string;
+    slot: number;
+    dc: number;
+    ability: string;
+    ruleset?: '2014' | '2024';
+    point?: Pos;
+  };
+}
+
+/** Gatilho de uma magia de reação e o que fica suspenso até a decisão. */
+export type PendingSpellReaction =
+  /** Um ataque acertou o reator (Escudo Arcano): o dano só é aplicado depois da decisão. */
+  | { trigger: 'hit'; hit: HeldHit }
+  /** O reator sofreu dano de `attackerId` (Repreensão Diabólica): já aplicado, a magia responde. */
+  | { trigger: 'damaged'; attackerId: string }
+  /** Alguém conjura uma magia (Contrafeitiço): a conjuração inteira aguarda. */
+  | { trigger: 'cast'; casterId: string; spellId: string; slotLevel: number; command: string };
+
+/** Área de magia que permanece no mapa (Teia, Névoa Mortal, Guardiões Espirituais). */
+export interface Zone {
+  id: number;
+  spellId: string;
+  name: string;
+  casterId: string;
+  slotLevel: number;
+  ruleset?: '2014' | '2024';
+  shape: SpellTarget;
+  /** Centro (esfera/cubo) ou origem (linha/cone); a aura acompanha o conjurador. */
+  center: Pos;
+  toward?: Pos;
+  aura?: boolean;
+  on: 'start' | 'enter' | 'both' | 'cast';
+  rounds?: number;
+  concentration?: boolean;
+  difficult?: boolean;
+  obscures?: boolean;
+  color?: FxColor;
 }
 
 export type CombatPhase = 'setup' | 'running' | 'ended';
@@ -92,6 +151,8 @@ export interface EncounterState {
   log: LogEntry[];
   /** Número do próximo evento de log. */
   seq: number;
+  /** Áreas de magia ativas. */
+  zones?: Zone[];
   /** O mapa ativo continua em `map`; os demais ficam guardados aqui. */
   floorId?: string;
   floorName?: string;

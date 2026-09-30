@@ -31,6 +31,11 @@ export const FEATURE_BY_TRAIT: Record<string, FeatureId> = {
   'Cunning Action': 'cunning-action',
 };
 
-export function bonusActionsOf(c: Pick<Creature, 'features'>): BonusAction[] {
-  return [...new Set((c.features ?? []).flatMap((f) => FEATURES[f]?.bonusActions ?? []))];
+export function bonusActionsOf(c: Pick<Creature, 'features' | 'effects'>): BonusAction[] {
+  return [
+    ...new Set([
+      ...(c.features ?? []).flatMap((f) => FEATURES[f]?.bonusActions ?? []),
+      ...(c.effects ?? []).flatMap((e) => e.mods.bonusActions ?? []),
+    ]),
+  ];
 }

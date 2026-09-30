@@ -20,7 +20,8 @@ import {
   teamOf,
   tokenOf,
 } from '@core/rules/encounter';
-import { inCone, inSphere } from '@core/rules/grid/area';
+import { inArea } from '@core/rules/encounter/zones';
+import { reactionSpells } from '@core/rules/encounter/reactions';
 import { canStand, distanceFt, findPath, reachable } from '@core/rules/grid/movement';
 import { DiceTray3d } from '@features/dice/dice-3d/dice-tray-3d';
 import type { StageDie } from '@features/dice/dice-3d/dice-stage';
@@ -29,9 +30,11 @@ import { EncounterStore } from '@state/encounter.store';
 import { getItem } from '@core/rules/inventory/catalog';
 import { RoomService } from '@net/room.service';
 import { PartyStore } from '@state/party.store';
+import { SpellStore } from '@state/spell.store';
 import { UiPrefs } from '@state/ui-prefs';
 import { FxView } from './fx-layer';
 import { AreaPreview, MapView, TokenView } from './map-view';
+import { ZoneView } from './zone-layer';
 import { BonusAction, bonusActionsOf } from '@core/rules/creature/features';
 import { MiniatureQuery, queryFromCreature } from '@core/rules/srd/miniature';
 import { MiniaturePicker } from '@features/creatures/miniature-picker';
@@ -42,7 +45,7 @@ type Mode =
   | { kind: 'move' }
   | { kind: 'attack'; index: number }
   | { kind: 'help' }
-  | { kind: 'cast'; spell: Spell; slot: number };
+  | { kind: 'cast'; spell: Spell; slot: number; sustain?: boolean; picked: string[] };
 
 @Component({
   selector: 'app-combat-page',
@@ -57,6 +60,7 @@ export class CombatPage {
   protected readonly diceStore = inject(DiceStore);
   protected readonly ui = inject(UiPrefs);
   protected readonly room = inject(RoomService);
+  private readonly spellStore = inject(SpellStore);
 
   /** Régua: mede a distância entre dois pontos arrastando no mapa. */
   protected readonly rulerOn = signal(false);
@@ -73,6 +77,7 @@ export class CombatPage {
   protected readonly condLabel = CONDITION_LABEL;
 
   constructor() {
+    effect(() => void this.spellStore.ensure(this.ui.ruleset()));
     // entradas novas do registro com dados → animação 3D (igual em todos os navegadores)
     effect(() => {
       const st = this.store.view();
@@ -250,26 +255,123 @@ export class CombatPage {
     return ids.map((id) => this.creature(id)).filter((c): c is Creature => !!c);
   });
 
+  /** Alvo efetivo da magia em preparo (a repetição pode mudar o alvo). */
+  protected castTarget(m: Extract<Mode, { kind: 'cast' }>): Spell['target'] {
+    return m.sustain && m.spell.sustain?.use?.target ? m.spell.sustain.use.target : m.spell.target;
+  }
+
+  /** O alvo dispensa clique no mapa (afeta o conjurador ou nasce nele): basta confirmar. */
+  protected selfOnly(m: Extract<Mode, { kind: 'cast' }>): boolean {
+    const t = this.castTarget(m);
+    return t.kind === 'self' || (t.kind === 'sphere' && !!t.self);
+  }
+
+  /** Quantos alvos o clique escolhe (1 = conjura logo no primeiro clique). */
+  protected maxTargets(m: Extract<Mode, { kind: 'cast' }>): number {
+    const t = this.castTarget(m);
+    if (t.kind !== 'creature') return 1;
+    return (t.max ?? 1) + (t.perLevel ?? 0) * Math.max(0, m.slot - m.spell.level);
+  }
+
   /** Prévia da área da magia em preparo (esfera no cursor, cone na direção do cursor). */
   protected readonly preview = computed<AreaPreview | null>(() => {
     const m = this.mode();
     const a = this.active();
     const h = this.hover();
-    if (m.kind !== 'cast' || !a || !h) return null;
+    if (m.kind !== 'cast' || !a) return null;
     const from = tokenOf(this.s(), a.id);
     if (!from) return null;
-    const t = m.spell.target;
+    const t = this.castTarget(m);
+    if (t.kind === 'sphere' && t.self)
+      return { kind: 'sphere', center: from.pos, radiusFt: t.radius };
+    if (!h) return null;
     if (t.kind === 'sphere') return { kind: 'sphere', center: h, radiusFt: t.radius };
-    if (t.kind === 'cone') {
+    if (t.kind === 'cube' && !t.self) return { kind: 'cube', center: h, sizeFt: t.size };
+    if (t.kind === 'cone' || (t.kind === 'cube' && t.self)) {
       return {
         kind: 'cone',
         origin: from.pos,
         originSize: sizeOf(a),
         toward: h,
+        lengthFt: t.kind === 'cone' ? t.length : t.size,
+      };
+    }
+    if (t.kind === 'line') {
+      return {
+        kind: 'line',
+        origin: from.pos,
+        originSize: sizeOf(a),
+        toward: h,
         lengthFt: t.length,
+        widthFt: t.width,
       };
     }
     return null;
+  });
+
+  /** Áreas de magia ativas, em pixels do mapa (48 px por célula). */
+  protected readonly zoneViews = computed<ZoneView[]>(() => {
+    const st = this.s();
+    const C = 48;
+    return (st.zones ?? []).flatMap((z): ZoneView[] => {
+      const caster = tokenOf(st, z.casterId);
+      const origin = z.aura && caster ? caster.pos : z.center;
+      const size = caster ? sizeOf(st.creatures.find((c) => c.id === z.casterId)!) : 1;
+      const color = z.color ?? 'arcane';
+      const base = { id: z.id, name: z.name, color, obscures: z.obscures };
+      const sh = z.shape;
+      if (sh.kind === 'sphere') {
+        const c = z.aura
+          ? { x: origin.x + size / 2, y: origin.y + size / 2 }
+          : { x: origin.x + 0.5, y: origin.y + 0.5 };
+        return [
+          { ...base, shape: { kind: 'circle', cx: c.x * C, cy: c.y * C, r: (sh.radius / 5) * C } },
+        ];
+      }
+      if (sh.kind === 'cube' && !sh.self) {
+        const h = (sh.size / 10) * C;
+        return [
+          {
+            ...base,
+            shape: {
+              kind: 'rect',
+              x: (origin.x + 0.5) * C - h,
+              y: (origin.y + 0.5) * C - h,
+              w: 2 * h,
+              h: 2 * h,
+            },
+          },
+        ];
+      }
+      const toward = z.toward ?? origin;
+      const ox = (origin.x + size / 2) * C;
+      const oy = (origin.y + size / 2) * C;
+      const ang = Math.atan2((toward.y + 0.5) * C - oy, (toward.x + 0.5) * C - ox);
+      if (sh.kind === 'line') {
+        const len = (sh.length / 5) * C;
+        const w = (sh.width / 10) * C;
+        const [cs, sn] = [Math.cos(ang), Math.sin(ang)];
+        const pt = (a: number, b: number) => `${ox + a * cs - b * sn},${oy + a * sn + b * cs}`;
+        return [
+          {
+            ...base,
+            shape: {
+              kind: 'poly',
+              points: `${pt(0, -w)} ${pt(len, -w)} ${pt(len, w)} ${pt(0, w)}`,
+            },
+          },
+        ];
+      }
+      const len = ((sh.kind === 'cone' ? sh.length : sh.kind === 'cube' ? sh.size : 0) / 5) * C;
+      const half = Math.atan(0.5);
+      const pt = (a: number) => `${ox + len * Math.cos(a)},${oy + len * Math.sin(a)}`;
+      return [
+        {
+          ...base,
+          shape: { kind: 'poly', points: `${ox},${oy} ${pt(ang - half)} ${pt(ang + half)}` },
+        },
+      ];
+    });
   });
 
   /** Criaturas do encontro que ainda não estão no mapa (só o Mestre vê). */
@@ -374,7 +476,11 @@ export class CombatPage {
       return out;
     }
 
-    const target = m.spell.target;
+    const target = this.castTarget(m);
+    if (this.selfOnly(m)) {
+      if (target.kind === 'self') out.add(a.id);
+    }
+    for (const id of m.picked) out.add(id);
     for (const t of st.tokens) {
       const o = this.creature(t.creatureId);
       if (!o) continue;
@@ -382,14 +488,22 @@ export class CombatPage {
         const ok = o.status !== 'dead' || !!m.spell.heal;
         if (ok && distanceFt(from.pos, sizeOf(a), t.pos, sizeOf(o), st.rule) <= m.spell.range)
           out.add(o.id);
-      } else {
+      } else if (target.kind === 'sphere' && target.self) {
+        if (
+          o.id !== a.id &&
+          o.status !== 'dead' &&
+          inArea(null, target, from.pos, sizeOf(a), from.pos, t.pos, sizeOf(o))
+        )
+          out.add(o.id);
+      } else if (target.kind !== 'self' && target.kind !== 'point') {
         const h = this.hover();
         if (!h || o.status === 'dead') continue;
-        const hit =
-          target.kind === 'sphere'
-            ? inSphere(h, target.radius, t.pos, sizeOf(o))
-            : inCone(from.pos, sizeOf(a), h, target.length, t.pos, sizeOf(o));
-        if (hit && !(target.kind === 'cone' && o.id === a.id)) out.add(o.id);
+        const hit = inArea(null, target, from.pos, sizeOf(a), h, t.pos, sizeOf(o));
+        const selfOrigin =
+          target.kind === 'cone' ||
+          target.kind === 'line' ||
+          (target.kind === 'cube' && target.self);
+        if (hit && !(selfOrigin && o.id === a.id)) out.add(o.id);
       }
     }
     return out;
@@ -456,19 +570,9 @@ export class CombatPage {
   protected onCell(pos: Pos): void {
     const m = this.mode();
     const a = this.active();
-    if (m.kind === 'cast' && a && m.spell.target.kind !== 'creature') {
+    if (m.kind === 'cast' && a && this.castTarget(m).kind !== 'creature' && !this.selfOnly(m)) {
       // magia de área: o clique define o ponto (esfera) ou a direção (cone)
-      if (
-        this.store.send({
-          type: 'cast',
-          actorId: a.id,
-          spellId: m.spell.id,
-          slotLevel: m.slot,
-          point: pos,
-        })
-      ) {
-        this.resetMode();
-      }
+      if (this.sendCast(m, a.id, { point: pos })) this.resetMode();
       return;
     }
     this.tryMove(this.running() ? a?.id : this.selected()?.id, pos);
@@ -499,23 +603,22 @@ export class CombatPage {
       return;
     }
     if (m.kind === 'cast' && a) {
-      const ok =
-        m.spell.target.kind === 'creature'
-          ? this.store.send({
-              type: 'cast',
-              actorId: a.id,
-              spellId: m.spell.id,
-              slotLevel: m.slot,
-              targetId: id,
-            })
-          : this.store.send({
-              type: 'cast',
-              actorId: a.id,
-              spellId: m.spell.id,
-              slotLevel: m.slot,
-              point: tokenOf(this.s(), id)?.pos,
-            });
-      if (ok) this.resetMode();
+      if (this.selfOnly(m)) return;
+      if (this.castTarget(m).kind !== 'creature') {
+        if (this.sendCast(m, a.id, { point: tokenOf(this.s(), id)?.pos })) this.resetMode();
+        return;
+      }
+      if (this.maxTargets(m) <= 1) {
+        if (this.sendCast(m, a.id, { targetId: id })) this.resetMode();
+        return;
+      }
+      // vários alvos: marca/desmarca e confirma em "Conjurar"
+      const picked = m.picked.includes(id)
+        ? m.picked.filter((x) => x !== id)
+        : m.picked.length < this.maxTargets(m)
+          ? [...m.picked, id]
+          : m.picked;
+      this.mode.set({ ...m, picked });
       return;
     }
     this.selectedId.set(id);
@@ -560,8 +663,45 @@ export class CombatPage {
   }
 
   /** O painel de magias escolheu uma magia e um espaço (ou limpou a escolha). */
-  protected onSpell(pick: { spell: Spell; slot: number } | null): void {
-    this.mode.set(pick ? { kind: 'cast', spell: pick.spell, slot: pick.slot } : { kind: 'move' });
+  /** Envia a conjuração com o conjunto de regras da tela; reações avulsas saem como `reaction`. */
+  private sendCast(
+    m: Extract<Mode, { kind: 'cast' }>,
+    actorId: string,
+    over: { targetId?: string; targetIds?: string[]; point?: Pos },
+  ): boolean {
+    const common = {
+      actorId,
+      spellId: m.spell.id,
+      slotLevel: m.slot,
+      ruleset: this.ui.ruleset(),
+      ...over,
+    };
+    return m.spell.castTime === 'reaction'
+      ? this.store.send({ type: 'reaction', use: true, ...common })
+      : this.store.send({ type: 'cast', ...common, ...(m.sustain ? { sustain: true } : {}) });
+  }
+
+  /** "Conjurar": magia sem alvo a clicar (em você, aura) ou com vários alvos já marcados. */
+  protected confirmCast(): void {
+    const m = this.mode();
+    const a = this.active();
+    if (m.kind !== 'cast' || !a) return;
+    const over = m.picked.length ? { targetIds: m.picked } : {};
+    if (this.sendCast(m, a.id, over)) this.resetMode();
+  }
+
+  protected castReady(): boolean {
+    const m = this.mode();
+    if (m.kind !== 'cast') return false;
+    return this.selfOnly(m) || (this.maxTargets(m) > 1 && m.picked.length > 0);
+  }
+
+  protected onSpell(pick: { spell: Spell; slot: number; sustain?: boolean } | null): void {
+    this.mode.set(
+      pick
+        ? { kind: 'cast', spell: pick.spell, slot: pick.slot, sustain: pick.sustain, picked: [] }
+        : { kind: 'move' },
+    );
   }
 
   protected toggleHelp(): void {
@@ -627,8 +767,23 @@ export class CombatPage {
     this.store.send({ type: 'removeCondition', targetId: id, condition: name });
   }
 
-  protected react(actorId: string, use: boolean): void {
-    this.store.send({ type: 'reaction', actorId, use });
+  protected react(actorId: string, use: boolean, spellId?: string, slotLevel?: number): void {
+    this.store.send({
+      type: 'reaction',
+      actorId,
+      use,
+      ...(spellId ? { spellId, slotLevel, ruleset: this.ui.ruleset() } : {}),
+    });
+  }
+
+  /** Magias de reação que quem reage pode usar agora, conforme o gatilho pendente. */
+  protected reactionOptions(r: {
+    reactorId: string;
+    spell?: { trigger: 'hit' | 'damaged' | 'cast' };
+  }) {
+    const c = this.creature(r.reactorId);
+    if (!c || !r.spell) return [];
+    return reactionSpells(c, r.spell.trigger);
   }
 
   protected nameOf(id: string): string {

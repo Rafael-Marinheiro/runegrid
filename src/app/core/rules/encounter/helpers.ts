@@ -1,4 +1,4 @@
-import { Creature, DAMAGE_LABEL, DamageType } from '../../models/creature';
+import { CONDITION_LABEL, Creature, DAMAGE_LABEL, DamageType } from '../../models/creature';
 import { EncounterState, Role, TurnState } from '../../models/encounter';
 import { BonusAction, bonusActionsOf, canAct, checkConcentration, RuleError } from '../creature';
 import { AdvMode, Rng } from '../dice';
@@ -74,6 +74,11 @@ export function actorTurn(
   if (state.combat.phase !== 'running' || !turn)
     throw new RuleError('O combate não está em andamento.');
   if (turn.actorId !== actorId) throw new RuleError(`Não é a vez de ${actor.name}.`);
+  const waiting = (state.combat.pending ?? []).find((p) => p.kind === 'spell');
+  if (waiting)
+    throw new RuleError(
+      `Aguardando a reação de ${creatureOf(state, waiting.reactorId).name}: use ou recuse.`,
+    );
   if (need === 'alive' && !canAct(actor)) throw new RuleError(`${actor.name} não pode agir agora.`);
   if (need === 'dying' && actor.status !== 'dying')
     throw new RuleError(`${actor.name} não está morrendo.`);
@@ -123,7 +128,16 @@ export function aftermath(
   dealt: number,
   rng: Rng,
 ): EncounterState {
-  const t = creatureOf(state, targetId);
+  let t = creatureOf(state, targetId);
+  if (dealt > 0 && t.conditions.some((c) => c.endsOnDamage)) {
+    const woke = t.conditions.filter((c) => c.endsOnDamage);
+    t = { ...t, conditions: t.conditions.filter((c) => !c.endsOnDamage) };
+    state = addLog(
+      withCreature(state, t),
+      `${t.name} acorda: ${woke.map((c) => c.spell ?? CONDITION_LABEL[c.name]).join(', ')} termina.`,
+      [t.id],
+    );
+  }
   if (!t.concentration) return state;
   if (t.status !== 'alive') {
     return addLog(

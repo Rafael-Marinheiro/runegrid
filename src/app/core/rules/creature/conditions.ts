@@ -1,5 +1,6 @@
-import { Ability, ConditionName, Creature } from '../../models/creature';
+import { ActiveCondition, Ability, ConditionName, Creature } from '../../models/creature';
 import { AdvMode, Rng, rollD20 } from '../dice';
+import { attackedModes, blocksCondition, ownAttackModes, speedWithEffects } from './effects';
 import { saveBonus } from './stats';
 
 export const hasCondition = (c: Creature, name: ConditionName): boolean =>
@@ -41,7 +42,7 @@ export const canAct = (c: Creature): boolean => c.status === 'alive' && !any(c, 
 
 /** Deslocamento efetivo (0 se agarrado, contido, paralisado…). */
 export const effectiveSpeed = (c: Creature): number =>
-  any(c, NO_SPEED) || isDown(c) ? 0 : c.speed;
+  any(c, NO_SPEED) || isDown(c) ? 0 : speedWithEffects(c, c.speed);
 
 export const autoFailsSave = (c: Creature, ability: Ability): boolean =>
   (ability === 'str' || ability === 'dex') && (any(c, AUTO_FAIL_STR_DEX) || isDown(c));
@@ -59,7 +60,7 @@ export function attackModifiers(
   distanceFt: number,
   ranged: boolean,
 ): AttackContext {
-  const modes: AdvMode[] = [];
+  const modes: AdvMode[] = [...ownAttackModes(attacker), ...attackedModes(target)];
   if (any(attacker, ATTACK_DISADV)) modes.push('disadvantage');
   if (hasCondition(attacker, 'invisible')) modes.push('advantage');
 
@@ -73,9 +74,19 @@ export function attackModifiers(
   return { modes, autoCrit: helpless && distanceFt <= 5 };
 }
 
-export function addCondition(c: Creature, name: ConditionName, rounds?: number): Creature {
+export function addCondition(
+  c: Creature,
+  name: ConditionName,
+  rounds?: number,
+  origin?: Pick<ActiveCondition, 'spell' | 'by' | 'concentration' | 'repeatSave' | 'endsOnDamage'>,
+): Creature {
+  if (blocksCondition(c, name)) return c;
   const existing = c.conditions.find((x) => x.name === name);
-  const entry = rounds && rounds > 0 ? { name, rounds } : { name };
+  const entry: ActiveCondition = {
+    name,
+    ...(rounds && rounds > 0 ? { rounds } : {}),
+    ...(origin ?? {}),
+  };
   if (!existing) return { ...c, conditions: [...c.conditions, entry] };
   // já tem: mantém a duração mais longa
   const keep =

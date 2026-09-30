@@ -45,3 +45,48 @@ export function inCone(
     return cos >= Math.cos((30 * Math.PI) / 180);
   });
 }
+
+/** Cubo de `sizeFt` de aresta centrado na célula `point` atinge alguma célula da criatura? */
+export function inCube(point: Pos, sizeFt: number, pos: Pos, size: number): boolean {
+  const c = center(point);
+  const half = sizeFt / 2;
+  return footprint(pos, size).some((cell) => {
+    const q = center(cell);
+    return (
+      Math.abs(q.x - c.x) * CELL_FT <= half + CELL_FT / 2 - 0.01 &&
+      Math.abs(q.y - c.y) * CELL_FT <= half + CELL_FT / 2 - 0.01
+    );
+  });
+}
+
+/**
+ * Linha que nasce em `origin` (criatura de `originSize`), aponta para `toward`, mede `lengthFt` de
+ * comprimento e `widthFt` de largura atinge alguma célula da criatura?
+ */
+export function inLine(
+  origin: Pos,
+  originSize: number,
+  toward: Pos,
+  lengthFt: number,
+  widthFt: number,
+  pos: Pos,
+  size: number,
+): boolean {
+  const o = bodyCenter(origin, originSize);
+  const t = center(toward);
+  const dir = { x: t.x - o.x, y: t.y - o.y };
+  const dirLen = Math.hypot(dir.x, dir.y);
+  if (dirLen === 0) return false;
+  const u = { x: dir.x / dirLen, y: dir.y / dirLen };
+  const own = new Set(footprint(origin, originSize).map((c) => `${c.x},${c.y}`));
+  const length = lengthFt / CELL_FT;
+  const half = Math.max(widthFt / CELL_FT / 2, 0.5);
+  return footprint(pos, size).some((cell) => {
+    if (own.has(`${cell.x},${cell.y}`)) return false;
+    const q = center(cell);
+    const v = { x: q.x - o.x, y: q.y - o.y };
+    const along = v.x * u.x + v.y * u.y;
+    const across = Math.abs(v.x * u.y - v.y * u.x);
+    return along > 0 && along <= length + 0.5 && across <= half;
+  });
+}

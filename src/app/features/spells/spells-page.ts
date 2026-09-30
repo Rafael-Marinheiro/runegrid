@@ -9,6 +9,7 @@ import {
 import { SrdSpell } from '@core/models/srd';
 import { getSpell } from '@core/rules/spells/data';
 import { spellNamePt } from '@core/rules/srd/names-pt';
+import { SpellStore } from '@state/spell.store';
 import { SrdStore } from '@state/srd.store';
 import { UiPrefs } from '@state/ui-prefs';
 
@@ -23,6 +24,7 @@ const PAGE = 60;
 export class SpellsPage implements OnInit {
   protected readonly srd = inject(SrdStore);
   protected readonly ui = inject(UiPrefs);
+  private readonly spellStore = inject(SpellStore);
 
   protected readonly levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
   protected readonly query = signal('');
@@ -59,12 +61,14 @@ export class SpellsPage implements OnInit {
 
   ngOnInit(): void {
     void this.srd.loadSpells(this.ui.ruleset());
+    void this.spellStore.ensure(this.ui.ruleset());
   }
 
   protected setRuleset(value: string): void {
     const ruleset = value === '2024' ? '2024' : '2014';
     this.ui.ruleset.set(ruleset);
     void this.srd.loadSpells(ruleset);
+    void this.spellStore.ensure(ruleset);
   }
 
   /** Nome da magia em pt-BR se a interface estiver nesse idioma (glossário próprio, F11-6). */
@@ -87,8 +91,15 @@ export class SpellsPage implements OnInit {
       : this.ui.text(`${s.level}º nível`, `Level ${s.level}`);
   }
 
-  /** O motor de combate já resolve esta magia por completo? */
-  protected inCombat(s: SrdSpell): boolean {
-    return !!getSpell(s.id);
+  /** Como o motor trata a magia: resolvida (`engine`), só narrativa (`narrative`) ou ainda sem regra. */
+  protected kind(s: SrdSpell): 'engine' | 'narrative' | null {
+    this.spellStore.version();
+    const spell = getSpell(s.id, this.ui.ruleset());
+    return !spell ? null : spell.narrative ? 'narrative' : 'engine';
+  }
+
+  /** Parte que o Mestre resolve à mão, se a magia a declara. */
+  protected manual(s: SrdSpell): string | undefined {
+    return getSpell(s.id, this.ui.ruleset())?.manual;
   }
 }

@@ -1,7 +1,7 @@
 /** Text views of the scene for the LLM: an ASCII map (per role) and the game/combat status. */
 import { CONDITION_LABEL, DAMAGE_LABEL, type Creature } from '@core/models/creature';
 import type { EncounterState } from '@core/models/encounter';
-import { SPELLS } from '@core/rules/spells/data';
+import { getSpell } from '@core/rules/spells/data';
 import { creatureOf, project, sizeOf, teamOf, tokenOf } from '@core/rules/encounter';
 import { effectiveSpeed } from '@core/rules/creature';
 import { distanceFt, footprint } from '@core/rules/grid/movement';
@@ -181,7 +181,7 @@ function combatBlock(s: EncounterState, lab: Map<string, string>): string[] {
       `Attacks: ${actor.attacks.map((a, i) => `[${i}] ${a.name} ${fmt(a.bonus)} ${a.damage} ${DAMAGE_LABEL[a.type].toLowerCase()} (${a.range} ft)`).join(' | ')}`,
     );
   const known = (actor.spellcasting?.spells ?? [])
-    .map((id) => SPELLS.find((x) => x.id === id))
+    .map((id) => getSpell(id, '2024'))
     .filter((x) => x !== undefined);
   if (known.length)
     L.push(
@@ -191,10 +191,15 @@ function combatBlock(s: EncounterState, lab: Map<string, string>): string[] {
           .join(' ') || 'none'
       }`,
     );
-  for (const p of combat.pending ?? [])
+  for (const p of combat.pending ?? []) {
+    const who = creatureOf(s, p.reactorId).name;
+    const other = creatureOf(s, p.targetId).name;
     L.push(
-      `⚠ PENDING REACTION: ${creatureOf(s, p.reactorId).name} may make an opportunity attack on ${creatureOf(s, p.targetId).name} — act {actor:"${creatureOf(s, p.reactorId).name}", action:"reaction", use:true|false} before end_turn.`,
+      p.kind === 'spell'
+        ? `⚠ PENDING REACTION (${p.spell?.trigger}): ${who} may react to ${other} with a reaction spell — act {actor:"${who}", action:"reaction", use:true, spell:"Shield"|"Counterspell"|"Hellish Rebuke", slot_level?} or use:false. Everything waits for the decision.`
+        : `⚠ PENDING REACTION: ${who} may make an opportunity attack on ${other} — act {actor:"${who}", action:"reaction", use:true|false} before end_turn.`,
     );
+  }
 
   L.push('Initiative order:');
   combat.order.forEach((id, i) => {

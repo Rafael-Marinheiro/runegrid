@@ -278,6 +278,7 @@
         [tokens]="tokens()"
         [reach]="reach()"
         [preview]="preview()"
+        [zones]="zoneViews()"
         [path]="path()"
         [pings]="room.pings()"
         [effects]="effects()"
@@ -312,27 +313,58 @@
     </div>
 
     @for (r of reactions(); track r.id) {
-      <div class="panel reaction" role="alert">
-        <span>
-          <b>{{ nameOf(r.reactorId) }}</b>
-          {{
-            ui.text(
-              'pode fazer um ataque de oportunidade contra',
-              'can make an opportunity attack against'
-            )
-          }}
-          <b>{{ nameOf(r.targetId) }}</b
-          >.
-        </span>
-        <span class="react-btns">
-          <button type="button" class="primary" (click)="react(r.reactorId, true)">
-            {{ ui.text('Atacar', 'Attack') }}
-          </button>
-          <button type="button" (click)="react(r.reactorId, false)">
-            {{ ui.text('Recusar', 'Decline') }}
-          </button>
-        </span>
-      </div>
+      @if (r.kind === 'spell') {
+        <div class="panel reaction" role="alert">
+          <span>
+            <b>{{ nameOf(r.reactorId) }}</b>
+            {{
+              r.spell?.trigger === 'hit'
+                ? ui.text('foi atingido(a) por', 'was hit by')
+                : r.spell?.trigger === 'damaged'
+                  ? ui.text('sofreu dano de', 'took damage from')
+                  : ui.text('vê uma conjuração de', 'sees a spell cast by')
+            }}
+            <b>{{ nameOf(r.targetId) }}</b
+            >.
+          </span>
+          <span class="react-btns">
+            @for (o of reactionOptions(r); track o.spell.id) {
+              <button
+                type="button"
+                class="primary"
+                (click)="react(r.reactorId, true, o.spell.id, o.slot)"
+              >
+                {{ o.spell.name }} ({{ o.slot }}º)
+              </button>
+            }
+            <button type="button" (click)="react(r.reactorId, false)">
+              {{ ui.text('Recusar', 'Decline') }}
+            </button>
+          </span>
+        </div>
+      } @else {
+        <div class="panel reaction" role="alert">
+          <span>
+            <b>{{ nameOf(r.reactorId) }}</b>
+            {{
+              ui.text(
+                'pode fazer um ataque de oportunidade contra',
+                'can make an opportunity attack against'
+              )
+            }}
+            <b>{{ nameOf(r.targetId) }}</b
+            >.
+          </span>
+          <span class="react-btns">
+            <button type="button" class="primary" (click)="react(r.reactorId, true)">
+              {{ ui.text('Atacar', 'Attack') }}
+            </button>
+            <button type="button" (click)="react(r.reactorId, false)">
+              {{ ui.text('Recusar', 'Decline') }}
+            </button>
+          </span>
+        </div>
+      }
     }
 
     @let a = active();
@@ -510,6 +542,11 @@
                 )
               }}
             </p>
+            @if (castReady()) {
+              <button type="button" class="primary" (click)="confirmCast()">
+                {{ ui.text('Conjurar', 'Cast') }}
+              </button>
+            }
           } @else if (!spellsOpen()) {
             <p class="hint">
               {{
@@ -607,6 +644,15 @@
                     ×
                   </button>
                 }
+              </li>
+            }
+          </ul>
+        }
+        @if (c.effects?.length) {
+          <ul class="conds" [attr.aria-label]="ui.text('Efeitos de magias', 'Spell effects')">
+            @for (e of c.effects; track e.id) {
+              <li class="chip cond" [attr.title]="e.mods.note ?? ''">
+                {{ e.name }}{{ e.rounds && e.rounds <= 100 ? ' · ' + e.rounds + 'r' : '' }}
               </li>
             }
           </ul>

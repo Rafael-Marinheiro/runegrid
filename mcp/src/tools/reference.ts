@@ -4,7 +4,7 @@ import type { SrdMonster } from '@core/models/srd';
 import { abilityMod, autoFailsSave, saveBonus, skillBonus } from '@core/rules/creature';
 import { roll, rollD20, type AdvMode, type RollResult } from '@core/rules/dice';
 import { CATALOG } from '@core/rules/inventory/catalog';
-import { SPELLS } from '@core/rules/spells/data';
+import { getSpell } from '@core/rules/spells/data';
 import { crLabel } from '@core/rules/srd/convert';
 import { monsterNamePt, spellNamePt } from '@core/rules/srd/names-pt';
 import { z } from 'zod';
@@ -218,7 +218,10 @@ Spells marked ✔engine are resolved automatically by rg_combat_act cast; others
             .sort((x, y) => x.level - y.level || x.name.localeCompare(y.name))
             .map(
               (s) =>
-                `${s.id} | ${spellNamePt(s.name)} | L${s.level} | ${s.school} | ${s.classes.join('/')}${SPELLS.some((e) => e.id === s.id) ? ' | ✔engine' : ''}`,
+                `${s.id} | ${spellNamePt(s.name)} | L${s.level} | ${s.school} | ${s.classes.join('/')}${(() => {
+                  const e = getSpell(s.id, rs);
+                  return e ? (e.narrative ? ' | ✔narrative' : ' | ✔engine') : '';
+                })()}`,
             );
         else
           rows = CATALOG.filter((i) => !q || i.id.includes(q) || plain(i.name).includes(q)).map(
@@ -257,7 +260,7 @@ Spells marked ✔engine are resolved automatically by rg_combat_act cast; others
             plain(spellNamePt(x.name)) === r,
         );
         if (!s) throw new GameError(`No spell "${id}" in SRD ${rs}. Use rg_srd_search kind=spell.`);
-        const e = SPELLS.find((x) => x.id === s.id);
+        const e = getSpell(s.id, rs);
         return [
           `# ${spellNamePt(s.name)} (${s.name}) — level ${s.level} ${s.school} [id ${s.id}]`,
           `Casting time ${s.castingTime} · Range ${s.range} · Components ${s.components} · Duration ${s.duration}${s.concentration ? ' (concentration)' : ''}${s.ritual ? ' · ritual' : ''}`,
@@ -265,9 +268,11 @@ Spells marked ✔engine are resolved automatically by rg_combat_act cast; others
           '',
           s.desc,
           s.higher ? `\nAt higher levels: ${s.higher}` : '',
-          e
-            ? `\n✔ Engine-resolved: rg_combat_act cast handles targeting, attack/save rolls, damage/healing, slots and conditions automatically (${JSON.stringify({ target: e.target, resolution: e.resolution, damage: e.damage?.dice, heal: e.heal?.dice })}).`
-            : '\n✘ Not automated: adjudicate it yourself (rg_dm_command damage/heal/add_condition, rg_character_update spend_slot).',
+          e?.narrative
+            ? '\n✔ Castable in the engine (rg_combat_act cast spends the slot and concentration and logs the official text), but the effect is narrative: you adjudicate it.'
+            : e
+              ? `\n✔ Engine-resolved: rg_combat_act cast handles targeting, attack/save rolls, damage/healing, slots and conditions automatically (${JSON.stringify({ target: e.target, resolution: e.resolution, damage: e.damage?.dice, heal: e.heal?.dice })}).`
+              : '\n✘ Not automated: adjudicate it yourself (rg_dm_command damage/heal/add_condition, rg_character_update spend_slot).',
         ]
           .filter((l) => l !== '')
           .join('\n');

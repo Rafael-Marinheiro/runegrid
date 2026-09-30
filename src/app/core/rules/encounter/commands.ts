@@ -83,7 +83,13 @@ export type Command =
       spellId: string;
       slotLevel?: number;
       targetId?: string;
+      /** Vários alvos (Bênção, Raios Ardentes, Mísseis Mágicos entre criaturas diferentes). */
+      targetIds?: string[];
       point?: Pos;
+      /** Conjunto de regras do 2014 (padrão) ou do 2024. */
+      ruleset?: '2014' | '2024';
+      /** Usa de novo uma magia mantida (Arma Espiritual), sem gastar espaço. */
+      sustain?: boolean;
     }
   | { type: 'openDoor'; actorId: string; pos: Pos }
   | { type: 'standUp'; actorId: string }
@@ -97,7 +103,18 @@ export type Command =
   | { type: 'useItem'; actorId: string; itemId: string }
   | { type: 'deathSave'; actorId: string }
   /** Usa (ou recusa) a reação pendente do personagem: o ataque de oportunidade. */
-  | { type: 'reaction'; actorId: string; use: boolean }
+  | {
+      type: 'reaction';
+      actorId: string;
+      use: boolean;
+      /** Magia de reação (Escudo Arcano, Contrafeitiço); sem reação pendente, vale a reação avulsa. */
+      spellId?: string;
+      slotLevel?: number;
+      targetId?: string;
+      targetIds?: string[];
+      point?: Pos;
+      ruleset?: '2014' | '2024';
+    }
   | { type: 'endTurn'; actorId: string };
 
 export type CommandType = Command['type'];

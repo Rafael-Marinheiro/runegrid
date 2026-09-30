@@ -53,7 +53,22 @@ const ActionSchema = z.object({
     .describe(
       'SRD 2024: a melee hit that would drop the target to 0 HP leaves it at 1 HP unconscious instead',
     ),
-  spell: z.string().optional().describe('Engine spell id or name (see rg_srd_get)'),
+  spell: z
+    .string()
+    .optional()
+    .describe('Spell id or name (see rg_srd_get); every SRD spell is in the engine'),
+  targets: z
+    .array(z.string())
+    .optional()
+    .describe(
+      'cast/reaction: several targets (Bless, Scorching Ray, Magic Missile…); darts/rays are split among them',
+    ),
+  sustain: z
+    .boolean()
+    .optional()
+    .describe(
+      'cast: use again a spell you are sustaining (Spiritual Weapon…) — no slot, costs its action/bonus action',
+    ),
   slot_level: z
     .number()
     .int()
@@ -76,7 +91,9 @@ const ActionSchema = z.object({
   use: z
     .boolean()
     .optional()
-    .describe('reaction: true = make the opportunity attack, false = decline'),
+    .describe(
+      'reaction: true = react (opportunity attack, or cast the reaction spell named in "spell": Shield, Counterspell, Hellish Rebuke…), false = decline',
+    ),
 });
 
 export function registerCombat(server: McpServer): void {
@@ -122,7 +139,7 @@ The fight then runs: rg_game_status → rg_combat_act for the creature whose tur
     {
       title: 'Take combat actions for a creature',
       description: `Perform one or several actions for ONE creature, in order, through the rules engine: it checks that it is that creature's turn, range, action economy, movement cost/terrain/doors, opportunity attacks, cover, advantage/disadvantage from conditions, rolls the dice, applies damage/resistances/concentration/death saves and writes everything to the combat log. You never roll or compute damage yourself.
-Actions (one object each): move {to:{x,y}} or {adjacent_to:"Goblin 1"} · attack {target, attack?, mode?, knock_out?} · cast {spell, target? | at? | point?, slot_level?} · dash · dodge · disengage · hide · help {target} · use_item {item} · stand_up · open_door {point} · death_save · reaction {use:true|false} (the actor is then the REACTOR, see pending reactions in the status) · end_turn.
+Actions (one object each): move {to:{x,y}} or {adjacent_to:"Goblin 1"} · attack {target, attack?, mode?, knock_out?} · cast {spell, target? | at? | point?, slot_level?} · dash · dodge · disengage · hide · help {target} · use_item {item} · stand_up · open_door {point} · death_save · reaction {use:true|false, spell?, slot_level?} (the actor is then the REACTOR, see pending reactions in the status; Shield/Counterspell/Hellish Rebuke offer themselves as pending reactions) · end_turn.
 Batch a whole turn in one call, e.g. actions:[{move adjacent_to "Thordak"},{attack target "Thordak"},{attack target "Thordak"},{end_turn}]. Execution stops at the first failing action (earlier ones stay applied) and reports why; fix and call again.
 Always end a turn with end_turn (also when dying, after death_save). If a move provoked an opportunity attack the turn cannot end until each pending reaction is answered with reaction use:true|false.
 Args: actor (creature name); actions (1–8).`,

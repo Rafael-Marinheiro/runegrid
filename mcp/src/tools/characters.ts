@@ -5,7 +5,7 @@ import { fullCasterSlots, rest } from '@core/rules/creature';
 import { addItem, removeItem, toggleEquip } from '@core/rules/inventory/inventory';
 import { CATALOG, getItem } from '@core/rules/inventory/catalog';
 import { spendResource, spendSlot } from '@core/rules/creature';
-import { SPELLS } from '@core/rules/spells/data';
+import { allSpells } from '@core/rules/spells/data';
 import { z } from 'zod';
 import { activeGame, type Game } from '../campaign';
 import { exec, place, tx, who } from '../game';
@@ -23,7 +23,7 @@ function spellIds(names: string[]): { ids: string[]; manual: string[] } {
   const manual: string[] = [];
   for (const n of names) {
     const r = plain(n);
-    const s = SPELLS.find((x) => x.id === r.replace(/\s+/g, '-') || plain(x.name) === r);
+    const s = allSpells('2024').find((x) => x.id === r.replace(/\s+/g, '-') || plain(x.name) === r);
     if (s) ids.push(s.id);
     else {
       ids.push(r.replace(/\s+/g, '-'));

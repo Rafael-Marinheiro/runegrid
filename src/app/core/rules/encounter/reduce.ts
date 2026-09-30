@@ -22,12 +22,21 @@ import {
   tickConditions,
   canAct,
   skillBonus,
+  hasNoReactions,
+  effectiveAc,
+  weaponBonus,
+  weaponRiders,
+  effectsOf,
 } from '../creature';
 import { AdvMode, criticalExpr, parseDice, roll, rollD20, Rng } from '../dice';
 import { canStand, distanceFt, findPath, footprint, MoveQuery } from '../grid/movement';
 import { hasLineOfSight } from '../grid/visibility';
 import { consume, itemDef } from '../inventory/inventory';
 import { cast } from './cast';
+import { freeReaction, spellReaction } from './reaction-flow';
+import { holdOrApply } from './hits';
+import { attackExtra, consumeAttacked, dropOnAttack } from './rolls';
+import { beginUpkeep, endUpkeep, enterZones, syncConcentration, tickZones } from './upkeep';
 import { consumeHelp, coverBonus } from './cover';
 import {
   firstTrapOnPath,
@@ -64,7 +73,6 @@ import {
   checkOutcome,
   combineModes,
   Context,
-  dtype,
   fmt,
   notes,
   setTurn,
@@ -101,7 +109,7 @@ export function dispatch(state: EncounterState, cmd: Command, ctx: Context): Enc
     record: (sides: number, rolled: { value: number; dropped: boolean }[]) =>
       dice.push(...rolled.map((d) => ({ sides, value: d.value, dropped: d.dropped }))),
   });
-  const next = apply(state, cmd, { ...ctx, rng });
+  const next = syncConcentration(apply(state, cmd, { ...ctx, rng }));
   if (!dice.length) return next;
   // os dados vão na primeira linha nova do registro (a tela junta os de todas as linhas novas)
   const i = next.log.findIndex((e) => e.id >= state.seq);
@@ -115,7 +123,7 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
     case 'addCreature':
       return addCreature(state, cmd);
     case 'removeCreature':
-      return removeCreature(state, cmd.id);
+      return removeCreature(state, cmd.id, ctx);
     case 'placeToken':
       return placeToken(state, cmd.id, cmd.pos);
     case 'setHidden': {
@@ -203,7 +211,7 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       };
     }
     case 'startCombat':
-      return startCombat(state);
+      return startCombat(state, ctx);
     case 'joinCombat':
       return joinCombat(state, cmd.id, ctx.rng);
     case 'endCombat': {
@@ -265,7 +273,7 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       ]);
     }
     case 'move':
-      return move(state, cmd.actorId, cmd.to, ctx.rng);
+      return move(state, cmd.actorId, cmd.to, ctx);
     case 'attack':
       return attack(state, cmd, ctx);
     case 'dash': {
@@ -387,8 +395,12 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
         [actor.id],
       );
     }
-    case 'reaction':
+    case 'reaction': {
+      const pend = (state.combat.pending ?? []).find((x) => x.reactorId === cmd.actorId);
+      if (pend?.kind === 'spell') return spellReaction(state, cmd, pend, ctx);
+      if (!pend && cmd.spellId) return freeReaction(state, cmd, ctx);
       return reaction(state, cmd.actorId, cmd.use, ctx.rng);
+    }
     case 'endTurn': {
       const { actor } = actorTurn(state, cmd.actorId, 'any');
       if ((state.combat.pending ?? []).length) {
@@ -398,7 +410,7 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       let s = withCreature(state, t.creature);
       for (const n of t.expired)
         s = addLog(s, `${actor.name}: ${CONDITION_LABEL[n]} terminou.`, [actor.id]);
-      return advanceTurn(s);
+      return advanceTurn(endUpkeep(s, actor.id, ctx), ctx);
     }
     default:
       // mensagens malformadas de jogadores nunca chegam aqui (validação), mas o reducer não confia em ninguém
@@ -428,7 +440,7 @@ function addCreature(
   return addLog(s, `${c.name} entrou no encontro.`, [c.id]);
 }
 
-function removeCreature(state: EncounterState, id: string): EncounterState {
+function removeCreature(state: EncounterState, id: string, ctx: Context): EncounterState {
   const c = creatureOf(state, id);
   let s: EncounterState = {
     ...state,
@@ -460,7 +472,7 @@ function removeCreature(state: EncounterState, id: string): EncounterState {
   if (order.length === 0) return { ...s, combat: emptyCombat() };
   const outcome = checkOutcome(s);
   if (outcome.combat.phase === 'ended') return outcome;
-  return wasCurrent ? beginTurn(s) : s;
+  return wasCurrent ? beginTurn(s, ctx) : s;
 }
 
 function placeToken(
@@ -498,7 +510,7 @@ function rollInitiative(state: EncounterState, rng: Rng): EncounterState {
 
 // ---------- combate ----------
 
-function startCombat(state: EncounterState): EncounterState {
+function startCombat(state: EncounterState, ctx: Context): EncounterState {
   if (state.combat.phase === 'running') throw new RuleError('O combate já começou.');
   const order = state.creatures
     .filter((c) => state.combat.initiative[c.id] !== undefined && tokenOf(state, c.id))
@@ -524,7 +536,7 @@ function startCombat(state: EncounterState): EncounterState {
   };
   s = addLog(s, 'O combate começou.');
   // se o primeiro da ordem já está morto, pula para o próximo vivo
-  return creatureOf(s, order[0]).status === 'dead' ? advanceTurn(s) : beginTurn(s);
+  return creatureOf(s, order[0]).status === 'dead' ? advanceTurn(s, ctx) : beginTurn(s, ctx);
 }
 
 /** Entra num combate em andamento: rola iniciativa e se encaixa na ordem sem mudar de quem é a vez. */
@@ -570,7 +582,7 @@ function newTurn(actorId: string): TurnState {
 }
 
 /** Começa o turno de `combat.order[turnIndex]`: zera o orçamento e encerra a Esquiva dele. */
-function beginTurn(state: EncounterState): EncounterState {
+function beginTurn(state: EncounterState, ctx: Context): EncounterState {
   const actor = creatureOf(state, state.combat.order[state.combat.turnIndex]);
   const s: EncounterState = {
     ...state,
@@ -582,10 +594,14 @@ function beginTurn(state: EncounterState): EncounterState {
       reactionUsed: (state.combat.reactionUsed ?? []).filter((id) => id !== actor.id),
     },
   };
-  return addLog(s, `Turno de ${actor.name} (rodada ${s.combat.round}).`, [actor.id]);
+  return beginUpkeep(
+    addLog(s, `Turno de ${actor.name} (rodada ${s.combat.round}).`, [actor.id]),
+    actor.id,
+    ctx,
+  );
 }
 
-function advanceTurn(state: EncounterState): EncounterState {
+function advanceTurn(state: EncounterState, ctx: Context): EncounterState {
   const outcome = checkOutcome(state);
   if (outcome.combat.phase === 'ended') return outcome;
   const { order } = state.combat;
@@ -598,7 +614,8 @@ function advanceTurn(state: EncounterState): EncounterState {
     }
     if (creatureOf(state, order[turnIndex]).status !== 'dead') break;
   }
-  return beginTurn({ ...state, combat: { ...state.combat, turnIndex, round } });
+  const base = { ...state, combat: { ...state.combat, turnIndex, round } };
+  return beginTurn(round > state.combat.round ? tickZones(base) : base, ctx);
 }
 
 /**
@@ -626,8 +643,9 @@ function move(
   state: EncounterState,
   actorId: string,
   to: { x: number; y: number },
-  rng: Rng,
+  ctx: Context,
 ): EncounterState {
+  const rng = ctx.rng;
   const { actor, turn } = actorTurn(state, actorId);
   const q = moveQuery(state, actorId);
   // não pode terminar sobre ninguém
@@ -652,7 +670,8 @@ function move(
     [actorId],
   );
   const queued = turn.disengaged ? s : queueOpportunities(s, actorId, q.start, stop);
-  return hit ? triggerTrap(queued, actorId, hit.trap.id, rng) : queued;
+  const entered = enterZones(queued, actorId, q.start, ctx);
+  return hit ? triggerTrap(entered, actorId, hit.trap.id, rng) : entered;
 }
 
 /** Quem estava ao alcance e deixou de estar (sem Desengajar) dá uma reação a cada inimigo capaz. */
@@ -667,7 +686,7 @@ function queueOpportunities(
   let seq = pending.reduce((n, p) => Math.max(n, p.id), 0);
   for (const t of state.tokens) {
     const h = creatureOf(state, t.creatureId);
-    if (teamOf(h) === teamOf(mover) || !canAct(h)) continue;
+    if (teamOf(h) === teamOf(mover) || !canAct(h) || hasNoReactions(h)) continue;
     if ((state.combat.reactionUsed ?? []).includes(h.id)) continue;
     const melee = h.attacks.map((a, i) => ({ a, i })).filter((x) => x.a.range <= 10);
     if (!melee.length) continue;
@@ -701,7 +720,9 @@ function reaction(
   rng: Rng,
 ): EncounterState {
   const pending = state.combat.pending ?? [];
-  const p = pending.find((x: PendingReaction) => x.reactorId === reactorId);
+  const p = pending.find(
+    (x: PendingReaction) => x.reactorId === reactorId && x.kind === 'opportunity',
+  );
   if (!p) throw new RuleError('Não há reação pendente para essa criatura.');
   const rest = { ...state, combat: { ...state.combat, pending: pending.filter((x) => x !== p) } };
   const reactor = creatureOf(state, reactorId);
@@ -816,31 +837,50 @@ function strike(
   const cond = attackModifiers(actor, target, dist, weapon.range > 5);
   const helped = consumeHelp(state, target.id);
   state = helped.state;
+  const extraRoll = attackExtra(state, actor.id, rng);
+  state = consumeAttacked(extraRoll.state, target.id);
   const mode = combineModes([...modes, ...helped.modes, ...cond.modes]);
   const at = tokenOf(state, target.id)!;
   const cover = coverBonus(state, from.pos, at.pos);
-  const ac = target.ac + cover;
+  const ac = effectiveAc(target) + cover;
+  const magic = weaponBonus(actor);
 
-  const d20 = rollD20(weapon.bonus, mode, rng);
-  const hit = d20.crit || (!d20.fumble && d20.roll.total >= ac);
+  const d20 = rollD20(weapon.bonus + magic, mode, rng);
+  const total = d20.roll.total + extraRoll.bonus;
+  const hit = d20.crit || (!d20.fumble && total >= ac);
   const crit = hit && (d20.crit || cond.autoCrit);
   const head =
-    `${actor.name} atacou ${target.name} com ${weapon.name}: d20 ${d20.natural} ${fmt(weapon.bonus)} = ${d20.roll.total} vs CA ${ac}${cover ? ` (cobertura +${cover})` : ''}` +
+    `${actor.name} atacou ${target.name} com ${weapon.name}: d20 ${d20.natural} ${fmt(weapon.bonus + magic)}${extraRoll.text} = ${total} vs CA ${ac}${cover ? ` (cobertura +${cover})` : ''}` +
     (mode === 'normal' ? '' : mode === 'advantage' ? ' (vantagem)' : ' (desvantagem)');
-  if (!hit) return addLog(state, `${head} — erro.`, [actor.id, target.id]);
+  if (!hit) return dropOnAttack(addLog(state, `${head} — erro.`, [actor.id, target.id]), actor.id);
 
   const expr = parseDice(weapon.damage);
   const dmg = roll(crit ? criticalExpr(expr) : expr, rng);
-  const r = applyDamage(target, Math.max(0, dmg.total), {
-    type: weapon.type,
-    crit,
-    knockOut: knockOut && weapon.range <= 5,
-  });
-  let next = withCreature(state, r.creature);
-  next = addLog(
-    next,
-    `${head} — ${crit ? 'ACERTO CRÍTICO' : 'acerto'}: ${r.dealt} de dano ${dtype(weapon.type)}${notes(r)}.`,
-    [actor.id, target.id],
+  let amount = Math.max(0, dmg.total + magic);
+  if (weapon.range <= 5 && effectsOf(actor).some((e) => e.mods.halfWeaponDamage))
+    amount = Math.floor(amount / 2);
+  const parts = [{ amount, type: weapon.type as string }];
+  for (const rider of weaponRiders(actor, target.id)) {
+    const rexpr = parseDice(rider.dice);
+    const extra = roll(crit ? criticalExpr(rexpr) : rexpr, rng);
+    parts.push({
+      amount: Math.max(0, extra.total),
+      type: rider.type === 'weapon' ? weapon.type : rider.type,
+    });
+  }
+  return holdOrApply(
+    state,
+    {
+      attackerId: actor.id,
+      targetId: target.id,
+      head,
+      total,
+      ac,
+      nat20: d20.crit,
+      crit,
+      parts,
+      ...(knockOut && weapon.range <= 5 ? { knockOut: true } : {}),
+    },
+    rng,
   );
-  return checkOutcome(aftermath(next, target.id, r.dealt, rng));
 }

@@ -1,20 +1,97 @@
 import { Ability, ConditionName, DamageType } from './creature';
+import { EffectMods } from './effect';
 import { SpellVfx } from './fx';
 
-export type CastTime = 'action' | 'bonus' | 'reaction';
+/** `long` = mais de uma ação (minutos/horas): não cabe num turno de combate. */
+export type CastTime = 'action' | 'bonus' | 'reaction' | 'long';
 
 export type SpellTarget =
-  | { kind: 'creature' }
-  /** Esfera centrada num ponto dentro do alcance. */
-  | { kind: 'sphere'; radius: number }
+  /** Até `max` criaturas (+`perLevel` por espaço acima do nível da magia). */
+  | { kind: 'creature'; max?: number; perLevel?: number }
+  /** O próprio conjurador. */
+  | { kind: 'self' }
+  /** Um ponto do mapa (destino de teletransporte, origem de uma zona sem alvo). */
+  | { kind: 'point' }
+  /** Esfera centrada num ponto dentro do alcance (`self`: nasce no conjurador, como uma aura). */
+  | { kind: 'sphere'; radius: number; self?: boolean }
   /** Cone que nasce no conjurador, na direção do ponto escolhido. */
-  | { kind: 'cone'; length: number };
+  | { kind: 'cone'; length: number }
+  /** Cubo (aresta em pés) centrado num ponto dentro do alcance; `self`: cubo que nasce no conjurador. */
+  | { kind: 'cube'; size: number; self?: boolean }
+  /** Linha que nasce no conjurador na direção do ponto escolhido. */
+  | { kind: 'line'; length: number; width: number };
 
 export type SpellResolution =
   | { kind: 'attack' }
   | { kind: 'save'; ability: Ability; onSave: 'half' | 'none' }
-  /** Sem teste: acerta sempre (Mísseis Mágicos) ou cura. */
-  | { kind: 'auto' };
+  /** Sem teste: acerta sempre (Mísseis Mágicos), cura ou concede um efeito. */
+  | { kind: 'auto' }
+  /**
+   * Reserva de PV (Sono, Sopro Colorido): rola `dice` (+`perLevel` por espaço acima do nível); as
+   * criaturas na área são afetadas da com menos PV para a com mais, enquanto a reserva couber.
+   */
+  | { kind: 'pool'; dice: string; perLevel?: string };
+
+export interface SpellDamage {
+  dice: string;
+  type: DamageType;
+  /** Dados extras por nível de espaço acima do nível da magia. */
+  perLevel?: string;
+  /** Dano extra a cada `every` níveis acima do nível da magia (Lâmina de Fogo: 1 a cada 2). */
+  every?: number;
+  /** Truque: escala com o nível do conjurador (5, 11 e 17). */
+  cantrip?: boolean;
+  /** Repetições do dano (Mísseis Mágicos: 3 dardos + 1 por nível acima do 1º). */
+  instances?: { base: number; perLevel: number };
+  /** Truque com mais raios conforme o nível do conjurador (Rajada Mística): um ataque por raio. */
+  beams?: boolean;
+}
+
+export interface SpellCondition {
+  name: ConditionName;
+  /** Rodadas (0 = até ser removida). */
+  rounds: number;
+  /** Repete a salvaguarda no fim de cada turno do alvo; passar encerra (Imobilizar Pessoa). */
+  repeatSave?: boolean;
+  /** Acaba quando quem a tem sofre dano (Sono). */
+  endsOnDamage?: boolean;
+}
+
+export interface SpellEffect {
+  /** Rodadas; se ausente, vem da duração do SRD. */
+  rounds?: number;
+  /**
+   * Quando acaba: no fim (padrão) ou início do turno de quem carrega, ou no início/fim do próximo
+   * turno de quem conjurou.
+   */
+  ends?: 'start' | 'end' | 'casterStart' | 'casterEnd';
+  mods: EffectMods;
+  /** Modificadores extras a partir do espaço (substituem os campos de `mods`): `{ from: 4, mods: { weaponBonus: 2 } }`. */
+  scale?: { from: number; mods: EffectMods }[];
+  /** A quem se aplica: ao alvo atingido/que falhou (padrão) ou só ao conjurador. */
+  to?: 'targets' | 'self';
+}
+
+/** Repetição a cada turno (Arma Espiritual, Esfera Flamejante, Raio Místico…). */
+export interface SpellSustain {
+  cost: 'action' | 'bonus';
+  /** Campos que mudam ao repetir (alvo, resolução, dano). */
+  use?: Partial<Pick<Spell, 'target' | 'resolution' | 'damage' | 'extraDamage' | 'condition'>>;
+}
+
+/** Área que permanece no mapa depois da conjuração (Teia, Névoa Mortal, Guardiões Espirituais). */
+export interface SpellZone {
+  /** `aura` acompanha o conjurador. */
+  aura?: boolean;
+  /** Quando aplica o efeito: ao começar o turno de quem está dentro, ao entrar, ou só na conjuração. */
+  on: 'start' | 'enter' | 'both' | 'cast';
+  /** Terreno difícil (lembrete desenhado no mapa). */
+  difficult?: boolean;
+  /** Bloqueia visão (Nuvem de Névoa, Escuridão). */
+  obscures?: boolean;
+  /** Cor do desenho no mapa. */
+  color?: SpellVfx['color'];
+}
 
 export interface Spell {
   id: string;
@@ -23,25 +100,53 @@ export interface Spell {
   level: number;
   school: string;
   castTime: CastTime;
-  /** Alcance em pés (5 = toque). */
+  /** Gatilho de uma reação, em texto do SRD. */
+  trigger?: string;
+  /** Reação que o motor sabe oferecer: ao ser atingido (`acBonus` = CA extra), ao sofrer dano, ou ao ver uma conjuração. */
+  react?: { on: 'hit'; acBonus: number } | { on: 'damaged' } | { on: 'cast' };
+  /** Alcance em pés (5 = toque, 0 = pessoal). */
   range: number;
   target: SpellTarget;
   resolution: SpellResolution;
-  damage?: {
-    dice: string;
-    type: DamageType;
-    /** Dados extras por nível de espaço acima do nível da magia. */
+  damage?: SpellDamage;
+  /** Outros tipos de dano da mesma magia (Tempestade de Gelo: contundente + gélido). */
+  extraDamage?: SpellDamage[];
+  heal?: {
+    dice?: string;
     perLevel?: string;
-    /** Truque: escala com o nível do conjurador (5, 11 e 17). */
-    cantrip?: boolean;
-    /** Repetições do dano (Mísseis Mágicos: 3 dardos + 1 por nível acima do 1º). */
-    instances?: { base: number; perLevel: number };
+    flat?: number;
+    flatPerLevel?: number;
+    addModifier?: boolean;
   };
-  heal?: { dice: string; perLevel?: string; addModifier?: boolean };
+  /** Estabiliza quem está morrendo (Poupar os Moribundos). */
+  stabilize?: boolean;
+  /** PV temporários (Vida Falsa, Heroísmo em 2024). */
+  tempHp?: { dice?: string; flat?: number; flatPerLevel?: number; addModifier?: boolean };
   /** Aplicada em quem falha na salvaguarda (ou em quem é atingido, se for ataque). */
-  condition?: { name: ConditionName; rounds: number };
+  condition?: SpellCondition | SpellCondition[];
+  /** Efeito ativo com duração (Bênção, Armadura Arcana, Escudo). */
+  effect?: SpellEffect;
+  /** Empurra (ou puxa) quem falhou. */
+  push?: { ft: number; dir?: 'away' | 'toward' };
+  /** Teletransporta o conjurador ao ponto escolhido, até `range`. */
+  teleport?: boolean;
   concentration?: boolean;
+  /** Duração em rodadas, tirada do SRD (1 min = 10). */
+  rounds?: number;
+  sustain?: SpellSustain;
+  /** A conjuração em si não causa o efeito: quem o causa é a repetição (`sustain`) ou a área (`zone`). */
+  noInitial?: boolean;
+  zone?: SpellZone;
   /** Efeito visual no mapa, escrito a partir da descrição desta magia. */
   vfx?: SpellVfx;
+  /** Puramente narrativa: o motor gasta espaço/concentração e registra o texto oficial, nada mais. */
+  narrative?: boolean;
+  /** Parte do efeito o Mestre resolve (texto dito ao conjurar); o que o motor faz está nos campos acima. */
+  manual?: string;
   description: string;
 }
+
+/** Mecânica de uma magia em `public/data/spell-rules*.json`; o resto vem do SRD (ver `spells/build`). */
+export type SpellRule = Partial<
+  Omit<Spell, 'id' | 'name' | 'level' | 'school' | 'description' | 'rounds'>
+> & { rounds?: number };

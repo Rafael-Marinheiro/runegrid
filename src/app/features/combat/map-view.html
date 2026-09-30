@@ -287,6 +287,9 @@
     @if (cone(); as pts) {
       <polygon class="aoe" [attr.points]="pts" />
     }
+    @if (poly(); as pts) {
+      <polygon class="aoe" [attr.points]="pts" />
+    }
 
     @if (path(); as pth) {
       <polyline class="path" [attr.points]="pathPoints()" />
@@ -446,6 +449,7 @@
       </g>
     }
 
+    <g app-zone-layer [zones]="zones()" />
     <g app-fx-layer [effects]="effects()" />
   </svg>
 

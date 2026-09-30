@@ -45,4 +45,6 @@ export interface SpellVfx {
   color: FxColor;
   /** Brilho extra em cada alvo atingido, de outra cor. */
   impact?: FxColor;
+  /** Raio da onda (pés) quando a área da magia não o diz (ex.: Detectar Magia, 30 ft). */
+  radius?: number;
 }

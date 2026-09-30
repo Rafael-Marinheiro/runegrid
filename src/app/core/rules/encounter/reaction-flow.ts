@@ -1,0 +1,183 @@
+import { Creature } from '../../models/creature';
+import { EncounterState, PendingReaction } from '../../models/encounter';
+import { Spell } from '../../models/spell';
+import { abilityMod, canAct, effectiveAc, RuleError, spendSlot } from '../creature';
+import { rollD20 } from '../dice';
+import { distanceFt } from '../grid/movement';
+import { getSpell } from '../spells/data';
+import { affectedBy, finishCast, resolveSpell } from './cast';
+import { Command } from './commands';
+import { attachFx, spellFx } from './fx';
+import { Context } from './helpers';
+import { applyHeldHit } from './hits';
+import { canReact, freeSlotFor } from './reactions';
+import { dropOnAttack } from './rolls';
+import { addLog, creatureOf, sizeOf, tokenOf, withCreature } from './state';
+
+type ReactionCmd = Extract<Command, { type: 'reaction' }>;
+
+const LEVEL = (n: number) => `${n}º nível`;
+
+/** Gasta o espaço e a reação, registra a conjuração e devolve o conjurador já atualizado. */
+function payReaction(
+  state: EncounterState,
+  reactor: Creature,
+  spell: Spell,
+  slot: number,
+): { state: EncounterState; reactor: Creature } {
+  const paid = slot > 0 ? spendSlot(reactor, slot) : reactor;
+  let s = withCreature(state, paid);
+  s = {
+    ...s,
+    combat: { ...s.combat, reactionUsed: [...(s.combat.reactionUsed ?? []), reactor.id] },
+  };
+  const up = slot > spell.level ? ` (${LEVEL(slot)})` : '';
+  s = addLog(s, `${reactor.name} usa a reação: ${spell.name}${up}.`, [reactor.id]);
+  return { state: s, reactor: paid };
+}
+
+function pickSpell(reactor: Creature, cmd: ReactionCmd): { spell: Spell; slot: number } {
+  const spell = cmd.spellId ? getSpell(cmd.spellId, cmd.ruleset) : undefined;
+  if (!spell || !reactor.spellcasting?.spells.includes(spell.id))
+    throw new RuleError(`${reactor.name} não conhece essa magia.`);
+  if (spell.castTime !== 'reaction')
+    throw new RuleError(`${spell.name} não é uma magia de reação.`);
+  const slot = cmd.slotLevel ?? freeSlotFor(reactor, spell.level);
+  if (slot === null || slot === undefined || slot < spell.level || slot > 9)
+    throw new RuleError('Sem espaço de magia para reagir.');
+  const pool = reactor.spellSlots[slot];
+  if (!pool || pool.used >= pool.max) throw new RuleError(`Sem espaço de magia de ${slot}º nível.`);
+  return { spell, slot };
+}
+
+/** Reação de magia à espera de decisão: usa (ou recusa) Escudo Arcano, Repreensão Diabólica, Contrafeitiço. */
+export function spellReaction(
+  state: EncounterState,
+  cmd: ReactionCmd,
+  pend: PendingReaction,
+  ctx: Context,
+): EncounterState {
+  const info = pend.spell!;
+  const reactor = creatureOf(state, cmd.actorId);
+  const rest = {
+    ...state,
+    combat: { ...state.combat, pending: (state.combat.pending ?? []).filter((x) => x !== pend) },
+  };
+
+  if (!cmd.use) {
+    const s = addLog(rest, `${reactor.name} não reage.`, [reactor.id]);
+    if (info.trigger === 'hit') return applyHeldHit(s, info.hit, ctx.rng);
+    if (info.trigger === 'cast') return resumeCast(s, info.command, ctx);
+    return s;
+  }
+
+  if (!canReact({ ...rest, combat: { ...rest.combat, pending: [] } }, reactor))
+    throw new RuleError(`${reactor.name} não pode reagir agora.`);
+  const { spell, slot } = pickSpell(reactor, cmd);
+  if (spell.react?.on !== info.trigger) throw new RuleError(`${spell.name} não responde a isso.`);
+  const paid = payReaction(rest, reactor, spell, slot);
+  let s = paid.state;
+  const who = paid.reactor;
+
+  if (info.trigger === 'hit') {
+    const before = effectiveAc(who);
+    const fx = spellFx(s, spell, slot, who.id, [who.id]);
+    s = attachFx(state, s, fx);
+    s = resolveSpell(s, who, spell, slot, [who], 0, ctx, { ruleset: cmd.ruleset });
+    const newAc = info.hit.ac + (effectiveAc(creatureOf(s, who.id)) - before);
+    if (info.hit.total >= newAc) return applyHeldHit(s, info.hit, ctx.rng);
+    s = addLog(s, `${info.hit.head} — erro (${spell.name}).`, [info.hit.attackerId, who.id]);
+    return dropOnAttack(s, info.hit.attackerId);
+  }
+
+  if (info.trigger === 'damaged') {
+    const attacker = creatureOf(s, info.attackerId);
+    const a = tokenOf(s, attacker.id);
+    const r = tokenOf(s, who.id);
+    if (!a || !r || attacker.status === 'dead') return s;
+    const dist = distanceFt(r.pos, sizeOf(who), a.pos, sizeOf(attacker), s.rule);
+    if (dist > spell.range)
+      throw new RuleError(`Alvo fora de alcance (${dist} ft; alcance ${spell.range} ft).`);
+    const before = s;
+    s = attachFx(before, s, spellFx(s, spell, slot, who.id, [attacker.id]));
+    return resolveSpell(s, who, spell, slot, [attacker], dist, ctx, { ruleset: cmd.ruleset });
+  }
+
+  // contrafeitiço: anula a magia de nível igual ou menor; senão, teste de atributo CD 10 + nível
+  const target = JSON.parse(info.command) as Extract<Command, { type: 'cast' }>;
+  const other = getSpell(info.spellId, target.ruleset);
+  const theirLevel = info.slotLevel;
+  let countered = slot >= theirLevel;
+  let text = '';
+  if (!countered) {
+    const mod = abilityMod(who.abilities[who.spellcasting?.ability ?? 'int']);
+    const r = rollD20(mod, 'normal', ctx.rng);
+    countered = r.roll.total >= 10 + theirLevel;
+    text = ` (teste d20 ${r.natural} ${mod >= 0 ? '+' : ''}${mod} = ${r.roll.total} vs CD ${10 + theirLevel})`;
+  }
+  if (countered) {
+    const caster = creatureOf(s, info.casterId);
+    s = addLog(s, `${spell.name}: ${caster.name} perde ${other?.name ?? 'a magia'}${text}.`, [
+      who.id,
+      caster.id,
+    ]);
+    // outras reações à mesma conjuração deixam de fazer sentido
+    return {
+      ...s,
+      combat: {
+        ...s.combat,
+        pending: (s.combat.pending ?? []).filter(
+          (x) => !(x.spell?.trigger === 'cast' && x.spell.command === info.command),
+        ),
+      },
+    };
+  }
+  s = addLog(s, `${spell.name} falha${text}.`, [who.id]);
+  return resumeCast(s, info.command, ctx);
+}
+
+/** A conjuração suspensa segue em frente quando ninguém mais pode anulá-la. */
+function resumeCast(state: EncounterState, command: string, ctx: Context): EncounterState {
+  const waiting = (state.combat.pending ?? []).some(
+    (x) => x.spell?.trigger === 'cast' && x.spell.command === command,
+  );
+  if (waiting) return state;
+  return finishCast(state, JSON.parse(command) as Extract<Command, { type: 'cast' }>, ctx);
+}
+
+/** Reação avulsa (sem gatilho do motor): Queda Suave. Qualquer hora, gasta a reação. */
+export function freeReaction(
+  state: EncounterState,
+  cmd: ReactionCmd,
+  ctx: Context,
+): EncounterState {
+  const reactor = creatureOf(state, cmd.actorId);
+  if (!canAct(reactor)) throw new RuleError(`${reactor.name} não pode reagir agora.`);
+  if ((state.combat.reactionUsed ?? []).includes(reactor.id))
+    throw new RuleError(`${reactor.name} já usou a reação.`);
+  const { spell, slot } = pickSpell(reactor, cmd);
+  if (spell.react) throw new RuleError(`${spell.name} só responde ao gatilho dela.`);
+  const { creatures: targets, dist } = affectedBy(state, spell, reactor, cmd, slot, ctx.role);
+  const paid = payReaction(state, reactor, spell, slot);
+  const s = attachFx(
+    state,
+    paid.state,
+    spellFx(
+      paid.state,
+      spell,
+      slot,
+      reactor.id,
+      targets.map((t) => t.id),
+      cmd.point,
+    ),
+  );
+  if (spell.narrative || spell.manual)
+    return addLog(
+      resolveSpell(s, paid.reactor, spell, slot, targets, dist, ctx, cmd),
+      spell.narrative
+        ? `${spell.name}: efeito narrativo, o Mestre conduz.`
+        : `${spell.name}: ${spell.manual}`,
+      [reactor.id],
+    );
+  return resolveSpell(s, paid.reactor, spell, slot, targets, dist, ctx, cmd);
+}

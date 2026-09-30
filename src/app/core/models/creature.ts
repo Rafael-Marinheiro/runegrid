@@ -1,3 +1,4 @@
+import { ActiveEffect } from './effect';
 import { InventoryItem } from './item';
 export const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
 export type Ability = (typeof ABILITIES)[number];
@@ -118,6 +119,14 @@ export interface ActiveCondition {
   name: ConditionName;
   /** Rodadas restantes, contadas no fim do turno de quem tem a condição. Sem valor = até ser removida. */
   rounds?: number;
+  /** Magia que a impôs (ao acabar a concentração dela, a condição some) e quem a conjurou. */
+  spell?: string;
+  by?: string;
+  concentration?: boolean;
+  /** No fim de cada turno de quem a tem, repete a salvaguarda; passar encerra a condição. */
+  repeatSave?: { ability: Ability; dc: number };
+  /** Acaba quando quem a tem sofre dano (Sono). */
+  endsOnDamage?: boolean;
 }
 
 export type CreatureKind = 'pc' | 'npc' | 'monster';
@@ -186,4 +195,8 @@ export interface Creature {
   inventory?: InventoryItem[];
   /** Magia mantida em concentração. */
   concentration?: string;
+  /** Efeitos de magias ativos (Bênção, Escudo Arcano, Armadura Arcana…). */
+  effects?: ActiveEffect[];
+  /** Magias que continuam agindo a cada turno (Arma Espiritual, Esfera Flamejante) e o espaço usado. */
+  sustained?: { spellId: string; slotLevel: number; rounds?: number }[];
 }

@@ -3358,5 +3358,377 @@
   "nome": "diversidade linha06 variante08",
   "raca": "humano",
   "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_01_guerreiro.png",
+  "nome": "Guerreiro com espada curta",
+  "raca": "hobgoblin",
+  "grupo": "legiao"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_02_espadachim.png",
+  "nome": "Espadachim",
+  "raca": "hobgoblin",
+  "grupo": "legiao"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_03_lanceiro.png",
+  "nome": "Lanceiro",
+  "raca": "hobgoblin",
+  "grupo": "legiao"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_04_soldado_com_escudo.png",
+  "nome": "Soldado com escudo",
+  "raca": "hobgoblin",
+  "grupo": "legiao"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_05_capitao.png",
+  "nome": "Capitão",
+  "raca": "hobgoblin",
+  "grupo": "legiao"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_06_guarda_de_elite.png",
+  "nome": "Guarda de elite",
+  "raca": "hobgoblin",
+  "grupo": "legiao"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_07_arqueiro.png",
+  "nome": "Arqueiro",
+  "raca": "hobgoblin",
+  "grupo": "legiao"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_08_besteiro.png",
+  "nome": "Besteiro",
+  "raca": "hobgoblin",
+  "grupo": "legiao"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_09_atirador_leve.png",
+  "nome": "Atirador leve",
+  "raca": "hobgoblin",
+  "grupo": "legiao"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_10_atirador_pesado.png",
+  "nome": "Atirador pesado",
+  "raca": "hobgoblin",
+  "grupo": "legiao"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_11_patrulheiro.png",
+  "nome": "Patrulheiro",
+  "raca": "hobgoblin",
+  "grupo": "legiao"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_12_batedor.png",
+  "nome": "Batedor",
+  "raca": "hobgoblin",
+  "grupo": "legiao"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_13_veterano.png",
+  "nome": "Veterano",
+  "raca": "hobgoblin",
+  "grupo": "legiao"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_14_alabardeiro.png",
+  "nome": "Alabardeiro",
+  "raca": "hobgoblin",
+  "grupo": "legiao"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_15_porta_estandarte.png",
+  "nome": "Porta-estandarte",
+  "raca": "hobgoblin",
+  "grupo": "legiao"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_16_comandante.png",
+  "nome": "Comandante",
+  "raca": "hobgoblin",
+  "grupo": "legiao"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_17_ladino.png",
+  "nome": "Ladino",
+  "raca": "hobgoblin",
+  "grupo": "classes"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_18_assassino.png",
+  "nome": "Assassino",
+  "raca": "hobgoblin",
+  "grupo": "classes"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_19_explorador.png",
+  "nome": "Explorador",
+  "raca": "hobgoblin",
+  "grupo": "classes"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_20_cacador.png",
+  "nome": "Caçador",
+  "raca": "hobgoblin",
+  "grupo": "classes"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_21_barbaro.png",
+  "nome": "Bárbaro",
+  "raca": "hobgoblin",
+  "grupo": "classes"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_22_gladiador.png",
+  "nome": "Gladiador",
+  "raca": "hobgoblin",
+  "grupo": "classes"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_23_monge.png",
+  "nome": "Monge",
+  "raca": "hobgoblin",
+  "grupo": "classes"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_24_paladino.png",
+  "nome": "Paladino",
+  "raca": "hobgoblin",
+  "grupo": "classes"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_25_clerigo.png",
+  "nome": "Clérigo",
+  "raca": "hobgoblin",
+  "grupo": "classes"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_26_inquisidor.png",
+  "nome": "Inquisidor",
+  "raca": "hobgoblin",
+  "grupo": "classes"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_27_bruxo.png",
+  "nome": "Bruxo",
+  "raca": "hobgoblin",
+  "grupo": "classes"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_28_mago_de_guerra.png",
+  "nome": "Mago de guerra",
+  "raca": "hobgoblin",
+  "grupo": "classes"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_29_feiticeiro.png",
+  "nome": "Feiticeiro",
+  "raca": "hobgoblin",
+  "grupo": "classes"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_30_necromante.png",
+  "nome": "Necromante",
+  "raca": "hobgoblin",
+  "grupo": "classes"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_31_bardo_militar.png",
+  "nome": "Bardo militar",
+  "raca": "hobgoblin",
+  "grupo": "classes"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_32_druida_das_estepes.png",
+  "nome": "Druida das estepes",
+  "raca": "hobgoblin",
+  "grupo": "classes"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_33_chefe_tribal.png",
+  "nome": "Chefe tribal",
+  "raca": "hobgoblin",
+  "grupo": "oficios"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_34_conselheiro.png",
+  "nome": "Conselheiro",
+  "raca": "hobgoblin",
+  "grupo": "oficios"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_35_emissario.png",
+  "nome": "Emissário",
+  "raca": "hobgoblin",
+  "grupo": "oficios"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_36_sacerdote.png",
+  "nome": "Sacerdote",
+  "raca": "hobgoblin",
+  "grupo": "oficios"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_37_xama.png",
+  "nome": "Xamã",
+  "raca": "hobgoblin",
+  "grupo": "oficios"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_38_oraculo.png",
+  "nome": "Oráculo",
+  "raca": "hobgoblin",
+  "grupo": "oficios"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_39_ferreiro.png",
+  "nome": "Ferreiro",
+  "raca": "hobgoblin",
+  "grupo": "oficios"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_40_armeiro.png",
+  "nome": "Armeiro",
+  "raca": "hobgoblin",
+  "grupo": "oficios"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_41_alquimista.png",
+  "nome": "Alquimista",
+  "raca": "hobgoblin",
+  "grupo": "oficios"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_42_engenheiro.png",
+  "nome": "Engenheiro",
+  "raca": "hobgoblin",
+  "grupo": "oficios"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_43_inventor.png",
+  "nome": "Inventor",
+  "raca": "hobgoblin",
+  "grupo": "oficios"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_44_artifice.png",
+  "nome": "Artífice",
+  "raca": "hobgoblin",
+  "grupo": "oficios"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_45_cozinheiro.png",
+  "nome": "Cozinheiro",
+  "raca": "hobgoblin",
+  "grupo": "oficios"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_46_mercador.png",
+  "nome": "Mercador",
+  "raca": "hobgoblin",
+  "grupo": "oficios"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_47_curandeiro.png",
+  "nome": "Curandeiro",
+  "raca": "hobgoblin",
+  "grupo": "oficios"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_48_intendente.png",
+  "nome": "Intendente",
+  "raca": "hobgoblin",
+  "grupo": "oficios"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_49_cavaleiro_de_lobo.png",
+  "nome": "Cavaleiro em lobo",
+  "raca": "hobgoblin",
+  "grupo": "especialistas_montarias"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_50_cavaleiro_de_javali.png",
+  "nome": "Cavaleiro em javali",
+  "raca": "hobgoblin",
+  "grupo": "especialistas_montarias"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_51_cavaleiro_de_lagarto.png",
+  "nome": "Cavaleiro em lagarto",
+  "raca": "hobgoblin",
+  "grupo": "especialistas_montarias"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_52_cavaleiro_de_hiena.png",
+  "nome": "Cavaleiro em hiena",
+  "raca": "hobgoblin",
+  "grupo": "especialistas_montarias"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_53_cavaleiro_de_crocodilo.png",
+  "nome": "Cavaleiro em crocodilo",
+  "raca": "hobgoblin",
+  "grupo": "especialistas_montarias"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_54_cavaleiro.png",
+  "nome": "Cavaleiro",
+  "raca": "hobgoblin",
+  "grupo": "especialistas_montarias"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_55_elite_com_estandarte.png",
+  "nome": "Elite com estandarte",
+  "raca": "hobgoblin",
+  "grupo": "especialistas_montarias"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_56_guarda_real.png",
+  "nome": "Guarda real",
+  "raca": "hobgoblin",
+  "grupo": "especialistas_montarias"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_57_guerreiro_duas_armas.png",
+  "nome": "Guerreiro com duas armas",
+  "raca": "hobgoblin",
+  "grupo": "especialistas_montarias"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_58_guerreiro_pesado.png",
+  "nome": "Guerreiro pesado",
+  "raca": "hobgoblin",
+  "grupo": "especialistas_montarias"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_60_combatente_de_assalto.png",
+  "nome": "Combatente de assalto",
+  "raca": "hobgoblin",
+  "grupo": "especialistas_montarias"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_61_atirador_em_cobertura.png",
+  "nome": "Atirador em cobertura",
+  "raca": "hobgoblin",
+  "grupo": "especialistas_montarias"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_62_sabotador.png",
+  "nome": "Sabotador",
+  "raca": "hobgoblin",
+  "grupo": "especialistas_montarias"
+ },
+ {
+  "arquivo": "miniaturas/hobgoblin_63_demolidor.png",
+  "nome": "Demolidor",
+  "raca": "hobgoblin",
+  "grupo": "especialistas_montarias"
  }
 ]

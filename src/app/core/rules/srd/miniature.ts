@@ -4,7 +4,7 @@
  * o futuro Mestre MCP usam a mesma função.
  */
 
-export type MiniatureRace = 'humano' | 'anao' | 'elfo' | 'goblin';
+export type MiniatureRace = 'humano' | 'anao' | 'elfo' | 'goblin' | 'hobgoblin';
 
 export interface MiniatureEntry {
   /** Caminho relativo a `data/`, ex.: `miniaturas/goblin_xama-caveira-cajado.png`. */
@@ -28,6 +28,7 @@ export const isTokenArt = (s: unknown): s is string =>
 const plain = (s: string): string => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 const RACE_BY_NAME: [RegExp, MiniatureRace][] = [
+  [/hobgoblin/, 'hobgoblin'], // antes de goblin: o nome contém "goblin"
   [/goblin/, 'goblin'],
   [/duergar|dwarf|anao|anoes/, 'anao'],
   [/drow|\belf|\belfo|elves|elfa/, 'elfo'],
@@ -97,7 +98,7 @@ const tokensOf = (e: MiniatureEntry): Set<string> =>
 
 const RACE_BASE = 1;
 /** Já contadas pela raça (prefixo de todos os arquivos dela). */
-const RACE_WORDS = new Set(['goblin', 'humano', 'human', 'anao', 'elfo']);
+const RACE_WORDS = new Set(['goblin', 'hobgoblin', 'humano', 'human', 'anao', 'elfo']);
 
 function score(q: MiniatureQuery, e: MiniatureEntry): number {
   if (e.raca !== q.race) return 0;

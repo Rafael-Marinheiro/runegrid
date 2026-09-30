@@ -17,6 +17,7 @@ const RACES: { id: MiniatureRace; pt: string; en: string }[] = [
   { id: 'anao', pt: 'Anões', en: 'Dwarves' },
   { id: 'elfo', pt: 'Elfos', en: 'Elves' },
   { id: 'goblin', pt: 'Goblins', en: 'Goblins' },
+  { id: 'hobgoblin', pt: 'Hobgoblins', en: 'Hobgoblins' },
 ];
 
 /**

@@ -88,6 +88,17 @@ describe('miniaturas', () => {
     expect(q('Shield Guardian')).toBeNull();
   });
 
+  it('hobgoblin não cai na raça goblin (e vice-versa)', () => {
+    const cat = [
+      e('goblin', 'goblin_guerreiro'),
+      e('hobgoblin', 'hobgoblin_01_guerreiro', 'Guerreiro'),
+    ];
+    const hob = queryFromCreature({ name: 'Hobgoblin Warrior', kind: 'monster', attacks: [] });
+    expect(hob.race).toBe('hobgoblin');
+    expect(suggestMiniatures(hob, cat).map((x) => x.raca)).toEqual(['hobgoblin']);
+    expect(queryFromCreature({ name: 'Goblin', kind: 'monster', attacks: [] }).race).toBe('goblin');
+  });
+
   it('isTokenArt só aceita PNG em miniaturas/ (sem ../ nem URL externa)', () => {
     expect(isTokenArt('miniaturas/goblin_a-b.png')).toBe(true);
     for (const bad of [

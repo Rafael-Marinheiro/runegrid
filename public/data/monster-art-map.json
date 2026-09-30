@@ -611,5 +611,8 @@
   "srd-2024_pirate": "miniaturas/humano_pirata_sabre.png",
   "srd-2024_pirate-captain": "miniaturas/humano_capitao-pirata_sabre-casaco.png",
   "srd-2024_cultist-fanatic": "miniaturas/humano_fanatico-culto_cajado-ritual.png",
-  "cult-fanatic": "miniaturas/humano_fanatico-culto_cajado-ritual.png"
+  "cult-fanatic": "miniaturas/humano_fanatico-culto_cajado-ritual.png",
+  "hobgoblin": "miniaturas/hobgoblin_01_guerreiro.png",
+  "srd-2024_hobgoblin-warrior": "miniaturas/hobgoblin_01_guerreiro.png",
+  "srd-2024_hobgoblin-captain": "miniaturas/hobgoblin_05_capitao.png"
 }

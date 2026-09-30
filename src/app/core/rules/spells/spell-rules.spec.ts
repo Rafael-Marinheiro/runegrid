@@ -61,6 +61,7 @@ const MODS = new Set([
   'noHealing',
   'halfWeaponDamage',
   'maxHp',
+  'images',
   'repeatSave',
   'once',
   'endsOnAttack',
@@ -75,7 +76,7 @@ const sets: { name: '2014' | '2024'; srd: SrdSpell[]; rules: SpellRules }[] = [
 ];
 
 /** Nível máximo já conferido pela cobertura; sobe a cada lote até o 9 (ver PLANO.md, F12). */
-const DONE_LEVEL = { '2014': 1, '2024': -1 };
+const DONE_LEVEL = { '2014': 3, '2024': -1 };
 
 const dice = (d: string) => expect(() => parseDice(d), d).not.toThrow();
 
@@ -97,7 +98,8 @@ function checkSpell(s: Spell) {
     expect(COLORS, at).toContain(s.vfx.color);
     expect(['bolts', 'ray', 'glow', 'burst', 'cone'], at).toContain(s.vfx.kind);
   }
-  const mods = [s.effect?.mods, ...(s.effect?.scale ?? []).map((x) => x.mods)];
+  const effects = [s.effect, ...(s.options ?? []).map((o) => o.patch.effect)];
+  const mods = effects.flatMap((e) => [e?.mods, ...(e?.scale ?? []).map((x) => x.mods)]);
   for (const m of mods)
     for (const k of Object.keys(m ?? {})) expect(MODS.has(k), `${at}: ${k}`).toBe(true);
   for (const m of mods) {
@@ -125,6 +127,10 @@ function checkSpell(s: Spell) {
       s.tempHp ||
       s.stabilize ||
       s.push ||
+      s.react ||
+      s.cure ||
+      s.dispel ||
+      s.revive ||
       s.teleport ||
       s.zone ||
       s.sustain;
@@ -211,6 +217,7 @@ describe('fumaça: conjurar cada magia mecanizada não quebra o motor', () => {
         (sp) => !sp.narrative && sp.castTime !== 'long' && sp.castTime !== 'reaction',
       );
       expect(list.length).toBeGreaterThan(10);
+      const refused: string[] = [];
       for (const sp of list) {
         const s = scene(sp);
         const cmd = {
@@ -219,20 +226,24 @@ describe('fumaça: conjurar cada magia mecanizada não quebra o motor', () => {
           spellId: sp.id,
           slotLevel: sp.level === 0 ? undefined : Math.max(sp.level, 5),
           ruleset: set.name,
-          targetIds: ['m0', 'm1'].slice(
+          // toque: o aliado ao lado; o resto: os dois monstros à frente
+          targetIds: (sp.range <= 5 ? ['ally'] : ['m0', 'm1']).slice(
             0,
             sp.target.kind === 'creature'
               ? (sp.target.max ?? 1) + (sp.target.perLevel ?? 0) * 4
               : 1,
           ),
-          point: { x: 8, y: 5 },
+          point: sp.teleport ? { x: 5, y: 9 } : { x: 8, y: 5 },
         };
         try {
           dispatch(s, cmd, { rng, role: dm });
         } catch (e) {
           if (!(e instanceof RuleError)) throw new Error(`${sp.id}: ${String(e)}`, { cause: e });
+          refused.push(`${sp.id}: ${e.message}`);
         }
       }
+      // a cena de teste alcança todos os alvos: recusar uma magia é exceção (ex.: só toca em si)
+      expect(refused).toEqual([]);
     });
   }
 });

@@ -52,7 +52,10 @@ export function createZone(
     casterId,
     slotLevel,
     ...(ruleset ? { ruleset } : {}),
-    shape: spell.target.kind === 'creature' ? { kind: 'sphere', radius: 5 } : spell.target,
+    shape:
+      spell.target.kind === 'creature' || spell.target.kind === 'point'
+        ? { kind: 'sphere', radius: z.radius ?? 5 }
+        : spell.target,
     center: fromCaster && caster ? caster.pos : point,
     ...(fromCaster ? { toward: point } : {}),
     ...(z.aura ? { aura: true } : {}),

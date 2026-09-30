@@ -78,7 +78,10 @@ export function addCondition(
   c: Creature,
   name: ConditionName,
   rounds?: number,
-  origin?: Pick<ActiveCondition, 'spell' | 'by' | 'concentration' | 'repeatSave' | 'endsOnDamage'>,
+  origin?: Pick<
+    ActiveCondition,
+    'spell' | 'by' | 'concentration' | 'repeatSave' | 'endsOnDamage' | 'endsOnAttack'
+  >,
 ): Creature {
   if (blocksCondition(c, name)) return c;
   const existing = c.conditions.find((x) => x.name === name);

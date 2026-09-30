@@ -35,7 +35,7 @@ import { consume, itemDef } from '../inventory/inventory';
 import { cast } from './cast';
 import { freeReaction, spellReaction } from './reaction-flow';
 import { holdOrApply } from './hits';
-import { attackExtra, consumeAttacked, dropOnAttack } from './rolls';
+import { attackExtra, consumeAttacked, consumeWeaponRiders, decoy, dropOnAttack } from './rolls';
 import { beginUpkeep, endUpkeep, enterZones, syncConcentration, tickZones } from './upkeep';
 import { consumeHelp, coverBonus } from './cover';
 import {
@@ -849,6 +849,8 @@ function strike(
   const total = d20.roll.total + extraRoll.bonus;
   const hit = d20.crit || (!d20.fumble && total >= ac);
   const crit = hit && (d20.crit || cond.autoCrit);
+  const decoyed = decoy(state, target.id, total, rng);
+  if (decoyed) return dropOnAttack(decoyed, actor.id);
   const head =
     `${actor.name} atacou ${target.name} com ${weapon.name}: d20 ${d20.natural} ${fmt(weapon.bonus + magic)}${extraRoll.text} = ${total} vs CA ${ac}${cover ? ` (cobertura +${cover})` : ''}` +
     (mode === 'normal' ? '' : mode === 'advantage' ? ' (vantagem)' : ' (desvantagem)');
@@ -869,7 +871,7 @@ function strike(
     });
   }
   return holdOrApply(
-    state,
+    consumeWeaponRiders(state, actor.id),
     {
       attackerId: actor.id,
       targetId: target.id,

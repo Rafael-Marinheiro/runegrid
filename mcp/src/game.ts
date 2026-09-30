@@ -195,6 +195,7 @@ export interface Act {
   spell?: string;
   targets?: string[];
   sustain?: boolean;
+  option?: string;
   slot_level?: number;
   to?: Pos;
   adjacent_to?: string;
@@ -283,6 +284,7 @@ export function toCommand(g: Game, actorRef: string, a: Act): Command {
         ...(targetIds.length ? { targetIds } : a.target ? { targetId: target() } : {}),
         ...(point ? { point } : {}),
         ...(a.sustain ? { sustain: true } : {}),
+        ...(a.option ? { option: a.option } : {}),
       };
     }
     case 'help':

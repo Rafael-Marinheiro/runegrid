@@ -3,9 +3,17 @@ import { ActiveEffect } from '../../models/effect';
 import { EncounterState } from '../../models/encounter';
 import { Pos } from '../../models/grid';
 import { Spell, SpellCondition } from '../../models/spell';
-import { abilityMod, addCondition, addEffect, addTempHp } from '../creature';
-import { roll, Rng } from '../dice';
+import {
+  abilityMod,
+  addCondition,
+  addEffect,
+  addTempHp,
+  removeCondition,
+  removeEffects,
+} from '../creature';
+import { roll, rollD20, Rng } from '../dice';
 import { canStand } from '../grid/movement';
+import { allSpells, getSpell } from '../spells/data';
 import { flatTemp } from '../spells/scaling';
 import { addLog, creatureOf, occupiedCells, sizeOf, tokenOf, withCreature } from './state';
 
@@ -27,7 +35,7 @@ export function makeEffect(
     mods = { ...mods, ...s.mods };
   if (mods.weaponDamage?.onlyAgainst === '@target' && targetId)
     mods = { ...mods, weaponDamage: { ...mods.weaponDamage, onlyAgainst: targetId } };
-  if (mods.repeatSave) mods = { ...mods, repeatSave: { ability, dc } };
+  if (mods.repeatSave) mods = { ...mods, repeatSave: { ability: mods.repeatSave.ability, dc } };
   if (mods.tempPerTurnMod)
     mods = { ...mods, tempPerTurn: Math.max(0, abilityMod(caster.abilities[ability])) };
   const rounds = e.rounds ?? spell.rounds;
@@ -39,6 +47,7 @@ export function makeEffect(
     ...(rounds !== undefined ? { rounds } : {}),
     ...(e.ends ? { ends: e.ends } : {}),
     ...(spell.concentration ? { concentration: true } : {}),
+    ...(e.endsOnDamage ? { endsOnDamage: true } : {}),
     mods,
   };
 }
@@ -72,6 +81,7 @@ export function applyRiders(
       by: caster.id,
       ...(spell.concentration ? { concentration: true } : {}),
       ...(c.endsOnDamage ? { endsOnDamage: true } : {}),
+      ...(c.endsOnAttack ? { endsOnAttack: true } : {}),
       ...rep,
     });
     s = withCreature(s, t);
@@ -82,6 +92,36 @@ export function applyRiders(
         : `${t.name} ficou sob efeito de ${spell.name}.`,
       [t.id],
     );
+  }
+
+  if (spell.dispel) s = dispelOn(s, caster, t.id, slot, ability, rng);
+
+  if (spell.cure?.spells?.length) {
+    const names = spell.cure.spells.map((id) => getSpell(id)?.name).filter((n): n is string => !!n);
+    let cur = creatureOf(s, t.id);
+    const before = (cur.effects ?? []).length + cur.conditions.length;
+    cur = removeEffects(
+      { ...cur, conditions: cur.conditions.filter((k) => !(k.spell && names.includes(k.spell))) },
+      (e) => names.includes(e.name),
+    );
+    if ((cur.effects ?? []).length + cur.conditions.length < before) {
+      s = withCreature(s, cur);
+      s = addLog(s, `${cur.name}: ${names.join(', ')} termina.`, [caster.id, cur.id]);
+    }
+  }
+
+  if (spell.cure?.conditions?.length) {
+    let cur = creatureOf(s, t.id);
+    const present = spell.cure.conditions.filter((n) => cur.conditions.some((k) => k.name === n));
+    const gone = spell.cure.all ? present : present.slice(0, 1);
+    for (const n of gone) cur = removeCondition(cur, n);
+    if (gone.length) {
+      s = withCreature(s, cur);
+      s = addLog(s, `${cur.name}: ${gone.map((n) => CONDITION_LABEL[n]).join(', ')} termina.`, [
+        caster.id,
+        cur.id,
+      ]);
+    }
   }
 
   if (spell.effect && spell.effect.to !== 'self') {
@@ -158,5 +198,56 @@ export function forcedMove(
     moved,
     `${t.name} é empurrado(a) ${Math.max(...[Math.abs(pos.x - tok.pos.x), Math.abs(pos.y - tok.pos.y)]) * 5} ft.`,
     [targetId],
+  );
+}
+
+/**
+ * Dissipar Magia: cada magia sobre o alvo de nível até o espaço usado acaba; das de nível maior
+ * faz-se um teste de atributo de conjuração contra CD 10 + nível da magia.
+ */
+function dispelOn(
+  state: EncounterState,
+  caster: Creature,
+  targetId: string,
+  slot: number,
+  ability: Ability,
+  rng: Rng,
+): EncounterState {
+  let s = state;
+  const t = creatureOf(s, targetId);
+  const levelOf = (name: string, id?: string): number =>
+    (id ? getSpell(id)?.level : undefined) ??
+    allSpells('2024').find((x) => x.name === name)?.level ??
+    9;
+  const sources = new Map<string, { name: string; level: number }>();
+  for (const e of t.effects ?? [])
+    sources.set(e.name, { name: e.name, level: levelOf(e.name, e.spell) });
+  for (const k of t.conditions)
+    if (k.spell) sources.set(k.spell, { name: k.spell, level: levelOf(k.spell) });
+  if (!sources.size) return addLog(s, `${t.name}: nenhuma magia para dissipar.`, [caster.id, t.id]);
+  const mod = abilityMod(caster.abilities[ability]);
+  const ended: string[] = [];
+  for (const src of sources.values()) {
+    let ok = src.level <= slot;
+    let txt = '';
+    if (!ok) {
+      const r = rollD20(mod, 'normal', rng);
+      ok = r.roll.total >= 10 + src.level;
+      txt = ` (teste d20 ${r.natural} ${mod >= 0 ? '+' : ''}${mod} = ${r.roll.total} vs CD ${10 + src.level})`;
+    }
+    s = addLog(s, `Dissipar Magia contra ${src.name}${txt}: ${ok ? 'termina' : 'resiste'}.`, [
+      caster.id,
+      t.id,
+    ]);
+    if (ok) ended.push(src.name);
+  }
+  if (!ended.length) return s;
+  const cur = creatureOf(s, targetId);
+  return withCreature(
+    s,
+    removeEffects(
+      { ...cur, conditions: cur.conditions.filter((k) => !(k.spell && ended.includes(k.spell))) },
+      (e) => ended.includes(e.name),
+    ),
   );
 }

@@ -63,6 +63,12 @@ const ActionSchema = z.object({
     .describe(
       'cast/reaction: several targets (Bless, Scorching Ray, Magic Missile…); darts/rays are split among them',
     ),
+  option: z
+    .string()
+    .optional()
+    .describe(
+      'cast: the spell choice when it has one (e.g. Protection from Energy: fire|acid|cold|lightning|thunder; Bestow Curse: attack|ability|turns|necrotic)',
+    ),
   sustain: z
     .boolean()
     .optional()

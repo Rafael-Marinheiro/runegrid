@@ -127,6 +127,8 @@ export interface ActiveCondition {
   repeatSave?: { ability: Ability; dc: number };
   /** Acaba quando quem a tem sofre dano (Sono). */
   endsOnDamage?: boolean;
+  /** Acaba quando quem a tem ataca ou conjura (Invisibilidade). */
+  endsOnAttack?: boolean;
 }
 
 export type CreatureKind = 'pc' | 'npc' | 'monster';

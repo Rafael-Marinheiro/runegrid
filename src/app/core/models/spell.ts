@@ -43,6 +43,12 @@ export interface SpellDamage {
   cantrip?: boolean;
   /** Repetições do dano (Mísseis Mágicos: 3 dardos + 1 por nível acima do 1º). */
   instances?: { base: number; perLevel: number };
+  /** Quem conjura recupera essa fração do dano causado (Toque Vampírico: 0,5). */
+  lifesteal?: number;
+  /** Soma o modificador do atributo de conjuração ao dano (Arma Espiritual). */
+  addModifier?: boolean;
+  /** Ataque de magia que erra ainda causa metade do dano (Flecha Ácida). */
+  missHalf?: boolean;
   /** Truque com mais raios conforme o nível do conjurador (Rajada Mística): um ataque por raio. */
   beams?: boolean;
 }
@@ -55,6 +61,8 @@ export interface SpellCondition {
   repeatSave?: boolean;
   /** Acaba quando quem a tem sofre dano (Sono). */
   endsOnDamage?: boolean;
+  /** Acaba quando quem a tem ataca ou conjura (Invisibilidade). */
+  endsOnAttack?: boolean;
 }
 
 export interface SpellEffect {
@@ -68,15 +76,19 @@ export interface SpellEffect {
   mods: EffectMods;
   /** Modificadores extras a partir do espaço (substituem os campos de `mods`): `{ from: 4, mods: { weaponBonus: 2 } }`. */
   scale?: { from: number; mods: EffectMods }[];
-  /** A quem se aplica: ao alvo atingido/que falhou (padrão) ou só ao conjurador. */
-  to?: 'targets' | 'self';
+  /** O efeito acaba quando quem o tem sofre dano (Padrão Hipnótico). */
+  endsOnDamage?: boolean;
+  /** A quem se aplica: ao alvo atingido/que falhou (padrão), só ao conjurador, ou aos dois. */
+  to?: 'targets' | 'self' | 'both';
 }
 
 /** Repetição a cada turno (Arma Espiritual, Esfera Flamejante, Raio Místico…). */
 export interface SpellSustain {
   cost: 'action' | 'bonus';
   /** Campos que mudam ao repetir (alvo, resolução, dano). */
-  use?: Partial<Pick<Spell, 'target' | 'resolution' | 'damage' | 'extraDamage' | 'condition'>>;
+  use?: Partial<
+    Pick<Spell, 'target' | 'resolution' | 'damage' | 'extraDamage' | 'condition' | 'range' | 'vfx'>
+  >;
 }
 
 /** Área que permanece no mapa depois da conjuração (Teia, Névoa Mortal, Guardiões Espirituais). */
@@ -85,12 +97,23 @@ export interface SpellZone {
   aura?: boolean;
   /** Quando aplica o efeito: ao começar o turno de quem está dentro, ao entrar, ou só na conjuração. */
   on: 'start' | 'enter' | 'both' | 'cast';
+  /** Raio (pés) da área quando o alvo da magia é um ponto (Esfera Flamejante: 7,5 ft = adjacente). */
+  radius?: number;
   /** Terreno difícil (lembrete desenhado no mapa). */
   difficult?: boolean;
   /** Bloqueia visão (Nuvem de Névoa, Escuridão). */
   obscures?: boolean;
   /** Cor do desenho no mapa. */
   color?: SpellVfx['color'];
+}
+
+/** Uma escolha que o conjurador faz ao lançar (ver `Spell.options`); a primeira vale se nada for dito. */
+export interface SpellOption {
+  id: string;
+  label: string;
+  patch: Partial<
+    Pick<Spell, 'effect' | 'condition' | 'damage' | 'extraDamage' | 'tempHp' | 'vfx' | 'manual'>
+  >;
 }
 
 export interface Spell {
@@ -118,6 +141,14 @@ export interface Spell {
     flatPerLevel?: number;
     addModifier?: boolean;
   };
+  /** Encerra as magias do alvo (Dissipar Magia): automático até o espaço usado, acima disso teste de atributo. */
+  dispel?: boolean;
+  /** Escolhas da conjuração (Proteção contra Energia: tipo de dano); `patch` substitui campos da magia. */
+  options?: SpellOption[];
+  /** Traz de volta quem morreu há pouco, com 1 PV (Reviver). */
+  revive?: boolean;
+  /** Encerra condições do alvo (Restauração Menor): uma, ou todas as listadas com `all`. */
+  cure?: { conditions?: ConditionName[]; all?: boolean; spells?: string[] };
   /** Estabiliza quem está morrendo (Poupar os Moribundos). */
   stabilize?: boolean;
   /** PV temporários (Vida Falsa, Heroísmo em 2024). */

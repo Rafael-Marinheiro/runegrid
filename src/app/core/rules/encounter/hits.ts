@@ -1,6 +1,6 @@
 import { Ability, DamageType } from '../../models/creature';
 import { EncounterState, HeldHit } from '../../models/encounter';
-import { applyDamage } from '../creature';
+import { applyDamage, heal } from '../creature';
 import { Rng } from '../dice';
 import { getSpell } from '../spells/data';
 import { aftermath, checkOutcome, dtype, notes } from './helpers';
@@ -36,6 +36,14 @@ export function applyHeldHit(state: EncounterState, hit: HeldHit, rng: Rng): Enc
   if (r) {
     const spell = getSpell(r.spellId, r.ruleset);
     const caster = creatureOf(s, hit.attackerId);
+    if (spell?.damage?.lifesteal && dealtTotal > 0) {
+      const back = Math.floor(dealtTotal * spell.damage.lifesteal);
+      const who = creatureOf(s, hit.attackerId);
+      if (back > 0) {
+        s = withCreature(s, heal(who, back));
+        s = addLog(s, `${who.name} recupera ${back} PV.`, [who.id]);
+      }
+    }
     if (spell && creatureOf(s, hit.targetId).status !== 'dead')
       s = applyRiders(
         s,

@@ -1,6 +1,13 @@
 import { CONDITION_LABEL, Creature, DAMAGE_LABEL, DamageType } from '../../models/creature';
 import { EncounterState, Role, TurnState } from '../../models/encounter';
-import { BonusAction, bonusActionsOf, canAct, checkConcentration, RuleError } from '../creature';
+import {
+  BonusAction,
+  bonusActionsOf,
+  canAct,
+  checkConcentration,
+  removeEffects,
+  RuleError,
+} from '../creature';
 import { AdvMode, Rng } from '../dice';
 import { addLog, creatureOf, teamOf, withCreature } from './state';
 import { xpForCr } from '../srd/xp';
@@ -135,6 +142,15 @@ export function aftermath(
     state = addLog(
       withCreature(state, t),
       `${t.name} acorda: ${woke.map((c) => c.spell ?? CONDITION_LABEL[c.name]).join(', ')} termina.`,
+      [t.id],
+    );
+  }
+  if (dealt > 0 && (t.effects ?? []).some((e) => e.endsOnDamage)) {
+    const woke = (t.effects ?? []).filter((e) => e.endsOnDamage);
+    t = removeEffects(t, (e) => woke.includes(e));
+    state = addLog(
+      withCreature(state, t),
+      `${t.name}: ${woke.map((e) => e.name).join(', ')} termina.`,
       [t.id],
     );
   }

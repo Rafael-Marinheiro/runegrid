@@ -58,6 +58,8 @@ export interface EffectMods {
   repeatSave?: { ability: Ability; dc: number };
   /** Some ao ser usado uma vez (Orientação, Resistência, Verdadeiro Golpe). */
   once?: boolean;
+  /** Imagens ilusórias restantes (Imagem Espelhada): ataques podem mirar uma delas. */
+  images?: number;
   /** Termina quando quem carrega ataca ou conjura (Invisibilidade, Santuário). */
   endsOnAttack?: boolean;
   /** Sem efeito no motor: só lembrete para o Mestre (testes de atributo, sentidos…). */
@@ -82,5 +84,7 @@ export interface ActiveEffect {
   ends?: 'start' | 'end' | 'casterStart' | 'casterEnd';
   /** Some quando o conjurador perde a concentração. */
   concentration?: boolean;
+  /** Some quando quem carrega sofre dano (Padrão Hipnótico). */
+  endsOnDamage?: boolean;
   mods: EffectMods;
 }

@@ -36,3 +36,27 @@ export const narrative = (v, o = {}) => ({
   ...(v ? { vfx: v } : {}),
   ...o,
 });
+
+/** Modificadores por espaço: `ladder(3, 9, (s) => ({ maxHp: 5 * (s - 1) }))` → um degrau por nível. */
+export const ladder = (from, to, fn) =>
+  Array.from({ length: to - from + 1 }, (_, i) => ({ from: from + i, mods: fn(from + i) }));
+
+/** Todos os tipos de dano (Vínculo Protetor: resistência a tudo). */
+export const ALL_DAMAGE = [
+  'acid',
+  'bludgeoning',
+  'cold',
+  'fire',
+  'force',
+  'lightning',
+  'necrotic',
+  'piercing',
+  'poison',
+  'psychic',
+  'radiant',
+  'slashing',
+  'thunder',
+];
+
+/** Escolha feita ao lançar (Proteção contra Energia: o tipo de dano); `patch` troca campos da magia. */
+export const opt = (id, label, patch) => ({ id, label, patch });

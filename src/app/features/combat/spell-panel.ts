@@ -86,6 +86,16 @@ import { UiPrefs } from '@state/ui-prefs';
             }}
           </p>
         }
+        @if (sp.options?.length) {
+          <label class="slot">
+            {{ ui.text('Escolha', 'Choice') }}
+            <select #opt (change)="setOption(opt.value)">
+              @for (o of sp.options; track o.id) {
+                <option [value]="o.id" [selected]="o.id === option()">{{ o.label }}</option>
+              }
+            </select>
+          </label>
+        }
         @if (sp.level > 0 && !sustainPick()) {
           <label class="slot">
             {{ ui.text('Espaço', 'Slot') }}
@@ -163,7 +173,13 @@ export class SpellPanel {
   readonly picked = signal<Spell | null>(null);
   readonly slot = signal(0);
   readonly sustainPick = signal(false);
-  readonly chosen = output<{ spell: Spell; slot: number; sustain?: boolean } | null>();
+  readonly option = signal<string | undefined>(undefined);
+  readonly chosen = output<{
+    spell: Spell;
+    slot: number;
+    sustain?: boolean;
+    option?: string;
+  } | null>();
   private readonly spellStore = inject(SpellStore);
 
   protected readonly known = computed(() => {
@@ -244,6 +260,7 @@ export class SpellPanel {
 
   protected pick(sp: Spell): void {
     this.sustainPick.set(false);
+    this.option.set(sp.options?.[0]?.id);
     if (this.picked()?.id === sp.id) {
       this.picked.set(null);
       this.chosen.emit(null);
@@ -252,13 +269,20 @@ export class SpellPanel {
     const slots = this.available(sp);
     this.picked.set(sp);
     this.slot.set(slots[0]);
-    this.chosen.emit({ spell: sp, slot: slots[0] });
+    this.chosen.emit({ spell: sp, slot: slots[0], option: this.option() });
+  }
+
+  protected setOption(id: string): void {
+    const sp = this.picked();
+    if (!sp) return;
+    this.option.set(id);
+    this.chosen.emit({ spell: sp, slot: this.slot(), option: id });
   }
 
   protected setSlot(level: number): void {
     const sp = this.picked();
     if (!sp) return;
     this.slot.set(level);
-    this.chosen.emit({ spell: sp, slot: level });
+    this.chosen.emit({ spell: sp, slot: level, option: this.option() });
   }
 }

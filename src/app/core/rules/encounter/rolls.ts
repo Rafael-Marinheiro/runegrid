@@ -1,4 +1,4 @@
-import { Ability, Creature } from '../../models/creature';
+import { Ability, CONDITION_LABEL, Creature } from '../../models/creature';
 import { EncounterState } from '../../models/encounter';
 import { attackDice, effectsOf, removeEffects, saveDice, saveFlat, saveModes } from '../creature';
 import { AdvMode, roll, Rng } from '../dice';
@@ -83,11 +83,68 @@ export function saveExtra(
 export function dropOnAttack(state: EncounterState, actorId: string): EncounterState {
   const c = creatureOf(state, actorId);
   const gone = effectsOf(c).filter((e) => e.mods.endsOnAttack);
-  if (!gone.length) return state;
+  const conds = c.conditions.filter((k) => k.endsOnAttack);
+  if (!gone.length && !conds.length) return state;
   let s = withCreature(
     state,
-    removeEffects(c, (e) => gone.includes(e)),
+    removeEffects({ ...c, conditions: c.conditions.filter((k) => !k.endsOnAttack) }, (e) =>
+      gone.includes(e),
+    ),
   );
   for (const e of gone) s = addLog(s, `${c.name}: ${e.name} termina.`, [c.id]);
+  for (const k of conds)
+    s = addLog(s, `${c.name}: ${k.spell ?? CONDITION_LABEL[k.name]} termina.`, [c.id]);
   return s;
+}
+
+/**
+ * Imagem Espelhada: um ataque contra quem tem imagens pode mirar uma delas (d20: 6+ com três,
+ * 8+ com duas, 11+ com uma). Acertar CA 10 + Des destrói uma imagem. Devolve o estado se o ataque
+ * foi desviado para uma imagem, ou `null` se mirou a criatura de verdade.
+ */
+export function decoy(
+  state: EncounterState,
+  targetId: string,
+  attackTotal: number,
+  rng: Rng,
+): EncounterState | null {
+  const t = creatureOf(state, targetId);
+  const eff = effectsOf(t).find((e) => (e.mods.images ?? 0) > 0);
+  if (!eff) return null;
+  const n = eff.mods.images!;
+  const r = roll('1d20', rng).total;
+  if (r < (n >= 3 ? 6 : n === 2 ? 8 : 11)) return null;
+  const ac = 10 + Math.floor((t.abilities.dex - 10) / 2);
+  let s = state;
+  if (attackTotal >= ac) {
+    const left = n - 1;
+    const next = left > 0 ? { ...eff, mods: { ...eff.mods, images: left } } : null;
+    const others = effectsOf(t).filter((e) => e !== eff);
+    s = withCreature(s, {
+      ...t,
+      effects: [...others, ...(next ? [next] : [])].length
+        ? [...others, ...(next ? [next] : [])]
+        : undefined,
+    });
+    return addLog(
+      s,
+      `O ataque acerta uma imagem de ${t.name} (d20 ${r}): ela se desfaz (restam ${left}).`,
+      [t.id],
+    );
+  }
+  return addLog(s, `O ataque erra: mirou uma imagem de ${t.name} (d20 ${r}).`, [t.id]);
+}
+
+/** O dano extra de uso único (Golpe Marcante) foi gasto no acerto; a magia acaba. */
+export function consumeWeaponRiders(state: EncounterState, actorId: string): EncounterState {
+  const c = creatureOf(state, actorId);
+  const gone = effectsOf(c).filter((e) => e.mods.once && e.mods.weaponDamage);
+  if (!gone.length) return state;
+  const names = gone.map((e) => e.name);
+  const left = removeEffects(c, (e) => gone.includes(e));
+  return withCreature(state, {
+    ...left,
+    concentration:
+      left.concentration && names.includes(left.concentration) ? undefined : left.concentration,
+  });
 }

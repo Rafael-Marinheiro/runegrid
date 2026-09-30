@@ -45,7 +45,14 @@ type Mode =
   | { kind: 'move' }
   | { kind: 'attack'; index: number }
   | { kind: 'help' }
-  | { kind: 'cast'; spell: Spell; slot: number; sustain?: boolean; picked: string[] };
+  | {
+      kind: 'cast';
+      spell: Spell;
+      slot: number;
+      sustain?: boolean;
+      option?: string;
+      picked: string[];
+    };
 
 @Component({
   selector: 'app-combat-page',
@@ -674,6 +681,7 @@ export class CombatPage {
       spellId: m.spell.id,
       slotLevel: m.slot,
       ruleset: this.ui.ruleset(),
+      ...(m.option ? { option: m.option } : {}),
       ...over,
     };
     return m.spell.castTime === 'reaction'
@@ -696,10 +704,19 @@ export class CombatPage {
     return this.selfOnly(m) || (this.maxTargets(m) > 1 && m.picked.length > 0);
   }
 
-  protected onSpell(pick: { spell: Spell; slot: number; sustain?: boolean } | null): void {
+  protected onSpell(
+    pick: { spell: Spell; slot: number; sustain?: boolean; option?: string } | null,
+  ): void {
     this.mode.set(
       pick
-        ? { kind: 'cast', spell: pick.spell, slot: pick.slot, sustain: pick.sustain, picked: [] }
+        ? {
+            kind: 'cast',
+            spell: pick.spell,
+            slot: pick.slot,
+            sustain: pick.sustain,
+            option: pick.option,
+            picked: [],
+          }
         : { kind: 'move' },
     );
   }

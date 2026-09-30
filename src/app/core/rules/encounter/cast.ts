@@ -44,7 +44,7 @@ import {
   setTurn,
 } from './helpers';
 import { applyRiders, makeEffect } from './rider';
-import { attackExtra, consumeAttacked, dropOnAttack, saveExtra } from './rolls';
+import { attackExtra, consumeAttacked, decoy, dropOnAttack, saveExtra } from './rolls';
 import { addLog, creatureOf, occupiedCells, sizeOf, teamOf, tokenOf, withCreature } from './state';
 import { createZone, inArea } from './zones';
 
@@ -78,7 +78,7 @@ export function affectedBy(
       const at = tokenOf(state, target.id);
       if (!at) throw new RuleError(`${target.name} não está no mapa.`);
       if (role.kind === 'player' && at.hidden) throw new RuleError('Alvo não visível.');
-      if (target.status === 'dead' && !spell.heal)
+      if (target.status === 'dead' && !spell.heal && !spell.revive)
         throw new RuleError(`${target.name} já está morto.`);
       const d = distanceFt(from.pos, sizeOf(caster), at.pos, sizeOf(target), state.rule);
       if (d > spell.range)
@@ -161,8 +161,11 @@ export function cast(state: EncounterState, cmd: CastCmd, ctx: Context): Encount
   }
 
   // na repetição, vale o que a magia muda (alvo, dano) sobre a conjuração original
-  const use: Spell = sustain ? { ...spell, ...spell.sustain!.use } : spell;
-  const { creatures: targets } = affectedBy(state, use, actor, cmd, slotLevel, ctx.role);
+  const use: Spell = withOption(sustain ? { ...spell, ...spell.sustain!.use } : spell, cmd.option);
+  // repetir só para mover a área (Esfera Flamejante, Raio de Lua, Lufada de Vento)
+  const moveOnly =
+    sustain && !!spell.zone && !!cmd.point && !cmd.targetId && !cmd.targetIds?.length;
+  const targets = moveOnly ? [] : affectedBy(state, use, actor, cmd, slotLevel, ctx.role).creatures;
 
   // gasta espaço de magia e troca a concentração
   let caster = slotLevel > 0 && !sustain ? spendSlot(actor, slotLevel) : actor;
@@ -212,11 +215,9 @@ export function cast(state: EncounterState, cmd: CastCmd, ctx: Context): Encount
       cmd.point,
     ),
   );
-  if (spell.narrative || spell.manual) {
-    s = addLog(s, spell.narrative ? narrativeNote(spell) : `${spell.name}: ${spell.manual}`, [
-      caster.id,
-    ]);
-  }
+  if (spell.narrative) s = addLog(s, narrativeNote(spell), [caster.id]);
+  if (spell.manual) s = addLog(s, `${spell.name}: ${spell.manual}`, [caster.id]);
+  if (moveOnly) return moveZone(s, caster, spell, cmd.point!);
   // alguém pode reagir à conjuração (Contrafeitiço): a resolução espera a decisão
   if (!sustain) {
     const held = offerCast(s, caster.id, spell, slotLevel, JSON.stringify(cmd));
@@ -235,7 +236,7 @@ export function finishCast(state: EncounterState, cmd: CastCmd, ctx: Context): E
     : spell.level === 0
       ? 0
       : (cmd.slotLevel ?? spell.level);
-  const use: Spell = sustain ? { ...spell, ...spell.sustain!.use } : spell;
+  const use: Spell = withOption(sustain ? { ...spell, ...spell.sustain!.use } : spell, cmd.option);
   const { creatures: targets, dist } = affectedBy(state, use, caster, cmd, slotLevel, ctx.role);
   const done = resolveSpell(
     state,
@@ -260,6 +261,12 @@ export function finishCast(state: EncounterState, cmd: CastCmd, ctx: Context): E
         )
       : done,
   );
+}
+
+/** A escolha feita ao lançar (primeira opção se nenhuma for dita) substitui campos da magia. */
+export function withOption(spell: Spell, option?: string): Spell {
+  const o = spell.options?.find((x) => x.id === option) ?? spell.options?.[0];
+  return o ? { ...spell, ...o.patch } : spell;
 }
 
 const narrativeNote = (spell: Spell): string => `${spell.name}: efeito narrativo, o Mestre conduz.`;
@@ -294,6 +301,9 @@ export function resolveSpell(
       spell.effect ||
       spell.tempHp ||
       spell.stabilize ||
+      spell.cure ||
+      spell.dispel ||
+      spell.revive ||
       spell.push
     ) {
       if (spell.resolution.kind === 'pool')
@@ -325,7 +335,19 @@ export function resolveSpell(
     }
   }
 
-  if (mode !== 'tick' && spell.effect?.to === 'self') {
+  const affected =
+    spell.resolution.kind === 'auto' ||
+    targets.some((t) => {
+      const c = creatureOf(s, t.id);
+      return (
+        (c.effects ?? []).some((e) => e.spell === spell.id && e.by === caster.id) ||
+        c.conditions.some((k) => k.spell === spell.name && k.by === caster.id)
+      );
+    });
+  if (
+    mode !== 'tick' &&
+    (spell.effect?.to === 'self' || (spell.effect?.to === 'both' && affected))
+  ) {
     const eff = makeEffect(spell, caster, slot, dc, ability, targets[0]?.id);
     if (eff) s = withCreature(s, addEffect(creatureOf(s, caster.id), eff));
   }
@@ -434,12 +456,23 @@ function spellAttack(
   const crit = hit && (d20.crit || cond.autoCrit);
   const label = ray ? `${spell.name} (raio ${ray})` : spell.name;
   const head = `${label}: d20 ${d20.natural} ${fmt(bonus)}${extra.text} = ${total} vs CA ${ac}${cover ? ` (cobertura +${cover})` : ''}${mode === 'normal' ? '' : mode === 'advantage' ? ' (vantagem)' : ' (desvantagem)'}`;
-  if (!hit) return addLog(state, `${head} — erro.`, [caster.id, target.id]);
+  const mod = abilityMod(caster.abilities[ability]);
+  const dec = decoy(state, target.id, total, rng);
+  if (dec) return dropOnAttack(dec, caster.id);
+  if (!hit) {
+    const miss = addLog(state, `${head} — erro.`, [caster.id, target.id]);
+    return spell.damage?.missHalf
+      ? splash(miss, caster, target.id, spell, slot, level, mod, rng)
+      : miss;
+  }
 
   const parts = damageParts(spell).map((p) => {
     const expr = parseDice(partExpression(p, spell.level, slot, level));
     return {
-      amount: Math.max(0, roll(crit ? criticalExpr(expr) : expr, rng).total),
+      amount: Math.max(
+        0,
+        roll(crit ? criticalExpr(expr) : expr, rng).total + (p.addModifier ? mod : 0),
+      ),
       type: p.type as string,
     };
   });
@@ -484,7 +517,11 @@ function spellSave(
   // o dano é rolado uma vez para todos (um total por tipo de dano)
   const rolled = damageParts(spell).map((p) => ({
     p,
-    total: Math.max(0, roll(partExpression(p, spell.level, slot, level), rng).total),
+    total: Math.max(
+      0,
+      roll(partExpression(p, spell.level, slot, level), rng).total +
+        (p.addModifier ? abilityMod(caster.abilities[ability]) : 0),
+    ),
   }));
   let s = state;
   for (const original of targets) {
@@ -549,6 +586,16 @@ function spellAuto(
 
   for (const original of targets) {
     const t = creatureOf(s, original.id);
+    if (spell.revive && t.status === 'dead') {
+      s = withCreature(s, {
+        ...t,
+        status: 'alive',
+        hp: { ...t.hp, current: 1 },
+        deathSaves: { successes: 0, failures: 0 },
+      });
+      s = addLog(s, `${t.name} volta à vida com 1 PV.`, [caster.id, t.id]);
+      continue;
+    }
     if (spell.heal) {
       const amount = Math.max(
         0,
@@ -571,7 +618,11 @@ function spellAuto(
         ? [{ type: spell.damage.type, amount: perTarget.get(t.id) ?? 0 }]
         : parts.map((p) => ({
             type: p.type,
-            amount: Math.max(0, roll(partExpression(p, spell.level, slot, level), rng).total),
+            amount: Math.max(
+              0,
+              roll(partExpression(p, spell.level, slot, level), rng).total +
+                (p.addModifier ? mod : 0),
+            ),
           }));
       for (const it of items) {
         const d = applyDamage(cur, it.amount, { type: it.type });
@@ -616,4 +667,46 @@ function spellPool(
     s = applyRiders(s, caster, t.id, spell, slot, dc, ability, rng, point);
   }
   return s;
+}
+
+/** Move a área de uma magia mantida: aura e linhas giram em torno do conjurador; as demais andam até o ponto. */
+function moveZone(
+  state: EncounterState,
+  caster: Creature,
+  spell: Spell,
+  point: Pos,
+): EncounterState {
+  const zones = (state.zones ?? []).map((z) => {
+    if (z.casterId !== caster.id || z.spellId !== spell.id) return z;
+    const fromCaster = z.aura || z.shape.kind === 'line' || z.shape.kind === 'cone';
+    return fromCaster ? { ...z, toward: point } : { ...z, center: point };
+  });
+  return addLog({ ...state, zones }, `${spell.name} se move.`, [caster.id]);
+}
+
+/** Flecha Ácida errou: o alvo ainda leva metade do dano inicial (sem consequências adicionais). */
+function splash(
+  state: EncounterState,
+  caster: Creature,
+  targetId: string,
+  spell: Spell,
+  slot: number,
+  level: number,
+  mod: number,
+  rng: Rng,
+): EncounterState {
+  let cur = creatureOf(state, targetId);
+  const lines: string[] = [];
+  let dealt = 0;
+  for (const p of damageParts(spell)) {
+    const total =
+      roll(partExpression(p, spell.level, slot, level), rng).total + (p.addModifier ? mod : 0);
+    const r = applyDamage(cur, Math.floor(Math.max(0, total) / 2), { type: p.type });
+    cur = r.creature;
+    dealt += r.dealt;
+    lines.push(`${r.dealt} de dano ${dtype(p.type)}${notes(r)}`);
+  }
+  let s = withCreature(state, cur);
+  s = addLog(s, `${spell.name} respinga no alvo: ${lines.join(' + ')}.`, [caster.id, targetId]);
+  return checkOutcome(aftermath(s, targetId, dealt, rng));
 }

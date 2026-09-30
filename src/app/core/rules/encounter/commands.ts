@@ -88,6 +88,8 @@ export type Command =
       point?: Pos;
       /** Conjunto de regras do 2014 (padrão) ou do 2024. */
       ruleset?: '2014' | '2024';
+      /** Escolha da conjuração (`Spell.options`). */
+      option?: string;
       /** Usa de novo uma magia mantida (Arma Espiritual), sem gastar espaço. */
       sustain?: boolean;
     }

@@ -55,6 +55,8 @@ Os itens de fases anteriores estão todos concluídos ou fora do escopo por deci
 
 **Fora do escopo (por ora):** criação completa de personagem com todas as classes/subclasses, grid hexagonal, regras de variante, conteúdo não-SRD, vídeo. (Voz entra no escopo: F8-15.)
 
+**Visão de longo prazo (não iniciado, sem item de backlog ainda):** um "Mestre" via MCP — um agente de IA capaz de gerar aventuras e conduzir o jogo diretamente na ferramenta (não só sugerir texto como o assistente narrativo de F10-2, e sim operar os comandos do jogo: mover monstro, atacar, revelar névoa etc., dentro das mesmas regras que um Mestre humano segue). Registrado aqui só para não se perder; ainda não tem desenho de escopo, arquitetura nem estimativa.
+
 **Decisões-chave (revise se discordar):**
 
 | Tema                 | Decisão                                                                                                                                             | Por quê                                                                                                                                                                                                                            |

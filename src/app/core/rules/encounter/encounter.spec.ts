@@ -90,6 +90,21 @@ describe('montagem', () => {
     expect(tokenOf(s, 'ogre')?.pos).toEqual({ x: 3, y: 0 });
   });
 
+  it('setTokenArt: só o Mestre, só caminho válido, e dá para remover', () => {
+    let s = newEncounter(map);
+    s = run(s, { type: 'addCreature', creature: foe(), pos: { x: 5, y: 0 } });
+    s = run(s, { type: 'setTokenArt', id: 'foe', art: 'miniaturas/goblin_a.png' });
+    expect(s.creatures[0].tokenArt).toBe('miniaturas/goblin_a.png');
+    expect(() => run(s, { type: 'setTokenArt', id: 'foe', art: 'http://x/a.png' })).toThrow(
+      RuleError,
+    );
+    const player: Role = { kind: 'player', owns: ['foe'] };
+    expect(() =>
+      run(s, { type: 'setTokenArt', id: 'foe', art: 'miniaturas/a.png' }, dice(), player),
+    ).toThrow();
+    expect(run(s, { type: 'setTokenArt', id: 'foe' }).creatures[0].tokenArt).toBeUndefined();
+  });
+
   it('não altera o estado anterior', () => {
     const s = newEncounter(map);
     run(s, { type: 'addCreature', creature: hero(), pos: { x: 0, y: 0 } });

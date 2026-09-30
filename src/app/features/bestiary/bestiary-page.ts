@@ -11,8 +11,10 @@ import { ABILITIES, ABILITY_LABEL } from '@core/models/creature';
 import { SrdMonster } from '@core/models/srd';
 import { abilityMod, fmtBonus } from '@core/rules/creature';
 import { crLabel, monsterToCreature } from '@core/rules/srd/convert';
+import { MiniatureQuery, queryFromMonster } from '@core/rules/srd/miniature';
 import { monsterNamePt } from '@core/rules/srd/names-pt';
 import { DIFFICULTY_LABEL, estimateEncounter, xpForCr } from '@core/rules/srd/xp';
+import { MiniaturePicker } from '@features/creatures/miniature-picker';
 import { EncounterStore } from '@state/encounter.store';
 import { MonsterArtStore } from '@state/monster-art.store';
 import { PartyStore } from '@state/party.store';
@@ -24,6 +26,7 @@ const CRS = [0, 0.125, 0.25, 0.5, ...Array.from({ length: 30 }, (_, i) => i + 1)
 
 @Component({
   selector: 'app-bestiary-page',
+  imports: [MiniaturePicker],
   templateUrl: './bestiary-page.html',
   styleUrl: './bestiary-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -117,7 +120,33 @@ export class BestiaryPage implements OnInit {
 
   /** Miniatura do monstro (F11-5), quando o pacote de arte tiver uma para o id. */
   protected artUrl(m: SrdMonster): string | null {
-    return this.art.urlFor(m.id);
+    const file = this.artFile(m);
+    return file ? `data/${file}` : null;
+  }
+
+  /** Variante escolhida na ficha (vale para a lista, o retrato e o token ao levar ao mapa). */
+  private readonly chosenArt = signal<Record<string, string>>({});
+
+  protected artFile(m: SrdMonster): string | undefined {
+    return this.chosenArt()[m.id] ?? this.art.fileFor(m.id);
+  }
+
+  protected artQuery(m: SrdMonster): MiniatureQuery {
+    return queryFromMonster(m);
+  }
+
+  /** Só humanoides do catálogo (humanos, anões, elfos, goblins) têm variantes para escolher. */
+  protected hasVariants(m: SrdMonster): boolean {
+    return this.art.suggest(queryFromMonster(m), 1).length > 0;
+  }
+
+  protected chooseArt(m: SrdMonster, file: string | undefined): void {
+    this.chosenArt.update((c) => {
+      const next = { ...c };
+      if (file) next[m.id] = file;
+      else delete next[m.id];
+      return next;
+    });
   }
 
   protected setRuleset(value: string): void {
@@ -170,7 +199,9 @@ export class BestiaryPage implements OnInit {
   protected toEncounter(): void {
     for (const { m, n } of this.pickedList()) {
       for (let i = 0; i < n; i++)
-        this.encounter.autoPlace(this.encounter.addFromRoster(monsterToCreature(m, this.name(m))));
+        this.encounter.autoPlace(
+          this.encounter.addFromRoster(monsterToCreature(m, this.name(m), this.artFile(m))),
+        );
     }
     this.picked.set({});
     void this.router.navigate(['/combate']);
@@ -178,6 +209,6 @@ export class BestiaryPage implements OnInit {
 
   /** Guarda o monstro entre as criaturas para reutilizar. */
   protected toParty(m: SrdMonster): void {
-    this.party.creatures.update((l) => [...l, monsterToCreature(m, this.name(m))]);
+    this.party.creatures.update((l) => [...l, monsterToCreature(m, this.name(m), this.artFile(m))]);
   }
 }

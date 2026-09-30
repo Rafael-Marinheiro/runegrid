@@ -46,6 +46,7 @@ import {
   upsertMapObject,
   upsertTrap,
 } from './mapedit';
+import { isTokenArt } from '../srd/miniature';
 import { Command, PLAYER_COMMANDS } from './commands';
 import {
   addFloor,
@@ -124,6 +125,12 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
           t.creatureId === cmd.id ? { ...t, hidden: cmd.hidden } : t,
         ),
       };
+    }
+    case 'setTokenArt': {
+      const c = { ...creatureOf(state, cmd.id) };
+      delete c.tokenArt;
+      if (cmd.art !== undefined && !isTokenArt(cmd.art)) throw new RuleError('Miniatura inválida.');
+      return withCreature(state, cmd.art ? { ...c, tokenArt: cmd.art } : c);
     }
     case 'setTerrain': {
       return paint(state, [cmd.pos], cmd.terrain);

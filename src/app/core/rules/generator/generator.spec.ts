@@ -276,6 +276,15 @@ describe('regenerar mantendo salas travadas', () => {
 });
 
 describe('levar para o combate', () => {
+  it('aplica a miniatura escolhida a cada monstro (variante = n-ésima cópia)', () => {
+    const adv = gen({ size: 'medium', seed: 'jogar', emphasis: 'combat' });
+    const s = adventureToEncounter(adv, [], monsters, (m, i) => `miniaturas/${m.id}-${i}.png`);
+    const foes = s.creatures.filter((c) => c.kind === 'monster');
+    expect(foes.length).toBeGreaterThan(0);
+    for (const c of foes) expect(c.tokenArt).toMatch(/^miniaturas\/.+-\d+\.png$/);
+    expect(adventureToEncounter(adv, [], monsters).creatures.every((c) => !c.tokenArt)).toBe(true);
+  });
+
   it('grupo na entrada, monstros ocultos nas suas salas e mapa sob névoa', () => {
     const adv = gen({ size: 'medium', seed: 'jogar', emphasis: 'combat' });
     const party = sampleCreatures().filter((c) => c.kind === 'pc');

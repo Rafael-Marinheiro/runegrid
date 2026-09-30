@@ -107,6 +107,16 @@
       @if (artUrl(m); as url) {
         <img class="portrait" [src]="url" [alt]="name(m)" />
       }
+      @if (hasVariants(m)) {
+        <details class="variants">
+          <summary>{{ ui.text('Variantes de miniatura', 'Miniature variants') }}</summary>
+          <app-miniature-picker
+            [query]="artQuery(m)"
+            [current]="artFile(m)"
+            (pick)="chooseArt(m, $event)"
+          />
+        </details>
+      }
       <div class="bhead">
         <h2>{{ name(m) }}</h2>
         <span class="muted">{{ m.size }} · {{ m.type }}</span>

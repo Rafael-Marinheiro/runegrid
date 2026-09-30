@@ -170,7 +170,7 @@
         @for (c of unplaced(); track c.id) {
           <div class="up-row">
             <span>{{ c.name }}</span>
-            <button type="button" (click)="store.autoPlace(c.id); selectedId.set(c.id)">
+            <button type="button" (click)="store.autoPlace(c.id); selectedId.set(c.id); openArt(c)">
               {{ ui.text('Posicionar', 'Place') }}
             </button>
           </div>
@@ -538,6 +538,23 @@
           <h2>{{ c.name }}</h2>
           <span class="chip" [class.foe]="c.kind === 'monster'">{{ teamLabel(c) }}</span>
         </div>
+        @if (isDm()) {
+          <button
+            type="button"
+            class="art-toggle"
+            [attr.aria-expanded]="artFor() === c.id"
+            (click)="artFor.set(artFor() === c.id ? null : c.id)"
+          >
+            {{ ui.text('Miniatura do token', 'Token miniature') }}
+          </button>
+          @if (artFor() === c.id) {
+            <app-miniature-picker
+              [query]="artQuery(c)"
+              [current]="c.tokenArt"
+              (pick)="store.send({ type: 'setTokenArt', id: c.id, art: $event })"
+            />
+          }
+        }
         <dl class="stats">
           <div>
             <dt>{{ ui.text('PV', 'HP') }}</dt>

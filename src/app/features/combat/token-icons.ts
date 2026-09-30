@@ -1,3 +1,5 @@
+import { isTokenArt } from '@core/rules/srd/miniature';
+
 /**
  * Ícones de token (desenhos próprios em grade 24×24, contorno): sem dependência e sem licença externa.
  * Um dado sem ícone cai na inicial do nome.
@@ -75,14 +77,18 @@ export interface IconSource {
   kind: 'pc' | 'npc' | 'monster';
   icon?: string;
   tokenImage?: string;
+  tokenArt?: string;
 }
 
+/** Retrato do token: o do próprio jogador (data URL) ou, na falta dele, a miniatura estática. */
 export const tokenImageFor = (c: IconSource): string | null =>
   c.tokenImage &&
   c.tokenImage.length <= 512 * 1024 &&
   /^data:image\/(?:png|jpeg|webp);base64,/.test(c.tokenImage)
     ? c.tokenImage
-    : null;
+    : isTokenArt(c.tokenArt)
+      ? `data/${c.tokenArt}`
+      : null;
 
 export function iconFor(c: IconSource): IconId | null {
   if (c.icon && (ICON_IDS as readonly string[]).includes(c.icon)) return c.icon as IconId;

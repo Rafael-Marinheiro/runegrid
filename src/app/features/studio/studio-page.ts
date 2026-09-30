@@ -29,6 +29,7 @@ import {
 import { project, sizeOf, teamOf } from '@core/rules/encounter';
 import { CATALOG } from '@core/rules/inventory/catalog';
 import { monsterToCreature } from '@core/rules/srd/convert';
+import { queryFromMonster } from '@core/rules/srd/miniature';
 import { monsterNamePt } from '@core/rules/srd/names-pt';
 import { exportFoundryScene, importFoundryScene } from '@core/rules/vtt/foundry';
 import { MapView, TokenView } from '@features/combat/map-view';
@@ -44,6 +45,7 @@ import { UiPrefs } from '@state/ui-prefs';
 import { DungeonLibrary, SavedDungeon } from '@state/dungeon-library';
 import { EncounterStore } from '@state/encounter.store';
 import { PartyStore } from '@state/party.store';
+import { MonsterArtStore } from '@state/monster-art.store';
 import { SrdStore } from '@state/srd.store';
 
 type Tool =
@@ -95,6 +97,7 @@ export class StudioPage implements OnInit {
   protected readonly ui = inject(UiPrefs);
   protected readonly party = inject(PartyStore);
   protected readonly srd = inject(SrdStore);
+  private readonly art = inject(MonsterArtStore);
   protected readonly catalog = CATALOG;
   protected readonly objectKinds = MAP_OBJECT_KINDS;
   protected readonly objectTextures = MAP_OBJECT_TEXTURES;
@@ -270,6 +273,7 @@ export class StudioPage implements OnInit {
 
   ngOnInit(): void {
     void this.srd.loadMonsters(this.ui.ruleset());
+    void this.art.load();
   }
 
   protected pick(id: string): void {
@@ -381,7 +385,13 @@ export class StudioPage implements OnInit {
     const [source, id] = this.creatureSource().split(':', 2);
     if (source === 'party') return this.party.creatures().find((creature) => creature.id === id);
     const monster = this.srd.monsters().find((creature) => creature.id === id);
-    return monster ? monsterToCreature(monster, this.monsterName(monster)) : undefined;
+    return monster
+      ? monsterToCreature(
+          monster,
+          this.monsterName(monster),
+          this.art.pickFor(monster.id, queryFromMonster(monster)),
+        )
+      : undefined;
   }
 
   private addCreature(pos: Pos): void {

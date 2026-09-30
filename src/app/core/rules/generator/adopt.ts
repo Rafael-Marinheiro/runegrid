@@ -17,6 +17,8 @@ export function adventureToEncounter(
   adv: GeneratedAdventure,
   party: Creature[],
   monsters: SrdMonster[],
+  /** Miniatura do monstro (n-ésima cópia do mesmo id, começando em 0); ausente = sem arte. */
+  pickArt?: (m: SrdMonster, variant: number) => string | undefined,
 ): EncounterState {
   const ctx = { rng: mulberry32(seedFromString(adv.params.seed)), role: { kind: 'dm' } as const };
   const byId = new Map(monsters.map((m) => [m.id, m]));
@@ -57,6 +59,7 @@ export function adventureToEncounter(
         const creature = monsterToCreature(
           m,
           (totals.get(m.id) ?? 1) > 1 ? `${m.name} ${n}` : m.name,
+          pickArt?.(m, n - 1),
         );
         const pos = free(s, room, sizeOf(creature));
         s = dispatch(

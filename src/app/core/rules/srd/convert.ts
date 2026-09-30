@@ -17,7 +17,11 @@ const SKILL_KEY: Record<string, Skill> = Object.fromEntries(
 );
 
 /** Cria uma criatura de combate a partir do bloco de estatísticas do SRD (PV médios). */
-export function monsterToCreature(m: SrdMonster, name: string = m.name): Creature {
+export function monsterToCreature(
+  m: SrdMonster,
+  name: string = m.name,
+  tokenArt?: string,
+): Creature {
   const abilities = Object.fromEntries(ABILITY_ORDER.map((a, i) => [a, m.abilities[i]])) as Record<
     Ability,
     number
@@ -43,6 +47,7 @@ export function monsterToCreature(m: SrdMonster, name: string = m.name): Creatur
     resistances: [...m.resistances],
     immunities: [...m.immunities],
     vulnerabilities: [...m.vulnerabilities],
+    ...(tokenArt ? { tokenArt } : {}),
   });
 }
 

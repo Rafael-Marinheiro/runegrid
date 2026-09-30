@@ -22,6 +22,8 @@ export type Command =
   | { type: 'removeCreature'; id: string }
   | { type: 'placeToken'; id: string; pos: Pos }
   | { type: 'setHidden'; id: string; hidden: boolean }
+  /** Troca a miniatura do token (só o Mestre); `art` ausente remove. */
+  | { type: 'setTokenArt'; id: string; art?: string }
   | { type: 'setTerrain'; pos: Pos; terrain: Terrain }
   /** Pintura em lote (um traço do pincel = um comando = um "desfazer"). */
   | { type: 'paint'; cells: Pos[]; terrain: Terrain }

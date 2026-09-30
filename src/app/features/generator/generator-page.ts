@@ -31,6 +31,7 @@ import {
 } from '@core/rules/generator';
 import { teamOf } from '@core/rules/encounter';
 import { monsterToCreature } from '@core/rules/srd/convert';
+import { queryFromMonster } from '@core/rules/srd/miniature';
 import { monsterNamePt } from '@core/rules/srd/names-pt';
 import { DIFFICULTY_LABEL } from '@core/rules/srd/xp';
 import { MapView, TokenView } from '@features/combat/map-view';
@@ -39,6 +40,7 @@ import { enhanceAdventureText } from '@net/ai-text';
 import { UiPrefs } from '@state/ui-prefs';
 import { EncounterStore } from '@state/encounter.store';
 import { PartyStore } from '@state/party.store';
+import { MonsterArtStore } from '@state/monster-art.store';
 import { SrdStore } from '@state/srd.store';
 
 const SIZE_LABEL: Record<SizeId, string> = {
@@ -72,6 +74,7 @@ const rnd = () => Math.random().toString(36).slice(2, 8);
 })
 export class GeneratorPage implements OnInit {
   private readonly srd = inject(SrdStore);
+  private readonly art = inject(MonsterArtStore);
   protected readonly ui = inject(UiPrefs);
   private readonly encounter = inject(EncounterStore);
   private readonly party = inject(PartyStore);
@@ -199,6 +202,7 @@ export class GeneratorPage implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
+    void this.art.load();
     await this.srd.loadMonsters(this.ui.ruleset());
     const q = this.route.snapshot.queryParamMap;
     if (q.has('seed')) {
@@ -276,7 +280,11 @@ export class GeneratorPage implements OnInit {
       if (!monster) continue;
       for (let i = 0; i < group.count; i++) {
         const id = this.encounter.addFromRoster(
-          monsterToCreature(monster, this.ui.text(monsterNamePt(monster.name), monster.name)),
+          monsterToCreature(
+            monster,
+            this.ui.text(monsterNamePt(monster.name), monster.name),
+            this.art.pickFor(monster.id, queryFromMonster(monster), i),
+          ),
         );
         this.encounter.autoPlace(id);
       }
@@ -317,7 +325,11 @@ export class GeneratorPage implements OnInit {
     if (!a) return;
     const pcs = this.party.creatures().filter((c) => c.kind === 'pc');
     const copies = pcs.map((c) => ({ ...structuredClone(c), id: crypto.randomUUID() }));
-    this.encounter.load(adventureToEncounter(a, copies, this.srd.monsters()));
+    this.encounter.load(
+      adventureToEncounter(a, copies, this.srd.monsters(), (m, i) =>
+        this.art.pickFor(m.id, queryFromMonster(m), i),
+      ),
+    );
     void this.router.navigate(['/combate']);
   }
 

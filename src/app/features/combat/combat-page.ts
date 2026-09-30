@@ -31,6 +31,8 @@ import { RoomService } from '@net/room.service';
 import { PartyStore } from '@state/party.store';
 import { UiPrefs } from '@state/ui-prefs';
 import { AreaPreview, MapView, TokenView } from './map-view';
+import { MiniatureQuery, queryFromCreature } from '@core/rules/srd/miniature';
+import { MiniaturePicker } from '@features/creatures/miniature-picker';
 import { iconFor, tokenImageFor } from './token-icons';
 import { SpellPanel } from './spell-panel';
 
@@ -42,7 +44,7 @@ type Mode =
 
 @Component({
   selector: 'app-combat-page',
-  imports: [MapView, SpellPanel, DiceTray3d],
+  imports: [MapView, MiniaturePicker, SpellPanel, DiceTray3d],
   templateUrl: './combat-page.html',
   styleUrl: './combat-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -130,6 +132,8 @@ export class CombatPage {
   protected readonly showXp = signal(false);
 
   protected readonly selectedId = signal<string | null>(null);
+  /** Criatura cujo seletor de miniatura está aberto. */
+  protected readonly artFor = signal<string | null>(null);
   protected readonly mode = signal<Mode>({ kind: 'move' });
   protected readonly spellsOpen = signal(false);
   /** Célula sob o cursor (para a prévia de área). */
@@ -152,6 +156,15 @@ export class CombatPage {
   protected readonly selected = computed(() =>
     this.creature(this.selectedId() ?? this.active()?.id),
   );
+  protected artQuery(c: Creature): MiniatureQuery {
+    return queryFromCreature(c);
+  }
+
+  /** Ao posicionar um NPC/monstro à mão, já oferece as miniaturas que combinam com a ficha. */
+  protected openArt(c: Creature): void {
+    if (c.kind !== 'pc' && !c.tokenArt) this.artFor.set(c.id);
+  }
+
   protected names(creatures: Creature[]): string {
     return creatures.map((c) => c.name).join(', ');
   }

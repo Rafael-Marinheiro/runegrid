@@ -176,6 +176,8 @@ export interface Creature {
   icon?: string;
   /** Retrato próprio do token, compactado como data URL local. */
   tokenImage?: string;
+  /** Miniatura estática do catálogo (`miniaturas/x.png`, relativa a `data/`); `tokenImage` tem prioridade. */
+  tokenArt?: string;
   /** Itens carregados (ver `models/item`). */
   inventory?: InventoryItem[];
   /** Magia mantida em concentração. */

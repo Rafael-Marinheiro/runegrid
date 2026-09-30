@@ -1,0 +1,3362 @@
+[
+ {
+  "arquivo": "miniaturas/goblin_guerreiro-espada-curta-escudo-redondo.png",
+  "nome": "Guerreiro — espada curta e escudo redondo",
+  "raca": "goblin",
+  "grupo": "01_combate-e-patrulha"
+ },
+ {
+  "arquivo": "miniaturas/goblin_lanceiro-escudo-de-madeira.png",
+  "nome": "Lanceiro — escudo de madeira",
+  "raca": "goblin",
+  "grupo": "01_combate-e-patrulha"
+ },
+ {
+  "arquivo": "miniaturas/goblin_arqueiro-arco-curto-capuz.png",
+  "nome": "Arqueiro — arco curto e capuz",
+  "raca": "goblin",
+  "grupo": "01_combate-e-patrulha"
+ },
+ {
+  "arquivo": "miniaturas/goblin_besteiro-besta-leve.png",
+  "nome": "Besteiro — besta leve",
+  "raca": "goblin",
+  "grupo": "01_combate-e-patrulha"
+ },
+ {
+  "arquivo": "miniaturas/goblin_ladino-duas-adagas.png",
+  "nome": "Ladino — duas adagas",
+  "raca": "goblin",
+  "grupo": "01_combate-e-patrulha"
+ },
+ {
+  "arquivo": "miniaturas/goblin_saqueador-espada-larga.png",
+  "nome": "Saqueador — espada larga",
+  "raca": "goblin",
+  "grupo": "01_combate-e-patrulha"
+ },
+ {
+  "arquivo": "miniaturas/goblin_fundeiro-funda-e-broquel.png",
+  "nome": "Fundeiro — funda e broquel",
+  "raca": "goblin",
+  "grupo": "01_combate-e-patrulha"
+ },
+ {
+  "arquivo": "miniaturas/goblin_escaramucador-lanca-escudo.png",
+  "nome": "Escaramuçador — lança e escudo",
+  "raca": "goblin",
+  "grupo": "01_combate-e-patrulha"
+ },
+ {
+  "arquivo": "miniaturas/goblin_barbaro-alabarda-peles.png",
+  "nome": "Bárbaro — alabarda e peles",
+  "raca": "goblin",
+  "grupo": "01_combate-e-patrulha"
+ },
+ {
+  "arquivo": "miniaturas/goblin_armadilheiro-rede-e-faca.png",
+  "nome": "Armadilheiro — rede e faca",
+  "raca": "goblin",
+  "grupo": "01_combate-e-patrulha"
+ },
+ {
+  "arquivo": "miniaturas/goblin_granadeiro-bomba-e-adaga.png",
+  "nome": "Granadeiro — bomba e adaga",
+  "raca": "goblin",
+  "grupo": "01_combate-e-patrulha"
+ },
+ {
+  "arquivo": "miniaturas/goblin_xama-caveira-cajado.png",
+  "nome": "Xamã — cajado de caveira",
+  "raca": "goblin",
+  "grupo": "01_combate-e-patrulha"
+ },
+ {
+  "arquivo": "miniaturas/goblin_piromante-maca-flamejante.png",
+  "nome": "Piromante — maça flamejante",
+  "raca": "goblin",
+  "grupo": "01_combate-e-patrulha"
+ },
+ {
+  "arquivo": "miniaturas/goblin_campeao-machado-pesado.png",
+  "nome": "Campeão — machado pesado",
+  "raca": "goblin",
+  "grupo": "01_combate-e-patrulha"
+ },
+ {
+  "arquivo": "miniaturas/goblin_porta-estandarte-tribal.png",
+  "nome": "Porta-estandarte tribal",
+  "raca": "goblin",
+  "grupo": "01_combate-e-patrulha"
+ },
+ {
+  "arquivo": "miniaturas/goblin_domador-chicote-e-peles.png",
+  "nome": "Domador — chicote e peles",
+  "raca": "goblin",
+  "grupo": "01_combate-e-patrulha"
+ },
+ {
+  "arquivo": "miniaturas/goblin_alquimista-zarabatana-pocoes.png",
+  "nome": "Alquimista — zarabatana e poções",
+  "raca": "goblin",
+  "grupo": "02_oficios-e-rituais"
+ },
+ {
+  "arquivo": "miniaturas/goblin_incendiario-tocha-e-adaga.png",
+  "nome": "Incendiário — tocha e adaga",
+  "raca": "goblin",
+  "grupo": "02_oficios-e-rituais"
+ },
+ {
+  "arquivo": "miniaturas/goblin_mineiro-picareta-e-lanterna.png",
+  "nome": "Mineiro — picareta e lanterna",
+  "raca": "goblin",
+  "grupo": "02_oficios-e-rituais"
+ },
+ {
+  "arquivo": "miniaturas/goblin_saqueador-mochila-tesouros.png",
+  "nome": "Saqueador — mochila de tesouros",
+  "raca": "goblin",
+  "grupo": "02_oficios-e-rituais"
+ },
+ {
+  "arquivo": "miniaturas/goblin_tamborileiro-bastao-de-osso.png",
+  "nome": "Tamborileiro — bastão de osso",
+  "raca": "goblin",
+  "grupo": "02_oficios-e-rituais"
+ },
+ {
+  "arquivo": "miniaturas/goblin_corneteiro-chifre-de-guerra.png",
+  "nome": "Corneteiro — chifre de guerra",
+  "raca": "goblin",
+  "grupo": "02_oficios-e-rituais"
+ },
+ {
+  "arquivo": "miniaturas/goblin_xama-dos-fungos.png",
+  "nome": "Xamã dos fungos",
+  "raca": "goblin",
+  "grupo": "02_oficios-e-rituais"
+ },
+ {
+  "arquivo": "miniaturas/goblin_sentinela-do-pantano-rede-lanca.png",
+  "nome": "Sentinela do pântano — rede e lança",
+  "raca": "goblin",
+  "grupo": "02_oficios-e-rituais"
+ },
+ {
+  "arquivo": "miniaturas/goblin_curandeiro-foice-e-bolsa.png",
+  "nome": "Curandeiro — foice e bolsa",
+  "raca": "goblin",
+  "grupo": "02_oficios-e-rituais"
+ },
+ {
+  "arquivo": "miniaturas/goblin_domador-de-worg.png",
+  "nome": "Domador de worg",
+  "raca": "goblin",
+  "grupo": "02_oficios-e-rituais"
+ },
+ {
+  "arquivo": "miniaturas/goblin_sapador-bombas-e-tocha.png",
+  "nome": "Sapador — bombas e tocha",
+  "raca": "goblin",
+  "grupo": "02_oficios-e-rituais"
+ },
+ {
+  "arquivo": "miniaturas/goblin_envenenador-pocoes-e-mascara.png",
+  "nome": "Envenenador — poções e máscara",
+  "raca": "goblin",
+  "grupo": "02_oficios-e-rituais"
+ },
+ {
+  "arquivo": "miniaturas/goblin_escavador-picareta-e-explosivos.png",
+  "nome": "Escavador — picareta e explosivos",
+  "raca": "goblin",
+  "grupo": "02_oficios-e-rituais"
+ },
+ {
+  "arquivo": "miniaturas/goblin_inventor-martelo-e-lamina-flamejante.png",
+  "nome": "Inventor — martelo e lâmina flamejante",
+  "raca": "goblin",
+  "grupo": "02_oficios-e-rituais"
+ },
+ {
+  "arquivo": "miniaturas/goblin_tambor-de-guerra-estandarte.png",
+  "nome": "Tambor de guerra com estandarte",
+  "raca": "goblin",
+  "grupo": "02_oficios-e-rituais"
+ },
+ {
+  "arquivo": "miniaturas/goblin_chefe-tribal-mascara-de-chifres.png",
+  "nome": "Chefe tribal — máscara de chifres",
+  "raca": "goblin",
+  "grupo": "02_oficios-e-rituais"
+ },
+ {
+  "arquivo": "miniaturas/goblin_guerreiro-espada-escudo-pintado.png",
+  "nome": "Guerreiro — espada e escudo pintado",
+  "raca": "goblin",
+  "grupo": "03_guerra-e-magias"
+ },
+ {
+  "arquivo": "miniaturas/goblin_espreitador-duas-adagas.png",
+  "nome": "Espreitador — duas adagas",
+  "raca": "goblin",
+  "grupo": "03_guerra-e-magias"
+ },
+ {
+  "arquivo": "miniaturas/goblin_lanceiro-escudo-de-ossos.png",
+  "nome": "Lanceiro — escudo de ossos",
+  "raca": "goblin",
+  "grupo": "03_guerra-e-magias"
+ },
+ {
+  "arquivo": "miniaturas/goblin_chefe-machado-escudo-redondo.png",
+  "nome": "Chefe — machado e escudo redondo",
+  "raca": "goblin",
+  "grupo": "03_guerra-e-magias"
+ },
+ {
+  "arquivo": "miniaturas/goblin_guerreiro-mangual-de-espinhos.png",
+  "nome": "Guerreiro — mangual de espinhos",
+  "raca": "goblin",
+  "grupo": "03_guerra-e-magias"
+ },
+ {
+  "arquivo": "miniaturas/goblin_saqueador-cutelo-e-punhal.png",
+  "nome": "Saqueador — cutelo e punhal",
+  "raca": "goblin",
+  "grupo": "03_guerra-e-magias"
+ },
+ {
+  "arquivo": "miniaturas/goblin_guardiao-maca-escudo-torre.png",
+  "nome": "Guardião — maça e escudo-torre",
+  "raca": "goblin",
+  "grupo": "03_guerra-e-magias"
+ },
+ {
+  "arquivo": "miniaturas/goblin_piquerio-lanca-longa.png",
+  "nome": "Piqueiro — lança longa",
+  "raca": "goblin",
+  "grupo": "03_guerra-e-magias"
+ },
+ {
+  "arquivo": "miniaturas/goblin_cacador-peles-de-lobo.png",
+  "nome": "Caçador — peles de lobo",
+  "raca": "goblin",
+  "grupo": "03_guerra-e-magias"
+ },
+ {
+  "arquivo": "miniaturas/goblin_sacerdote-cajado-de-ossos.png",
+  "nome": "Sacerdote — cajado de ossos",
+  "raca": "goblin",
+  "grupo": "03_guerra-e-magias"
+ },
+ {
+  "arquivo": "miniaturas/goblin_xama-das-tempestades.png",
+  "nome": "Xamã das tempestades",
+  "raca": "goblin",
+  "grupo": "03_guerra-e-magias"
+ },
+ {
+  "arquivo": "miniaturas/goblin_xama-da-lua-lanterna.png",
+  "nome": "Xamã da lua — lanterna",
+  "raca": "goblin",
+  "grupo": "03_guerra-e-magias"
+ },
+ {
+  "arquivo": "miniaturas/goblin_arqueiro-arco-e-cordas.png",
+  "nome": "Arqueiro — arco e cordas",
+  "raca": "goblin",
+  "grupo": "03_guerra-e-magias"
+ },
+ {
+  "arquivo": "miniaturas/goblin_atirador-besta-de-precisao.png",
+  "nome": "Atirador — besta de precisão",
+  "raca": "goblin",
+  "grupo": "03_guerra-e-magias"
+ },
+ {
+  "arquivo": "miniaturas/goblin_escaramucador-faca-e-mangual.png",
+  "nome": "Escaramuçador — faca e mangual",
+  "raca": "goblin",
+  "grupo": "03_guerra-e-magias"
+ },
+ {
+  "arquivo": "miniaturas/goblin_lider-de-guerra-cajado-de-caveira.png",
+  "nome": "Líder de guerra — cajado de caveira",
+  "raca": "goblin",
+  "grupo": "03_guerra-e-magias"
+ },
+ {
+  "arquivo": "miniaturas/goblin_saqueador-do-deserto-sabre.png",
+  "nome": "Saqueador do deserto — sabre",
+  "raca": "goblin",
+  "grupo": "04_tribos-e-especialistas"
+ },
+ {
+  "arquivo": "miniaturas/goblin_fundeiro-do-deserto.png",
+  "nome": "Fundeiro do deserto",
+  "raca": "goblin",
+  "grupo": "04_tribos-e-especialistas"
+ },
+ {
+  "arquivo": "miniaturas/goblin_arqueiro-da-floresta.png",
+  "nome": "Arqueiro da floresta",
+  "raca": "goblin",
+  "grupo": "04_tribos-e-especialistas"
+ },
+ {
+  "arquivo": "miniaturas/goblin_druida-da-floresta-cajado.png",
+  "nome": "Druida da floresta — cajado",
+  "raca": "goblin",
+  "grupo": "04_tribos-e-especialistas"
+ },
+ {
+  "arquivo": "miniaturas/goblin_batedor-das-neves-lanca.png",
+  "nome": "Batedor das neves — lança",
+  "raca": "goblin",
+  "grupo": "04_tribos-e-especialistas"
+ },
+ {
+  "arquivo": "miniaturas/goblin_sentinela-das-neves.png",
+  "nome": "Sentinela das neves",
+  "raca": "goblin",
+  "grupo": "04_tribos-e-especialistas"
+ },
+ {
+  "arquivo": "miniaturas/goblin_coletor-de-cogumelos.png",
+  "nome": "Coletor de cogumelos",
+  "raca": "goblin",
+  "grupo": "04_tribos-e-especialistas"
+ },
+ {
+  "arquivo": "miniaturas/goblin_domador-de-morcegos.png",
+  "nome": "Domador de morcegos",
+  "raca": "goblin",
+  "grupo": "04_tribos-e-especialistas"
+ },
+ {
+  "arquivo": "miniaturas/goblin_engenhoqueiro-canhao-portatil.png",
+  "nome": "Engenhoqueiro — canhão portátil",
+  "raca": "goblin",
+  "grupo": "04_tribos-e-especialistas"
+ },
+ {
+  "arquivo": "miniaturas/goblin_bombardeiro-lancador.png",
+  "nome": "Bombardeiro — lançador",
+  "raca": "goblin",
+  "grupo": "04_tribos-e-especialistas"
+ },
+ {
+  "arquivo": "miniaturas/goblin_catador-de-sucata.png",
+  "nome": "Catador de sucata",
+  "raca": "goblin",
+  "grupo": "04_tribos-e-especialistas"
+ },
+ {
+  "arquivo": "miniaturas/goblin_herborista-flores-e-frascos.png",
+  "nome": "Herborista — flores e frascos",
+  "raca": "goblin",
+  "grupo": "04_tribos-e-especialistas"
+ },
+ {
+  "arquivo": "miniaturas/goblin_sacerdote-do-fogo-braseiro.png",
+  "nome": "Sacerdote do fogo — braseiro",
+  "raca": "goblin",
+  "grupo": "04_tribos-e-especialistas"
+ },
+ {
+  "arquivo": "miniaturas/goblin_chefe-tribal-cutelo.png",
+  "nome": "Chefe tribal — cutelo",
+  "raca": "goblin",
+  "grupo": "04_tribos-e-especialistas"
+ },
+ {
+  "arquivo": "miniaturas/goblin_xama-dos-ossos-cajado.png",
+  "nome": "Xamã dos ossos — cajado",
+  "raca": "goblin",
+  "grupo": "04_tribos-e-especialistas"
+ },
+ {
+  "arquivo": "miniaturas/goblin_senhor-da-guerra-duas-laminas-escudo.png",
+  "nome": "Senhor da guerra — lâminas e escudo",
+  "raca": "goblin",
+  "grupo": "04_tribos-e-especialistas"
+ },
+ {
+  "arquivo": "miniaturas/anao_guardiao_do_cla_martelo_escudo.png",
+  "nome": "Guardiao Do Cla Martelo Escudo",
+  "raca": "anao",
+  "grupo": "guerreiros-clanicos"
+ },
+ {
+  "arquivo": "miniaturas/anao_guerreiro_do_cla_machado_escudo.png",
+  "nome": "Guerreiro Do Cla Machado Escudo",
+  "raca": "anao",
+  "grupo": "guerreiros-clanicos"
+ },
+ {
+  "arquivo": "miniaturas/anao_batedor_do_cla_machado_arco.png",
+  "nome": "Batedor Do Cla Machado Arco",
+  "raca": "anao",
+  "grupo": "guerreiros-clanicos"
+ },
+ {
+  "arquivo": "miniaturas/anao_besteiro_do_cla.png",
+  "nome": "Besteiro Do Cla",
+  "raca": "anao",
+  "grupo": "guerreiros-clanicos"
+ },
+ {
+  "arquivo": "miniaturas/anao_sacerdote_runesculpidor.png",
+  "nome": "Sacerdote Runesculpidor",
+  "raca": "anao",
+  "grupo": "guerreiros-clanicos"
+ },
+ {
+  "arquivo": "miniaturas/anao_forjapadre_martelo_runico.png",
+  "nome": "Forjapadre Martelo Rúnico",
+  "raca": "anao",
+  "grupo": "guerreiros-clanicos"
+ },
+ {
+  "arquivo": "miniaturas/anao_engenheiro_da_fortaleza.png",
+  "nome": "Engenheiro Da Fortaleza",
+  "raca": "anao",
+  "grupo": "guerreiros-clanicos"
+ },
+ {
+  "arquivo": "miniaturas/anao_mineiro_explorador_lanterna.png",
+  "nome": "Mineiro Explorador Lanterna",
+  "raca": "anao",
+  "grupo": "guerreiros-clanicos"
+ },
+ {
+  "arquivo": "miniaturas/anao_engenheiro_de_cerco_balestra.png",
+  "nome": "Engenheiro De Cerco Balestra",
+  "raca": "anao",
+  "grupo": "guerreiros-clanicos"
+ },
+ {
+  "arquivo": "miniaturas/anao_berserker_quebra_escudos.png",
+  "nome": "Berserker Quebra Escudos",
+  "raca": "anao",
+  "grupo": "guerreiros-clanicos"
+ },
+ {
+  "arquivo": "miniaturas/anao_sentinela_da_fortaleza.png",
+  "nome": "Sentinela Da Fortaleza",
+  "raca": "anao",
+  "grupo": "guerreiros-clanicos"
+ },
+ {
+  "arquivo": "miniaturas/anao_guardiao_da_pedra.png",
+  "nome": "Guardiao Da Pedra",
+  "raca": "anao",
+  "grupo": "guerreiros-clanicos"
+ },
+ {
+  "arquivo": "miniaturas/anao_prospector_de_cristais.png",
+  "nome": "Prospector De Cristais",
+  "raca": "anao",
+  "grupo": "guerreiros-clanicos"
+ },
+ {
+  "arquivo": "miniaturas/anao_guarda_de_caravana.png",
+  "nome": "Guarda De Caravana",
+  "raca": "anao",
+  "grupo": "guerreiros-clanicos"
+ },
+ {
+  "arquivo": "miniaturas/anao_campeao_do_cla.png",
+  "nome": "Campeao Do Cla",
+  "raca": "anao",
+  "grupo": "guerreiros-clanicos"
+ },
+ {
+  "arquivo": "miniaturas/anao_ferreiro_mestre.png",
+  "nome": "Ferreiro Mestre",
+  "raca": "anao",
+  "grupo": "guerreiros-clanicos"
+ },
+ {
+  "arquivo": "miniaturas/anao_barbaro_machado_duplo.png",
+  "nome": "Barbaro Machado Duplo",
+  "raca": "anao",
+  "grupo": "combate-clanico"
+ },
+ {
+  "arquivo": "miniaturas/anao_batedor_arco_curto.png",
+  "nome": "Batedor Arco Curto",
+  "raca": "anao",
+  "grupo": "combate-clanico"
+ },
+ {
+  "arquivo": "miniaturas/anao_ladino_duas_adagas.png",
+  "nome": "Ladino Duas Adagas",
+  "raca": "anao",
+  "grupo": "combate-clanico"
+ },
+ {
+  "arquivo": "miniaturas/anao_clerigo_da_luz_martelo.png",
+  "nome": "Clerigo Da Luz Martelo",
+  "raca": "anao",
+  "grupo": "combate-clanico"
+ },
+ {
+  "arquivo": "miniaturas/anao_clerigo_da_forja.png",
+  "nome": "Clerigo Da Forja",
+  "raca": "anao",
+  "grupo": "combate-clanico"
+ },
+ {
+  "arquivo": "miniaturas/anao_druida_da_pedra.png",
+  "nome": "Druida Da Pedra",
+  "raca": "anao",
+  "grupo": "combate-clanico"
+ },
+ {
+  "arquivo": "miniaturas/combate-clanico__anao_bardo_tambor.png",
+  "nome": "Bardo Tambor",
+  "raca": "anao",
+  "grupo": "combate-clanico"
+ },
+ {
+  "arquivo": "miniaturas/combate-clanico__anao_bardo_gaita.png",
+  "nome": "Bardo Gaita",
+  "raca": "anao",
+  "grupo": "combate-clanico"
+ },
+ {
+  "arquivo": "miniaturas/anao_paladino_martelo_escudo.png",
+  "nome": "Paladino Martelo Escudo",
+  "raca": "anao",
+  "grupo": "combate-clanico"
+ },
+ {
+  "arquivo": "miniaturas/anao_guerreiro_alabarda.png",
+  "nome": "Guerreiro Alabarda",
+  "raca": "anao",
+  "grupo": "combate-clanico"
+ },
+ {
+  "arquivo": "miniaturas/combate-clanico__anao_monge_runico.png",
+  "nome": "Monge Rúnico",
+  "raca": "anao",
+  "grupo": "combate-clanico"
+ },
+ {
+  "arquivo": "miniaturas/anao_mago_do_gelo.png",
+  "nome": "Mago Do Gelo",
+  "raca": "anao",
+  "grupo": "combate-clanico"
+ },
+ {
+  "arquivo": "miniaturas/combate-clanico__anao_feiticeiro_cristais.png",
+  "nome": "Feiticeiro Cristais",
+  "raca": "anao",
+  "grupo": "combate-clanico"
+ },
+ {
+  "arquivo": "miniaturas/anao_bruxo_do_vazio.png",
+  "nome": "Bruxo Do Vazio",
+  "raca": "anao",
+  "grupo": "combate-clanico"
+ },
+ {
+  "arquivo": "miniaturas/anao_artifice_engenho.png",
+  "nome": "Artifice Engenho",
+  "raca": "anao",
+  "grupo": "combate-clanico"
+ },
+ {
+  "arquivo": "miniaturas/anao_alquimista.png",
+  "nome": "Alquimista",
+  "raca": "anao",
+  "grupo": "combate-clanico"
+ },
+ {
+  "arquivo": "miniaturas/anao_guardiao_pesado.png",
+  "nome": "Guardiao Pesado",
+  "raca": "anao",
+  "grupo": "guerreiros-e-guardioes"
+ },
+ {
+  "arquivo": "miniaturas/anao_guerreiro_lanca_escudo.png",
+  "nome": "Guerreiro Lança Escudo",
+  "raca": "anao",
+  "grupo": "guerreiros-e-guardioes"
+ },
+ {
+  "arquivo": "miniaturas/anao_guerreiro_machado_pesado.png",
+  "nome": "Guerreiro Machado Pesado",
+  "raca": "anao",
+  "grupo": "guerreiros-e-guardioes"
+ },
+ {
+  "arquivo": "miniaturas/anao_patrulheiro_arco.png",
+  "nome": "Patrulheiro Arco",
+  "raca": "anao",
+  "grupo": "guerreiros-e-guardioes"
+ },
+ {
+  "arquivo": "miniaturas/anao_paladino_lanca_escudo.png",
+  "nome": "Paladino Lança Escudo",
+  "raca": "anao",
+  "grupo": "guerreiros-e-guardioes"
+ },
+ {
+  "arquivo": "miniaturas/anao_duelista_nobre.png",
+  "nome": "Duelista Nobre",
+  "raca": "anao",
+  "grupo": "guerreiros-e-guardioes"
+ },
+ {
+  "arquivo": "miniaturas/anao_mago_guerreiro.png",
+  "nome": "Mago Guerreiro",
+  "raca": "anao",
+  "grupo": "guerreiros-e-guardioes"
+ },
+ {
+  "arquivo": "miniaturas/anao_capitao_do_cla.png",
+  "nome": "Capitao Do Cla",
+  "raca": "anao",
+  "grupo": "guerreiros-e-guardioes"
+ },
+ {
+  "arquivo": "miniaturas/anao_paladino_sol.png",
+  "nome": "Paladino Sol",
+  "raca": "anao",
+  "grupo": "guerreiros-e-guardioes"
+ },
+ {
+  "arquivo": "miniaturas/anao_campeao_sagrado.png",
+  "nome": "Campeao Sagrado",
+  "raca": "anao",
+  "grupo": "guerreiros-e-guardioes"
+ },
+ {
+  "arquivo": "miniaturas/anao_batedor_arco.png",
+  "nome": "Batedor Arco",
+  "raca": "anao",
+  "grupo": "guerreiros-e-guardioes"
+ },
+ {
+  "arquivo": "miniaturas/anao_assassino_clanico.png",
+  "nome": "Assassino Clanico",
+  "raca": "anao",
+  "grupo": "guerreiros-e-guardioes"
+ },
+ {
+  "arquivo": "miniaturas/anao_mago_runico.png",
+  "nome": "Mago Rúnico",
+  "raca": "anao",
+  "grupo": "guerreiros-e-guardioes"
+ },
+ {
+  "arquivo": "miniaturas/anao_clerigo_guerra.png",
+  "nome": "Clerigo Guerra",
+  "raca": "anao",
+  "grupo": "guerreiros-e-guardioes"
+ },
+ {
+  "arquivo": "miniaturas/anao_bardo_clanico.png",
+  "nome": "Bardo Clanico",
+  "raca": "anao",
+  "grupo": "guerreiros-e-guardioes"
+ },
+ {
+  "arquivo": "miniaturas/anao_druida_guardiao.png",
+  "nome": "Druida Guardiao",
+  "raca": "anao",
+  "grupo": "guerreiros-e-guardioes"
+ },
+ {
+  "arquivo": "miniaturas/anao_guardiao_runico.png",
+  "nome": "Guardiao Rúnico",
+  "raca": "anao",
+  "grupo": "classes-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_templario_da_forja.png",
+  "nome": "Templario Da Forja",
+  "raca": "anao",
+  "grupo": "classes-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_artifice_bombardeiro.png",
+  "nome": "Artifice Bombardeiro",
+  "raca": "anao",
+  "grupo": "classes-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_mineiro_lanterna.png",
+  "nome": "Mineiro Lanterna",
+  "raca": "anao",
+  "grupo": "classes-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_cervejeiro_do_cla.png",
+  "nome": "Cervejeiro Do Cla",
+  "raca": "anao",
+  "grupo": "classes-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_nobre_martelo_joia.png",
+  "nome": "Nobre Martelo Joia",
+  "raca": "anao",
+  "grupo": "classes-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_porta_estandarte.png",
+  "nome": "Porta Estandarte",
+  "raca": "anao",
+  "grupo": "classes-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_batedor_tuneis.png",
+  "nome": "Batedor Tuneis",
+  "raca": "anao",
+  "grupo": "classes-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_besteiro_pesado.png",
+  "nome": "Besteiro Pesado",
+  "raca": "anao",
+  "grupo": "classes-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_berserker_tatuado.png",
+  "nome": "Berserker Tatuado",
+  "raca": "anao",
+  "grupo": "classes-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_guarda_escudo_torre.png",
+  "nome": "Guarda Escudo Torre",
+  "raca": "anao",
+  "grupo": "classes-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_anciao_da_pedra.png",
+  "nome": "Anciao Da Pedra",
+  "raca": "anao",
+  "grupo": "classes-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_geologo_prospector.png",
+  "nome": "Geologo Prospector",
+  "raca": "anao",
+  "grupo": "classes-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_guarda_estrada.png",
+  "nome": "Guarda Estrada",
+  "raca": "anao",
+  "grupo": "classes-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_campeao_escudo_vermelho.png",
+  "nome": "Campeao Escudo Vermelho",
+  "raca": "anao",
+  "grupo": "classes-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_ferreiro_artesao.png",
+  "nome": "Ferreiro Artesao",
+  "raca": "anao",
+  "grupo": "classes-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_barbaro_machado_duas_maos.png",
+  "nome": "Barbaro Machado Duas Maos",
+  "raca": "anao",
+  "grupo": "classes-aventureiras"
+ },
+ {
+  "arquivo": "miniaturas/anao_patrulheiro_arco_longo.png",
+  "nome": "Patrulheiro Arco Longo",
+  "raca": "anao",
+  "grupo": "classes-aventureiras"
+ },
+ {
+  "arquivo": "miniaturas/anao_ladino_capuz.png",
+  "nome": "Ladino Capuz",
+  "raca": "anao",
+  "grupo": "classes-aventureiras"
+ },
+ {
+  "arquivo": "miniaturas/anao_clerigo_luz.png",
+  "nome": "Clerigo Luz",
+  "raca": "anao",
+  "grupo": "classes-aventureiras"
+ },
+ {
+  "arquivo": "miniaturas/anao_clerigo_forja.png",
+  "nome": "Clerigo Forja",
+  "raca": "anao",
+  "grupo": "classes-aventureiras"
+ },
+ {
+  "arquivo": "miniaturas/anao_druida_bosque.png",
+  "nome": "Druida Bosque",
+  "raca": "anao",
+  "grupo": "classes-aventureiras"
+ },
+ {
+  "arquivo": "miniaturas/classes-aventureiras__anao_bardo_tambor.png",
+  "nome": "Bardo Tambor",
+  "raca": "anao",
+  "grupo": "classes-aventureiras"
+ },
+ {
+  "arquivo": "miniaturas/classes-aventureiras__anao_bardo_gaita.png",
+  "nome": "Bardo Gaita",
+  "raca": "anao",
+  "grupo": "classes-aventureiras"
+ },
+ {
+  "arquivo": "miniaturas/anao_paladino_templario.png",
+  "nome": "Paladino Templario",
+  "raca": "anao",
+  "grupo": "classes-aventureiras"
+ },
+ {
+  "arquivo": "miniaturas/anao_guerreiro_alabardeiro.png",
+  "nome": "Guerreiro Alabardeiro",
+  "raca": "anao",
+  "grupo": "classes-aventureiras"
+ },
+ {
+  "arquivo": "miniaturas/classes-aventureiras__anao_monge_runico.png",
+  "nome": "Monge Rúnico",
+  "raca": "anao",
+  "grupo": "classes-aventureiras"
+ },
+ {
+  "arquivo": "miniaturas/anao_mago_grimorio.png",
+  "nome": "Mago Grimorio",
+  "raca": "anao",
+  "grupo": "classes-aventureiras"
+ },
+ {
+  "arquivo": "miniaturas/classes-aventureiras__anao_feiticeiro_cristais.png",
+  "nome": "Feiticeiro Cristais",
+  "raca": "anao",
+  "grupo": "classes-aventureiras"
+ },
+ {
+  "arquivo": "miniaturas/anao_bruxo_lanterna_roxa.png",
+  "nome": "Bruxo Lanterna Roxa",
+  "raca": "anao",
+  "grupo": "classes-aventureiras"
+ },
+ {
+  "arquivo": "miniaturas/anao_artifice_armado.png",
+  "nome": "Artifice Armado",
+  "raca": "anao",
+  "grupo": "classes-aventureiras"
+ },
+ {
+  "arquivo": "miniaturas/anao_alquimista_de_campo.png",
+  "nome": "Alquimista De Campo",
+  "raca": "anao",
+  "grupo": "classes-aventureiras"
+ },
+ {
+  "arquivo": "miniaturas/anao_duergar_guerreiro_escudo.png",
+  "nome": "Duergar Guerreiro Escudo",
+  "raca": "anao",
+  "grupo": "duergar-e-variantes"
+ },
+ {
+  "arquivo": "miniaturas/anao_duergar_martelador.png",
+  "nome": "Duergar Martelador",
+  "raca": "anao",
+  "grupo": "duergar-e-variantes"
+ },
+ {
+  "arquivo": "miniaturas/anao_duergar_psionico.png",
+  "nome": "Duergar Psionico",
+  "raca": "anao",
+  "grupo": "duergar-e-variantes"
+ },
+ {
+  "arquivo": "miniaturas/anao_duergar_capataz.png",
+  "nome": "Duergar Capataz",
+  "raca": "anao",
+  "grupo": "duergar-e-variantes"
+ },
+ {
+  "arquivo": "miniaturas/anao_duergar_besteiro.png",
+  "nome": "Duergar Besteiro",
+  "raca": "anao",
+  "grupo": "duergar-e-variantes"
+ },
+ {
+  "arquivo": "miniaturas/anao_duergar_sacerdote_runico.png",
+  "nome": "Duergar Sacerdote Rúnico",
+  "raca": "anao",
+  "grupo": "duergar-e-variantes"
+ },
+ {
+  "arquivo": "miniaturas/anao_duergar_saqueador.png",
+  "nome": "Duergar Saqueador",
+  "raca": "anao",
+  "grupo": "duergar-e-variantes"
+ },
+ {
+  "arquivo": "miniaturas/anao_duergar_guarda_pedra.png",
+  "nome": "Duergar Guarda Pedra",
+  "raca": "anao",
+  "grupo": "duergar-e-variantes"
+ },
+ {
+  "arquivo": "miniaturas/anao_anao_colinas_anciao.png",
+  "nome": "Anao Colinas Anciao",
+  "raca": "anao",
+  "grupo": "duergar-e-variantes"
+ },
+ {
+  "arquivo": "miniaturas/anao_anao_colinas_cacador.png",
+  "nome": "Anao Colinas Cacador",
+  "raca": "anao",
+  "grupo": "duergar-e-variantes"
+ },
+ {
+  "arquivo": "miniaturas/anao_anao_montanha_guarda_real.png",
+  "nome": "Anao Montanha Guarda Real",
+  "raca": "anao",
+  "grupo": "duergar-e-variantes"
+ },
+ {
+  "arquivo": "miniaturas/anao_anao_montanha_engenheiro.png",
+  "nome": "Anao Montanha Engenheiro",
+  "raca": "anao",
+  "grupo": "duergar-e-variantes"
+ },
+ {
+  "arquivo": "miniaturas/anao_anao_gelo_machado_runico.png",
+  "nome": "Anao Gelo Machado Rúnico",
+  "raca": "anao",
+  "grupo": "duergar-e-variantes"
+ },
+ {
+  "arquivo": "miniaturas/anao_anao_deserto_caravaneiro.png",
+  "nome": "Anao Deserto Caravaneiro",
+  "raca": "anao",
+  "grupo": "duergar-e-variantes"
+ },
+ {
+  "arquivo": "miniaturas/anao_anao_marinheiro_arpao.png",
+  "nome": "Anao Marinheiro Arpao",
+  "raca": "anao",
+  "grupo": "duergar-e-variantes"
+ },
+ {
+  "arquivo": "miniaturas/anao_anao_vulcanico_sentinela.png",
+  "nome": "Anao Vulcanico Sentinela",
+  "raca": "anao",
+  "grupo": "duergar-e-variantes"
+ },
+ {
+  "arquivo": "miniaturas/anao_mestre_runesculpidor.png",
+  "nome": "Mestre Runesculpidor",
+  "raca": "anao",
+  "grupo": "cultura-clanica"
+ },
+ {
+  "arquivo": "miniaturas/anao_sacerdote_forja_cerimonial.png",
+  "nome": "Sacerdote Forja Cerimonial",
+  "raca": "anao",
+  "grupo": "cultura-clanica"
+ },
+ {
+  "arquivo": "miniaturas/anao_engenheiro_mecanico.png",
+  "nome": "Engenheiro Mecanico",
+  "raca": "anao",
+  "grupo": "cultura-clanica"
+ },
+ {
+  "arquivo": "miniaturas/cultura-clanica__anao_mineiro_picareta_lanterna.png",
+  "nome": "Mineiro Picareta Lanterna",
+  "raca": "anao",
+  "grupo": "cultura-clanica"
+ },
+ {
+  "arquivo": "miniaturas/anao_mestre_cervejeiro.png",
+  "nome": "Mestre Cervejeiro",
+  "raca": "anao",
+  "grupo": "cultura-clanica"
+ },
+ {
+  "arquivo": "miniaturas/anao_nobre_do_cla.png",
+  "nome": "Nobre Do Cla",
+  "raca": "anao",
+  "grupo": "cultura-clanica"
+ },
+ {
+  "arquivo": "miniaturas/anao_porta_estandarte_clanico.png",
+  "nome": "Porta Estandarte Clanico",
+  "raca": "anao",
+  "grupo": "cultura-clanica"
+ },
+ {
+  "arquivo": "miniaturas/anao_batedor_de_tuneis.png",
+  "nome": "Batedor De Tuneis",
+  "raca": "anao",
+  "grupo": "cultura-clanica"
+ },
+ {
+  "arquivo": "miniaturas/anao_besteiro_pesado_clanico.png",
+  "nome": "Besteiro Pesado Clanico",
+  "raca": "anao",
+  "grupo": "cultura-clanica"
+ },
+ {
+  "arquivo": "miniaturas/anao_guerreiro_mohawk.png",
+  "nome": "Guerreiro Mohawk",
+  "raca": "anao",
+  "grupo": "cultura-clanica"
+ },
+ {
+  "arquivo": "miniaturas/anao_guarda_domestico.png",
+  "nome": "Guarda Domestico",
+  "raca": "anao",
+  "grupo": "cultura-clanica"
+ },
+ {
+  "arquivo": "miniaturas/anao_anciao_da_pedra_clanico.png",
+  "nome": "Anciao Da Pedra Clanico",
+  "raca": "anao",
+  "grupo": "cultura-clanica"
+ },
+ {
+  "arquivo": "miniaturas/anao_geologo_prospector_clanico.png",
+  "nome": "Geologo Prospector Clanico",
+  "raca": "anao",
+  "grupo": "cultura-clanica"
+ },
+ {
+  "arquivo": "miniaturas/anao_guarda_de_estrada_clanico.png",
+  "nome": "Guarda De Estrada Clanico",
+  "raca": "anao",
+  "grupo": "cultura-clanica"
+ },
+ {
+  "arquivo": "miniaturas/anao_campeao_do_cla_vermelho.png",
+  "nome": "Campeao Do Cla Vermelho",
+  "raca": "anao",
+  "grupo": "cultura-clanica"
+ },
+ {
+  "arquivo": "miniaturas/anao_ferreiro_artesao_clanico.png",
+  "nome": "Ferreiro Artesao Clanico",
+  "raca": "anao",
+  "grupo": "cultura-clanica"
+ },
+ {
+  "arquivo": "miniaturas/anao_sacerdotisa_runica.png",
+  "nome": "Sacerdotisa Rúnica",
+  "raca": "anao",
+  "grupo": "artesaos-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_rei_do_cla.png",
+  "nome": "Rei Do Cla",
+  "raca": "anao",
+  "grupo": "artesaos-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_mercador_balanca.png",
+  "nome": "Mercador Balança",
+  "raca": "anao",
+  "grupo": "artesaos-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_erudito_engenheiro.png",
+  "nome": "Erudito Engenheiro",
+  "raca": "anao",
+  "grupo": "artesaos-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_cervejeiro_taverneiro.png",
+  "nome": "Cervejeiro Taverneiro",
+  "raca": "anao",
+  "grupo": "artesaos-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_joalheiro_gemologo.png",
+  "nome": "Joalheiro Gemologo",
+  "raca": "anao",
+  "grupo": "artesaos-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_pedreiro_runesculpidor.png",
+  "nome": "Pedreiro Runesculpidor",
+  "raca": "anao",
+  "grupo": "artesaos-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/artesaos-e-oficios__anao_mineiro_picareta_lanterna.png",
+  "nome": "Mineiro Picareta Lanterna",
+  "raca": "anao",
+  "grupo": "artesaos-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_ferreiro_forjador.png",
+  "nome": "Ferreiro Forjador",
+  "raca": "anao",
+  "grupo": "artesaos-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_cartografo_explorador.png",
+  "nome": "Cartografo Explorador",
+  "raca": "anao",
+  "grupo": "artesaos-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_herbalista_alquimista.png",
+  "nome": "Herbalista Alquimista",
+  "raca": "anao",
+  "grupo": "artesaos-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_guarda_lanca_escudo.png",
+  "nome": "Guarda Lança Escudo",
+  "raca": "anao",
+  "grupo": "artesaos-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_viajante_caravana.png",
+  "nome": "Viajante Caravana",
+  "raca": "anao",
+  "grupo": "artesaos-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_batedor_caravana.png",
+  "nome": "Batedor Caravana",
+  "raca": "anao",
+  "grupo": "artesaos-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_cozinheiro_do_cla.png",
+  "nome": "Cozinheiro Do Cla",
+  "raca": "anao",
+  "grupo": "artesaos-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_artesao_de_metal.png",
+  "nome": "Artesao De Metal",
+  "raca": "anao",
+  "grupo": "artesaos-e-oficios"
+ },
+ {
+  "arquivo": "miniaturas/anao_barbaro_da_montanha.png",
+  "nome": "Barbaro Da Montanha",
+  "raca": "anao",
+  "grupo": "especialistas-e-aventureiros"
+ },
+ {
+  "arquivo": "miniaturas/anao_guardiao_real_martelo_escudo.png",
+  "nome": "Guardiao Real Martelo Escudo",
+  "raca": "anao",
+  "grupo": "especialistas-e-aventureiros"
+ },
+ {
+  "arquivo": "miniaturas/anao_anao_do_gelo_machado.png",
+  "nome": "Anao Do Gelo Machado",
+  "raca": "anao",
+  "grupo": "especialistas-e-aventureiros"
+ },
+ {
+  "arquivo": "miniaturas/anao_anao_do_deserto_machado.png",
+  "nome": "Anao Do Deserto Machado",
+  "raca": "anao",
+  "grupo": "especialistas-e-aventureiros"
+ },
+ {
+  "arquivo": "miniaturas/anao_guardiao_vulcanico.png",
+  "nome": "Guardiao Vulcanico",
+  "raca": "anao",
+  "grupo": "especialistas-e-aventureiros"
+ },
+ {
+  "arquivo": "miniaturas/anao_caravaneiro_rede_lanca.png",
+  "nome": "Caravaneiro Rede Lança",
+  "raca": "anao",
+  "grupo": "especialistas-e-aventureiros"
+ },
+ {
+  "arquivo": "miniaturas/anao_mineiro_capuz.png",
+  "nome": "Mineiro Capuz",
+  "raca": "anao",
+  "grupo": "especialistas-e-aventureiros"
+ },
+ {
+  "arquivo": "miniaturas/anao_druida_selvagem.png",
+  "nome": "Druida Selvagem",
+  "raca": "anao",
+  "grupo": "especialistas-e-aventureiros"
+ },
+ {
+  "arquivo": "miniaturas/anao_cacador_da_floresta.png",
+  "nome": "Cacador Da Floresta",
+  "raca": "anao",
+  "grupo": "especialistas-e-aventureiros"
+ },
+ {
+  "arquivo": "miniaturas/anao_mago_cristais.png",
+  "nome": "Mago Cristais",
+  "raca": "anao",
+  "grupo": "especialistas-e-aventureiros"
+ },
+ {
+  "arquivo": "miniaturas/anao_sacerdote_lanterna.png",
+  "nome": "Sacerdote Lanterna",
+  "raca": "anao",
+  "grupo": "especialistas-e-aventureiros"
+ },
+ {
+  "arquivo": "miniaturas/anao_guerreira_escudo_martelo.png",
+  "nome": "Guerreira Escudo Martelo",
+  "raca": "anao",
+  "grupo": "especialistas-e-aventureiros"
+ },
+ {
+  "arquivo": "miniaturas/anao_artifice_besta_pesada.png",
+  "nome": "Artifice Besta Pesada",
+  "raca": "anao",
+  "grupo": "especialistas-e-aventureiros"
+ },
+ {
+  "arquivo": "miniaturas/anao_clerigo_runico.png",
+  "nome": "Clerigo Rúnico",
+  "raca": "anao",
+  "grupo": "especialistas-e-aventureiros"
+ },
+ {
+  "arquivo": "miniaturas/anao_guerreiro_martelo.png",
+  "nome": "Guerreiro Martelo",
+  "raca": "anao",
+  "grupo": "especialistas-e-aventureiros"
+ },
+ {
+  "arquivo": "miniaturas/anao_xama_cristal.png",
+  "nome": "Xama Cristal",
+  "raca": "anao",
+  "grupo": "especialistas-e-aventureiros"
+ },
+ {
+  "arquivo": "miniaturas/anao_duergar_guardiao_runico.png",
+  "nome": "Duergar Guardiao Rúnico",
+  "raca": "anao",
+  "grupo": "guerreiros-regionais"
+ },
+ {
+  "arquivo": "miniaturas/anao_duergar_bruto_correntes.png",
+  "nome": "Duergar Bruto Correntes",
+  "raca": "anao",
+  "grupo": "guerreiros-regionais"
+ },
+ {
+  "arquivo": "miniaturas/anao_duergar_mago_cristal.png",
+  "nome": "Duergar Mago Cristal",
+  "raca": "anao",
+  "grupo": "guerreiros-regionais"
+ },
+ {
+  "arquivo": "miniaturas/anao_duergar_capataz_corrente.png",
+  "nome": "Duergar Capataz Corrente",
+  "raca": "anao",
+  "grupo": "guerreiros-regionais"
+ },
+ {
+  "arquivo": "miniaturas/anao_duergar_besteiro_pesado.png",
+  "nome": "Duergar Besteiro Pesado",
+  "raca": "anao",
+  "grupo": "guerreiros-regionais"
+ },
+ {
+  "arquivo": "miniaturas/anao_duergar_sacerdote_vermelho.png",
+  "nome": "Duergar Sacerdote Vermelho",
+  "raca": "anao",
+  "grupo": "guerreiros-regionais"
+ },
+ {
+  "arquivo": "miniaturas/anao_duergar_campeao_machado.png",
+  "nome": "Duergar Campeao Machado",
+  "raca": "anao",
+  "grupo": "guerreiros-regionais"
+ },
+ {
+  "arquivo": "miniaturas/anao_duergar_sentinela.png",
+  "nome": "Duergar Sentinela",
+  "raca": "anao",
+  "grupo": "guerreiros-regionais"
+ },
+ {
+  "arquivo": "miniaturas/anao_druida_anao_cristal.png",
+  "nome": "Druida Anao Cristal",
+  "raca": "anao",
+  "grupo": "guerreiros-regionais"
+ },
+ {
+  "arquivo": "miniaturas/anao_batedor_anao_lanca.png",
+  "nome": "Batedor Anao Lança",
+  "raca": "anao",
+  "grupo": "guerreiros-regionais"
+ },
+ {
+  "arquivo": "miniaturas/anao_guerreiro_montanha_machado_escudo.png",
+  "nome": "Guerreiro Montanha Machado Escudo",
+  "raca": "anao",
+  "grupo": "guerreiros-regionais"
+ },
+ {
+  "arquivo": "miniaturas/anao_artifice_besta_repeticao.png",
+  "nome": "Artifice Besta Repeticao",
+  "raca": "anao",
+  "grupo": "guerreiros-regionais"
+ },
+ {
+  "arquivo": "miniaturas/anao_anao_gelo_mago_cristal.png",
+  "nome": "Anao Gelo Mago Cristal",
+  "raca": "anao",
+  "grupo": "guerreiros-regionais"
+ },
+ {
+  "arquivo": "miniaturas/anao_anao_deserto_machado.png",
+  "nome": "Anao Deserto Machado",
+  "raca": "anao",
+  "grupo": "guerreiros-regionais"
+ },
+ {
+  "arquivo": "miniaturas/anao_anao_marinheiro_lanca.png",
+  "nome": "Anao Marinheiro Lança",
+  "raca": "anao",
+  "grupo": "guerreiros-regionais"
+ },
+ {
+  "arquivo": "miniaturas/anao_sentinela_vulcanico_runico.png",
+  "nome": "Sentinela Vulcanico Rúnico",
+  "raca": "anao",
+  "grupo": "guerreiros-regionais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-guardiao-espada-escudo-01.png",
+  "nome": "Elfos Altos — guardiao espada escudo (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-guardiao-lanca-escudo-01.png",
+  "nome": "Elfos Altos — guardiao lanca escudo (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-guerreiro-alabarda-01.png",
+  "nome": "Elfos Altos — guerreiro alabarda (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-arqueiro-arco-longo-01.png",
+  "nome": "Elfos Altos — arqueiro arco longo (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-lanceiro-armadura-pesada-01.png",
+  "nome": "Elfos Altos — lanceiro armadura pesada (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-duelista-rapieira-01.png",
+  "nome": "Elfos Altos — duelista rapieira (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-guerreiro-espada-grimorio-01.png",
+  "nome": "Elfos Altos — guerreiro espada grimorio (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-guardiao-espada-escudo-azul-01.png",
+  "nome": "Elfos Altos — guardiao espada escudo azul (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-paladino-espada-escudo-01.png",
+  "nome": "Elfos Altos — paladino espada escudo (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-paladino-montante-01.png",
+  "nome": "Elfos Altos — paladino montante (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-patrulheiro-arco-01.png",
+  "nome": "Elfos Altos — patrulheiro arco (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-ladino-adagas-01.png",
+  "nome": "Elfos Altos — ladino adagas (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-mago-cajado-grimorio-01.png",
+  "nome": "Elfos Altos — mago cajado grimorio (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-clerigo-maca-escudo-01.png",
+  "nome": "Elfos Altos — clerigo maca escudo (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-bardo-alaude-01.png",
+  "nome": "Elfos Altos — bardo alaude (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-druida-cajado-01.png",
+  "nome": "Elfos Altos — druida cajado (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-bardo-flauta-01.png",
+  "nome": "Elfos Altos — bardo flauta (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-bardo-violino-01.png",
+  "nome": "Elfos Altos — bardo violino (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-mago-cajado-grimorio-02.png",
+  "nome": "Elfos Altos — mago cajado grimorio (02)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-mago-orbe-adaga-01.png",
+  "nome": "Elfos Altos — mago orbe adaga (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-feiticeiro-fogo-01.png",
+  "nome": "Elfos Altos — feiticeiro fogo (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-bruxo-orbe-grimorio-01.png",
+  "nome": "Elfos Altos — bruxo orbe grimorio (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-monge-bastao-01.png",
+  "nome": "Elfos Altos — monge bastao (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-monge-desarmado-01.png",
+  "nome": "Elfos Altos — monge desarmado (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-ladino-besta-adaga-01.png",
+  "nome": "Elfos Altos — ladino besta adaga (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-ladino-duas-adagas-01.png",
+  "nome": "Elfos Altos — ladino duas adagas (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-clerigo-luz-cajado-01.png",
+  "nome": "Elfos Altos — clerigo luz cajado (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-paladino-maca-escudo-01.png",
+  "nome": "Elfos Altos — paladino maca escudo (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-druida-flores-cajado-01.png",
+  "nome": "Elfos Altos — druida flores cajado (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-ladino-cimitarra-01.png",
+  "nome": "Elfos Altos — ladino cimitarra (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-guerreiro-espada-escudo-01.png",
+  "nome": "Elfos Altos — guerreiro espada escudo (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-altos-patrulheiro-arco-lanca-01.png",
+  "nome": "Elfos Altos — patrulheiro arco lanca (01)",
+  "raca": "elfo",
+  "grupo": "elfos-altos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-arqueiro-capa-verde-01.png",
+  "nome": "Elfos Da Floresta — arqueiro capa verde (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-lanceiro-peles-01.png",
+  "nome": "Elfos Da Floresta — lanceiro peles (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-arqueiro-capuz-01.png",
+  "nome": "Elfos Da Floresta — arqueiro capuz (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-druida-cajado-ancestral-01.png",
+  "nome": "Elfos Da Floresta — druida cajado ancestral (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-druida-foice-escudo-01.png",
+  "nome": "Elfos Da Floresta — druida foice escudo (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-barbaro-machado-peles-01.png",
+  "nome": "Elfos Da Floresta — barbaro machado peles (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-ladino-duas-adagas-01.png",
+  "nome": "Elfos Da Floresta — ladino duas adagas (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-bardo-flauta-florestal-01.png",
+  "nome": "Elfos Da Floresta — bardo flauta florestal (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-clerigo-natureza-cajado-escudo-01.png",
+  "nome": "Elfos Da Floresta — clerigo natureza cajado escudo (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-guerreiro-espada-escudo-01.png",
+  "nome": "Elfos Da Floresta — guerreiro espada escudo (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-patrulheiro-lanca-01.png",
+  "nome": "Elfos Da Floresta — patrulheiro lanca (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-arqueiro-companheiro-ave-01.png",
+  "nome": "Elfos Da Floresta — arqueiro companheiro ave (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-druida-espiritos-da-floresta-01.png",
+  "nome": "Elfos Da Floresta — druida espiritos da floresta (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-monge-vestes-verdes-01.png",
+  "nome": "Elfos Da Floresta — monge vestes verdes (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-arqueiro-capa-folhas-01.png",
+  "nome": "Elfos Da Floresta — arqueiro capa folhas (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-besteiro-besta-leve-01.png",
+  "nome": "Elfos Da Floresta — besteiro besta leve (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-druida-cajado-01.png",
+  "nome": "Elfos Da Floresta — druida cajado (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-herbalista-ervas-01.png",
+  "nome": "Elfos Da Floresta — herbalista ervas (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-guerreiro-lanca-01.png",
+  "nome": "Elfos Da Floresta — guerreiro lanca (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-guardiao-lanca-escudo-01.png",
+  "nome": "Elfos Da Floresta — guardiao lanca escudo (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-barbaro-machado-01.png",
+  "nome": "Elfos Da Floresta — barbaro machado (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-ladino-duas-laminas-01.png",
+  "nome": "Elfos Da Floresta — ladino duas laminas (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-arqueiro-arco-curto-01.png",
+  "nome": "Elfos Da Floresta — arqueiro arco curto (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-bardo-flauta-01.png",
+  "nome": "Elfos Da Floresta — bardo flauta (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-assassino-capuz-adagas-01.png",
+  "nome": "Elfos Da Floresta — assassino capuz adagas (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-batedor-arco-mapa-01.png",
+  "nome": "Elfos Da Floresta — batedor arco mapa (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-patrulheiro-arco-01.png",
+  "nome": "Elfos Da Floresta — patrulheiro arco (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-ladino-duas-adagas-02.png",
+  "nome": "Elfos Da Floresta — ladino duas adagas (02)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-clerigo-natureza-cajado-escudo-02.png",
+  "nome": "Elfos Da Floresta — clerigo natureza cajado escudo (02)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-feiticeiro-florestal-cajado-01.png",
+  "nome": "Elfos Da Floresta — feiticeiro florestal cajado (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-sacerdote-natureza-01.png",
+  "nome": "Elfos Da Floresta — sacerdote natureza (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-da-floresta-monge-bastao-01.png",
+  "nome": "Elfos Da Floresta — monge bastao (01)",
+  "raca": "elfo",
+  "grupo": "elfos-da-floresta"
+ },
+ {
+  "arquivo": "miniaturas/elfos-sazonais-primavera-paladino-espada-escudo-01.png",
+  "nome": "Elfos Sazonais — primavera paladino espada escudo (01)",
+  "raca": "elfo",
+  "grupo": "elfos-sazonais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-sazonais-verao-paladino-lanca-escudo-01.png",
+  "nome": "Elfos Sazonais — verao paladino lanca escudo (01)",
+  "raca": "elfo",
+  "grupo": "elfos-sazonais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-sazonais-outono-druida-cajado-01.png",
+  "nome": "Elfos Sazonais — outono druida cajado (01)",
+  "raca": "elfo",
+  "grupo": "elfos-sazonais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-sazonais-inverno-mago-gelo-01.png",
+  "nome": "Elfos Sazonais — inverno mago gelo (01)",
+  "raca": "elfo",
+  "grupo": "elfos-sazonais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-sazonais-primavera-bardo-harpa-01.png",
+  "nome": "Elfos Sazonais — primavera bardo harpa (01)",
+  "raca": "elfo",
+  "grupo": "elfos-sazonais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-sazonais-verao-patrulheiro-arco-01.png",
+  "nome": "Elfos Sazonais — verao patrulheiro arco (01)",
+  "raca": "elfo",
+  "grupo": "elfos-sazonais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-sazonais-outono-clerigo-cajado-01.png",
+  "nome": "Elfos Sazonais — outono clerigo cajado (01)",
+  "raca": "elfo",
+  "grupo": "elfos-sazonais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-sazonais-inverno-ladino-adagas-01.png",
+  "nome": "Elfos Sazonais — inverno ladino adagas (01)",
+  "raca": "elfo",
+  "grupo": "elfos-sazonais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-sazonais-primavera-monge-01.png",
+  "nome": "Elfos Sazonais — primavera monge (01)",
+  "raca": "elfo",
+  "grupo": "elfos-sazonais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-sazonais-verao-guerreiro-lanca-01.png",
+  "nome": "Elfos Sazonais — verao guerreiro lanca (01)",
+  "raca": "elfo",
+  "grupo": "elfos-sazonais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-sazonais-outono-arqueiro-arco-01.png",
+  "nome": "Elfos Sazonais — outono arqueiro arco (01)",
+  "raca": "elfo",
+  "grupo": "elfos-sazonais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-sazonais-inverno-bruxo-orbe-01.png",
+  "nome": "Elfos Sazonais — inverno bruxo orbe (01)",
+  "raca": "elfo",
+  "grupo": "elfos-sazonais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-sazonais-primavera-feiticeiro-floral-01.png",
+  "nome": "Elfos Sazonais — primavera feiticeiro floral (01)",
+  "raca": "elfo",
+  "grupo": "elfos-sazonais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-sazonais-verao-nobre-calice-01.png",
+  "nome": "Elfos Sazonais — verao nobre calice (01)",
+  "raca": "elfo",
+  "grupo": "elfos-sazonais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-sazonais-outono-druida-foice-01.png",
+  "nome": "Elfos Sazonais — outono druida foice (01)",
+  "raca": "elfo",
+  "grupo": "elfos-sazonais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-sazonais-inverno-guardiao-espada-escudo-01.png",
+  "nome": "Elfos Sazonais — inverno guardiao espada escudo (01)",
+  "raca": "elfo",
+  "grupo": "elfos-sazonais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-astrais-guardiao-espada-escudo-astral-01.png",
+  "nome": "Elfos Astrais — guardiao espada escudo astral (01)",
+  "raca": "elfo",
+  "grupo": "elfos-astrais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-astrais-mago-cajado-astral-01.png",
+  "nome": "Elfos Astrais — mago cajado astral (01)",
+  "raca": "elfo",
+  "grupo": "elfos-astrais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-astrais-clerigo-luz-cajado-01.png",
+  "nome": "Elfos Astrais — clerigo luz cajado (01)",
+  "raca": "elfo",
+  "grupo": "elfos-astrais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-astrais-bardo-harpa-01.png",
+  "nome": "Elfos Astrais — bardo harpa (01)",
+  "raca": "elfo",
+  "grupo": "elfos-astrais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-astrais-arqueiro-arco-astral-01.png",
+  "nome": "Elfos Astrais — arqueiro arco astral (01)",
+  "raca": "elfo",
+  "grupo": "elfos-astrais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-astrais-assassino-adagas-01.png",
+  "nome": "Elfos Astrais — assassino adagas (01)",
+  "raca": "elfo",
+  "grupo": "elfos-astrais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-astrais-monge-astral-01.png",
+  "nome": "Elfos Astrais — monge astral (01)",
+  "raca": "elfo",
+  "grupo": "elfos-astrais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-astrais-paladino-espada-escudo-01.png",
+  "nome": "Elfos Astrais — paladino espada escudo (01)",
+  "raca": "elfo",
+  "grupo": "elfos-astrais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-astrais-feiticeiro-orbe-astral-01.png",
+  "nome": "Elfos Astrais — feiticeiro orbe astral (01)",
+  "raca": "elfo",
+  "grupo": "elfos-astrais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-astrais-bruxo-lua-grimorio-01.png",
+  "nome": "Elfos Astrais — bruxo lua grimorio (01)",
+  "raca": "elfo",
+  "grupo": "elfos-astrais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-astrais-druida-cajado-lunar-01.png",
+  "nome": "Elfos Astrais — druida cajado lunar (01)",
+  "raca": "elfo",
+  "grupo": "elfos-astrais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-astrais-mago-marinho-01.png",
+  "nome": "Elfos Astrais — mago marinho (01)",
+  "raca": "elfo",
+  "grupo": "elfos-astrais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-astrais-mago-cajado-cristal-01.png",
+  "nome": "Elfos Astrais — mago cajado cristal (01)",
+  "raca": "elfo",
+  "grupo": "elfos-astrais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-astrais-guerreiro-natureza-espada-01.png",
+  "nome": "Elfos Astrais — guerreiro natureza espada (01)",
+  "raca": "elfo",
+  "grupo": "elfos-astrais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-astrais-clerigo-cajado-sol-01.png",
+  "nome": "Elfos Astrais — clerigo cajado sol (01)",
+  "raca": "elfo",
+  "grupo": "elfos-astrais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-astrais-arquimago-cajado-astral-01.png",
+  "nome": "Elfos Astrais — arquimago cajado astral (01)",
+  "raca": "elfo",
+  "grupo": "elfos-astrais"
+ },
+ {
+  "arquivo": "miniaturas/elfos-marinhos-guardiao-tridente-01.png",
+  "nome": "Elfos Marinhos — guardiao tridente (01)",
+  "raca": "elfo",
+  "grupo": "elfos-marinhos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-marinhos-guerreiro-lanca-escudo-01.png",
+  "nome": "Elfos Marinhos — guerreiro lanca escudo (01)",
+  "raca": "elfo",
+  "grupo": "elfos-marinhos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-marinhos-cacador-rede-01.png",
+  "nome": "Elfos Marinhos — cacador rede (01)",
+  "raca": "elfo",
+  "grupo": "elfos-marinhos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-marinhos-arqueiro-arco-marinho-01.png",
+  "nome": "Elfos Marinhos — arqueiro arco marinho (01)",
+  "raca": "elfo",
+  "grupo": "elfos-marinhos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-marinhos-sacerdote-cajado-marinho-01.png",
+  "nome": "Elfos Marinhos — sacerdote cajado marinho (01)",
+  "raca": "elfo",
+  "grupo": "elfos-marinhos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-marinhos-druida-coral-cajado-01.png",
+  "nome": "Elfos Marinhos — druida coral cajado (01)",
+  "raca": "elfo",
+  "grupo": "elfos-marinhos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-marinhos-bardo-concha-01.png",
+  "nome": "Elfos Marinhos — bardo concha (01)",
+  "raca": "elfo",
+  "grupo": "elfos-marinhos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-marinhos-ladino-adagas-marinhas-01.png",
+  "nome": "Elfos Marinhos — ladino adagas marinhas (01)",
+  "raca": "elfo",
+  "grupo": "elfos-marinhos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-marinhos-mago-orbe-grimorio-01.png",
+  "nome": "Elfos Marinhos — mago orbe grimorio (01)",
+  "raca": "elfo",
+  "grupo": "elfos-marinhos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-marinhos-paladino-tridente-escudo-01.png",
+  "nome": "Elfos Marinhos — paladino tridente escudo (01)",
+  "raca": "elfo",
+  "grupo": "elfos-marinhos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-marinhos-patrulheiro-tridente-arco-01.png",
+  "nome": "Elfos Marinhos — patrulheiro tridente arco (01)",
+  "raca": "elfo",
+  "grupo": "elfos-marinhos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-marinhos-sacerdotisa-coral-01.png",
+  "nome": "Elfos Marinhos — sacerdotisa coral (01)",
+  "raca": "elfo",
+  "grupo": "elfos-marinhos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-marinhos-capitao-sabre-01.png",
+  "nome": "Elfos Marinhos — capitao sabre (01)",
+  "raca": "elfo",
+  "grupo": "elfos-marinhos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-marinhos-batedor-lanca-01.png",
+  "nome": "Elfos Marinhos — batedor lanca (01)",
+  "raca": "elfo",
+  "grupo": "elfos-marinhos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-marinhos-monge-marinho-01.png",
+  "nome": "Elfos Marinhos — monge marinho (01)",
+  "raca": "elfo",
+  "grupo": "elfos-marinhos"
+ },
+ {
+  "arquivo": "miniaturas/elfos-marinhos-feiticeiro-orbes-de-agua-01.png",
+  "nome": "Elfos Marinhos — feiticeiro orbes de agua (01)",
+  "raca": "elfo",
+  "grupo": "elfos-marinhos"
+ },
+ {
+  "arquivo": "miniaturas/drow-guerreiro-besta-adaga-01.png",
+  "nome": "Drow — guerreiro besta adaga (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-guardiao-espada-escudo-01.png",
+  "nome": "Drow — guardiao espada escudo (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-lanceiro-lanca-negra-01.png",
+  "nome": "Drow — lanceiro lanca negra (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-assassino-besta-adaga-01.png",
+  "nome": "Drow — assassino besta adaga (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-ladino-duas-adagas-01.png",
+  "nome": "Drow — ladino duas adagas (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-sacerdotisa-maca-ritual-01.png",
+  "nome": "Drow — sacerdotisa maca ritual (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-mago-grimorio-cajado-01.png",
+  "nome": "Drow — mago grimorio cajado (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-bruxo-orbe-sombrio-01.png",
+  "nome": "Drow — bruxo orbe sombrio (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-duelista-rapieira-01.png",
+  "nome": "Drow — duelista rapieira (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-paladino-espada-escudo-01.png",
+  "nome": "Drow — paladino espada escudo (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-patrulheiro-arco-01.png",
+  "nome": "Drow — patrulheiro arco (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-feiticeiro-orbe-roxo-01.png",
+  "nome": "Drow — feiticeiro orbe roxo (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-bardo-violino-01.png",
+  "nome": "Drow — bardo violino (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-monge-sombrio-01.png",
+  "nome": "Drow — monge sombrio (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-clerigo-armadura-escudo-01.png",
+  "nome": "Drow — clerigo armadura escudo (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-guerreiro-montante-01.png",
+  "nome": "Drow — guerreiro montante (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-assassino-chicote-adaga-01.png",
+  "nome": "Drow — assassino chicote adaga (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-ladino-duas-laminas-01.png",
+  "nome": "Drow — ladino duas laminas (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-sacerdotisa-maca-01.png",
+  "nome": "Drow — sacerdotisa maca (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-bruxo-orbe-negro-01.png",
+  "nome": "Drow — bruxo orbe negro (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-arqueiro-arco-sombrio-01.png",
+  "nome": "Drow — arqueiro arco sombrio (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-guerreiro-chicote-01.png",
+  "nome": "Drow — guerreiro chicote (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-guerreiro-montante-02.png",
+  "nome": "Drow — guerreiro montante (02)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-ladino-duas-adagas-02.png",
+  "nome": "Drow — ladino duas adagas (02)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-paladino-lamina-escudo-01.png",
+  "nome": "Drow — paladino lamina escudo (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-bardo-harpa-01.png",
+  "nome": "Drow — bardo harpa (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-mago-grimorio-01.png",
+  "nome": "Drow — mago grimorio (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-druida-cajado-escuro-01.png",
+  "nome": "Drow — druida cajado escuro (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-nobre-calice-01.png",
+  "nome": "Drow — nobre calice (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-lanceiro-lanca-01.png",
+  "nome": "Drow — lanceiro lanca (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-clerigo-maca-ritual-01.png",
+  "nome": "Drow — clerigo maca ritual (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-guardiao-espada-escudo-02.png",
+  "nome": "Drow — guardiao espada escudo (02)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-ladino-duas-laminas-02.png",
+  "nome": "Drow — ladino duas laminas (02)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-arqueiro-arco-comprido-01.png",
+  "nome": "Drow — arqueiro arco comprido (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-sacerdotisa-cajado-cranios-01.png",
+  "nome": "Drow — sacerdotisa cajado cranios (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-assassino-adaga-ritual-01.png",
+  "nome": "Drow — assassino adaga ritual (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-bruxo-orbe-negro-02.png",
+  "nome": "Drow — bruxo orbe negro (02)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-mago-grimorio-cajado-02.png",
+  "nome": "Drow — mago grimorio cajado (02)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-ladino-adagas-capuz-01.png",
+  "nome": "Drow — ladino adagas capuz (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-sacerdotisa-cajado-aranha-01.png",
+  "nome": "Drow — sacerdotisa cajado aranha (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-matriarca-nobre-01.png",
+  "nome": "Drow — matriarca nobre (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-guerreiro-lanca-escudo-01.png",
+  "nome": "Drow — guerreiro lanca escudo (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-patrulheiro-lanca-01.png",
+  "nome": "Drow — patrulheiro lanca (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-bardo-flauta-01.png",
+  "nome": "Drow — bardo flauta (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-feiticeiro-grimorio-01.png",
+  "nome": "Drow — feiticeiro grimorio (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-druida-fungos-01.png",
+  "nome": "Drow — druida fungos (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-guerreiro-chicote-adaga-01.png",
+  "nome": "Drow — guerreiro chicote adaga (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/drow-clerigo-maca-pesada-01.png",
+  "nome": "Drow — clerigo maca pesada (01)",
+  "raca": "elfo",
+  "grupo": "drow"
+ },
+ {
+  "arquivo": "miniaturas/humano_plebeu_roupa-simples.png",
+  "nome": "plebeu roupa simples",
+  "raca": "humano",
+  "grupo": "personagens_npcs"
+ },
+ {
+  "arquivo": "miniaturas/humano_nobre_vestido-cerimonial.png",
+  "nome": "nobre vestido cerimonial",
+  "raca": "humano",
+  "grupo": "personagens_npcs"
+ },
+ {
+  "arquivo": "miniaturas/humano_bandido_adagas_couro.png",
+  "nome": "bandido adagas couro",
+  "raca": "humano",
+  "grupo": "personagens_npcs"
+ },
+ {
+  "arquivo": "miniaturas/humano_capitao-bandido_espadas-couro.png",
+  "nome": "capitao bandido espadas couro",
+  "raca": "humano",
+  "grupo": "personagens_npcs"
+ },
+ {
+  "arquivo": "miniaturas/humano_acolito_livro-simbolo.png",
+  "nome": "acolito livro simbolo",
+  "raca": "humano",
+  "grupo": "personagens_npcs"
+ },
+ {
+  "arquivo": "miniaturas/humano_sacerdote_cajado-sagrado.png",
+  "nome": "sacerdote cajado sagrado",
+  "raca": "humano",
+  "grupo": "personagens_npcs"
+ },
+ {
+  "arquivo": "miniaturas/humano_cultista_adaga-capuz.png",
+  "nome": "cultista adaga capuz",
+  "raca": "humano",
+  "grupo": "personagens_npcs"
+ },
+ {
+  "arquivo": "miniaturas/humano_fanatico-culto_cajado-ritual.png",
+  "nome": "fanatico culto cajado ritual",
+  "raca": "humano",
+  "grupo": "personagens_npcs"
+ },
+ {
+  "arquivo": "miniaturas/humano_batedor_arco-capuz.png",
+  "nome": "batedor arco capuz",
+  "raca": "humano",
+  "grupo": "personagens_npcs"
+ },
+ {
+  "arquivo": "miniaturas/humano_espiao_adagas-capuz.png",
+  "nome": "espiao adagas capuz",
+  "raca": "humano",
+  "grupo": "personagens_npcs"
+ },
+ {
+  "arquivo": "miniaturas/humano_druida_cajado-folhas.png",
+  "nome": "druida cajado folhas",
+  "raca": "humano",
+  "grupo": "personagens_npcs"
+ },
+ {
+  "arquivo": "miniaturas/humano_mago_cajado-orbe.png",
+  "nome": "mago cajado orbe",
+  "raca": "humano",
+  "grupo": "personagens_npcs"
+ },
+ {
+  "arquivo": "miniaturas/humano_arquimago_cajado-orbe.png",
+  "nome": "arquimago cajado orbe",
+  "raca": "humano",
+  "grupo": "personagens_npcs"
+ },
+ {
+  "arquivo": "miniaturas/humano_assassino_duas-adagas.png",
+  "nome": "assassino duas adagas",
+  "raca": "humano",
+  "grupo": "personagens_npcs"
+ },
+ {
+  "arquivo": "miniaturas/humano_pirata_sabre.png",
+  "nome": "pirata sabre",
+  "raca": "humano",
+  "grupo": "personagens_npcs"
+ },
+ {
+  "arquivo": "miniaturas/humano_capitao-pirata_sabre-casaco.png",
+  "nome": "capitao pirata sabre casaco",
+  "raca": "humano",
+  "grupo": "personagens_npcs"
+ },
+ {
+  "arquivo": "miniaturas/humano_guarda_espada-escudo.png",
+  "nome": "guarda espada escudo",
+  "raca": "humano",
+  "grupo": "militares_e_brutos"
+ },
+ {
+  "arquivo": "miniaturas/humano_guarda_lanca-escudo.png",
+  "nome": "guarda lanca escudo",
+  "raca": "humano",
+  "grupo": "militares_e_brutos"
+ },
+ {
+  "arquivo": "miniaturas/humano_guarda_alabarda-malha.png",
+  "nome": "guarda alabarda malha",
+  "raca": "humano",
+  "grupo": "militares_e_brutos"
+ },
+ {
+  "arquivo": "miniaturas/humano_guarda_besta-couro.png",
+  "nome": "guarda besta couro",
+  "raca": "humano",
+  "grupo": "militares_e_brutos"
+ },
+ {
+  "arquivo": "miniaturas/humano_infantaria_lanca-escudo.png",
+  "nome": "infantaria lanca escudo",
+  "raca": "humano",
+  "grupo": "militares_e_brutos"
+ },
+ {
+  "arquivo": "miniaturas/humano_veterano_espada-escudo.png",
+  "nome": "veterano espada escudo",
+  "raca": "humano",
+  "grupo": "militares_e_brutos"
+ },
+ {
+  "arquivo": "miniaturas/humano_capitao-guarda_espada-escudo.png",
+  "nome": "capitao guarda espada escudo",
+  "raca": "humano",
+  "grupo": "militares_e_brutos"
+ },
+ {
+  "arquivo": "miniaturas/humano_cavaleiro_lanca-escudo.png",
+  "nome": "cavaleiro lanca escudo",
+  "raca": "humano",
+  "grupo": "militares_e_brutos"
+ },
+ {
+  "arquivo": "miniaturas/humano_cavaleiro_espada-escudo.png",
+  "nome": "cavaleiro espada escudo",
+  "raca": "humano",
+  "grupo": "militares_e_brutos"
+ },
+ {
+  "arquivo": "miniaturas/humano_gladiador_tridente-rede.png",
+  "nome": "gladiador tridente rede",
+  "raca": "humano",
+  "grupo": "militares_e_brutos"
+ },
+ {
+  "arquivo": "miniaturas/humano_gladiador_gladio-escudo.png",
+  "nome": "gladiador gladio escudo",
+  "raca": "humano",
+  "grupo": "militares_e_brutos"
+ },
+ {
+  "arquivo": "miniaturas/humano_barbaro_machado-peles.png",
+  "nome": "barbaro machado peles",
+  "raca": "humano",
+  "grupo": "militares_e_brutos"
+ },
+ {
+  "arquivo": "miniaturas/humano_brutamontes_clava-couro.png",
+  "nome": "brutamontes clava couro",
+  "raca": "humano",
+  "grupo": "militares_e_brutos"
+ },
+ {
+  "arquivo": "miniaturas/humano_brutamontes_maca-couro.png",
+  "nome": "brutamontes maca couro",
+  "raca": "humano",
+  "grupo": "militares_e_brutos"
+ },
+ {
+  "arquivo": "miniaturas/humano_chefe-brutamontes_maca-pesada.png",
+  "nome": "chefe brutamontes maca pesada",
+  "raca": "humano",
+  "grupo": "militares_e_brutos"
+ },
+ {
+  "arquivo": "miniaturas/humano_guerreiro_espada-longa-armadura.png",
+  "nome": "guerreiro espada longa armadura",
+  "raca": "humano",
+  "grupo": "militares_e_brutos"
+ },
+ {
+  "arquivo": "miniaturas/humano_barbaro_machado-duas-maos.png",
+  "nome": "barbaro machado duas maos",
+  "raca": "humano",
+  "grupo": "barbaros_ladinos_druidas_clerigos"
+ },
+ {
+  "arquivo": "miniaturas/humano_barbaro_espada-grande.png",
+  "nome": "barbaro espada grande",
+  "raca": "humano",
+  "grupo": "barbaros_ladinos_druidas_clerigos"
+ },
+ {
+  "arquivo": "miniaturas/barbaros_ladinos_druidas_clerigos__humano_barbaro_lanca-escudo.png",
+  "nome": "barbaro lanca escudo",
+  "raca": "humano",
+  "grupo": "barbaros_ladinos_druidas_clerigos"
+ },
+ {
+  "arquivo": "miniaturas/humano_barbaro_martelo-totem-lobo.png",
+  "nome": "barbaro martelo totem lobo",
+  "raca": "humano",
+  "grupo": "barbaros_ladinos_druidas_clerigos"
+ },
+ {
+  "arquivo": "miniaturas/barbaros_ladinos_druidas_clerigos__humano_ladino_rapieira-adaga.png",
+  "nome": "ladino rapieira adaga",
+  "raca": "humano",
+  "grupo": "barbaros_ladinos_druidas_clerigos"
+ },
+ {
+  "arquivo": "miniaturas/humano_ladino_duas-adagas.png",
+  "nome": "ladino duas adagas",
+  "raca": "humano",
+  "grupo": "barbaros_ladinos_druidas_clerigos"
+ },
+ {
+  "arquivo": "miniaturas/barbaros_ladinos_druidas_clerigos__humano_ladino_besta-adaga.png",
+  "nome": "ladino besta adaga",
+  "raca": "humano",
+  "grupo": "barbaros_ladinos_druidas_clerigos"
+ },
+ {
+  "arquivo": "miniaturas/humano_patrulheiro_arco-longo.png",
+  "nome": "patrulheiro arco longo",
+  "raca": "humano",
+  "grupo": "barbaros_ladinos_druidas_clerigos"
+ },
+ {
+  "arquivo": "miniaturas/barbaros_ladinos_druidas_clerigos__humano_patrulheiro_duas-espadas.png",
+  "nome": "patrulheiro duas espadas",
+  "raca": "humano",
+  "grupo": "barbaros_ladinos_druidas_clerigos"
+ },
+ {
+  "arquivo": "miniaturas/humano_patrulheiro_lanca-bolsa.png",
+  "nome": "patrulheiro lanca bolsa",
+  "raca": "humano",
+  "grupo": "barbaros_ladinos_druidas_clerigos"
+ },
+ {
+  "arquivo": "miniaturas/humano_druida_cajado-vegetal.png",
+  "nome": "druida cajado vegetal",
+  "raca": "humano",
+  "grupo": "barbaros_ladinos_druidas_clerigos"
+ },
+ {
+  "arquivo": "miniaturas/humano_druida_foice-escudo.png",
+  "nome": "druida foice escudo",
+  "raca": "humano",
+  "grupo": "barbaros_ladinos_druidas_clerigos"
+ },
+ {
+  "arquivo": "miniaturas/humano_clerigo-guerra_martelo-escudo.png",
+  "nome": "clerigo guerra martelo escudo",
+  "raca": "humano",
+  "grupo": "barbaros_ladinos_druidas_clerigos"
+ },
+ {
+  "arquivo": "miniaturas/humano_clerigo-vida_maca-escudo.png",
+  "nome": "clerigo vida maca escudo",
+  "raca": "humano",
+  "grupo": "barbaros_ladinos_druidas_clerigos"
+ },
+ {
+  "arquivo": "miniaturas/humano_clerigo-morte_cajado-ossos.png",
+  "nome": "clerigo morte cajado ossos",
+  "raca": "humano",
+  "grupo": "barbaros_ladinos_druidas_clerigos"
+ },
+ {
+  "arquivo": "miniaturas/humano_clerigo-natureza_cajado.png",
+  "nome": "clerigo natureza cajado",
+  "raca": "humano",
+  "grupo": "barbaros_ladinos_druidas_clerigos"
+ },
+ {
+  "arquivo": "miniaturas/humano_barbaro_machado-tatuagens.png",
+  "nome": "barbaro machado tatuagens",
+  "raca": "humano",
+  "grupo": "combatentes_natureza_divinos"
+ },
+ {
+  "arquivo": "miniaturas/humano_barbaro_espada-duas-maos.png",
+  "nome": "barbaro espada duas maos",
+  "raca": "humano",
+  "grupo": "combatentes_natureza_divinos"
+ },
+ {
+  "arquivo": "miniaturas/combatentes_natureza_divinos__humano_barbaro_lanca-escudo.png",
+  "nome": "barbaro lanca escudo",
+  "raca": "humano",
+  "grupo": "combatentes_natureza_divinos"
+ },
+ {
+  "arquivo": "miniaturas/humano_barbaro_martelo-peles.png",
+  "nome": "barbaro martelo peles",
+  "raca": "humano",
+  "grupo": "combatentes_natureza_divinos"
+ },
+ {
+  "arquivo": "miniaturas/humano_ladino_duas-adagas-capuz.png",
+  "nome": "ladino duas adagas capuz",
+  "raca": "humano",
+  "grupo": "combatentes_natureza_divinos"
+ },
+ {
+  "arquivo": "miniaturas/combatentes_natureza_divinos__humano_ladino_rapieira-adaga.png",
+  "nome": "ladino rapieira adaga",
+  "raca": "humano",
+  "grupo": "combatentes_natureza_divinos"
+ },
+ {
+  "arquivo": "miniaturas/humano_patrulheiro_arco-curto.png",
+  "nome": "patrulheiro arco curto",
+  "raca": "humano",
+  "grupo": "combatentes_natureza_divinos"
+ },
+ {
+  "arquivo": "miniaturas/combatentes_natureza_divinos__humano_ladino_besta-adaga.png",
+  "nome": "ladino besta adaga",
+  "raca": "humano",
+  "grupo": "combatentes_natureza_divinos"
+ },
+ {
+  "arquivo": "miniaturas/humano_druida-circulo-terra_cajado.png",
+  "nome": "druida circulo terra cajado",
+  "raca": "humano",
+  "grupo": "combatentes_natureza_divinos"
+ },
+ {
+  "arquivo": "miniaturas/humano_druida-circulo-lua_foice-escudo.png",
+  "nome": "druida circulo lua foice escudo",
+  "raca": "humano",
+  "grupo": "combatentes_natureza_divinos"
+ },
+ {
+  "arquivo": "miniaturas/humano_druida-bosque_cajado.png",
+  "nome": "druida bosque cajado",
+  "raca": "humano",
+  "grupo": "combatentes_natureza_divinos"
+ },
+ {
+  "arquivo": "miniaturas/combatentes_natureza_divinos__humano_druida-fungos_cajado.png",
+  "nome": "druida fungos cajado",
+  "raca": "humano",
+  "grupo": "combatentes_natureza_divinos"
+ },
+ {
+  "arquivo": "miniaturas/humano_paladino_martelo-escudo.png",
+  "nome": "paladino martelo escudo",
+  "raca": "humano",
+  "grupo": "combatentes_natureza_divinos"
+ },
+ {
+  "arquivo": "miniaturas/humano_clerigo-luz_maca-escudo.png",
+  "nome": "clerigo luz maca escudo",
+  "raca": "humano",
+  "grupo": "combatentes_natureza_divinos"
+ },
+ {
+  "arquivo": "miniaturas/humano_clerigo-morte_cajado-cranios.png",
+  "nome": "clerigo morte cajado cranios",
+  "raca": "humano",
+  "grupo": "combatentes_natureza_divinos"
+ },
+ {
+  "arquivo": "miniaturas/humano_clerigo-natureza_cajado-vegetal.png",
+  "nome": "clerigo natureza cajado vegetal",
+  "raca": "humano",
+  "grupo": "combatentes_natureza_divinos"
+ },
+ {
+  "arquivo": "miniaturas/humano_bardo_alaude-viajante.png",
+  "nome": "bardo alaude viajante",
+  "raca": "humano",
+  "grupo": "bardos_arcanos"
+ },
+ {
+  "arquivo": "miniaturas/humano_bardo_flauta-nobre.png",
+  "nome": "bardo flauta nobre",
+  "raca": "humano",
+  "grupo": "bardos_arcanos"
+ },
+ {
+  "arquivo": "miniaturas/humano_bardo_violino.png",
+  "nome": "bardo violino",
+  "raca": "humano",
+  "grupo": "bardos_arcanos"
+ },
+ {
+  "arquivo": "miniaturas/humano_bardo_tambor.png",
+  "nome": "bardo tambor",
+  "raca": "humano",
+  "grupo": "bardos_arcanos"
+ },
+ {
+  "arquivo": "miniaturas/humano_bardo_harpa-cerimonial.png",
+  "nome": "bardo harpa cerimonial",
+  "raca": "humano",
+  "grupo": "bardos_arcanos"
+ },
+ {
+  "arquivo": "miniaturas/humano_bardo_espadachim-alaude.png",
+  "nome": "bardo espadachim alaude",
+  "raca": "humano",
+  "grupo": "bardos_arcanos"
+ },
+ {
+  "arquivo": "miniaturas/humano_bardo_tambor-pergaminho.png",
+  "nome": "bardo tambor pergaminho",
+  "raca": "humano",
+  "grupo": "bardos_arcanos"
+ },
+ {
+  "arquivo": "miniaturas/humano_bardo-magico_harpa-orbe.png",
+  "nome": "bardo magico harpa orbe",
+  "raca": "humano",
+  "grupo": "bardos_arcanos"
+ },
+ {
+  "arquivo": "miniaturas/humano_mago_cajado-grimorio.png",
+  "nome": "mago cajado grimorio",
+  "raca": "humano",
+  "grupo": "bardos_arcanos"
+ },
+ {
+  "arquivo": "miniaturas/humano_feiticeiro_orbe-adaga.png",
+  "nome": "feiticeiro orbe adaga",
+  "raca": "humano",
+  "grupo": "bardos_arcanos"
+ },
+ {
+  "arquivo": "miniaturas/humano_arquimago_cajado-cristal.png",
+  "nome": "arquimago cajado cristal",
+  "raca": "humano",
+  "grupo": "bardos_arcanos"
+ },
+ {
+  "arquivo": "miniaturas/humano_feiticeiro-fogo_orbe-flamejante.png",
+  "nome": "feiticeiro fogo orbe flamejante",
+  "raca": "humano",
+  "grupo": "bardos_arcanos"
+ },
+ {
+  "arquivo": "miniaturas/humano_feiticeiro-tempestade_cajado.png",
+  "nome": "feiticeiro tempestade cajado",
+  "raca": "humano",
+  "grupo": "bardos_arcanos"
+ },
+ {
+  "arquivo": "miniaturas/humano_bruxo-sombrio_magia.png",
+  "nome": "bruxo sombrio magia",
+  "raca": "humano",
+  "grupo": "bardos_arcanos"
+ },
+ {
+  "arquivo": "miniaturas/humano_bruxo-infernal_cajado-tomo.png",
+  "nome": "bruxo infernal cajado tomo",
+  "raca": "humano",
+  "grupo": "bardos_arcanos"
+ },
+ {
+  "arquivo": "miniaturas/humano_bruxo-feerico_cajado.png",
+  "nome": "bruxo feerico cajado",
+  "raca": "humano",
+  "grupo": "bardos_arcanos"
+ },
+ {
+  "arquivo": "miniaturas/humano_ladino_duas-adagas-couro.png",
+  "nome": "ladino duas adagas couro",
+  "raca": "humano",
+  "grupo": "furtivos_patrulheiros_monges"
+ },
+ {
+  "arquivo": "miniaturas/humano_ladino_rapieira-casaco.png",
+  "nome": "ladino rapieira casaco",
+  "raca": "humano",
+  "grupo": "furtivos_patrulheiros_monges"
+ },
+ {
+  "arquivo": "miniaturas/furtivos_patrulheiros_monges__humano_ladino_besta-adaga.png",
+  "nome": "ladino besta adaga",
+  "raca": "humano",
+  "grupo": "furtivos_patrulheiros_monges"
+ },
+ {
+  "arquivo": "miniaturas/humano_assassino_duas-adagas-mascara.png",
+  "nome": "assassino duas adagas mascara",
+  "raca": "humano",
+  "grupo": "furtivos_patrulheiros_monges"
+ },
+ {
+  "arquivo": "miniaturas/humano_ladino-alquimista_besta-pocoes.png",
+  "nome": "ladino alquimista besta pocoes",
+  "raca": "humano",
+  "grupo": "furtivos_patrulheiros_monges"
+ },
+ {
+  "arquivo": "miniaturas/humano_espiao_nobre_adaga.png",
+  "nome": "espiao nobre adaga",
+  "raca": "humano",
+  "grupo": "furtivos_patrulheiros_monges"
+ },
+ {
+  "arquivo": "miniaturas/humano_patrulheiro_arco-aljava.png",
+  "nome": "patrulheiro arco aljava",
+  "raca": "humano",
+  "grupo": "furtivos_patrulheiros_monges"
+ },
+ {
+  "arquivo": "miniaturas/furtivos_patrulheiros_monges__humano_patrulheiro_duas-espadas.png",
+  "nome": "patrulheiro duas espadas",
+  "raca": "humano",
+  "grupo": "furtivos_patrulheiros_monges"
+ },
+ {
+  "arquivo": "miniaturas/humano_patrulheiro_lanca-arco.png",
+  "nome": "patrulheiro lanca arco",
+  "raca": "humano",
+  "grupo": "furtivos_patrulheiros_monges"
+ },
+ {
+  "arquivo": "miniaturas/humano_patrulheiro_besta-espada.png",
+  "nome": "patrulheiro besta espada",
+  "raca": "humano",
+  "grupo": "furtivos_patrulheiros_monges"
+ },
+ {
+  "arquivo": "miniaturas/humano_monge_punhos.png",
+  "nome": "monge punhos",
+  "raca": "humano",
+  "grupo": "furtivos_patrulheiros_monges"
+ },
+ {
+  "arquivo": "miniaturas/humano_monge_cajado.png",
+  "nome": "monge cajado",
+  "raca": "humano",
+  "grupo": "furtivos_patrulheiros_monges"
+ },
+ {
+  "arquivo": "miniaturas/humano_monge_lanca.png",
+  "nome": "monge lanca",
+  "raca": "humano",
+  "grupo": "furtivos_patrulheiros_monges"
+ },
+ {
+  "arquivo": "miniaturas/humano_monge_punhos-tunica.png",
+  "nome": "monge punhos tunica",
+  "raca": "humano",
+  "grupo": "furtivos_patrulheiros_monges"
+ },
+ {
+  "arquivo": "miniaturas/humano_monge-sombra_foices.png",
+  "nome": "monge sombra foices",
+  "raca": "humano",
+  "grupo": "furtivos_patrulheiros_monges"
+ },
+ {
+  "arquivo": "miniaturas/humano_monge-viajante_cajado.png",
+  "nome": "monge viajante cajado",
+  "raca": "humano",
+  "grupo": "furtivos_patrulheiros_monges"
+ },
+ {
+  "arquivo": "miniaturas/humano_paladino-luz_maca-escudo.png",
+  "nome": "paladino luz maca escudo",
+  "raca": "humano",
+  "grupo": "paladinos_clerigos_druidas"
+ },
+ {
+  "arquivo": "miniaturas/humano_paladino-guerra_martelo-escudo.png",
+  "nome": "paladino guerra martelo escudo",
+  "raca": "humano",
+  "grupo": "paladinos_clerigos_druidas"
+ },
+ {
+  "arquivo": "miniaturas/humano_clerigo-luz_cajado.png",
+  "nome": "clerigo luz cajado",
+  "raca": "humano",
+  "grupo": "paladinos_clerigos_druidas"
+ },
+ {
+  "arquivo": "miniaturas/humano_clerigo-tempestade_lanca-escudo.png",
+  "nome": "clerigo tempestade lanca escudo",
+  "raca": "humano",
+  "grupo": "paladinos_clerigos_druidas"
+ },
+ {
+  "arquivo": "miniaturas/humano_clerigo-morte_foice.png",
+  "nome": "clerigo morte foice",
+  "raca": "humano",
+  "grupo": "paladinos_clerigos_druidas"
+ },
+ {
+  "arquivo": "miniaturas/humano_paladino-guerra_martelo-escudo-capa.png",
+  "nome": "paladino guerra martelo escudo capa",
+  "raca": "humano",
+  "grupo": "paladinos_clerigos_druidas"
+ },
+ {
+  "arquivo": "miniaturas/humano_druida-terra_cajado.png",
+  "nome": "druida terra cajado",
+  "raca": "humano",
+  "grupo": "paladinos_clerigos_druidas"
+ },
+ {
+  "arquivo": "miniaturas/humano_druida-lua_foice-escudo.png",
+  "nome": "druida lua foice escudo",
+  "raca": "humano",
+  "grupo": "paladinos_clerigos_druidas"
+ },
+ {
+  "arquivo": "miniaturas/paladinos_clerigos_druidas__humano_druida-fungos_cajado.png",
+  "nome": "druida fungos cajado",
+  "raca": "humano",
+  "grupo": "paladinos_clerigos_druidas"
+ },
+ {
+  "arquivo": "miniaturas/humano_druida-inverno_cajado.png",
+  "nome": "druida inverno cajado",
+  "raca": "humano",
+  "grupo": "paladinos_clerigos_druidas"
+ },
+ {
+  "arquivo": "miniaturas/humano_clerigo-acolito_maca.png",
+  "nome": "clerigo acolito maca",
+  "raca": "humano",
+  "grupo": "paladinos_clerigos_druidas"
+ },
+ {
+  "arquivo": "miniaturas/humano_clerigo-conhecimento_cajado-livro.png",
+  "nome": "clerigo conhecimento cajado livro",
+  "raca": "humano",
+  "grupo": "paladinos_clerigos_druidas"
+ },
+ {
+  "arquivo": "miniaturas/humano_paladino-devocao_espada-escudo.png",
+  "nome": "paladino devocao espada escudo",
+  "raca": "humano",
+  "grupo": "paladinos_clerigos_druidas"
+ },
+ {
+  "arquivo": "miniaturas/humano_paladino-vinganca_espada-grande.png",
+  "nome": "paladino vinganca espada grande",
+  "raca": "humano",
+  "grupo": "paladinos_clerigos_druidas"
+ },
+ {
+  "arquivo": "miniaturas/humano_paladino-ancioes_espada-escudo.png",
+  "nome": "paladino anciões espada escudo",
+  "raca": "humano",
+  "grupo": "paladinos_clerigos_druidas"
+ },
+ {
+  "arquivo": "miniaturas/humano_paladino-ordem_maca-escudo.png",
+  "nome": "paladino ordem maca escudo",
+  "raca": "humano",
+  "grupo": "paladinos_clerigos_druidas"
+ },
+ {
+  "arquivo": "miniaturas/humano_guarda_espada-escudo-variante.png",
+  "nome": "guarda espada escudo variante",
+  "raca": "humano",
+  "grupo": "guerreiros_barbaros_gladiadores"
+ },
+ {
+  "arquivo": "miniaturas/humano_guerreiro_espada-longa.png",
+  "nome": "guerreiro espada longa",
+  "raca": "humano",
+  "grupo": "guerreiros_barbaros_gladiadores"
+ },
+ {
+  "arquivo": "miniaturas/humano_guerreiro_alabarda.png",
+  "nome": "guerreiro alabarda",
+  "raca": "humano",
+  "grupo": "guerreiros_barbaros_gladiadores"
+ },
+ {
+  "arquivo": "miniaturas/humano_patrulheiro_arco.png",
+  "nome": "patrulheiro arco",
+  "raca": "humano",
+  "grupo": "guerreiros_barbaros_gladiadores"
+ },
+ {
+  "arquivo": "miniaturas/humano_besteiro_besta-pesada.png",
+  "nome": "besteiro besta pesada",
+  "raca": "humano",
+  "grupo": "guerreiros_barbaros_gladiadores"
+ },
+ {
+  "arquivo": "miniaturas/humano_barbaro_machado-tatuagens-variante.png",
+  "nome": "barbaro machado tatuagens variante",
+  "raca": "humano",
+  "grupo": "guerreiros_barbaros_gladiadores"
+ },
+ {
+  "arquivo": "miniaturas/humano_barbaro_espada-peles-variante.png",
+  "nome": "barbaro espada peles variante",
+  "raca": "humano",
+  "grupo": "guerreiros_barbaros_gladiadores"
+ },
+ {
+  "arquivo": "miniaturas/humano_barbaro_lanca-escudo-variante.png",
+  "nome": "barbaro lanca escudo variante",
+  "raca": "humano",
+  "grupo": "guerreiros_barbaros_gladiadores"
+ },
+ {
+  "arquivo": "miniaturas/humano_barbaro_martelo-totem-variante.png",
+  "nome": "barbaro martelo totem variante",
+  "raca": "humano",
+  "grupo": "guerreiros_barbaros_gladiadores"
+ },
+ {
+  "arquivo": "miniaturas/humano_barbaro_duas-machadinhas.png",
+  "nome": "barbaro duas machadinhas",
+  "raca": "humano",
+  "grupo": "guerreiros_barbaros_gladiadores"
+ },
+ {
+  "arquivo": "miniaturas/humano_gladiador_tridente-rede-variante.png",
+  "nome": "gladiador tridente rede variante",
+  "raca": "humano",
+  "grupo": "guerreiros_barbaros_gladiadores"
+ },
+ {
+  "arquivo": "miniaturas/humano_gladiador_gladio-escudo-variante.png",
+  "nome": "gladiador gladio escudo variante",
+  "raca": "humano",
+  "grupo": "guerreiros_barbaros_gladiadores"
+ },
+ {
+  "arquivo": "miniaturas/humano_guerreiro_machado-escudo.png",
+  "nome": "guerreiro machado escudo",
+  "raca": "humano",
+  "grupo": "guerreiros_barbaros_gladiadores"
+ },
+ {
+  "arquivo": "miniaturas/humano_soldado_lanca-malha.png",
+  "nome": "soldado lanca malha",
+  "raca": "humano",
+  "grupo": "guerreiros_barbaros_gladiadores"
+ },
+ {
+  "arquivo": "miniaturas/humano_duelista_rapieira-escudo.png",
+  "nome": "duelista rapieira escudo",
+  "raca": "humano",
+  "grupo": "guerreiros_barbaros_gladiadores"
+ },
+ {
+  "arquivo": "miniaturas/humano_cavaleiro_espada-escudo-variante.png",
+  "nome": "cavaleiro espada escudo variante",
+  "raca": "humano",
+  "grupo": "guerreiros_barbaros_gladiadores"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha01_variante01.png",
+  "nome": "diversidade linha01 variante01",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha01_variante02.png",
+  "nome": "diversidade linha01 variante02",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha01_variante03.png",
+  "nome": "diversidade linha01 variante03",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha01_variante04.png",
+  "nome": "diversidade linha01 variante04",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha01_variante05.png",
+  "nome": "diversidade linha01 variante05",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha01_variante06.png",
+  "nome": "diversidade linha01 variante06",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha01_variante07.png",
+  "nome": "diversidade linha01 variante07",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha01_variante08.png",
+  "nome": "diversidade linha01 variante08",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha02_variante01.png",
+  "nome": "diversidade linha02 variante01",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha02_variante02.png",
+  "nome": "diversidade linha02 variante02",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha02_variante03.png",
+  "nome": "diversidade linha02 variante03",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha02_variante04.png",
+  "nome": "diversidade linha02 variante04",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha02_variante05.png",
+  "nome": "diversidade linha02 variante05",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha02_variante06.png",
+  "nome": "diversidade linha02 variante06",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha02_variante07.png",
+  "nome": "diversidade linha02 variante07",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha02_variante08.png",
+  "nome": "diversidade linha02 variante08",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha03_variante01.png",
+  "nome": "diversidade linha03 variante01",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha03_variante02.png",
+  "nome": "diversidade linha03 variante02",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha03_variante03.png",
+  "nome": "diversidade linha03 variante03",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha03_variante04.png",
+  "nome": "diversidade linha03 variante04",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha03_variante05.png",
+  "nome": "diversidade linha03 variante05",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha03_variante06.png",
+  "nome": "diversidade linha03 variante06",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha03_variante07.png",
+  "nome": "diversidade linha03 variante07",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha03_variante08.png",
+  "nome": "diversidade linha03 variante08",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha04_variante01.png",
+  "nome": "diversidade linha04 variante01",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha04_variante02.png",
+  "nome": "diversidade linha04 variante02",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha04_variante03.png",
+  "nome": "diversidade linha04 variante03",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha04_variante04.png",
+  "nome": "diversidade linha04 variante04",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha04_variante05.png",
+  "nome": "diversidade linha04 variante05",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha04_variante06.png",
+  "nome": "diversidade linha04 variante06",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha04_variante07.png",
+  "nome": "diversidade linha04 variante07",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha04_variante08.png",
+  "nome": "diversidade linha04 variante08",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha05_variante01.png",
+  "nome": "diversidade linha05 variante01",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha05_variante02.png",
+  "nome": "diversidade linha05 variante02",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha05_variante03.png",
+  "nome": "diversidade linha05 variante03",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha05_variante04.png",
+  "nome": "diversidade linha05 variante04",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha05_variante05.png",
+  "nome": "diversidade linha05 variante05",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha05_variante06.png",
+  "nome": "diversidade linha05 variante06",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha05_variante07.png",
+  "nome": "diversidade linha05 variante07",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha05_variante08.png",
+  "nome": "diversidade linha05 variante08",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha06_variante01.png",
+  "nome": "diversidade linha06 variante01",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha06_variante02.png",
+  "nome": "diversidade linha06 variante02",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha06_variante03.png",
+  "nome": "diversidade linha06 variante03",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha06_variante04.png",
+  "nome": "diversidade linha06 variante04",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha06_variante05.png",
+  "nome": "diversidade linha06 variante05",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha06_variante06.png",
+  "nome": "diversidade linha06 variante06",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha06_variante07.png",
+  "nome": "diversidade linha06 variante07",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ },
+ {
+  "arquivo": "miniaturas/humano_diversidade_linha06_variante08.png",
+  "nome": "diversidade linha06 variante08",
+  "raca": "humano",
+  "grupo": "diversidade_tons_de_pele"
+ }
+]

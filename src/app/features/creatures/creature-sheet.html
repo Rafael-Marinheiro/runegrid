@@ -250,6 +250,19 @@
   <div class="col">
     <app-hp-panel [creature]="c" />
     <app-slots-panel [creature]="c" />
+    <section class="panel" [attr.aria-label]="ui.text('Características', 'Features')">
+      <h3>{{ ui.text('Características', 'Features') }}</h3>
+      @for (f of featureIds; track f) {
+        <label class="check">
+          <input
+            type="checkbox"
+            [checked]="hasFeature(f)"
+            (change)="toggleFeature(f, $any($event.target).checked)"
+          />
+          {{ ui.text(featureInfo[f].pt, featureInfo[f].en) }}
+        </label>
+      }
+    </section>
     <app-inventory-panel [creature]="c" />
   </div>
 </div>

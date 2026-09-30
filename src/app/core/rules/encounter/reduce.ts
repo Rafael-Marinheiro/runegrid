@@ -68,6 +68,7 @@ import {
   notes,
   setTurn,
   spendAction,
+  spendCost,
 } from './helpers';
 import {
   addLog,
@@ -268,10 +269,10 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       return attack(state, cmd, ctx);
     case 'dash': {
       const { actor, turn } = actorTurn(state, cmd.actorId);
-      spendAction(turn);
+      const paid = spendCost(actor, turn, 'dash', cmd.bonus);
       return addLog(
-        setTurn(state, { ...turn, action: false, dashed: true }),
-        `${actor.name} correu (Disparada).`,
+        setTurn(state, { ...turn, [paid]: false, dashed: true }),
+        `${actor.name} correu (Disparada${paid === 'bonus' ? ', ação bônus' : ''}).`,
         [actor.id],
       );
     }
@@ -287,10 +288,10 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
     }
     case 'disengage': {
       const { actor, turn } = actorTurn(state, cmd.actorId);
-      spendAction(turn);
+      const paid = spendCost(actor, turn, 'disengage', cmd.bonus);
       return addLog(
-        setTurn(state, { ...turn, action: false, disengaged: true }),
-        `${actor.name} se desengajou.`,
+        setTurn(state, { ...turn, [paid]: false, disengaged: true }),
+        `${actor.name} se desengajou${paid === 'bonus' ? ' (ação bônus)' : ''}.`,
         [actor.id],
       );
     }
@@ -314,12 +315,12 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
         );
       });
       if (seen) throw new RuleError('Saia da vista dos inimigos para se esconder.');
-      spendAction(turn);
+      const paid = spendCost(actor, turn, 'hide', cmd.bonus);
       const bonus = skillBonus(actor, 'stealth');
       const check = rollD20(bonus, 'normal', ctx.rng);
       const dc = Math.max(0, ...observers.map(({ creature }) => passivePerception(creature)));
       let next = addLog(
-        setTurn(state, { ...turn, action: false }),
+        setTurn(state, { ...turn, [paid]: false }),
         `${actor.name} tentou se esconder: d20 ${check.natural} ${fmt(bonus)} = ${check.roll.total}.`,
         [actor.id],
       );

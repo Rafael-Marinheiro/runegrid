@@ -1,6 +1,7 @@
 import { Ability, Creature, Skill, SKILLS } from '../../models/creature';
 import { newCreature } from '../../models/creature-factory';
 import { SrdMonster } from '../../models/srd';
+import { FEATURE_BY_TRAIT } from '../creature/features';
 
 const ABILITY_ORDER: Ability[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 
@@ -31,6 +32,10 @@ export function monsterToCreature(
     const skill = SKILL_KEY[key.toLowerCase()];
     if (skill) skills[skill] = 'proficient';
   }
+  // 2014 traz em traços, 2024 em ações
+  const features = [
+    ...new Set([...m.traits, ...m.actions].flatMap((t) => FEATURE_BY_TRAIT[t.name] ?? [])),
+  ];
   return newCreature('monster', {
     name,
     cr: m.cr,
@@ -47,6 +52,7 @@ export function monsterToCreature(
     resistances: [...m.resistances],
     immunities: [...m.immunities],
     vulnerabilities: [...m.vulnerabilities],
+    ...(features.length ? { features } : {}),
     ...(tokenArt ? { tokenArt } : {}),
   });
 }

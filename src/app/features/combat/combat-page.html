@@ -426,6 +426,21 @@
             >
               {{ ui.text('Esconder', 'Hide') }}
             </button>
+            @for (b of bonusActions(); track b) {
+              <button
+                type="button"
+                [disabled]="!t.bonus || a.status !== 'alive'"
+                (click)="bonusAct(b)"
+              >
+                {{
+                  b === 'dash'
+                    ? ui.text('Correr (bônus)', 'Dash (bonus)')
+                    : b === 'disengage'
+                      ? ui.text('Desengajar (bônus)', 'Disengage (bonus)')
+                      : ui.text('Esconder (bônus)', 'Hide (bonus)')
+                }}
+              </button>
+            }
             <button
               type="button"
               [class.active]="mode().kind === 'help'"

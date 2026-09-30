@@ -871,3 +871,26 @@ describe('ataque de oportunidade', () => {
     expect(project(s, DM).combat.pending).toHaveLength(1);
   });
 });
+
+describe('ações bônus por característica', () => {
+  it('Ação Astuta: Desengajar/Correr como bônus gasta só o bônus e mantém a ação', () => {
+    let s = started({ hero: { features: ['cunning-action'] } });
+    s = run(s, { type: 'disengage', actorId: 'hero', bonus: true });
+    expect(s.combat.turn).toMatchObject({ bonus: false, action: true, disengaged: true });
+    expect(() => run(s, { type: 'dash', actorId: 'hero', bonus: true })).toThrow(RuleError); // bônus gasto
+    s = run(s, { type: 'dash', actorId: 'hero' }); // a ação segue livre
+    expect(s.combat.turn).toMatchObject({ action: false, dashed: true });
+  });
+
+  it('sem a característica, ou fora da lista dela, não vale como bônus', () => {
+    expect(() => run(started(), { type: 'disengage', actorId: 'hero', bonus: true })).toThrow(
+      RuleError,
+    );
+    // Fuga Ágil (goblin) não inclui Correr
+    const s = started({ hero: { features: ['nimble-escape'] } });
+    expect(() => run(s, { type: 'dash', actorId: 'hero', bonus: true })).toThrow(RuleError);
+    expect(run(s, { type: 'disengage', actorId: 'hero', bonus: true }).combat.turn?.bonus).toBe(
+      false,
+    );
+  });
+});

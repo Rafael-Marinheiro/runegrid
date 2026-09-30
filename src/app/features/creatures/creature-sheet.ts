@@ -4,6 +4,7 @@ import {
   ABILITIES,
   ABILITY_LABEL,
   Creature,
+  FeatureId,
   CreatureKind,
   DAMAGE_LABEL,
   DAMAGE_TYPES,
@@ -29,6 +30,7 @@ import { ICON_IDS, ICON_LABEL } from '@features/combat/token-icons';
 import { DiceStore } from '@state/dice.store';
 import { PartyStore } from '@state/party.store';
 import { UiPrefs } from '@state/ui-prefs';
+import { FEATURE_IDS, FEATURES } from '@core/rules/creature/features';
 import { HpPanel } from './hp-panel';
 import { InventoryPanel } from './inventory-panel';
 import { SlotsPanel } from './slots-panel';
@@ -111,6 +113,18 @@ export class CreatureSheet {
 
   /** Último teste rolado (aria-live). */
   protected readonly check = signal('');
+
+  protected readonly featureIds = FEATURE_IDS;
+  protected readonly featureInfo = FEATURES;
+
+  protected hasFeature(id: FeatureId): boolean {
+    return !!this.creature().features?.includes(id);
+  }
+
+  protected toggleFeature(id: FeatureId, on: boolean): void {
+    const rest = (this.creature().features ?? []).filter((f) => f !== id);
+    this.patch({ features: on ? [...rest, id] : rest });
+  }
 
   protected patch(changes: Partial<Creature>): void {
     this.store.patch(this.creature().id, changes);

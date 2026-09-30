@@ -141,6 +141,8 @@ export interface Attack {
   range: number;
 }
 
+export type FeatureId = 'cunning-action' | 'nimble-escape';
+
 export interface Creature {
   id: string;
   name: string;
@@ -172,6 +174,8 @@ export interface Creature {
   immunities: DamageType[];
   vulnerabilities: DamageType[];
   conditions: ActiveCondition[];
+  /** Características com efeito mecânico no motor (ver `rules/creature/features`). */
+  features?: FeatureId[];
   /** Ícone do token (ver `token-icons`); se ausente, deduzido do nome. */
   icon?: string;
   /** Retrato próprio do token, compactado como data URL local. */

@@ -87,10 +87,10 @@ export type Command =
     }
   | { type: 'openDoor'; actorId: string; pos: Pos }
   | { type: 'standUp'; actorId: string }
-  | { type: 'dash'; actorId: string }
+  | { type: 'dash'; actorId: string; bonus?: boolean }
   | { type: 'dodge'; actorId: string }
-  | { type: 'disengage'; actorId: string }
-  | { type: 'hide'; actorId: string }
+  | { type: 'disengage'; actorId: string; bonus?: boolean }
+  | { type: 'hide'; actorId: string; bonus?: boolean }
   /** Ajudar: o próximo ataque de um aliado contra o inimigo adjacente tem vantagem. */
   | { type: 'help'; actorId: string; targetId: string }
   /** Usa um consumível do próprio inventário (gasta a ação). */

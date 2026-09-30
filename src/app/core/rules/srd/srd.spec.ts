@@ -102,3 +102,12 @@ describe('dificuldade de encontro (DMG)', () => {
     expect(large.adjustedXp).toBe(900);
   });
 });
+
+describe('características no SRD', () => {
+  it('Fuga Ágil vira característica, tanto em traços (2014) quanto em ações (2024)', () => {
+    const t = { name: 'Nimble Escape', desc: '' };
+    expect(monsterToCreature({ ...goblin, traits: [t] }).features).toEqual(['nimble-escape']);
+    expect(monsterToCreature({ ...goblin, actions: [t] }).features).toEqual(['nimble-escape']);
+    expect(monsterToCreature(goblin).features).toBeUndefined();
+  });
+});

@@ -1,6 +1,6 @@
 import { Creature, DAMAGE_LABEL, DamageType } from '../../models/creature';
 import { EncounterState, Role, TurnState } from '../../models/encounter';
-import { canAct, checkConcentration, RuleError } from '../creature';
+import { BonusAction, bonusActionsOf, canAct, checkConcentration, RuleError } from '../creature';
 import { AdvMode, Rng } from '../dice';
 import { addLog, creatureOf, teamOf, withCreature } from './state';
 import { xpForCr } from '../srd/xp';
@@ -84,6 +84,26 @@ export const setTurn = (state: EncounterState, turn: TurnState): EncounterState 
   ...state,
   combat: { ...state.combat, turn },
 });
+
+/**
+ * Gasta a ação — ou, com `bonus`, a ação bônus que uma característica concede (Ação Astuta,
+ * Fuga Ágil). Devolve qual campo do turno foi gasto.
+ */
+export function spendCost(
+  actor: Creature,
+  turn: TurnState,
+  what: BonusAction,
+  bonus = false,
+): 'action' | 'bonus' {
+  if (!bonus) {
+    spendAction(turn);
+    return 'action';
+  }
+  if (!bonusActionsOf(actor).includes(what))
+    throw new RuleError(`${actor.name} não pode fazer isso como ação bônus.`);
+  if (!turn.bonus) throw new RuleError('Sem ação bônus disponível neste turno.');
+  return 'bonus';
+}
 
 export function spendAction(turn: TurnState): void {
   if (!turn.action) throw new RuleError('Sem ação disponível neste turno.');

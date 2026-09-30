@@ -31,6 +31,7 @@ import { RoomService } from '@net/room.service';
 import { PartyStore } from '@state/party.store';
 import { UiPrefs } from '@state/ui-prefs';
 import { AreaPreview, MapView, TokenView } from './map-view';
+import { BonusAction, bonusActionsOf } from '@core/rules/creature/features';
 import { MiniatureQuery, queryFromCreature } from '@core/rules/srd/miniature';
 import { MiniaturePicker } from '@features/creatures/miniature-picker';
 import { iconFor, tokenImageFor } from './token-icons';
@@ -537,6 +538,16 @@ export class CombatPage {
 
   protected toggleHelp(): void {
     this.mode.update((m) => (m.kind === 'help' ? { kind: 'move' } : { kind: 'help' }));
+  }
+
+  /** Ações que o personagem ativo pode fazer como ação bônus (Ação Astuta, Fuga Ágil). */
+  protected readonly bonusActions = computed(() => bonusActionsOf(this.active() ?? {}));
+
+  protected bonusAct(type: BonusAction): void {
+    const a = this.active();
+    if (!a) return;
+    this.store.send({ type, actorId: a.id, bonus: true });
+    this.resetMode();
   }
 
   protected act(

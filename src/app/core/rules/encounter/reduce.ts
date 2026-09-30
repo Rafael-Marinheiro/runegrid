@@ -47,6 +47,7 @@ import {
   upsertTrap,
 } from './mapedit';
 import { isTokenArt } from '../srd/miniature';
+import { attachFx, attackFx } from './fx';
 import { Command, PLAYER_COMMANDS } from './commands';
 import {
   addFloor,
@@ -722,7 +723,18 @@ function reaction(
   return strike(announced, reactor, target, p.attackIndex, p.reach, [], rng);
 }
 
+/** Resolve o ataque e pendura o efeito visual (talho ou flecha) na primeira linha nova do registro. */
 function attack(
+  state: EncounterState,
+  cmd: Extract<Command, { type: 'attack' }>,
+  ctx: Context,
+): EncounterState {
+  const next = resolveAttack(state, cmd, ctx);
+  const w = creatureOf(state, cmd.actorId).attacks[cmd.attackIndex];
+  return attachFx(state, next, attackFx(state, cmd.actorId, cmd.targetId, w.range, w.type));
+}
+
+function resolveAttack(
   state: EncounterState,
   cmd: Extract<Command, { type: 'attack' }>,
   ctx: Context,

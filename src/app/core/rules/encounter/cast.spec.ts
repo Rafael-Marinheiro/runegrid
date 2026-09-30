@@ -290,3 +290,38 @@ describe('restrições da conjuração', () => {
     expect(() => run(s, cast({ spellId: 'fire-bolt', targetId: 'a' }))).toThrow(/não pode agir/);
   });
 });
+
+describe('efeitos visuais', () => {
+  const fxOf = (s: EncounterState) => s.log.flatMap((e) => e.fx ?? []);
+
+  it('Mísseis Mágicos: um projétil violeta por dardo, conforme o espaço', () => {
+    const at = (slotLevel: number) =>
+      fxOf(run(scene(), cast({ spellId: 'magic-missile', slotLevel, targetId: 'a' })));
+    expect(at(1)).toEqual([expect.objectContaining({ kind: 'bolts', count: 3, color: 'violet' })]);
+    expect(at(3)).toEqual([expect.objectContaining({ kind: 'bolts', count: 5 })]);
+  });
+
+  it('cura faz o alvo brilhar; área vira explosão do tamanho da esfera', () => {
+    const heal = fxOf(run(scene(), cast({ spellId: 'cure-wounds', targetId: 'ally' })));
+    expect(heal).toEqual([{ kind: 'glow', at: { x: 1.5, y: 0.5 }, color: 'life' }]);
+    const ball = fxOf(
+      run(scene(), cast({ spellId: 'fireball', slotLevel: 3, point: { x: 6, y: 0 } })),
+    );
+    expect(ball).toEqual([{ kind: 'burst', at: { x: 6.5, y: 0.5 }, radius: 4, color: 'fire' }]);
+  });
+
+  it('ataque de arma: talho na cor do dano; à distância, flecha', () => {
+    const atk = (range: number, type: 'piercing' | 'fire') => ({
+      name: 'Arma',
+      bonus: 5,
+      damage: '1d6',
+      type,
+      range,
+    });
+    const s = scene({ mage: { attacks: [atk(80, 'piercing'), atk(5, 'fire')] } });
+    const ranged = run(s, { type: 'attack', actorId: 'mage', targetId: 'a', attackIndex: 0 });
+    expect(fxOf(ranged)).toEqual([expect.objectContaining({ kind: 'arrow', color: 'steel' })]);
+    const melee = run(s, { type: 'attack', actorId: 'mage', targetId: 'ally', attackIndex: 1 });
+    expect(fxOf(melee)).toEqual([expect.objectContaining({ kind: 'slash', color: 'fire' })]);
+  });
+});

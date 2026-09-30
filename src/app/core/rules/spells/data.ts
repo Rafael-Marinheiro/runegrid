@@ -15,6 +15,7 @@ export const SPELLS: Spell[] = [
     target: { kind: 'creature' },
     resolution: { kind: 'attack' },
     damage: { dice: '1d10', type: 'fire', cantrip: true },
+    vfx: { kind: 'bolts', color: 'fire' },
     description: 'Ataque de magia à distância. 1d10 de fogo; escala nos níveis 5, 11 e 17.',
   },
   {
@@ -27,6 +28,7 @@ export const SPELLS: Spell[] = [
     target: { kind: 'creature' },
     resolution: { kind: 'attack' },
     damage: { dice: '1d8', type: 'cold', cantrip: true },
+    vfx: { kind: 'ray', color: 'frost' },
     description: 'Ataque de magia à distância. 1d8 de gelo.',
   },
   {
@@ -39,6 +41,7 @@ export const SPELLS: Spell[] = [
     target: { kind: 'creature' },
     resolution: { kind: 'attack' },
     damage: { dice: '1d8', type: 'lightning', cantrip: true },
+    vfx: { kind: 'ray', color: 'lightning' },
     description: 'Ataque de magia corpo a corpo. 1d8 elétrico.',
   },
   {
@@ -51,6 +54,7 @@ export const SPELLS: Spell[] = [
     target: { kind: 'creature' },
     resolution: { kind: 'save', ability: 'dex', onSave: 'none' },
     damage: { dice: '1d8', type: 'radiant', cantrip: true },
+    vfx: { kind: 'glow', color: 'holy' },
     description: 'Salvaguarda de Destreza; 1d8 radiante se falhar.',
   },
   {
@@ -63,6 +67,7 @@ export const SPELLS: Spell[] = [
     target: { kind: 'creature' },
     resolution: { kind: 'save', ability: 'wis', onSave: 'none' },
     damage: { dice: '1d4', type: 'psychic', cantrip: true },
+    vfx: { kind: 'glow', color: 'psychic' },
     description: 'Salvaguarda de Sabedoria; 1d4 psíquico se falhar.',
   },
   {
@@ -75,6 +80,7 @@ export const SPELLS: Spell[] = [
     target: { kind: 'creature' },
     resolution: { kind: 'auto' },
     damage: { dice: '1d4+1', type: 'force', instances: { base: 3, perLevel: 1 } },
+    vfx: { kind: 'bolts', color: 'violet' },
     description:
       'Três dardos que sempre acertam (1d4+1 de energia cada); +1 dardo por nível acima do 1º.',
   },
@@ -88,6 +94,7 @@ export const SPELLS: Spell[] = [
     target: { kind: 'cone', length: 15 },
     resolution: { kind: 'save', ability: 'dex', onSave: 'half' },
     damage: { dice: '3d6', type: 'fire', perLevel: '1d6' },
+    vfx: { kind: 'cone', color: 'fire' },
     description: 'Cone de 15 ft. Salvaguarda de Destreza; 3d6 de fogo (metade se passar).',
   },
   {
@@ -100,6 +107,7 @@ export const SPELLS: Spell[] = [
     target: { kind: 'creature' },
     resolution: { kind: 'auto' },
     heal: { dice: '1d8', perLevel: '1d8', addModifier: true },
+    vfx: { kind: 'glow', color: 'life' },
     description: 'Toque. Cura 1d8 + modificador de conjuração; +1d8 por nível acima do 1º.',
   },
   {
@@ -112,6 +120,7 @@ export const SPELLS: Spell[] = [
     target: { kind: 'creature' },
     resolution: { kind: 'auto' },
     heal: { dice: '1d4', perLevel: '1d4', addModifier: true },
+    vfx: { kind: 'glow', color: 'life' },
     description: 'Ação bônus. Cura 1d4 + modificador de conjuração; +1d4 por nível acima do 1º.',
   },
   {
@@ -124,6 +133,7 @@ export const SPELLS: Spell[] = [
     target: { kind: 'creature' },
     resolution: { kind: 'attack' },
     damage: { dice: '4d6', type: 'radiant', perLevel: '1d6' },
+    vfx: { kind: 'bolts', color: 'holy', impact: 'holy' },
     description: 'Ataque de magia à distância; 4d6 radiante.',
   },
   {
@@ -136,6 +146,7 @@ export const SPELLS: Spell[] = [
     target: { kind: 'creature' },
     resolution: { kind: 'attack' },
     damage: { dice: '3d10', type: 'necrotic', perLevel: '1d10' },
+    vfx: { kind: 'ray', color: 'shadow' },
     description: 'Ataque de magia corpo a corpo; 3d10 necrótico.',
   },
   {
@@ -149,6 +160,7 @@ export const SPELLS: Spell[] = [
     resolution: { kind: 'save', ability: 'wis', onSave: 'none' },
     condition: { name: 'paralyzed', rounds: 10 },
     concentration: true,
+    vfx: { kind: 'glow', color: 'arcane' },
     description:
       'Salvaguarda de Sabedoria; se falhar, fica paralisado (concentração, até 1 minuto).',
   },
@@ -162,6 +174,7 @@ export const SPELLS: Spell[] = [
     target: { kind: 'sphere', radius: 10 },
     resolution: { kind: 'save', ability: 'con', onSave: 'half' },
     damage: { dice: '3d8', type: 'thunder', perLevel: '1d8' },
+    vfx: { kind: 'burst', color: 'thunder' },
     description: 'Esfera de 10 ft. Salvaguarda de Constituição; 3d8 trovejante (metade se passar).',
   },
   {
@@ -174,6 +187,7 @@ export const SPELLS: Spell[] = [
     target: { kind: 'sphere', radius: 20 },
     resolution: { kind: 'save', ability: 'dex', onSave: 'half' },
     damage: { dice: '8d6', type: 'fire', perLevel: '1d6' },
+    vfx: { kind: 'burst', color: 'fire' },
     description: 'Esfera de 20 ft. Salvaguarda de Destreza; 8d6 de fogo (metade se passar).',
   },
 ];

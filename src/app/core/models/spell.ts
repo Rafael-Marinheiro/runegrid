@@ -1,4 +1,5 @@
 import { Ability, ConditionName, DamageType } from './creature';
+import { SpellVfx } from './fx';
 
 export type CastTime = 'action' | 'bonus' | 'reaction';
 
@@ -40,5 +41,7 @@ export interface Spell {
   /** Aplicada em quem falha na salvaguarda (ou em quem é atingido, se for ataque). */
   condition?: { name: ConditionName; rounds: number };
   concentration?: boolean;
+  /** Efeito visual no mapa, escrito a partir da descrição desta magia. */
+  vfx?: SpellVfx;
   description: string;
 }

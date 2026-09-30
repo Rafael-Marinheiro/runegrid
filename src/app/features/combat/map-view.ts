@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import { GridMap, MapObject, MapObjectTexture, Pos, Room, Trap } from '@core/models/grid';
 import { UiPrefs } from '@state/ui-prefs';
+import { FxLayer, FxView } from './fx-layer';
 import { MAP_OBJECT_ART, MAP_OBJECT_TEXTURE_LABEL } from './map-object-art';
 import { ICON_PATH, IconId } from './token-icons';
 
@@ -77,6 +78,7 @@ const MAX_ZOOM = 3;
 
 @Component({
   selector: 'app-map-view',
+  imports: [FxLayer],
   templateUrl: './map-view.html',
   styleUrl: './map-view.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -123,7 +125,11 @@ export class MapView {
   readonly strokeMove = output<Pos>();
   readonly strokeEnd = output<void>();
 
+  /** Efeitos visuais de ações recentes (magias, golpes); só enfeite, nunca altera regra. */
+  readonly effects = input<FxView[]>([]);
+
   protected readonly C = CELL;
+
   protected readonly iconPath = ICON_PATH;
   protected readonly objectArt = MAP_OBJECT_ART;
   protected readonly texture = computed(() =>

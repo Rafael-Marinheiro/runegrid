@@ -30,6 +30,7 @@ import { getItem } from '@core/rules/inventory/catalog';
 import { RoomService } from '@net/room.service';
 import { PartyStore } from '@state/party.store';
 import { UiPrefs } from '@state/ui-prefs';
+import { FxView } from './fx-layer';
 import { AreaPreview, MapView, TokenView } from './map-view';
 import { BonusAction, bonusActionsOf } from '@core/rules/creature/features';
 import { MiniatureQuery, queryFromCreature } from '@core/rules/srd/miniature';
@@ -125,6 +126,33 @@ export class CombatPage {
 
   /** O que este papel enxerga do encontro. */
   protected readonly s = this.store.view;
+
+  /** Efeitos visuais em cartaz: as entradas novas do registro que trazem `fx`. */
+  protected readonly effects = signal<FxView[]>([]);
+  private readonly destroyRef = inject(DestroyRef);
+  private fxSeen: number | null = null;
+  private readonly fxWatch = effect(() => {
+    const log = this.s().log;
+    const top = log.length ? log[log.length - 1].id : -1;
+    untracked(() => {
+      if (this.fxSeen === null || top < this.fxSeen) {
+        this.fxSeen = top; // primeira leitura ou encontro trocado: não reexibe o histórico
+        return;
+      }
+      const seen = this.fxSeen;
+      this.fxSeen = top;
+      const fresh = log.filter((e) => e.id > seen && e.fx?.length);
+      if (!fresh.length) return;
+      const views = fresh.flatMap((e) => e.fx!.map((fx, i) => ({ key: `${e.id}-${i}`, fx })));
+      this.effects.update((l) => [...l, ...views]);
+      const keys = new Set(views.map((v) => v.key));
+      const timer = setTimeout(
+        () => this.effects.update((l) => l.filter((v) => !keys.has(v.key))),
+        2400,
+      );
+      this.destroyRef.onDestroy(() => clearTimeout(timer));
+    });
+  });
   protected readonly combat = computed(() => this.s().combat);
   protected readonly isRemote = computed(() => !!this.store.remote());
   protected readonly isDm = computed(() => this.store.role().kind === 'dm');

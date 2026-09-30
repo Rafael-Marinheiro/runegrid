@@ -1,3 +1,4 @@
+import { Fx } from './fx';
 import { Creature } from './creature';
 import { DiagonalRule, GridMap, Pos } from './grid';
 
@@ -77,6 +78,8 @@ export interface LogEntry {
   secret?: boolean;
   /** Dados rolados pelo comando que gerou esta entrada. */
   dice?: RolledDie[];
+  /** Efeitos visuais da ação (ver `models/fx`). */
+  fx?: Fx[];
 }
 
 export interface EncounterState {

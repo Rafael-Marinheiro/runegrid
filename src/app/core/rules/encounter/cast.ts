@@ -22,6 +22,7 @@ import { getSpell } from '../spells/data';
 import { damageExpression, healExpression } from '../spells/scaling';
 import { Command } from './commands';
 import { consumeHelp, coverBonus } from './cover';
+import { attachFx, spellFx } from './fx';
 import {
   actorTurn,
   aftermath,
@@ -131,7 +132,20 @@ export function cast(
     bonus: usesAction ? turn.bonus : false,
   });
   const upcast = slotLevel > spell.level ? ` (${LEVEL(slotLevel)})` : '';
+  const before = s;
   s = addLog(s, `${caster.name} conjura ${spell.name}${upcast}.`, [caster.id]);
+  s = attachFx(
+    before,
+    s,
+    spellFx(
+      s,
+      spell,
+      slotLevel,
+      caster.id,
+      targets.map((t) => t.id),
+      cmd.point,
+    ),
+  );
 
   const level = caster.kind === 'monster' ? Math.max(1, Math.ceil(caster.cr ?? 1)) : caster.level;
   const ability = caster.spellcasting!.ability;

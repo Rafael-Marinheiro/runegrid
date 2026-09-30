@@ -62,6 +62,9 @@ const MODS = new Set([
   'halfWeaponDamage',
   'maxHp',
   'images',
+  'imagesD6',
+  'damageDie',
+  'onHit',
   'repeatSave',
   'once',
   'endsOnAttack',
@@ -76,7 +79,7 @@ const sets: { name: '2014' | '2024'; srd: SrdSpell[]; rules: SpellRules }[] = [
 ];
 
 /** Nível máximo já conferido pela cobertura; sobe a cada lote até o 9 (ver PLANO.md, F12). */
-const DONE_LEVEL = { '2014': 3, '2024': -1 };
+const DONE_LEVEL = { '2014': 3, '2024': 3 };
 
 const dice = (d: string) => expect(() => parseDice(d), d).not.toThrow();
 
@@ -128,6 +131,7 @@ function checkSpell(s: Spell) {
       s.stabilize ||
       s.push ||
       s.react ||
+      s.splash ||
       s.cure ||
       s.dispel ||
       s.revive ||

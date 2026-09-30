@@ -10,7 +10,7 @@ export type SpellRules = Record<string, SpellRuleEntry>;
 /** "1 action", "1 bonus action", "1 reaction, which you take…", "action" (2024), "1 minute"… */
 export function parseCastTime(text: string): { castTime: CastTime; trigger?: string } {
   const t = text.trim().toLowerCase();
-  if (/^(1 )?bonus action/.test(t)) return { castTime: 'bonus' };
+  if (/^(1 )?bonus[ -]action/.test(t)) return { castTime: 'bonus' };
   if (/^(1 )?reaction/.test(t)) {
     const trigger = /,\s*(.+)$/.exec(text.trim())?.[1];
     return { castTime: 'reaction', ...(trigger ? { trigger } : {}) };

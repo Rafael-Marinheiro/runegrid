@@ -58,8 +58,25 @@ export interface EffectMods {
   repeatSave?: { ability: Ability; dc: number };
   /** Some ao ser usado uma vez (Orientação, Resistência, Verdadeiro Golpe). */
   once?: boolean;
+  /** Ao acertar com arma (junto com `weaponDamage` + `once`): consequências no alvo (Golpe Aprisionador, Golpe Ardente). */
+  onHit?: {
+    /** Salvaguarda do alvo contra a CD da magia; passar evita `condition` e `mods`. */
+    save?: Ability;
+    /** CD fixada ao conjurar. */
+    dc?: number;
+    condition?: { name: ConditionName; rounds: number };
+    /** Efeito aplicado ao alvo que falha (dano no início do turno, salvaguarda repetida). */
+    mods?: EffectMods;
+    rounds?: number;
+    /** Se o alvo passar na salvaguarda, a magia acaba (perde a concentração). */
+    endsOnSave?: boolean;
+  };
   /** Imagens ilusórias restantes (Imagem Espelhada): ataques podem mirar uma delas. */
   images?: number;
+  /** Imagem Espelhada 2024: ao ser acertado, um d6 por imagem; 3+ desvia o golpe para uma imagem. */
+  imagesD6?: boolean;
+  /** Dado somado (ou subtraído, com `-`) a cada dano de quem carrega (Raio do Enfraquecimento, 2024). */
+  damageDie?: string;
   /** Termina quando quem carrega ataca ou conjura (Invisibilidade, Santuário). */
   endsOnAttack?: boolean;
   /** Sem efeito no motor: só lembrete para o Mestre (testes de atributo, sentidos…). */

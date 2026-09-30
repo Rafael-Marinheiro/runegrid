@@ -35,7 +35,14 @@ import { consume, itemDef } from '../inventory/inventory';
 import { cast } from './cast';
 import { freeReaction, spellReaction } from './reaction-flow';
 import { holdOrApply } from './hits';
-import { attackExtra, consumeAttacked, consumeWeaponRiders, decoy, dropOnAttack } from './rolls';
+import {
+  attackExtra,
+  consumeAttacked,
+  consumeWeaponRiders,
+  damageDieTotal,
+  decoy,
+  dropOnAttack,
+} from './rolls';
 import { beginUpkeep, endUpkeep, enterZones, syncConcentration, tickZones } from './upkeep';
 import { consumeHelp, coverBonus } from './cover';
 import {
@@ -849,7 +856,7 @@ function strike(
   const total = d20.roll.total + extraRoll.bonus;
   const hit = d20.crit || (!d20.fumble && total >= ac);
   const crit = hit && (d20.crit || cond.autoCrit);
-  const decoyed = decoy(state, target.id, total, rng);
+  const decoyed = decoy(state, target.id, total, rng, hit);
   if (decoyed) return dropOnAttack(decoyed, actor.id);
   const head =
     `${actor.name} atacou ${target.name} com ${weapon.name}: d20 ${d20.natural} ${fmt(weapon.bonus + magic)}${extraRoll.text} = ${total} vs CA ${ac}${cover ? ` (cobertura +${cover})` : ''}` +
@@ -858,7 +865,8 @@ function strike(
 
   const expr = parseDice(weapon.damage);
   const dmg = roll(crit ? criticalExpr(expr) : expr, rng);
-  let amount = Math.max(0, dmg.total + magic);
+  const minus = damageDieTotal(actor, rng);
+  let amount = Math.max(0, dmg.total + magic + minus.total);
   if (weapon.range <= 5 && effectsOf(actor).some((e) => e.mods.halfWeaponDamage))
     amount = Math.floor(amount / 2);
   const parts = [{ amount, type: weapon.type as string }];
@@ -870,10 +878,23 @@ function strike(
       type: rider.type === 'weapon' ? weapon.type : rider.type,
     });
   }
+  const onHit = effectsOf(actor).flatMap((e) =>
+    e.mods.once && e.mods.onHit
+      ? [
+          {
+            spell: e.name,
+            by: e.by,
+            ...(e.concentration ? { concentration: true } : {}),
+            spec: e.mods.onHit,
+          },
+        ]
+      : [],
+  );
   return holdOrApply(
     consumeWeaponRiders(state, actor.id),
     {
       attackerId: actor.id,
+      ...(onHit.length ? { onHit } : {}),
       targetId: target.id,
       head,
       total,

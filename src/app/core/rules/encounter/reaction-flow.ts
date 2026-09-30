@@ -1,7 +1,16 @@
 import { Creature } from '../../models/creature';
 import { EncounterState, PendingReaction } from '../../models/encounter';
 import { Spell } from '../../models/spell';
-import { abilityMod, canAct, effectiveAc, RuleError, spendSlot } from '../creature';
+import {
+  abilityMod,
+  canAct,
+  effectiveAc,
+  proficiencyBonus,
+  restoreSlot,
+  RuleError,
+  saveBonus,
+  spendSlot,
+} from '../creature';
 import { rollD20 } from '../dice';
 import { distanceFt } from '../grid/movement';
 import { getSpell } from '../spells/data';
@@ -109,7 +118,16 @@ export function spellReaction(
   const theirLevel = info.slotLevel;
   let countered = slot >= theirLevel;
   let text = '';
-  if (!countered) {
+  if (spell.react?.on === 'cast' && spell.react.save) {
+    // 2024: o conjurador faz salvaguarda de Constituição; se falhar, a magia se dissipa e o espaço não é gasto
+    const victim = creatureOf(s, info.casterId);
+    const dc =
+      8 + proficiencyBonus(who) + abilityMod(who.abilities[who.spellcasting?.ability ?? 'int']);
+    const r = rollD20(saveBonus(victim, 'con'), 'normal', ctx.rng);
+    countered = r.roll.total < dc;
+    text = ` (Constituição de ${victim.name}: d20 ${r.natural} = ${r.roll.total} vs CD ${dc})`;
+    if (countered && theirLevel > 0) s = withCreature(s, restoreSlot(victim, theirLevel));
+  } else if (!countered) {
     const mod = abilityMod(who.abilities[who.spellcasting?.ability ?? 'int']);
     const r = rollD20(mod, 'normal', ctx.rng);
     countered = r.roll.total >= 10 + theirLevel;

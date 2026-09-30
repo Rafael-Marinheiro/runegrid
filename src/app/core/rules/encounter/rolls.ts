@@ -107,40 +107,51 @@ export function decoy(
   targetId: string,
   attackTotal: number,
   rng: Rng,
+  hit = true,
 ): EncounterState | null {
   const t = creatureOf(state, targetId);
   const eff = effectsOf(t).find((e) => (e.mods.images ?? 0) > 0);
   if (!eff) return null;
   const n = eff.mods.images!;
-  const r = roll('1d20', rng).total;
-  if (r < (n >= 3 ? 6 : n === 2 ? 8 : 11)) return null;
-  const ac = 10 + Math.floor((t.abilities.dex - 10) / 2);
-  let s = state;
-  if (attackTotal >= ac) {
-    const left = n - 1;
-    const next = left > 0 ? { ...eff, mods: { ...eff.mods, images: left } } : null;
-    const others = effectsOf(t).filter((e) => e !== eff);
-    s = withCreature(s, {
-      ...t,
-      effects: [...others, ...(next ? [next] : [])].length
-        ? [...others, ...(next ? [next] : [])]
-        : undefined,
-    });
-    return addLog(
-      s,
-      `O ataque acerta uma imagem de ${t.name} (d20 ${r}): ela se desfaz (restam ${left}).`,
-      [t.id],
-    );
+  let text: string;
+  if (eff.mods.imagesD6) {
+    // 2024: só se o golpe acertou; um d6 por imagem, 3 ou mais desvia o golpe para uma delas
+    if (!hit) return null;
+    const dice = Array.from({ length: n }, () => roll('1d6', rng).total);
+    text = ` (d6: ${dice.join(', ')})`;
+    if (!dice.some((d) => d >= 3)) return null;
+  } else {
+    const r = roll('1d20', rng).total;
+    text = ` (d20 ${r})`;
+    if (r < (n >= 3 ? 6 : n === 2 ? 8 : 11)) return null;
+    const ac = 10 + Math.floor((t.abilities.dex - 10) / 2);
+    if (attackTotal < ac)
+      return addLog(state, `O ataque erra: mirou uma imagem de ${t.name}${text}.`, [t.id]);
   }
-  return addLog(s, `O ataque erra: mirou uma imagem de ${t.name} (d20 ${r}).`, [t.id]);
+  const left = n - 1;
+  const others = effectsOf(t).filter((e) => e !== eff);
+  const next = left > 0 ? [...others, { ...eff, mods: { ...eff.mods, images: left } }] : others;
+  return addLog(
+    withCreature(state, { ...t, effects: next.length ? next : undefined }),
+    `O ataque atinge uma imagem de ${t.name}${text}: ela se desfaz (restam ${left}).`,
+    [t.id],
+  );
+}
+
+/** Dados somados ou subtraídos a cada dano de quem carrega o efeito (Raio do Enfraquecimento, 2024). */
+export function damageDieTotal(c: Creature, rng: Rng): { total: number; text: string } {
+  const parts = effectsOf(c).flatMap((e) =>
+    e.mods.damageDie ? [rollSigned(e.mods.damageDie, rng)] : [],
+  );
+  return { total: parts.reduce((a, b) => a + b, 0), text: parts.map(signed).join('') };
 }
 
 /** O dano extra de uso único (Golpe Marcante) foi gasto no acerto; a magia acaba. */
 export function consumeWeaponRiders(state: EncounterState, actorId: string): EncounterState {
   const c = creatureOf(state, actorId);
-  const gone = effectsOf(c).filter((e) => e.mods.once && e.mods.weaponDamage);
+  const gone = effectsOf(c).filter((e) => e.mods.once && (e.mods.weaponDamage || e.mods.onHit));
   if (!gone.length) return state;
-  const names = gone.map((e) => e.name);
+  const names = gone.filter((e) => !e.mods.onHit).map((e) => e.name);
   const left = removeEffects(c, (e) => gone.includes(e));
   return withCreature(state, {
     ...left,

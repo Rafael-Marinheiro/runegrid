@@ -14,13 +14,15 @@ export function registerSpells(ruleset: SpellRuleset, spells: Spell[]): void {
   tables[ruleset] = new Map(spells.map((s) => [s.id, s]));
 }
 
-/** Magia pelo id; o 2024 cai no 2014 (mesma mecânica) e ambos caem nas magias embutidas. */
+/** Magia pelo id; o 2024 cai no 2014 (mesma mecânica) e ambos caem nas magias embutidas e, por fim, nas só do 2024. */
 export function getSpell(id: string, ruleset: SpellRuleset = '2014'): Spell | undefined {
   const base = baseSpellId(id);
   return (
     tables[ruleset].get(base) ??
     (ruleset === '2024' ? tables['2014'].get(base) : undefined) ??
-    BUILTIN.get(base)
+    BUILTIN.get(base) ??
+    // magia que só existe no outro conjunto (ex.: Sopro do Dragão, 2024) ainda é reconhecida
+    tables['2024'].get(base)
   );
 }
 

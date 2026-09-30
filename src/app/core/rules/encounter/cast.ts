@@ -17,6 +17,7 @@ import {
   spendSlot,
 } from '../creature';
 import { AdvMode, criticalExpr, parseDice, roll, rollD20, Rng } from '../dice';
+import { inSphere } from '../grid/area';
 import { canStand, distanceFt } from '../grid/movement';
 import { getSpell } from '../spells/data';
 import {
@@ -46,7 +47,7 @@ import {
 import { applyRiders, makeEffect } from './rider';
 import { attackExtra, consumeAttacked, decoy, dropOnAttack, saveExtra } from './rolls';
 import { addLog, creatureOf, occupiedCells, sizeOf, teamOf, tokenOf, withCreature } from './state';
-import { createZone, inArea } from './zones';
+import { createZone, inArea, zoneContains } from './zones';
 
 const LEVEL = (n: number) => (n === 0 ? 'truque' : `${n}º nível`);
 
@@ -128,7 +129,10 @@ export function affectedBy(
 /** Conjura uma magia: valida, gasta ação e espaço, e resolve o efeito. */
 export function cast(state: EncounterState, cmd: CastCmd, ctx: Context): EncounterState {
   const spell = getSpell(cmd.spellId, cmd.ruleset);
-  const known = (id: string) => creatureOf(state, cmd.actorId).spellcasting?.spells.includes(id);
+  const known = (id: string) => {
+    const who = creatureOf(state, cmd.actorId);
+    return who.spellcasting?.spells.includes(id) || who.sustained?.some((x) => x.spellId === id);
+  };
   if (!spell || !known(spell.id)) {
     throw new RuleError(`${creatureOf(state, cmd.actorId).name} não conhece essa magia.`);
   }
@@ -161,7 +165,10 @@ export function cast(state: EncounterState, cmd: CastCmd, ctx: Context): Encount
   }
 
   // na repetição, vale o que a magia muda (alvo, dano) sobre a conjuração original
-  const use: Spell = withOption(sustain ? { ...spell, ...spell.sustain!.use } : spell, cmd.option);
+  const use: Spell = withOption(
+    sustain ? { ...spell, ...spell.sustain!.use } : spell,
+    cmd.option ?? kept?.option,
+  );
   // repetir só para mover a área (Esfera Flamejante, Raio de Lua, Lufada de Vento)
   const moveOnly =
     sustain && !!spell.zone && !!cmd.point && !cmd.targetId && !cmd.targetIds?.length;
@@ -177,12 +184,17 @@ export function cast(state: EncounterState, cmd: CastCmd, ctx: Context): Encount
       ]);
     caster = { ...caster, concentration: spell.name };
   }
-  if (!sustain && spell.sustain) {
+  if (!sustain && spell.sustain && !spell.grantSustain) {
     caster = {
       ...caster,
       sustained: [
         ...(caster.sustained ?? []).filter((x) => x.spellId !== spell.id),
-        { spellId: spell.id, slotLevel, ...(spell.rounds ? { rounds: spell.rounds } : {}) },
+        {
+          spellId: spell.id,
+          slotLevel,
+          ...(spell.rounds ? { rounds: spell.rounds } : {}),
+          ...(cmd.option ? { option: cmd.option } : {}),
+        },
       ],
     };
   }
@@ -217,7 +229,7 @@ export function cast(state: EncounterState, cmd: CastCmd, ctx: Context): Encount
   );
   if (spell.narrative) s = addLog(s, narrativeNote(spell), [caster.id]);
   if (spell.manual) s = addLog(s, `${spell.name}: ${spell.manual}`, [caster.id]);
-  if (moveOnly) return moveZone(s, caster, spell, cmd.point!);
+  if (moveOnly) return moveZone(s, caster, spell, cmd.point!, slotLevel, ctx, cmd.ruleset);
   // alguém pode reagir à conjuração (Contrafeitiço): a resolução espera a decisão
   if (!sustain) {
     const held = offerCast(s, caster.id, spell, slotLevel, JSON.stringify(cmd));
@@ -231,14 +243,20 @@ export function finishCast(state: EncounterState, cmd: CastCmd, ctx: Context): E
   const spell = getSpell(cmd.spellId, cmd.ruleset)!;
   const caster = creatureOf(state, cmd.actorId);
   const sustain = cmd.sustain === true;
+  const kept = caster.sustained?.find((x) => x.spellId === spell.id);
   const slotLevel = sustain
-    ? (caster.sustained?.find((x) => x.spellId === spell.id)?.slotLevel ?? spell.level)
+    ? (kept?.slotLevel ?? spell.level)
     : spell.level === 0
       ? 0
       : (cmd.slotLevel ?? spell.level);
-  const use: Spell = withOption(sustain ? { ...spell, ...spell.sustain!.use } : spell, cmd.option);
+  const use: Spell = withOption(
+    sustain ? { ...spell, ...spell.sustain!.use } : spell,
+    cmd.option ?? kept?.option,
+  );
   const { creatures: targets, dist } = affectedBy(state, use, caster, cmd, slotLevel, ctx.role);
-  const done = resolveSpell(
+  // quem usa a repetição pode não ser quem conjurou (Sopro do Dragão): a CD é de quem conjurou
+  const dcFrom = kept?.by ? state.creatures.find((c) => c.id === kept.by) : undefined;
+  let done = resolveSpell(
     state,
     caster,
     use,
@@ -248,7 +266,26 @@ export function finishCast(state: EncounterState, cmd: CastCmd, ctx: Context): E
     ctx,
     cmd,
     sustain ? 'sustain' : 'cast',
+    dcFrom,
   );
+  if (spell.grantSustain && !sustain) {
+    for (const t of targets) {
+      const cur = creatureOf(done, t.id);
+      done = withCreature(done, {
+        ...cur,
+        sustained: [
+          ...(cur.sustained ?? []).filter((x) => x.spellId !== spell.id),
+          {
+            spellId: spell.id,
+            slotLevel,
+            by: caster.id,
+            ...(spell.rounds ? { rounds: spell.rounds } : {}),
+            ...(cmd.option ? { option: cmd.option } : {}),
+          },
+        ],
+      });
+    }
+  }
   return checkOutcome(
     spell.zone && !sustain
       ? createZone(
@@ -282,11 +319,13 @@ export function resolveSpell(
   ctx: Context,
   cmd: Pick<CastCmd, 'point' | 'ruleset'>,
   mode: 'cast' | 'sustain' | 'tick' = 'cast',
+  dcFrom?: Creature,
 ): EncounterState {
   let s = state;
   const level = caster.kind === 'monster' ? Math.max(1, Math.ceil(caster.cr ?? 1)) : caster.level;
-  const ability = caster.spellcasting?.ability ?? 'int';
-  const dc = caster.spellcasting ? spellSaveDc(caster, ability) : 8;
+  const source = dcFrom ?? caster;
+  const ability = source.spellcasting?.ability ?? 'int';
+  const dc = source.spellcasting ? spellSaveDc(source, ability) : 8;
   const t = spell.target;
   const pointOrigin = (t.kind === 'sphere' || t.kind === 'cube') && !t.self;
   const origin = pointOrigin ? cmd.point : tokenOf(s, caster.id)?.pos;
@@ -308,7 +347,7 @@ export function resolveSpell(
     ) {
       if (spell.resolution.kind === 'pool')
         s = spellPool(s, caster, targets, spell, slot, ctx.rng, ability, dc, origin);
-      else if (spell.resolution.kind === 'attack')
+      else if (spell.resolution.kind === 'attack') {
         s = spellAttacks(
           s,
           caster,
@@ -322,7 +361,9 @@ export function resolveSpell(
           origin,
           cmd.ruleset,
         );
-      else if (spell.resolution.kind === 'save')
+        if (spell.splash && targets[0])
+          s = splashArea(s, caster, targets[0].id, spell, slot, level, ctx.rng, ability, dc);
+      } else if (spell.resolution.kind === 'save')
         s = spellSave(s, caster, targets, spell, slot, level, ctx.rng, ability, dc, origin);
       else s = spellAuto(s, caster, targets, spell, slot, level, ctx.rng, ability, dc, origin);
     } else if (
@@ -457,7 +498,7 @@ function spellAttack(
   const label = ray ? `${spell.name} (raio ${ray})` : spell.name;
   const head = `${label}: d20 ${d20.natural} ${fmt(bonus)}${extra.text} = ${total} vs CA ${ac}${cover ? ` (cobertura +${cover})` : ''}${mode === 'normal' ? '' : mode === 'advantage' ? ' (vantagem)' : ' (desvantagem)'}`;
   const mod = abilityMod(caster.abilities[ability]);
-  const dec = decoy(state, target.id, total, rng);
+  const dec = decoy(state, target.id, total, rng, hit);
   if (dec) return dropOnAttack(dec, caster.id);
   if (!hit) {
     const miss = addLog(state, `${head} — erro.`, [caster.id, target.id]);
@@ -675,13 +716,36 @@ function moveZone(
   caster: Creature,
   spell: Spell,
   point: Pos,
+  slot: number,
+  ctx: Context,
+  ruleset?: '2014' | '2024',
 ): EncounterState {
   const zones = (state.zones ?? []).map((z) => {
     if (z.casterId !== caster.id || z.spellId !== spell.id) return z;
     const fromCaster = z.aura || z.shape.kind === 'line' || z.shape.kind === 'cone';
     return fromCaster ? { ...z, toward: point } : { ...z, center: point };
   });
-  return addLog({ ...state, zones }, `${spell.name} se move.`, [caster.id]);
+  let s = addLog({ ...state, zones }, `${spell.name} se move.`, [caster.id]);
+  // Raio de Lua (2024): quem a área alcança ao se mover refaz a salvaguarda
+  const zone = zones.find((z) => z.casterId === caster.id && z.spellId === spell.id);
+  if (spell.zone?.onMove && zone) {
+    for (const t of s.tokens) {
+      const c = creatureOf(s, t.creatureId);
+      if (c.status === 'dead' || !zoneContains(s, zone, c.id)) continue;
+      s = resolveSpell(
+        s,
+        caster,
+        spell,
+        slot,
+        [c],
+        0,
+        ctx,
+        { point: zone.center, ruleset },
+        'tick',
+      );
+    }
+  }
+  return s;
 }
 
 /** Flecha Ácida errou: o alvo ainda leva metade do dano inicial (sem consequências adicionais). */
@@ -709,4 +773,36 @@ function splash(
   let s = withCreature(state, cur);
   s = addLog(s, `${spell.name} respinga no alvo: ${lines.join(' + ')}.`, [caster.id, targetId]);
   return checkOutcome(aftermath(s, targetId, dealt, rng));
+}
+
+/** Explosão depois do ataque (Faca de Gelo): o alvo e quem está a até `radius` ft dele fazem a salvaguarda. */
+function splashArea(
+  state: EncounterState,
+  caster: Creature,
+  centerId: string,
+  spell: Spell,
+  slot: number,
+  level: number,
+  rng: Rng,
+  ability: Ability,
+  dc: number,
+): EncounterState {
+  const sp = spell.splash!;
+  const at = tokenOf(state, centerId);
+  if (!at) return state;
+  const near = state.tokens.flatMap((t) => {
+    const c = creatureOf(state, t.creatureId);
+    return c.status !== 'dead' && inSphere(at.pos, sp.radius, t.pos, sizeOf(c)) ? [c] : [];
+  });
+  const pseudo: Spell = {
+    ...spell,
+    resolution: { kind: 'save', ability: sp.ability, onSave: sp.onSave },
+    damage: sp.damage,
+    extraDamage: undefined,
+    condition: undefined,
+    effect: undefined,
+    push: undefined,
+    splash: undefined,
+  };
+  return spellSave(state, caster, near, pseudo, slot, level, rng, ability, dc, at.pos);
 }

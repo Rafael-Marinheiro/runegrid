@@ -35,6 +35,7 @@ export function makeEffect(
     mods = { ...mods, ...s.mods };
   if (mods.weaponDamage?.onlyAgainst === '@target' && targetId)
     mods = { ...mods, weaponDamage: { ...mods.weaponDamage, onlyAgainst: targetId } };
+  if (mods.onHit?.save) mods = { ...mods, onHit: { ...mods.onHit, dc } };
   if (mods.repeatSave) mods = { ...mods, repeatSave: { ability: mods.repeatSave.ability, dc } };
   if (mods.tempPerTurnMod)
     mods = { ...mods, tempPerTurn: Math.max(0, abilityMod(caster.abilities[ability])) };

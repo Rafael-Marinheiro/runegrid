@@ -46,7 +46,9 @@ export function syncConcentration(state: EncounterState): EncounterState {
     }
     const kept = (next.sustained ?? []).filter((x) => {
       const sp = getSpell(x.spellId);
-      return !(sp?.concentration && next.concentration !== sp.name);
+      return !(
+        sp?.concentration && !(x.by ? holding(x.by, sp.name) : next.concentration === sp.name)
+      );
     });
     if (kept.length !== (next.sustained ?? []).length)
       next = { ...next, sustained: kept.length ? kept : undefined };

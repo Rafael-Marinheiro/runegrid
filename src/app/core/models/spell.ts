@@ -84,7 +84,8 @@ export interface SpellEffect {
 
 /** Repetição a cada turno (Arma Espiritual, Esfera Flamejante, Raio Místico…). */
 export interface SpellSustain {
-  cost: 'action' | 'bonus';
+  /** `free`: sem gastar ação (mover a alcateia de Conjurar Animais junto com o deslocamento). */
+  cost: 'action' | 'bonus' | 'free';
   /** Campos que mudam ao repetir (alvo, resolução, dano). */
   use?: Partial<
     Pick<Spell, 'target' | 'resolution' | 'damage' | 'extraDamage' | 'condition' | 'range' | 'vfx'>
@@ -99,6 +100,8 @@ export interface SpellZone {
   on: 'start' | 'enter' | 'both' | 'cast';
   /** Raio (pés) da área quando o alvo da magia é um ponto (Esfera Flamejante: 7,5 ft = adjacente). */
   radius?: number;
+  /** Ao mover a área (ação de repetição), quem fica dentro refaz o efeito (Raio de Lua, 2024). */
+  onMove?: boolean;
   /** Terreno difícil (lembrete desenhado no mapa). */
   difficult?: boolean;
   /** Bloqueia visão (Nuvem de Névoa, Escuridão). */
@@ -126,7 +129,7 @@ export interface Spell {
   /** Gatilho de uma reação, em texto do SRD. */
   trigger?: string;
   /** Reação que o motor sabe oferecer: ao ser atingido (`acBonus` = CA extra), ao sofrer dano, ou ao ver uma conjuração. */
-  react?: { on: 'hit'; acBonus: number } | { on: 'damaged' } | { on: 'cast' };
+  react?: { on: 'hit'; acBonus: number } | { on: 'damaged' } | { on: 'cast'; save?: boolean };
   /** Alcance em pés (5 = toque, 0 = pessoal). */
   range: number;
   target: SpellTarget;
@@ -141,6 +144,8 @@ export interface Spell {
     flatPerLevel?: number;
     addModifier?: boolean;
   };
+  /** Depois do ataque, acerte ou erre: explode no alvo e nas criaturas a até `radius` ft dele (Faca de Gelo). */
+  splash?: { radius: number; ability: Ability; onSave: 'half' | 'none'; damage: SpellDamage };
   /** Encerra as magias do alvo (Dissipar Magia): automático até o espaço usado, acima disso teste de atributo. */
   dispel?: boolean;
   /** Escolhas da conjuração (Proteção contra Energia: tipo de dano); `patch` substitui campos da magia. */
@@ -165,6 +170,8 @@ export interface Spell {
   /** Duração em rodadas, tirada do SRD (1 min = 10). */
   rounds?: number;
   sustain?: SpellSustain;
+  /** A repetição fica com o alvo, não com o conjurador (Sopro do Dragão). */
+  grantSustain?: boolean;
   /** A conjuração em si não causa o efeito: quem o causa é a repetição (`sustain`) ou a área (`zone`). */
   noInitial?: boolean;
   zone?: SpellZone;

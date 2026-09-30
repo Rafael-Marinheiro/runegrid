@@ -200,5 +200,13 @@ export interface Creature {
   /** Efeitos de magias ativos (Bênção, Escudo Arcano, Armadura Arcana…). */
   effects?: ActiveEffect[];
   /** Magias que continuam agindo a cada turno (Arma Espiritual, Esfera Flamejante) e o espaço usado. */
-  sustained?: { spellId: string; slotLevel: number; rounds?: number }[];
+  sustained?: {
+    spellId: string;
+    slotLevel: number;
+    rounds?: number;
+    /** Quem conjurou, se não for quem usa (Sopro do Dragão: o alvo sopra, a CD é do conjurador). */
+    by?: string;
+    /** Escolha feita ao conjurar (tipo de dano do sopro). */
+    option?: string;
+  }[];
 }

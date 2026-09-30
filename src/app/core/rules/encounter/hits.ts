@@ -1,7 +1,7 @@
 import { Ability, DamageType } from '../../models/creature';
 import { EncounterState, HeldHit } from '../../models/encounter';
-import { applyDamage, heal } from '../creature';
-import { Rng } from '../dice';
+import { addCondition, addEffect, applyDamage, autoFailsSave, heal, saveBonus } from '../creature';
+import { rollD20, Rng } from '../dice';
 import { getSpell } from '../spells/data';
 import { aftermath, checkOutcome, dtype, notes } from './helpers';
 import { offerDamaged, offerHit } from './reactions';
@@ -57,6 +57,7 @@ export function applyHeldHit(state: EncounterState, hit: HeldHit, rng: Rng): Enc
         r.point,
       );
   }
+  for (const o of hit.onHit ?? []) s = applyOnHit(s, hit, o, rng);
   s = dropOnAttack(s, hit.attackerId);
   if (dealtTotal > 0 && creatureOf(s, hit.targetId).status !== 'dead')
     s = offerDamaged(s, hit.targetId, hit.attackerId);
@@ -66,4 +67,61 @@ export function applyHeldHit(state: EncounterState, hit: HeldHit, rng: Rng): Enc
 /** O golpe acertou: ou o alvo pode reagir (Escudo Arcano) e o dano fica suspenso, ou é aplicado já. */
 export function holdOrApply(state: EncounterState, hit: HeldHit, rng: Rng): EncounterState {
   return offerHit(state, hit) ?? applyHeldHit(state, hit, rng);
+}
+
+/** Golpe marcado (Golpe Aprisionador/Ardente): o alvo faz a salvaguarda; se falhar, leva a condição e o efeito. */
+function applyOnHit(
+  state: EncounterState,
+  hit: HeldHit,
+  o: NonNullable<HeldHit['onHit']>[number],
+  rng: Rng,
+): EncounterState {
+  let t = creatureOf(state, hit.targetId);
+  if (t.status === 'dead') return state;
+  let s = state;
+  const spec = o.spec;
+  if (spec.save) {
+    const auto = autoFailsSave(t, spec.save);
+    const r = rollD20(saveBonus(t, spec.save), 'normal', rng);
+    const ok = !auto && r.roll.total >= (spec.dc ?? 10);
+    s = addLog(
+      s,
+      `${t.name}: salvaguarda de ${spec.save.toUpperCase()} contra ${o.spell} — d20 ${r.natural} = ${r.roll.total} vs CD ${spec.dc ?? 10}: ${ok ? 'passou' : 'falhou'}.`,
+      [t.id],
+    );
+    if (ok) {
+      if (spec.endsOnSave) {
+        const c = creatureOf(s, hit.attackerId);
+        if (c.concentration === o.spell) s = withCreature(s, { ...c, concentration: undefined });
+      }
+      return s;
+    }
+  }
+  if (spec.condition) {
+    t = addCondition(creatureOf(s, t.id), spec.condition.name, spec.condition.rounds, {
+      spell: o.spell,
+      by: o.by,
+      ...(o.concentration ? { concentration: true } : {}),
+      ...(spec.save && spec.mods?.repeatSave
+        ? { repeatSave: { ability: spec.save, dc: spec.dc ?? 10 } }
+        : {}),
+    });
+    s = withCreature(s, t);
+    s = addLog(s, `${t.name} ficou sob efeito de ${o.spell}.`, [t.id]);
+  }
+  if (spec.mods) {
+    t = addEffect(creatureOf(s, t.id), {
+      id: `${o.by}:${o.spell}:hit`,
+      spell: o.spell,
+      name: o.spell,
+      by: o.by,
+      ...(spec.rounds !== undefined ? { rounds: spec.rounds } : {}),
+      ...(o.concentration ? { concentration: true } : {}),
+      mods: spec.mods.repeatSave
+        ? { ...spec.mods, repeatSave: { ability: spec.mods.repeatSave.ability, dc: spec.dc ?? 10 } }
+        : spec.mods,
+    });
+    s = withCreature(s, t);
+  }
+  return s;
 }

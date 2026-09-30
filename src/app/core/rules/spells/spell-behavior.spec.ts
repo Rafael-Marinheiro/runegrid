@@ -1,5 +1,7 @@
 import rules2014 from '../../../../../public/data/spell-rules.json';
+import rules2024 from '../../../../../public/data/spell-rules-2024.json';
 import spells2014 from '../../../../../public/data/spells.json';
+import spells2024 from '../../../../../public/data/spells-2024.json';
 import { Creature } from '../../models/creature';
 import { newCreature } from '../../models/creature-factory';
 import { EncounterState } from '../../models/encounter';
@@ -8,9 +10,16 @@ import { SrdSpell } from '../../models/srd';
 import { effectiveAc } from '../creature';
 import { fullCasterSlots } from '../creature/rest';
 import { Command, dispatch, newEncounter } from '../encounter';
-import { buildSpells, SpellRules } from './build';
+import { buildSpells, mergeRules, SpellRules } from './build';
 import { registerSpells } from './registry';
 
+registerSpells(
+  '2024',
+  buildSpells(
+    spells2024 as unknown as SrdSpell[],
+    mergeRules(rules2014 as unknown as SpellRules, rules2024 as unknown as SpellRules),
+  ),
+);
 registerSpells(
   '2014',
   buildSpells(spells2014 as unknown as SrdSpell[], rules2014 as unknown as SpellRules),
@@ -38,9 +47,14 @@ const ALL = [
   'hold-person',
   'shield',
   'scorching-ray',
+  'ice-knife',
+  'dragons-breath',
+  'searing-smite',
+  'counterspell',
+  'magic-missile',
 ];
 
-function scene(foes: Partial<Creature>[] = [{}]) {
+function scene(foes: Partial<Creature>[] = [{}], withAlly = false) {
   let s = newEncounter(map);
   const add = (c: Creature, x: number, y: number, init: number) => {
     s = run(s, { type: 'addCreature', creature: c, pos: { x, y } });
@@ -61,6 +75,18 @@ function scene(foes: Partial<Creature>[] = [{}]) {
     3,
     20,
   );
+  if (withAlly)
+    add(
+      newCreature('pc', {
+        id: 'ally',
+        name: 'Aliado',
+        hp: { max: 30, current: 30, temp: 0 },
+        attacks: [{ name: 'Espada', bonus: 5, damage: '1d8+3', type: 'slashing', range: 5 }],
+      }),
+      2,
+      3,
+      15,
+    );
   foes.forEach((over, i) =>
     add(
       newCreature('monster', {
@@ -204,5 +230,125 @@ describe('magias do SRD com os dados reais (F12)', () => {
     let s = scene([{ ac: 5, hp: { max: 100, current: 100, temp: 0 } }]);
     s = run(s, cast('scorching-ray', { targetId: 'f0', slotLevel: 4 }));
     expect(s.log.filter((e) => e.text.includes('raio ')).length).toBe(5);
+  });
+});
+
+describe('magias do SRD 2024 com os dados reais (F12)', () => {
+  const cast24 = (
+    spellId: string,
+    over: Partial<Extract<Command, { type: 'cast' }>> = {},
+  ): Command => ({
+    type: 'cast',
+    actorId: 'w',
+    spellId,
+    ruleset: '2024',
+    ...over,
+  });
+
+  it('Faca de Gelo: ataque e depois explosão nos vizinhos do alvo', () => {
+    let s = scene([{ ac: 5 }, { ac: 5 }, { ac: 5 }]);
+    s = run(s, cast24('ice-knife', { targetId: 'f0' }));
+    expect(get(s, 'f0').hp.current).toBeLessThan(20);
+    expect(get(s, 'f1').hp.current).toBeLessThan(20); // a 5 ft do alvo: levou o frio
+    expect(get(s, 'f2').hp.current).toBe(20); // a 10 ft: fora da explosão
+  });
+
+  it('Sopro do Dragão: o alvo sopra na vez dele, com a CD de quem conjurou', () => {
+    let s = scene([{}, {}], true);
+    s = run(s, cast24('dragons-breath', { targetId: 'ally', slotLevel: 2, option: 'cold' }));
+    expect(get(s, 'ally').sustained?.[0].by).toBe('w');
+    s = next(s, 'w');
+    const before = get(s, 'f0').hp.current;
+    s = run(s, {
+      type: 'cast',
+      actorId: 'ally',
+      spellId: 'dragons-breath',
+      ruleset: '2024',
+      sustain: true,
+      point: { x: 5, y: 3 },
+    });
+    expect(get(s, 'f0').hp.current).toBeLessThan(before);
+    // perder a concentração desfaz o sopro
+    s = run(s, { type: 'damage', targetId: 'w', amount: 60 }, () => 0.01);
+    expect(get(s, 'ally').sustained).toBeUndefined();
+  });
+
+  it('Golpe Ardente: o próximo acerto queima e o alvo começa a sofrer no início do turno', () => {
+    let s = scene([{ ac: 5, hp: { max: 60, current: 60, temp: 0 } }]);
+    s = run(s, { type: 'move', actorId: 'w', to: { x: 4, y: 3 } });
+    // o mago ataca com a Espada do aliado? usa um ataque próprio
+    const w = get(s, 'w');
+    s = {
+      ...s,
+      creatures: s.creatures.map((c) =>
+        c.id === 'w'
+          ? {
+              ...w,
+              attacks: [{ name: 'Adaga', bonus: 6, damage: '1d4+2', type: 'piercing', range: 5 }],
+            }
+          : c,
+      ),
+    };
+    s = run(s, cast24('searing-smite'));
+    s = run(s, { type: 'attack', actorId: 'w', targetId: 'f0', attackIndex: 0 }, () => 0.5); // d20 baixo: só precisa acertar CA 5
+    const f = get(s, 'f0');
+    expect(f.hp.current).toBeLessThan(60);
+  });
+
+  it('Contrafeitiço 2024: o conjurador faz Constituição; falhar não gasta o espaço', () => {
+    let s = newEncounter(map);
+    const add = (c: Creature, x: number, y: number, init: number) => {
+      s = run(s, { type: 'addCreature', creature: c, pos: { x, y } });
+      s = run(s, { type: 'setInitiative', id: c.id, value: init });
+    };
+    add(
+      newCreature('monster', {
+        id: 'lich',
+        name: 'Lich',
+        hp: { max: 60, current: 60, temp: 0 },
+        spellSlots: fullCasterSlots(9),
+        spellcasting: { ability: 'int', spells: ['magic-missile'] },
+      }),
+      7,
+      3,
+      20,
+    );
+    add(
+      newCreature('pc', {
+        id: 'w',
+        name: 'Mago',
+        level: 9,
+        hp: { max: 40, current: 40, temp: 0 },
+        abilities: { str: 10, dex: 10, con: 10, int: 18, wis: 10, cha: 10 },
+        spellSlots: fullCasterSlots(9),
+        spellcasting: { ability: 'int', spells: ['counterspell'] },
+      }),
+      4,
+      3,
+      10,
+    );
+    s = run(s, { type: 'startCombat' });
+    s = run(s, {
+      type: 'cast',
+      actorId: 'lich',
+      spellId: 'magic-missile',
+      targetId: 'w',
+      ruleset: '2024',
+    });
+    const hp = get(s, 'w').hp.current;
+    s = run(
+      s,
+      {
+        type: 'reaction',
+        actorId: 'w',
+        use: true,
+        spellId: 'counterspell',
+        slotLevel: 3,
+        ruleset: '2024',
+      },
+      () => 0.01,
+    );
+    expect(get(s, 'w').hp.current).toBe(hp); // dissipou
+    expect(get(s, 'lich').spellSlots[1].used).toBe(0); // espaço devolvido
   });
 });

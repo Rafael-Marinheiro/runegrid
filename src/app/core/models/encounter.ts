@@ -1,6 +1,7 @@
 import { Fx, FxColor } from './fx';
 import { SpellTarget } from './spell';
 import { Creature } from './creature';
+import { EffectMods } from './effect';
 import { DiagonalRule, GridMap, Pos } from './grid';
 
 export interface Token {
@@ -59,6 +60,13 @@ export interface HeldHit {
   /** Dano já rolado (dobrado se crítico), por tipo, antes de resistências. */
   parts: { amount: number; type: string }[];
   knockOut?: boolean;
+  /** Consequências no alvo dos golpes marcados (Golpe Aprisionador): de quem, salvaguarda e CD. */
+  onHit?: {
+    spell: string;
+    by: string;
+    concentration?: boolean;
+    spec: NonNullable<EffectMods['onHit']>;
+  }[];
   /** Ataque de magia: consequências além do dano (condições, efeitos) aplicadas ao acertar. */
   rider?: {
     spellId: string;

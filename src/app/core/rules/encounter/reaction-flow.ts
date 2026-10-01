@@ -229,17 +229,33 @@ export function spellReaction(
         s,
         removeEffects(creatureOf(s, who.id), (e) => e.spell === spell.id),
       );
-    // as outras consultas deste mesmo golpe perdem o sentido: decidiu-se agora
+    const others = (s.combat.pending ?? []).filter(
+      (x) => x.spell?.trigger === 'hit' && sameHit(x.spell.hit, info.hit),
+    );
+    // o golpe ainda acerta e há outro reator que pode somar o bônus dele: a decisão continua com ele,
+    // agora contra a CA já aumentada
+    if (info.hit.total >= newAc && others.length) {
+      return {
+        ...s,
+        combat: {
+          ...s.combat,
+          pending: (s.combat.pending ?? []).map((x) =>
+            others.includes(x) && x.spell?.trigger === 'hit'
+              ? { ...x, spell: { ...x.spell, hit: { ...x.spell.hit, ac: newAc } } }
+              : x,
+          ),
+        },
+      };
+    }
+    // errou, ou ninguém mais reage: as outras consultas deste golpe perdem o sentido
     s = {
       ...s,
       combat: {
         ...s.combat,
-        pending: (s.combat.pending ?? []).filter(
-          (x) => !(x.spell?.trigger === 'hit' && sameHit(x.spell.hit, info.hit)),
-        ),
+        pending: (s.combat.pending ?? []).filter((x) => !others.includes(x)),
       },
     };
-    if (info.hit.total >= newAc) return applyHeldHit(s, info.hit, ctx.rng);
+    if (info.hit.total >= newAc) return applyHeldHit(s, { ...info.hit, ac: newAc }, ctx.rng);
     s = addLog(
       s,
       T(

@@ -270,3 +270,75 @@ describe('6. Metamorfose e dano excedente', () => {
     expect(after.status).toBe('alive');
   });
 });
+
+describe('7. Duas reações aceitas ao mesmo tempo', () => {
+  /** Cavaleiro (CA 18, Aparar +2) com um Guardião Escudo ao lado (+2): o golpe de 21 só erra com os dois. */
+  const duo = () => {
+    const attacker = pc({
+      id: 'hero',
+      attacksPerAction: 2,
+      attacks: [{ name: 'Espada', bonus: 10, damage: '2d6', type: 'slashing', range: 5 }],
+    });
+    const g = game([
+      [attacker, 1, 2, 30],
+      [mon('knight', 'kn'), 2, 2, 20],
+      [mon('shield-guardian', 'sg'), 3, 2, 10],
+    ]);
+    const spellOf = (id: string, name: string) =>
+      abilitiesOf(g.c(id)!).find((a) => a.nameEn === name)!;
+    return { g, parry: spellOf('kn', 'Parry'), shield: spellOf('sg', 'Shield') };
+  };
+
+  it('as duas oferecem; aceitando as duas o bônus soma e o golpe erra', () => {
+    const { g, parry, shield } = duo();
+    expect(g.c('kn')!.ac).toBe(18);
+    g.run({ type: 'attack', actorId: 'hero', targetId: 'kn', attackIndex: 0 });
+    expect(
+      g
+        .get()
+        .combat.pending?.map((p) => p.reactorId)
+        .sort(),
+    ).toEqual(['kn', 'sg']);
+    const hp = g.c('kn')!.hp.current;
+    g.run({ type: 'reaction', actorId: 'kn', use: true, spellId: parry.id, ruleset: '2014' });
+    // com só o Aparar o golpe (21) ainda acerta a CA 20: o Guardião precisa poder reagir antes do dano
+    expect(g.get().combat.pending?.map((p) => p.reactorId)).toEqual(['sg']);
+    expect(g.c('kn')!.hp.current).toBe(hp);
+    g.run({ type: 'reaction', actorId: 'sg', use: true, spellId: shield.id, ruleset: '2014' });
+    expect(g.get().combat.pending).toEqual([]);
+    expect(g.c('kn')!.hp.current).toBe(hp);
+    expect(g.get().combat.reactionUsed).toEqual(expect.arrayContaining(['kn', 'sg']));
+  });
+
+  it('na ordem inversa (Guardião primeiro) o resultado é o mesmo', () => {
+    const { g, parry, shield } = duo();
+    g.run({ type: 'attack', actorId: 'hero', targetId: 'kn', attackIndex: 0 });
+    const hp = g.c('kn')!.hp.current;
+    g.run({ type: 'reaction', actorId: 'sg', use: true, spellId: shield.id, ruleset: '2014' });
+    expect(g.get().combat.pending?.map((p) => p.reactorId)).toEqual(['kn']);
+    g.run({ type: 'reaction', actorId: 'kn', use: true, spellId: parry.id, ruleset: '2014' });
+    expect(g.get().combat.pending).toEqual([]);
+    expect(g.c('kn')!.hp.current).toBe(hp);
+  });
+
+  it('aceitar uma e recusar a outra: o golpe acerta uma única vez', () => {
+    const { g, parry } = duo();
+    g.run({ type: 'attack', actorId: 'hero', targetId: 'kn', attackIndex: 0 });
+    const hp = g.c('kn')!.hp.current;
+    g.run({ type: 'reaction', actorId: 'kn', use: true, spellId: parry.id, ruleset: '2014' });
+    g.run({ type: 'reaction', actorId: 'sg', use: false });
+    expect(g.get().combat.pending).toEqual([]);
+    const lost = hp - g.c('kn')!.hp.current;
+    expect(lost).toBeGreaterThan(0);
+    expect(lost).toBeLessThanOrEqual(12);
+  });
+
+  it('a mesma reação não pode ser usada duas vezes e quem gastou fica sem reação até o próximo turno', () => {
+    const { g, parry } = duo();
+    g.run({ type: 'attack', actorId: 'hero', targetId: 'kn', attackIndex: 0 });
+    g.run({ type: 'reaction', actorId: 'kn', use: true, spellId: parry.id, ruleset: '2014' });
+    g.run({ type: 'reaction', actorId: 'sg', use: false });
+    g.run({ type: 'attack', actorId: 'hero', targetId: 'kn', attackIndex: 0 });
+    expect(g.get().combat.pending?.map((p) => p.reactorId) ?? []).not.toContain('kn');
+  });
+});

@@ -90,24 +90,44 @@ export function offerHit(state: EncounterState, hit: HeldHit): EncounterState | 
   if (target.status !== 'alive') return null;
   const attacker = creatureOf(state, hit.attackerId);
   const tt = tokenOf(state, target.id);
-  let s = state;
-  let offered = false;
+  // quem pode reagir a este golpe e com quê (ainda sem olhar se um bônus sozinho basta)
+  const eligible: {
+    reactor: Creature;
+    own: boolean;
+    options: ReturnType<typeof reactionSpells>;
+  }[] = [];
   for (const reactor of state.creatures) {
     const own = reactor.id === target.id;
     if (!own && (reactor.status !== 'alive' || teamOf(reactor) !== teamOf(target))) continue;
-    if (!canReact(s, reactor)) continue;
-    const rt = own ? tt : tokenOf(s, reactor.id);
+    if (!canReact(state, reactor)) continue;
+    const rt = own ? tt : tokenOf(state, reactor.id);
     if (!rt || !tt) continue;
     const dist = distanceFt(rt.pos, sizeOf(reactor), tt.pos, sizeOf(target), state.rule);
     const options = reactionSpells(reactor, 'hit').filter((o) => {
-      const r = o.spell.react;
-      if (r?.on !== 'hit') return false;
-      if (own ? r.ally !== undefined : r.ally === undefined || dist > r.ally) return false;
-      if (r.redirect) return redirectAllies(s, reactor).length > 0;
-      if (r.catch)
+      const re = o.spell.react;
+      if (re?.on !== 'hit') return false;
+      if (own ? re.ally !== undefined : re.ally === undefined || dist > re.ally) return false;
+      if (re.melee && !hit.melee) return false;
+      if (re.redirect) return redirectAllies(state, reactor).length > 0;
+      if (re.catch)
         return !hit.melee && hit.parts.some((p) => p.type === 'bludgeoning' && p.amount > 0);
-      if (r.reduce) return !hit.melee && hit.parts.some((p) => p.amount > 0);
-      return hit.total < hit.ac + r.acBonus && (!r.melee || hit.melee);
+      if (re.reduce) return !hit.melee && hit.parts.some((p) => p.amount > 0);
+      return true;
+    });
+    if (options.length) eligible.push({ reactor, own, options });
+  }
+  // bônus de CA de reatores diferentes somam: oferece enquanto o conjunto deles puder virar o golpe em erro
+  const bonusOf = (o: { spell: { react?: { on: string; acBonus?: number } } }) =>
+    o.spell.react?.on === 'hit' ? (o.spell.react.acBonus ?? 0) : 0;
+  const potential = eligible.reduce((n, e) => n + Math.max(0, ...e.options.map(bonusOf)), 0);
+  let s = state;
+  let offered = false;
+  for (const { reactor, own, options: all } of eligible) {
+    const options = all.filter((o) => {
+      const re = o.spell.react;
+      if (re?.on !== 'hit') return false;
+      if (re.redirect || re.catch || re.reduce) return true;
+      return hit.total < hit.ac + potential;
     });
     if (!options.length) continue;
     offered = true;

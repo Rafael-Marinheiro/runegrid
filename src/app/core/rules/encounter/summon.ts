@@ -497,9 +497,21 @@ export function guardBites(state: EncounterState, ownerId: string, ctx: Context)
       },
     };
     const before = s;
-    s = addLog(s, T(`${g.name} morde ${foe.name}.`, `${g.name} bites ${foe.name}.`), [foe.id]);
+    // o cão é invisível: o golpe (nome, posição e animação) é só do Mestre; os jogadores veem só o efeito
+    s = addLog(s, T(`${g.name} morde ${foe.name}.`, `${g.name} bites ${foe.name}.`), [
+      g.id,
+      foe.id,
+    ]);
     s = resolveSpell(s, g, bite, 0, [foe], 5, ctx, { ruleset: '2014' });
     s = attachFx(before, s, attackFx(before, g.id, foe.id, 5, guard.type, 'Bite'));
+    s = addLog(
+      s,
+      T(
+        `${foe.name} é mordido por algo invisível.`,
+        `${foe.name} is bitten by something invisible.`,
+      ),
+      [foe.id],
+    );
   }
   return s;
 }

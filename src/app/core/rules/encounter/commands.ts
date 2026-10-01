@@ -14,6 +14,7 @@ import {
   Trap,
 } from '../../models/grid';
 import { AdvMode } from '../dice';
+import { Adjustment } from './adjust';
 
 /** Tudo que muda o encontro passa por um destes comandos. */
 /** Como se move: a pé, voando, nadando, escalando ou escavando (as velocidades extras vêm da ficha). */
@@ -75,6 +76,8 @@ export type Command =
   | { type: 'heal'; targetId: string; amount: number }
   | { type: 'addCondition'; targetId: string; condition: ConditionName; rounds?: number }
   | { type: 'removeCondition'; targetId: string; condition: ConditionName }
+  /** Ajuste livre do Mestre: muda campos da criatura sem regras e registra o motivo (`note`, obrigatório). */
+  | { type: 'adjust'; targetId: string; changes: Adjustment; note: string; secret?: boolean }
   // Ações de turno (jogador dono da criatura ou Mestre)
   | { type: 'move'; actorId: string; to: Pos; mode?: MoveKind }
   | {

@@ -69,6 +69,44 @@ function started(
   return run(s, { type: 'startCombat' });
 }
 
+describe('ajuste livre do Mestre', () => {
+  it('muda campos sem gastar nada e registra o motivo; exige descrição e é só do Mestre', () => {
+    const s0 = started();
+    const s = run(s0, {
+      type: 'adjust',
+      targetId: 'foe',
+      note: 'A ferrugem corroeu a armadura',
+      changes: { ac: 9, speed: 20, hpMax: 30, hpCurrent: 25, attackBonus: -2 },
+    });
+    const foeNow = s.creatures.find((c) => c.id === 'foe')!;
+    expect(foeNow).toMatchObject({ ac: 9, speed: 20 });
+    expect(foeNow.hp).toMatchObject({ max: 30, current: 25 });
+    expect(foeNow.attacks[0].bonus).toBe(2);
+    expect(s.log[s.log.length - 1].text).toContain('A ferrugem corroeu a armadura');
+    expect(s.combat.turn).toEqual(s0.combat.turn);
+    expect(() =>
+      run(s0, { type: 'adjust', targetId: 'foe', note: '  ', changes: { ac: 5 } }),
+    ).toThrow(RuleError);
+    expect(() => run(s0, { type: 'adjust', targetId: 'foe', note: 'x', changes: {} })).toThrow(
+      RuleError,
+    );
+    expect(() =>
+      run(s0, { type: 'adjust', targetId: 'foe', note: 'x', changes: { ac: 1 } }, dice(), {
+        kind: 'player',
+        owns: ['foe'],
+      }),
+    ).toThrow(ForbiddenError);
+  });
+
+  it('PV acima de zero reanima quem estava caído', () => {
+    let s = started();
+    s = run(s, { type: 'damage', targetId: 'foe', amount: 99 });
+    expect(s.creatures.find((c) => c.id === 'foe')!.status).not.toBe('alive');
+    s = run(s, { type: 'adjust', targetId: 'foe', note: 'Cura divina', changes: { hpCurrent: 5 } });
+    expect(s.creatures.find((c) => c.id === 'foe')!.status).toBe('alive');
+  });
+});
+
 describe('montagem', () => {
   it('não coloca criatura em parede, fora do mapa ou sobre outra', () => {
     let s = newEncounter(map);

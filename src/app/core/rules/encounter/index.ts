@@ -1,4 +1,5 @@
 export * from './commands';
+export type { Adjustment } from './adjust';
 export { authorize, defaultMoveKind, dispatch, moveQuery } from './reduce';
 export { summarizeCombat } from './helpers';
 export type { Context } from './helpers';

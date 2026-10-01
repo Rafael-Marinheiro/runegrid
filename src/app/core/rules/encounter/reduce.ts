@@ -45,6 +45,7 @@ import { damageParts } from '../spells/scaling';
 import { cast } from './cast';
 import { freeReaction, spellReaction } from './reaction-flow';
 import { offerTrigger } from './reactions';
+import { adjustCreature } from './adjust';
 import { holdOrApply } from './hits';
 import {
   attackExtra,
@@ -351,6 +352,8 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       );
       return checkOutcome(aftermath(s, target.id, r.dealt, ctx.rng));
     }
+    case 'adjust':
+      return adjustCreature(state, cmd.targetId, cmd.changes, cmd.note, cmd.secret);
     case 'addCondition': {
       const target = creatureOf(state, cmd.targetId);
       const s = withCreature(state, addCondition(target, cmd.condition, cmd.rounds));

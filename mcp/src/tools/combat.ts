@@ -7,7 +7,14 @@ import { activeGame, type Game } from '../campaign';
 import { exec, place, roomOf, toCommand, tx, who, type Act } from '../game';
 import { afterAction } from '../render';
 import { GameError, WRITE, reply } from '../util';
-import { AreaSchema, ConditionSchema, DamageTypeSchema, ModeSchema, PosSchema } from './schemas';
+import {
+  AbilitySchema,
+  AreaSchema,
+  ConditionSchema,
+  DamageTypeSchema,
+  ModeSchema,
+  PosSchema,
+} from './schemas';
 
 const cellsOf = (g: Game, a: { x: number; y: number; w: number; h: number }): Pos[] => {
   if (a.w * a.h > 2500) throw new GameError('Area too large (max 2500 cells).');
@@ -205,6 +212,7 @@ Args: actor (creature name); actions (1–8).`,
 • set_environment {sunlight?, running_water?} — turns daylight (outdoors; rooms stay shaded) and flowing water on/off: vampires burn in sunlight and are harmed by running water, sun-sensitive monsters get disadvantage, etc., all applied by the engine
 • set_residence {room, residence?, target?, invite?} — marks a room as a dwelling and (un)invites a creature; stake {target, remove?} — a wooden stake through an incapacitated vampire's heart (paralyzes it; destroys a vampire spawn)
 • open_door {position} — opens a closed/locked door (outside a creature's turn); set_terrain {area, terrain}
+• adjust {target, note, changes:{ac?, speed?, speeds?, size?, hp_max?, hp_current?, hp_temp?, abilities?, attack_bonus?, attacks?:[{index,bonus?,damage?,range?}], attacks_per_action?, resistances?, immunities?, vulnerabilities?}} — free edit of a creature for narrative situations: nothing is spent or checked and the log records what changed plus your "note" (required: say what and why)
 • secret_roll {expr} — a roll the players never see (logged to Mestre/)
 • set_initiative {target, value} (before combat starts), join_combat {target} (late arrival), end_combat {}
 Use it for traps you adjudicate, environmental damage, spells the engine does not automate, and moving the party while exploring. Exploration movement has no cost or limit: you decide what is reasonable.`,
@@ -214,6 +222,7 @@ Use it for traps you adjudicate, environmental damage, spells the engine does no
           'heal',
           'add_condition',
           'remove_condition',
+          'adjust',
           'place_token',
           'set_hidden',
           'remove_creature',
@@ -265,6 +274,47 @@ Use it for traps you adjudicate, environmental damage, spells the engine does no
           .describe(
             'set_residence: true = invite target to the room, false = withdraw the invitation',
           ),
+        note: z
+          .string()
+          .max(500)
+          .optional()
+          .describe('adjust: REQUIRED description of what was changed and why (goes in the log)'),
+        changes: z
+          .object({
+            ac: z.number().int().min(0).max(40).optional(),
+            speed: z.number().int().min(0).max(400).optional(),
+            speeds: z
+              .object({
+                fly: z.number().int().min(0).max(400).optional(),
+                swim: z.number().int().min(0).max(400).optional(),
+                climb: z.number().int().min(0).max(400).optional(),
+                burrow: z.number().int().min(0).max(400).optional(),
+                hover: z.boolean().optional(),
+              })
+              .optional(),
+            size: z.enum(['tiny', 'small', 'medium', 'large', 'huge', 'gargantuan']).optional(),
+            hp_max: z.number().int().min(1).max(9999).optional(),
+            hp_current: z.number().int().min(0).max(9999).optional(),
+            hp_temp: z.number().int().min(0).max(9999).optional(),
+            abilities: z.record(AbilitySchema, z.number().int().min(1).max(30)).optional(),
+            attack_bonus: z.number().int().min(-20).max(20).optional(),
+            attacks: z
+              .array(
+                z.object({
+                  index: z.number().int().min(0),
+                  bonus: z.number().int().optional(),
+                  damage: z.string().max(40).optional(),
+                  range: z.number().int().min(0).optional(),
+                }),
+              )
+              .optional(),
+            attacks_per_action: z.number().int().min(1).max(10).optional(),
+            resistances: z.array(DamageTypeSchema).optional(),
+            immunities: z.array(DamageTypeSchema).optional(),
+            vulnerabilities: z.array(DamageTypeSchema).optional(),
+          })
+          .optional()
+          .describe('adjust: the fields to change on the target (only what is given changes)'),
         remove: z.boolean().optional().describe('stake: true = pull the stake out'),
         sunlight: z
           .boolean()
@@ -294,6 +344,35 @@ Use it for traps you adjudicate, environmental damage, spells the engine does no
                 }),
               );
               break;
+            case 'adjust': {
+              const c = a.changes ?? {};
+              lines.push(
+                ...exec(g, {
+                  type: 'adjust',
+                  targetId: t().id,
+                  note: need(a.note, 'note', a.op),
+                  changes: {
+                    ...(c.ac !== undefined ? { ac: c.ac } : {}),
+                    ...(c.speed !== undefined ? { speed: c.speed } : {}),
+                    ...(c.speeds ? { speeds: c.speeds } : {}),
+                    ...(c.size ? { size: c.size } : {}),
+                    ...(c.hp_max !== undefined ? { hpMax: c.hp_max } : {}),
+                    ...(c.hp_current !== undefined ? { hpCurrent: c.hp_current } : {}),
+                    ...(c.hp_temp !== undefined ? { hpTemp: c.hp_temp } : {}),
+                    ...(c.abilities ? { abilities: c.abilities } : {}),
+                    ...(c.attack_bonus ? { attackBonus: c.attack_bonus } : {}),
+                    ...(c.attacks ? { attacks: c.attacks } : {}),
+                    ...(c.attacks_per_action !== undefined
+                      ? { attacksPerAction: c.attacks_per_action }
+                      : {}),
+                    ...(c.resistances ? { resistances: c.resistances } : {}),
+                    ...(c.immunities ? { immunities: c.immunities } : {}),
+                    ...(c.vulnerabilities ? { vulnerabilities: c.vulnerabilities } : {}),
+                  },
+                }),
+              );
+              break;
+            }
             case 'heal':
               lines.push(
                 ...exec(g, {

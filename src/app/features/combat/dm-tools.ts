@@ -33,7 +33,7 @@ const ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
             </label>
           }
         </div>
-        <div class="grid six">
+        <div class="grid abil">
           @for (a of abilities; track a) {
             <label class="field">
               {{ a.toUpperCase() }}
@@ -117,8 +117,25 @@ const ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
       gap: var(--space-2);
       margin: var(--space-2) 0;
     }
-    .six {
-      grid-template-columns: repeat(6, 1fr);
+    .abil {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      min-height: 44px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .toggle input {
+      width: 20px;
+      height: 20px;
+      min-height: 0;
+      padding: 0;
+    }
+    form button[type='submit'] {
+      width: 100%;
     }
     .row,
     .room {
@@ -147,7 +164,7 @@ export class DmTools {
   protected readonly abilities = ABILITY_KEYS;
   protected readonly numeric = [
     { id: 'ac', pt: 'CA', en: 'AC' },
-    { id: 'speed', pt: 'Deslocamento (ft)', en: 'Speed (ft)' },
+    { id: 'speed', pt: 'Deslocamento (m)', en: 'Speed (ft)' },
     { id: 'hpMax', pt: 'PV máximos', en: 'Max HP' },
     { id: 'hpCurrent', pt: 'PV atuais', en: 'Current HP' },
     { id: 'hpTemp', pt: 'PV temporários', en: 'Temp HP' },
@@ -162,7 +179,7 @@ export class DmTools {
       case 'ac':
         return `${c.ac}`;
       case 'speed':
-        return `${c.speed}`;
+        return `${this.ui.lenIn(c.speed)}`;
       case 'hpMax':
         return `${c.hp.max}`;
       case 'hpCurrent':
@@ -193,7 +210,7 @@ export class DmTools {
       'attacksPerAction',
     ] as const) {
       const v = num(k);
-      if (v !== undefined) changes[k] = v;
+      if (v !== undefined) changes[k] = k === 'speed' ? this.ui.lenOut(v) : v;
     }
     for (const a of ABILITY_KEYS) {
       const v = num(`ab_${a}`);

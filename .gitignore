@@ -50,3 +50,4 @@ Thumbs.db
 # MCP server
 /mcp/node_modules
 /mcp/dist
+e2e/.scene.json

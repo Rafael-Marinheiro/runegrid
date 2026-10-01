@@ -12,7 +12,8 @@
     "format:check": "prettier --check \"src/**/*.{ts,html,scss}\"",
     "test:ci": "ng test --watch=false",
     "e2e": "playwright test",
-    "miniaturas": "node scripts/convert-miniaturas.mjs"
+    "miniaturas": "node scripts/convert-miniaturas.mjs",
+    "scene": "esbuild scripts/dev-scene.ts --bundle --platform=node --format=esm --outfile=/tmp/dev-scene.mjs --tsconfig=tsconfig.json --log-level=error && node /tmp/dev-scene.mjs"
   },
   "private": true,
   "packageManager": "npm@11.17.0",

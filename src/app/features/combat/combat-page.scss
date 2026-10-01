@@ -585,6 +585,14 @@ button.active {
   }
 }
 
+// A caixa de seleção não herda a altura de 44 px dos campos de texto: o rótulo é o alvo de toque.
+.toggle input[type='checkbox'] {
+  width: 20px;
+  min-height: 0;
+  height: 20px;
+  padding: 0;
+}
+
 .toggle3d,
 .toggle {
   display: inline-flex;

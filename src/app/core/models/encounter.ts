@@ -88,6 +88,10 @@ export type PendingSpellReaction =
   | { trigger: 'hit'; hit: HeldHit }
   /** O reator sofreu dano de `attackerId` (Repreensão Diabólica): já aplicado, a magia responde. */
   | { trigger: 'damaged'; attackerId: string }
+  /** Alguém terminou o movimento à vista do reator (Perseguição). */
+  | { trigger: 'moved'; moverId: string }
+  /** Alguém termina o turno perto do reator (Tinta do Polvo 2024). */
+  | { trigger: 'turnEnd'; moverId: string }
   /** Alguém conjura uma magia (Contrafeitiço): a conjuração inteira aguarda. */
   | { trigger: 'cast'; casterId: string; spellId: string; slotLevel: number; command: string };
 
@@ -130,6 +134,8 @@ export interface Combat {
   pending?: PendingReaction[];
   /** Quem já usou a reação nesta rodada (volta ao começo do turno de cada um). */
   reactionUsed?: string[];
+  /** Criatura cujo fim de turno já foi oferecido às reações (Tinta do Polvo): não oferece de novo. */
+  endOffered?: string;
   /** Quem já aplicou o Ataque Furtivo neste turno (limpo a cada novo turno). */
   sneakUsed?: string[];
   /** Vencedor quando `phase === 'ended'`. */

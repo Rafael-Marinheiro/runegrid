@@ -602,6 +602,49 @@ describe('Animar Correntes', () => {
   });
 });
 
+describe('Espada Voadora do Solar', () => {
+  it('a espada vira um token que voa e ataca com dano cortante mais radiante; cai se o Solar morrer', () => {
+    let s = newEncounter(map);
+    const run = (cmd: Command) => (s = dispatch(s, cmd, { rng, role: dm }));
+    run({
+      type: 'addCreature',
+      creature: { ...monsterToCreature(sheet.get('solar')!), id: 'sol' },
+      pos: { x: 2, y: 2 },
+    });
+    run({ type: 'setInitiative', id: 'sol', value: 20 });
+    run({
+      type: 'addCreature',
+      creature: newCreature('pc', {
+        id: 'p',
+        name: 'Herói',
+        hp: { max: 200, current: 200, temp: 0 },
+      }),
+      pos: { x: 4, y: 2 },
+    });
+    run({ type: 'setInitiative', id: 'p', value: 5 });
+    run({ type: 'startCombat' });
+    const ab = abilitiesOf(s.creatures.find((c) => c.id === 'sol')!).find(
+      (a) => a.nameEn === 'Flying Sword',
+    )!;
+    run({
+      type: 'cast',
+      actorId: 'sol',
+      spellId: ab.id,
+      option: 'sword',
+      point: { x: 3, y: 2 },
+      ruleset: '2014',
+    });
+    const sword = s.creatures.find((c) => c.summon)!;
+    expect(sword.icon).toBe('sword');
+    expect(sword.speeds?.fly).toBe(50);
+    expect(sword.attacks[0].extra?.[0].type).toBe('radiant');
+    run({ type: 'endTurn', actorId: 'sol' });
+    // vez da espada: ataca o herói com dano cortante e radiante
+    run({ type: 'attack', actorId: sword.id, targetId: 'p', attackIndex: 0 });
+    expect(s.log.some((e) => /radiante|radiant/i.test(e.text))).toBe(true);
+  });
+});
+
 describe('Metamorfose', () => {
   const sheet24 = new Map(
     (monsters24 as unknown as SrdMonster[]).map((m) => [m.id.replace(/^srd-2024_/, ''), m]),

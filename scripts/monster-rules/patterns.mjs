@@ -201,7 +201,8 @@ function inkCloud(a) {
   const radius = num(/(\d+)-foot-radius/i, d) ?? num(/(\d+)-foot Cube/i, d);
   if (!radius || a.ability?.cost === 'legendary') return a;
   const reactive = /takes damage/i.test(d);
-  if (/_Trigger:_/.test(d) && !reactive) return a;
+  const atEnd = /ends its turn within (\d+) feet/i.exec(d);
+  if (/_Trigger:_/.test(d) && !reactive && !atEnd) return a;
   return flat(a, {
     target: { kind: 'sphere', radius, self: true },
     range: 0,
@@ -209,12 +210,15 @@ function inkCloud(a) {
     zone: { on: 'cast', obscures: true, color: 'shadow' },
     rounds: 10,
     ...(reactive ? { react: { on: 'damaged' } } : {}),
-    manual: reactive
-      ? "Só debaixo d'água; depois de soltar a tinta o polvo se move até a velocidade de natação (o Mestre move). A área fica muito obscurecida por 1 minuto, a não ser que uma corrente forte a disperse."
-      : "Só debaixo d'água; depois de soltar a tinta o polvo pode Correr como ação bônus. A área fica muito obscurecida por 1 minuto, a não ser que uma corrente forte a disperse.",
-    manualEn: reactive
-      ? 'Underwater only; after releasing the ink the octopus moves up to its swim speed (the DM moves it). The area is heavily obscured for 1 minute unless a strong current disperses it.'
-      : 'Underwater only; after releasing the ink the octopus can Dash as a bonus action. The area is heavily obscured for 1 minute unless a strong current disperses it.',
+    ...(atEnd ? { castTime: 'reaction', react: { on: 'turnEnd', within: Number(atEnd[1]) } } : {}),
+    manual:
+      reactive || atEnd
+        ? "Só debaixo d'água; depois de soltar a tinta o polvo se move até a velocidade de natação (o Mestre move). A área fica muito obscurecida por 1 minuto, a não ser que uma corrente forte a disperse."
+        : "Só debaixo d'água; depois de soltar a tinta o polvo pode Correr como ação bônus. A área fica muito obscurecida por 1 minuto, a não ser que uma corrente forte a disperse.",
+    manualEn:
+      reactive || atEnd
+        ? 'Underwater only; after releasing the ink the octopus moves up to its swim speed (the DM moves it). The area is heavily obscured for 1 minute unless a strong current disperses it.'
+        : 'Underwater only; after releasing the ink the octopus can Dash as a bonus action. The area is heavily obscured for 1 minute unless a strong current disperses it.',
     vfx: { kind: 'burst', color: 'shadow', radius },
   });
 }
@@ -508,6 +512,30 @@ function whirlwind(a) {
   });
 }
 
+/** Espada Voadora (Solar, 2014): a espada larga vira um token que voa e ataca por comando. */
+function flyingSword(a, ruleset) {
+  if (ruleset !== '2014') return a;
+  return flat(a, {
+    ...FIELDS,
+    range: 5,
+    options: [
+      {
+        id: 'sword',
+        label: 'Espada Voadora',
+        labelEn: 'Flying Sword',
+        patch: {
+          summon: { custom: 'flying-sword', srd: 'sword', n: 1, rounds: 600, unique: true },
+        },
+      },
+    ],
+    vfx: { kind: 'glow', color: 'holy' },
+    manual:
+      'A espada paira num espaço livre a até 1,5 m; com ação bônus o Solar a comanda: voa até 15 m e ataca (+15, 4d6 + 8 cortante e 6d8 radiante) ou volta às suas mãos (o Mestre a retira). Cai se o Solar morrer.',
+    manualEn:
+      'The sword hovers in a free space within 5 ft; as a bonus action the solar commands it: it flies up to 50 ft and attacks (+15, 4d6 + 8 slashing plus 6d8 radiant) or returns to its hands (the DM removes it). It falls if the solar dies.',
+  });
+}
+
 /** Animar Correntes (2014): até quatro correntes viram objetos que atacam junto com o diabo. */
 function animateChains(a, ruleset) {
   if (ruleset !== '2014') return a;
@@ -613,14 +641,32 @@ function redirectAttack(a) {
 /** Desviar Projétil: reduz o dano de um ataque à distância; o dano devolvido fica com o Mestre. */
 function deflectMissile(a) {
   const dice = /\((\d+d\d+(?: \+ \d+)?)\)/.exec(a.desc)?.[1].replace(/\s/g, '') ?? '1d10+6';
+  const m =
+    /Dexterity Saving Throw:_ DC (\d+), one creature the giant can see within (\d+) feet\. Failure: \d+ \((\d+d\d+(?: \+ \d+)?)\) (\w+) damage/i.exec(
+      a.desc,
+    );
+  const reflect = m
+    ? {
+        ability: 'dex',
+        dc: Number(m[1]),
+        range: Number(m[2]),
+        dice: m[3].replace(/\s/g, ''),
+        type: m[4].toLowerCase(),
+      }
+    : undefined;
   return flat(a, {
     ...REACT,
-    react: { on: 'hit', acBonus: 0, reduce: dice },
+    react: {
+      on: 'hit',
+      acBonus: 0,
+      reduce: dice,
+      ...(reflect ? { reflect } : {}),
+    },
     vfx: { kind: 'glow', color: 'steel' },
     manual:
-      'Se o dano chegar a 0, o gigante pode devolver a força do ataque (salvaguarda de Destreza de uma criatura a até 18 m): o Mestre conduz.',
+      'Se o dano chegar a 0, a força volta contra quem atacou (salvaguarda de Destreza, a até 18 m).',
     manualEn:
-      "If the damage drops to 0, the giant can redirect the attack's force (Dexterity save of one creature within 60 ft): the DM runs it.",
+      "If the damage drops to 0, the attack's force is thrown back at the attacker (Dexterity save, within 60 ft).",
   });
 }
 
@@ -632,6 +678,7 @@ function pursuit(a) {
     target: { kind: 'point' },
     teleport: true,
     teleportNear: 10,
+    react: { on: 'moved', within: 120 },
     vfx: { kind: 'glow', color: 'arcane' },
   });
 }
@@ -690,6 +737,8 @@ export function applyPattern(a, m, ruleset = '2014') {
       return leadership(a);
     case 'Move':
       return legendaryMove(a, m);
+    case 'Flying Sword':
+      return flyingSword(a, ruleset);
     case 'Animate Chains':
       return animateChains(a, ruleset);
     case 'Animate Trees':

@@ -204,7 +204,7 @@ export function beginUpkeep(state: EncounterState, actorId: string, ctx: Context
   return s;
 }
 
-function dealDot(
+export function dealDot(
   state: EncounterState,
   id: string,
   dot: { dice: string; type: Parameters<typeof dtype>[0] },

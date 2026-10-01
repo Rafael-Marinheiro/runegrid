@@ -152,6 +152,8 @@ export interface Attack {
   range: number;
   /** Arma com acuidade (vale para o Ataque Furtivo, junto com as de distância). */
   finesse?: boolean;
+  /** Dano adicional do mesmo golpe, de outro tipo (Espada Voadora: radiante). */
+  extra?: { damage: string; type: DamageType }[];
 }
 
 export type FeatureId =

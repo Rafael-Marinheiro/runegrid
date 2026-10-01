@@ -282,7 +282,8 @@ export interface SummonSpec {
   /** Quantas aparecem com o espaço base. */
   n?: number;
   /** Ficha montada na hora, escalando com o espaço (Corcel de Outro Mundo); `srd` é o tipo (celestial|fey|fiend; acid|cold|fire|lightning|poison). */
-  custom?: 'otherworldly-steed' | 'draconic-spirit' | 'faithful-hound' | 'animated-chain';
+  custom?:
+    'otherworldly-steed' | 'draconic-spirit' | 'faithful-hound' | 'animated-chain' | 'flying-sword';
   /** O token fica oculto para quem não o invocou (Cão Fiel: invisível para todos menos você). */
   hidden?: boolean;
   /** Some se a distância até quem invocou passar disto, em pés (Cão Fiel: 100 ft no 2014, 300 ft no 2024). */
@@ -342,7 +343,11 @@ export interface Spell {
         redirect?: boolean;
         ranged?: boolean;
         reduce?: string;
+        /** Se o dano chegar a 0, a força volta contra quem atacou (salvaguarda, dano). */
+        reflect?: { ability: Ability; dc: number; dice: string; type: DamageType; range: number };
       }
+    | { on: 'moved'; within: number }
+    | { on: 'turnEnd'; within: number }
     | { on: 'damaged' }
     | { on: 'cast'; save?: boolean };
   /** Alcance em pés (5 = toque, 0 = pessoal). */

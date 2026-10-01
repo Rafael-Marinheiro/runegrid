@@ -70,6 +70,7 @@ export const ICON_PATH: Record<IconId, string> = {
 /** Palavras do nome (em inglês, como no SRD, ou em português) → ícone. */
 const BY_NAME: [RegExp, IconId][] = [
   [/animated chain|corrente animada/i, 'chain'],
+  [/flying sword|espada voadora/i, 'sword'],
   [/faithful hound|cão fiel|cao fiel|watchdog/i, 'hound'],
   [/skeleton|zombie|ghoul|ghast|wight|mummy|vampire|lich|esqueleto|zumbi|múmia|carniçal/i, 'skull'],
   [/ghost|specter|wraith|shadow|will-o|fantasma|espectro/i, 'ghost'],

@@ -13,7 +13,8 @@ import {
   spendSlot,
 } from '../creature';
 import { roll, rollD20 } from '../dice';
-import { distanceFt } from '../grid/movement';
+import { canStand, distanceFt } from '../grid/movement';
+import { Pos } from '../../models/grid';
 import { getSpell } from '../spells/data';
 import { affectedBy, finishCast, resolveSpell } from './cast';
 import { Command } from './commands';
@@ -23,7 +24,8 @@ import { manualT, spellName, T } from '../i18n';
 import { applyHeldHit } from './hits';
 import { canReact, freeSlotFor, redirectAllies, sameHit } from './reactions';
 import { dropOnAttack } from './rolls';
-import { addLog, creatureOf, sizeOf, tokenOf, withCreature } from './state';
+import { addLog, creatureOf, occupiedCells, sizeOf, tokenOf, withCreature } from './state';
+import { dealDot } from './upkeep';
 import { distT } from '../units';
 import { abilitiesOf } from '../monsters/registry';
 import { abilityReady, payAbility } from './ability';
@@ -159,7 +161,32 @@ export function spellReaction(
         ),
         [who.id],
       );
-      return applyHeldHit(s, { ...info.hit, parts }, ctx.rng);
+      s = applyHeldHit(s, { ...info.hit, parts }, ctx.rng);
+      const back = spell.react.reflect;
+      if (back && parts.every((p) => p.amount === 0)) {
+        const foe = creatureOf(s, info.hit.attackerId);
+        const a = tokenOf(s, foe.id);
+        const g = tokenOf(s, who.id);
+        if (
+          a &&
+          g &&
+          foe.status !== 'dead' &&
+          distanceFt(g.pos, sizeOf(who), a.pos, sizeOf(foe), s.rule) <= back.range
+        ) {
+          const r = rollD20(saveBonus(foe, back.ability), 'normal', ctx.rng);
+          const ok = r.roll.total >= back.dc;
+          s = addLog(
+            s,
+            T(
+              `${who.name} devolve a força do ataque: ${foe.name} tira ${r.roll.total} contra CD ${back.dc}.`,
+              `${who.name} redirects the attack's force: ${foe.name} rolls ${r.roll.total} vs DC ${back.dc}.`,
+            ),
+            [who.id, foe.id],
+          );
+          if (!ok) s = dealDot(s, foe.id, { dice: back.dice, type: back.type }, spell.name, ctx);
+        }
+      }
+      return s;
     }
     // quem reage por outro (Guardião Escudo) dá o bônus ao alvo do golpe, não a si
     const ally = spell.react?.on === 'hit' && spell.react.ally !== undefined;
@@ -195,6 +222,17 @@ export function spellReaction(
       [info.hit.attackerId, prot.id],
     );
     return dropOnAttack(s, info.hit.attackerId);
+  }
+
+  if (info.trigger === 'moved' || info.trigger === 'turnEnd') {
+    const mover = creatureOf(s, info.moverId);
+    let point = cmd.point;
+    if (spell.teleportNear !== undefined && !point)
+      point = freeCellNear(s, who, mover, spell.teleportNear);
+    if (spell.teleportNear !== undefined && !point)
+      throw new RuleError(T('Não há espaço livre perto.', 'No free space nearby.'));
+    s = attachFx(state, s, spellFx(s, spell, slot, who.id, [who.id], point));
+    return resolveSpell(s, who, spell, slot, [who], 0, ctx, { point, ruleset: cmd.ruleset });
   }
 
   if (info.trigger === 'damaged') {
@@ -267,6 +305,27 @@ export function spellReaction(
     who.id,
   ]);
   return resumeCast(s, info.command, ctx);
+}
+
+/** Primeira casa livre a até `ft` de `near` onde `who` cabe (destino padrão da Perseguição). */
+function freeCellNear(
+  state: EncounterState,
+  who: Creature,
+  near: Creature,
+  ft: number,
+): Pos | undefined {
+  const nt = tokenOf(state, near.id);
+  if (!nt) return undefined;
+  const blocked = occupiedCells(state, (c) => c.id !== who.id);
+  const reach = Math.ceil(ft / 5) + 1;
+  for (let d = 1; d <= reach; d++)
+    for (let dy = -d; dy <= d; dy++)
+      for (let dx = -d; dx <= d; dx++) {
+        const p = { x: nt.pos.x + dx, y: nt.pos.y + dy };
+        if (!canStand(state.map, p, sizeOf(who), blocked)) continue;
+        if (distanceFt(p, sizeOf(who), nt.pos, sizeOf(near), state.rule) <= ft) return p;
+      }
+  return undefined;
 }
 
 /** Redirecionar Ataque: o reator troca de lugar com um aliado, que passa a ser o alvo do golpe. */

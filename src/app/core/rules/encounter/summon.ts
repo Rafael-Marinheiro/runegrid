@@ -8,6 +8,7 @@ import {
   DragonType,
   faithfulHound,
   animatedChain,
+  flyingSword,
   otherworldlySteed,
   SteedKind,
 } from '../monsters/custom';
@@ -40,12 +41,14 @@ export const summonTemplate: SummonSource = (id, ruleset) => source(id, ruleset)
 
 /** Ficha de um bloco que escala com o espaço (Corcel de Outro Mundo). */
 function customTemplate(
-  kind: 'otherworldly-steed' | 'draconic-spirit' | 'faithful-hound' | 'animated-chain',
+  kind:
+    'otherworldly-steed' | 'draconic-spirit' | 'faithful-hound' | 'animated-chain' | 'flying-sword',
   variant: string,
   ruleset: '2014' | '2024',
   slot: number,
   caster: Creature,
 ): Creature {
+  if (kind === 'flying-sword') return flyingSword(nameLang() === 'en');
   if (kind === 'animated-chain') return animatedChain(nameLang() === 'en');
   if (kind === 'faithful-hound') return faithfulHound(caster, ruleset, nameLang() === 'en');
   return kind === 'otherworldly-steed'

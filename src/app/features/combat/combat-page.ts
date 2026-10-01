@@ -27,7 +27,7 @@ import {
 } from '@core/rules/encounter';
 import { inArea } from '@core/rules/encounter/zones';
 import { attackAllowed } from '@core/rules/encounter/forms';
-import { reactionSpells } from '@core/rules/encounter/reactions';
+import { reactionSpells, redirectAllies } from '@core/rules/encounter/reactions';
 import { canStand, distanceFt, findPath, reachable } from '@core/rules/grid/movement';
 import { DiceTray3d } from '@features/dice/dice-3d/dice-tray-3d';
 import type { StageDie } from '@features/dice/dice-3d/dice-stage';
@@ -896,19 +896,29 @@ export class CombatPage {
     this.store.send({ type: 'removeCondition', targetId: id, condition: name });
   }
 
-  protected react(actorId: string, use: boolean, spellId?: string, slotLevel?: number): void {
+  protected react(
+    actorId: string,
+    use: boolean,
+    spellId?: string,
+    slotLevel?: number,
+    redirect = false,
+  ): void {
+    // Redirecionar Ataque: o aliado que toma o lugar é o primeiro elegível (o Mestre-LLM escolhe pelo MCP)
+    const reactor = this.creature(actorId);
+    const ally = redirect && reactor ? redirectAllies(this.store.state(), reactor)[0] : undefined;
     this.store.send({
       type: 'reaction',
       actorId,
       use,
       ...(spellId ? { spellId, slotLevel, ruleset: this.ui.ruleset() } : {}),
+      ...(ally ? { targetId: ally.id } : {}),
     });
   }
 
   /** Magias de reação que quem reage pode usar agora, conforme o gatilho pendente. */
   protected reactionOptions(r: {
     reactorId: string;
-    spell?: { trigger: 'hit' | 'damaged' | 'cast' };
+    spell?: { trigger: 'hit' | 'damaged' | 'cast' | 'moved' | 'turnEnd' };
   }) {
     const c = this.creature(r.reactorId);
     if (!c || !r.spell) return [];

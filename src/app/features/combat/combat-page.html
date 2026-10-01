@@ -334,7 +334,11 @@
                 ? ui.text('foi atingido(a) por', 'was hit by')
                 : r.spell?.trigger === 'damaged'
                   ? ui.text('sofreu dano de', 'took damage from')
-                  : ui.text('vê uma conjuração de', 'sees a spell cast by')
+                  : r.spell?.trigger === 'moved'
+                    ? ui.text('vê terminar o movimento de', 'sees the move end of')
+                    : r.spell?.trigger === 'turnEnd'
+                      ? ui.text('vê terminar o turno de', 'sees the turn end of')
+                      : ui.text('vê uma conjuração de', 'sees a spell cast by')
             }}
             <b>{{ nameOf(r.targetId) }}</b
             >.
@@ -344,9 +348,20 @@
               <button
                 type="button"
                 class="primary"
-                (click)="react(r.reactorId, true, o.spell.id, o.slot)"
+                (click)="
+                  react(
+                    r.reactorId,
+                    true,
+                    o.spell.id,
+                    o.slot,
+                    o.spell.react?.on === 'hit' && !!o.spell.react.redirect
+                  )
+                "
               >
-                {{ o.spell.name }} ({{ o.slot }}º)
+                {{ o.spell.name }}
+                @if (o.slot) {
+                  ({{ o.slot }}º)
+                }
               </button>
             }
             <button type="button" (click)="react(r.reactorId, false)">

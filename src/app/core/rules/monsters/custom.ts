@@ -227,6 +227,32 @@ export function faithfulHound(caster: Creature, ruleset: '2014' | '2024', en = t
   });
 }
 
+/** Espada Voadora do Solar (SRD 2014): a espada larga flutua e ataca por comando mental, 15 m por turno. */
+export function flyingSword(en = true): Creature {
+  return newCreature('monster', {
+    name: en ? 'Flying Sword' : 'Espada Voadora',
+    icon: 'sword',
+    size: 'small',
+    speed: 50,
+    speeds: { fly: 50, hover: true },
+    ac: 21,
+    abilities: { str: 10, dex: 10, con: 10, int: 1, wis: 1, cha: 1 },
+    hp: { max: 1, current: 1, temp: 0 },
+    // qualquer efeito sobre ela vale como sobre o Solar segurando-a: a espada não sofre dano
+    immunities: [...DAMAGE_TYPES],
+    attacks: [
+      {
+        name: 'Greatsword',
+        bonus: 15,
+        damage: '4d6+8',
+        type: 'slashing',
+        range: 5,
+        extra: [{ damage: '6d8', type: 'radiant' }],
+      },
+    ],
+  });
+}
+
 /** Corrente animada do Diabo de Correntes (SRD 2014): um objeto com CA 20 e 20 PV que ataca com alcance de 3 m. */
 export function animatedChain(en = true): Creature {
   return newCreature('monster', {

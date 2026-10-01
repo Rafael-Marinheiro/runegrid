@@ -42,6 +42,27 @@ const noteEffect = (rounds, note, noteEn, extra = {}) => ({
 
 export default {
   ...shapechangers(),
+  // Flauta de Pã (variante): o SRD traz só a Canção de Ninar, sem CD nem alcance — vale como está escrito
+  satyr: {
+    abilities: {
+      panpipes: {
+        replace: true,
+        from: 'Variant: Panpipes',
+        pt: 'Flauta de Pã',
+        en: 'Panpipes',
+        ability: { cost: 'action' },
+        range: 30,
+        target: { kind: 'creature' },
+        resolution: { kind: 'auto' },
+        condition: { name: 'unconscious', rounds: 10, endsOnDamage: true },
+        ...man(
+          'Só a Canção de Ninar consta no SRD (sem CD): a criatura adormece por 1 minuto; acorda ao sofrer dano ou se alguém gastar uma ação para sacudi-la. O alcance de 9 m é um padrão do app.',
+          'Only Gentle Lullaby appears in the SRD (no DC): the creature falls asleep for 1 minute; it wakes on taking damage or when someone uses an action to shake it. The 30 ft range is an app default.',
+        ),
+        vfx: { kind: 'glow', color: 'arcane' },
+      },
+    },
+  },
   // Fungo Gritador: o grito é um traço automático (o motor avisa quando alguém chega a 9 m)
   shrieker: {
     skip: ['shriek'],

@@ -147,6 +147,40 @@ export function redirectAllies(state: EncounterState, reactor: Creature): Creatu
   });
 }
 
+/** Alguém terminou o movimento (`moved`) ou termina o turno (`turnEnd`): reatores por perto são consultados. */
+export function offerTrigger(
+  state: EncounterState,
+  moverId: string,
+  on: 'moved' | 'turnEnd',
+): EncounterState {
+  const mover = creatureOf(state, moverId);
+  const mt = tokenOf(state, moverId);
+  if (!mt || mover.status === 'dead') return state;
+  let s = state;
+  for (const t of state.tokens) {
+    const r = creatureOf(state, t.creatureId);
+    if (r.id === moverId || r.status !== 'alive' || !canReact(s, r)) continue;
+    if (on === 'moved' && (teamOf(r) === teamOf(mover) || mt.hidden)) continue;
+    const dist = distanceFt(t.pos, sizeOf(r), mt.pos, sizeOf(mover), state.rule);
+    const options = reactionSpells(r, on).filter((o) => {
+      const re = o.spell.react;
+      return (re?.on === 'moved' || re?.on === 'turnEnd') && dist <= re.within;
+    });
+    if (!options.length) continue;
+    s = addPending(
+      s,
+      r,
+      moverId,
+      { trigger: on, moverId },
+      T(
+        `${r.name} pode reagir com ${options.map((o) => o.spell.name).join(' ou ')} (${mover.name}).`,
+        `${r.name} can react with ${options.map((o) => spellName(o.spell)).join(' or ')} (${mover.name}).`,
+      ),
+    );
+  }
+  return s;
+}
+
 /** Duas consultas de reação são sobre o mesmo golpe? */
 export const sameHit = (a: HeldHit, b: HeldHit): boolean =>
   a.attackerId === b.attackerId && a.targetId === b.targetId && a.head === b.head;

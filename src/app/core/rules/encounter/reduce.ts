@@ -44,6 +44,7 @@ import { getSpell } from '../spells/data';
 import { damageParts } from '../spells/scaling';
 import { cast } from './cast';
 import { freeReaction, spellReaction } from './reaction-flow';
+import { offerTrigger } from './reactions';
 import { holdOrApply } from './hits';
 import {
   attackExtra,
@@ -572,6 +573,11 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
           ),
         );
       }
+      if (state.combat.endOffered !== actor.id) {
+        const offered = offerTrigger(state, actor.id, 'turnEnd');
+        if ((offered.combat.pending ?? []).length)
+          return { ...offered, combat: { ...offered.combat, endOffered: actor.id } };
+      }
       const raged = rageEndOfTurn(state, actor.id);
       const t = tickConditions(creatureOf(raged, actor.id));
       let s = withCreature(raged, t.creature);
@@ -581,7 +587,8 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
           T(`${actor.name}: ${CONDITION_LABEL[n]} terminou.`, `${actor.name}: ${condT(n)} ended.`),
           [actor.id],
         );
-      return advanceTurn(endUpkeep(s, actor.id, ctx), ctx);
+      const next = advanceTurn(endUpkeep(s, actor.id, ctx), ctx);
+      return { ...next, combat: { ...next.combat, endOffered: undefined } };
     }
     default:
       // mensagens malformadas de jogadores nunca chegam aqui (validação), mas o reducer não confia em ninguém
@@ -1022,7 +1029,8 @@ function move(
     q.start,
     stop,
   );
-  return hit ? triggerTrap(entered, actorId, hit.trap.id, rng) : entered;
+  const done = hit ? triggerTrap(entered, actorId, hit.trap.id, rng) : entered;
+  return offerTrigger(done, actorId, 'moved');
 }
 
 /** Quem estava ao alcance e deixou de estar (sem Desengajar) dá uma reação a cada inimigo capaz. */
@@ -1356,6 +1364,13 @@ function strike(
     parts.push({
       amount: Math.max(0, extra.total),
       type: rider.type === 'weapon' ? weapon.type : rider.type,
+    });
+  }
+  for (const x of weapon.extra ?? []) {
+    const xexpr = parseDice(x.damage);
+    parts.push({
+      amount: Math.max(0, roll(crit ? criticalExpr(xexpr) : xexpr, rng).total),
+      type: x.type,
     });
   }
   // monstro: o ataque traz dano extra ou uma salvaguarda (mordida envenenada, agarrar…)

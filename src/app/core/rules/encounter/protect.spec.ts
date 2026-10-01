@@ -181,29 +181,35 @@ describe('testes e perseguição', () => {
     expect(t.get().tokens.find((k) => k.creatureId === 'pc')!.hidden).toBeFalsy();
   });
 
-  it('Perseguição teleporta para até 3 m de um inimigo, e só para lá', () => {
+  it('Perseguição: quem termina o movimento à vista é seguido, para até 3 m dele', () => {
     const t = scene([[mon('nalfeshnee', 'nal'), 8]], 5);
+    t.run({ type: 'move', actorId: 'pc', to: { x: 3, y: 2 } });
+    expect(t.get().combat.pending?.map((p) => p.reactorId)).toEqual(['nal']);
     const p = abilitiesOf(t.get().creatures.find((c) => c.id === 'nal')!).find(
       (a) => a.nameEn === 'Pursuit',
     )!;
-    expect(() =>
-      t.run({
-        type: 'reaction',
-        actorId: 'nal',
-        use: true,
-        spellId: p.id,
-        point: { x: 8, y: 4 },
-        ruleset: '2024',
-      }),
-    ).toThrow();
-    t.run({
-      type: 'reaction',
-      actorId: 'nal',
-      use: true,
-      spellId: p.id,
-      point: { x: 2, y: 2 },
-      ruleset: '2024',
-    });
-    expect(t.get().tokens.find((k) => k.creatureId === 'nal')!.pos).toEqual({ x: 2, y: 2 });
+    t.run({ type: 'reaction', actorId: 'nal', use: true, spellId: p.id, ruleset: '2024' });
+    const pos = t.get().tokens.find((k) => k.creatureId === 'nal')!.pos;
+    expect(Math.max(Math.abs(pos.x - 3), Math.abs(pos.y - 2))).toBeLessThanOrEqual(2);
+    expect(t.get().combat.reactionUsed).toContain('nal');
+  });
+
+  it('Tinta do Polvo 2024: ao fim do turno de quem está perto, e só uma vez por consulta', () => {
+    const t = scene([[mon('octopus', 'oct'), 1]], 5);
+    t.run({ type: 'endTurn', actorId: 'pc' });
+    expect(t.get().combat.pending?.map((p) => p.reactorId)).toEqual(['oct']);
+    t.run({ type: 'reaction', actorId: 'oct', use: false });
+    t.run({ type: 'endTurn', actorId: 'pc' });
+    expect(t.get().combat.pending).toEqual([]);
+  });
+
+  it('Desviar Projétil devolve a força quando o dano chega a 0', () => {
+    const t = scene([[mon('stone-giant', 'giant'), 3]], 20, 60);
+    t.run({ type: 'attack', actorId: 'pc', targetId: 'giant', attackIndex: 0 });
+    const spell = abilitiesOf(t.get().creatures.find((c) => c.id === 'giant')!).find(
+      (a) => a.nameEn === 'Deflect Missile',
+    )!;
+    t.run({ type: 'reaction', actorId: 'giant', use: true, spellId: spell.id, ruleset: '2024' });
+    expect(t.get().creatures.find((c) => c.id === 'pc')!.hp.current).toBeLessThan(90);
   });
 });

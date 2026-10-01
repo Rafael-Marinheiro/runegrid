@@ -15,7 +15,7 @@ describe('imagem própria do token', () => {
 
   it('usa a miniatura estática só se válida e sem retrato próprio', () => {
     expect(tokenImageFor({ ...creature, tokenArt: 'miniaturas/goblin_a.png' })).toBe(
-      'data/miniaturas/goblin_a.png',
+      'data/miniaturas/goblin_a.webp',
     );
     expect(tokenImageFor({ ...creature, tokenArt: 'https://x/y.png' })).toBeNull();
     expect(

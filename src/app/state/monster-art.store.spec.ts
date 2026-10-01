@@ -14,7 +14,7 @@ describe('MonsterArtStore', () => {
     const store = TestBed.inject(MonsterArtStore);
     expect(store.urlFor('aboleth')).toBeNull(); // ainda não carregou
     await store.load();
-    expect(store.urlFor('aboleth')).toBe('data/miniaturas/aboleth.png');
+    expect(store.urlFor('aboleth')).toBe('data/miniaturas/aboleth.webp');
     expect(store.urlFor('nao-existe')).toBeNull();
   });
 

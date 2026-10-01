@@ -8,7 +8,7 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { MiniatureQuery, MiniatureRace } from '@core/rules/srd/miniature';
+import { artUrl, MiniatureQuery, MiniatureRace } from '@core/rules/srd/miniature';
 import { MonsterArtStore } from '@state/monster-art.store';
 import { UiPrefs } from '@state/ui-prefs';
 
@@ -63,7 +63,7 @@ const RACES: { id: MiniatureRace; pt: string; en: string }[] = [
             [attr.title]="m.nome"
             (click)="pick.emit(m.arquivo)"
           >
-            <img [src]="'data/' + m.arquivo" alt="" loading="lazy" width="64" height="64" />
+            <img [src]="artUrl(m.arquivo)" alt="" loading="lazy" width="64" height="64" />
           </button>
         } @empty {
           <p class="none">{{ ui.text('Nenhuma miniatura encontrada.', 'No miniature found.') }}</p>
@@ -132,6 +132,7 @@ export class MiniaturePicker implements OnInit {
   readonly pick = output<string | undefined>();
 
   protected readonly races = RACES;
+  protected readonly artUrl = artUrl;
   protected readonly all = signal(false);
   protected readonly raceFilter = signal('');
   protected readonly text = signal('');

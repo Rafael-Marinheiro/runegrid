@@ -1,4 +1,4 @@
-import { isTokenArt } from '@core/rules/srd/miniature';
+import { artUrl, isTokenArt } from '@core/rules/srd/miniature';
 
 /**
  * Ícones de token (desenhos próprios em grade 24×24, contorno): sem dependência e sem licença externa.
@@ -100,7 +100,7 @@ export const tokenImageFor = (c: IconSource): string | null =>
   /^data:image\/(?:png|jpeg|webp);base64,/.test(c.tokenImage)
     ? c.tokenImage
     : isTokenArt(c.tokenArt)
-      ? `data/${c.tokenArt}`
+      ? artUrl(c.tokenArt)
       : null;
 
 export function iconFor(c: IconSource): IconId | null {

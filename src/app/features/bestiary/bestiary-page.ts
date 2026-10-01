@@ -11,7 +11,7 @@ import { ABILITIES, ABILITY_LABEL } from '@core/models/creature';
 import { SrdMonster } from '@core/models/srd';
 import { abilityMod, fmtBonus } from '@core/rules/creature';
 import { crLabel, monsterToCreature } from '@core/rules/srd/convert';
-import { MiniatureQuery, queryFromMonster } from '@core/rules/srd/miniature';
+import { artUrl, MiniatureQuery, queryFromMonster } from '@core/rules/srd/miniature';
 import { monsterNamePt } from '@core/rules/srd/names-pt';
 import { DIFFICULTY_LABEL, estimateEncounter, xpForCr } from '@core/rules/srd/xp';
 import { MiniaturePicker } from '@features/creatures/miniature-picker';
@@ -121,7 +121,7 @@ export class BestiaryPage implements OnInit {
   /** Miniatura do monstro (F11-5), quando o pacote de arte tiver uma para o id. */
   protected artUrl(m: SrdMonster): string | null {
     const file = this.artFile(m);
-    return file ? `data/${file}` : null;
+    return file ? artUrl(file) : null;
   }
 
   /** Variante escolhida na ficha (vale para a lista, o retrato e o token ao levar ao mapa). */

@@ -7,7 +7,7 @@
 export type MiniatureRace = 'humano' | 'anao' | 'elfo' | 'goblin' | 'hobgoblin';
 
 export interface MiniatureEntry {
-  /** Caminho relativo a `data/`, ex.: `miniaturas/goblin_xama-caveira-cajado.png`. */
+  /** Caminho relativo a `data/`, ex.: `miniaturas/goblin_xama-caveira-cajado.webp`. */
   arquivo: string;
   nome: string;
   raca: MiniatureRace;
@@ -23,7 +23,13 @@ export interface MiniatureQuery {
 
 /** Só caminhos estáticos do próprio app (mesma origem para Mestre e jogadores). */
 export const isTokenArt = (s: unknown): s is string =>
-  typeof s === 'string' && /^miniaturas\/[\w.-]+\.png$/.test(s);
+  typeof s === 'string' && /^miniaturas\/[\w.-]+\.(?:png|webp)$/.test(s);
+
+/**
+ * URL da miniatura (relativa à raiz do app). Caminhos antigos `.png`, salvos em campanhas, apontam
+ * para o `.webp` equivalente: o app só publica WebP (`npm run miniaturas`).
+ */
+export const artUrl = (file: string): string => `data/${file.replace(/\.png$/, '.webp')}`;
 
 const plain = (s: string): string => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 

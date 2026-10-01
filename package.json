@@ -11,7 +11,8 @@
     "lint": "ng lint",
     "format:check": "prettier --check \"src/**/*.{ts,html,scss}\"",
     "test:ci": "ng test --watch=false",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "miniaturas": "node scripts/convert-miniaturas.mjs"
   },
   "private": true,
   "packageManager": "npm@11.17.0",
@@ -41,6 +42,7 @@
     "eslint": "^10.9.1",
     "jsdom": "^30.0.0",
     "prettier": "^3.8.1",
+    "sharp": "^0.35.5",
     "typescript": "~6.0.2",
     "typescript-eslint": "8.69.0",
     "vitest": "^5.0.0"

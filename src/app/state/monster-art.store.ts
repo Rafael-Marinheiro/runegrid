@@ -1,5 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import {
+  artUrl,
   MiniatureEntry,
   MiniatureQuery,
   pickMiniature,
@@ -9,7 +10,7 @@ import {
 type Status = 'idle' | 'loading' | 'ready' | 'error';
 
 /**
- * Miniaturas de monstro/NPC (PNG, geradas fora do app). Dois índices, carregados sob demanda:
+ * Miniaturas de monstro/NPC (geradas fora do app em PNG; o app publica WebP, ver `npm run miniaturas`). Dois índices, carregados sob demanda:
  * - `monster-art-map.json`: id do SRD → arte (2014 e 2024 compartilham arquivo quando a criatura
  *   é a mesma);
  * - `miniatura-catalogo.json`: biblioteca de variantes (humanos, anões, elfos, goblins) para
@@ -44,7 +45,7 @@ export class MonsterArtStore {
   /** URL da miniatura do monstro (relativa a `data/`), ou `null` se não houver arte para o id. */
   urlFor(monsterId: string): string | null {
     const file = this.map()[monsterId];
-    return file ? `data/${file}` : null;
+    return file ? artUrl(file) : null;
   }
 
   /** Arquivo da arte do id do SRD (`miniaturas/x.png`), se houver. */

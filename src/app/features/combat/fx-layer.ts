@@ -104,7 +104,26 @@ export interface FxView {
           @case ('slash') {
             @let g = geom(f.from, f.at);
             <g [attr.transform]="'translate(' + g.x2 + ' ' + g.y2 + ') rotate(' + g.ang + ')'">
-              <path class="slash" pathLength="1" d="M -16 -16 Q 10 0 -16 16" />
+              @switch (f.style) {
+                @case ('claw') {
+                  <path class="slash" pathLength="1" d="M -16 -20 Q 6 -14 -16 -8" />
+                  <path class="slash" pathLength="1" d="M -18 -4 Q 8 2 -18 8" />
+                  <path class="slash" pathLength="1" d="M -16 12 Q 6 18 -16 24" />
+                }
+                @case ('bite') {
+                  <path class="slash" pathLength="1" d="M -18 -18 Q 0 -6 -18 -2 M -12 -12 l 4 6" />
+                  <path class="slash" pathLength="1" d="M -18 18 Q 0 6 -18 2 M -12 12 l 4 -6" />
+                }
+                @case ('bash') {
+                  <circle class="ring" [attr.r]="C * 0.45" />
+                }
+                @case ('pierce') {
+                  <path class="slash" pathLength="1" d="M -26 0 L 8 0 M 0 -6 L 8 0 L 0 6" />
+                }
+                @default {
+                  <path class="slash" pathLength="1" d="M -16 -16 Q 10 0 -16 16" />
+                }
+              }
             </g>
             <circle class="still" [attr.cx]="g.x2" [attr.cy]="g.y2" [attr.r]="C * 0.4" />
           }
@@ -238,6 +257,15 @@ export interface FxView {
         filter: drop-shadow(0 0 4px var(--fx));
         animation: fx-slash 0.35s ease-out both;
       }
+      .ring {
+        fill: none;
+        stroke: var(--fx2);
+        stroke-width: 5;
+        filter: drop-shadow(0 0 4px var(--fx));
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: fx-ring 0.4s ease-out both;
+      }
       .still {
         display: none;
         fill: var(--fx);
@@ -313,6 +341,16 @@ export interface FxView {
         transform: scale(1);
       }
     }
+    @keyframes fx-ring {
+      0% {
+        transform: scale(0.3);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1.2);
+        opacity: 0;
+      }
+    }
     @keyframes fx-slash {
       0% {
         stroke-dashoffset: 1;
@@ -336,6 +374,7 @@ export interface FxView {
         .glow,
         .burst,
         .cone,
+        .ring,
         .slash {
           display: none;
         }

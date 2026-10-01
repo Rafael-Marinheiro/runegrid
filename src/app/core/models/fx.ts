@@ -1,4 +1,7 @@
 /** Paleta nomeada dos efeitos visuais; a tela decide as cores reais (e o modo de alto contraste). */
+/** Forma do golpe corpo a corpo: talho, garras (três riscos), mordida (duas mandíbulas), pancada (anel) ou estocada. */
+export type FxStrike = 'claw' | 'bite' | 'bash' | 'pierce';
+
 export type FxColor =
   | 'violet'
   | 'shadow'
@@ -37,7 +40,7 @@ export type Fx =
   | { kind: 'burst'; at: FxPoint; radius: number; color: FxColor }
   | { kind: 'cone'; from: FxPoint; to: FxPoint; length: number; color: FxColor }
   /** Golpe corpo a corpo sobre o alvo. */
-  | { kind: 'slash'; from: FxPoint; at: FxPoint; color: FxColor };
+  | { kind: 'slash'; from: FxPoint; at: FxPoint; color: FxColor; style?: FxStrike };
 
 /** Como uma magia se mostra; escrito magia a magia, a partir do texto dela. */
 export interface SpellVfx {

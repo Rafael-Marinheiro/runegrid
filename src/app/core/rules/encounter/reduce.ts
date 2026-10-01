@@ -978,7 +978,7 @@ function abilityStrike(
   return attachFx(
     s,
     strike(s, creatureOf(s, actor.id), target, index, dist, [], ctx.rng),
-    attackFx(s, actor.id, target.id, weapon.range, weapon.type),
+    attackFx(s, actor.id, target.id, weapon.range, weapon.type, weapon.name),
   );
 }
 
@@ -990,7 +990,7 @@ function attack(
 ): EncounterState {
   const next = resolveAttack(state, cmd, ctx);
   const w = creatureOf(state, cmd.actorId).attacks[cmd.attackIndex];
-  return attachFx(state, next, attackFx(state, cmd.actorId, cmd.targetId, w.range, w.type));
+  return attachFx(state, next, attackFx(state, cmd.actorId, cmd.targetId, w.range, w.type, w.name));
 }
 
 function resolveAttack(

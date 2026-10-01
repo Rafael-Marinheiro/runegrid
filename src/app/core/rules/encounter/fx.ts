@@ -1,6 +1,6 @@
 import { DamageType } from '../../models/creature';
 import { EncounterState } from '../../models/encounter';
-import { Fx, FxColor, FxPoint } from '../../models/fx';
+import { Fx, FxColor, FxPoint, FxStrike } from '../../models/fx';
 import { Pos } from '../../models/grid';
 import { Spell } from '../../models/spell';
 import { rayCount } from '../spells/scaling';
@@ -29,6 +29,23 @@ export function centerOf(state: EncounterState, creatureId: string): FxPoint | n
   return { x: t.pos.x + half, y: t.pos.y + half };
 }
 
+/** Forma do golpe pelo nome do ataque (mordida, garra, pancada…) ou, sem pista, pelo tipo de dano. */
+function strikeStyle(name: string, type: DamageType): { style?: FxStrike } {
+  const n = name.toLowerCase();
+  if (/bite|chomp|tusk|gore|fang/.test(n)) return { style: 'bite' };
+  if (/claw|talon|rend|shred|scratch|rake/.test(n)) return { style: 'claw' };
+  if (
+    /slam|fist|hoof|hooves|tail|ram|club|maul|hammer|pummel|crush|stomp|pseudopod|mace|stone|rock/.test(
+      n,
+    )
+  )
+    return { style: 'bash' };
+  if (/sting|spear|pike|lance|dagger|horn|beak|tentacle/.test(n)) return { style: 'pierce' };
+  if (type === 'bludgeoning') return { style: 'bash' };
+  if (type === 'piercing') return { style: 'pierce' };
+  return {};
+}
+
 /** Golpe de arma: corpo a corpo = talho na cor do dano; à distância = flecha. */
 export function attackFx(
   state: EncounterState,
@@ -36,13 +53,14 @@ export function attackFx(
   targetId: string,
   range: number,
   type: DamageType,
+  weaponName = '',
 ): Fx[] {
   const from = centerOf(state, actorId);
   const at = centerOf(state, targetId);
   if (!from || !at) return [];
   return range > 5
     ? [{ kind: 'arrow', from, to: at, color: 'steel' }]
-    : [{ kind: 'slash', from, at, color: colorOfDamage(type) }];
+    : [{ kind: 'slash', from, at, color: colorOfDamage(type), ...strikeStyle(weaponName, type) }];
 }
 
 /** Efeito da magia conforme o `vfx` dela e quem/onde ela atinge. */

@@ -195,6 +195,23 @@
           <b>{{ a.name }}.</b> {{ a.desc }}
         </p>
       }
+      @if (m.reactions?.length) {
+        <h3>{{ ui.text('Reações', 'Reactions') }}</h3>
+        @for (a of m.reactions; track a.name) {
+          <p>
+            <b>{{ a.name }}.</b> {{ a.desc }}
+          </p>
+        }
+      }
+      @if (m.legendary?.actions?.length) {
+        <h3>{{ ui.text('Ações lendárias', 'Legendary actions') }}</h3>
+        <p class="muted">{{ m.legendary.desc }}</p>
+        @for (a of m.legendary.actions; track a.name) {
+          <p>
+            <b>{{ a.name }}{{ a.cost > 1 ? ' (' + a.cost + ')' : '' }}.</b> {{ a.desc }}
+          </p>
+        }
+      }
       <p class="engine">
         {{ ui.text('No combate:', 'In combat:') }}
         {{

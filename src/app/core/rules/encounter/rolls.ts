@@ -41,9 +41,14 @@ export function attackExtra(
   const c = creatureOf(state, actorId);
   const dice = attackDice(c);
   const parts = dice.map((d) => rollSigned(d, rng));
-  const bonus = parts.reduce((a, b) => a + b, 0);
+  const flat = effectsOf(c).reduce((n, e) => n + (e.mods.attackBonus ?? 0), 0);
+  const bonus = parts.reduce((a, b) => a + b, 0) + flat;
   const s = spendOnce(state, c, (e) => !!e.mods.attackDie || !!e.mods.attackMode);
-  return { state: s, bonus, text: parts.map(signed).join('') };
+  return {
+    state: s,
+    bonus,
+    text: parts.map(signed).join('') + (flat ? signed(flat) : ''),
+  };
 }
 
 /** O alvo foi atacado: gasta o que valia só para o próximo ataque contra ele (Raio Guia). */

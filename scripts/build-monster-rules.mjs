@@ -311,7 +311,7 @@ function autoEntry(m) {
   // "The kraken uses Lightning Strike": a ação lendária repete a ação de outro nome
   for (const key of legendNarrative) {
     const a = entry.abilities[key];
-    const want = /\buses? (?:its )?([\w' -]+?)\.?$/i.exec(a.desc.trim())?.[1];
+    const want = /\buses? (?:its )?([\w' -]+?)\.(?:\s|$)/i.exec(a.desc.trim())?.[1];
     const hit = Object.entries(entry.abilities).find(
       ([k, x]) =>
         k !== key && want && x.en.toLowerCase() === want.toLowerCase() && !x.ability?.rider,

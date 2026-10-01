@@ -101,6 +101,22 @@ export function addEffect(c: Creature, effect: ActiveEffect): Creature {
   const old = effectsOf(c).find((e) => e.id === effect.id);
   if (old?.mods.maxHp) next = shiftMaxHp(next, -old.mods.maxHp);
   if (effect.mods.maxHp) next = shiftMaxHp(next, effect.mods.maxHp, effect.mods.maxHp > 0);
+  if (effect.stack && old)
+    effect = {
+      ...effect,
+      mods: {
+        ...effect.mods,
+        ...(effect.mods.ac !== undefined || old.mods.ac !== undefined
+          ? { ac: (old.mods.ac ?? 0) + (effect.mods.ac ?? 0) }
+          : {}),
+        ...(effect.mods.attackBonus !== undefined || old.mods.attackBonus !== undefined
+          ? { attackBonus: (old.mods.attackBonus ?? 0) + (effect.mods.attackBonus ?? 0) }
+          : {}),
+        ...(effect.mods.weaponBonus !== undefined || old.mods.weaponBonus !== undefined
+          ? { weaponBonus: (old.mods.weaponBonus ?? 0) + (effect.mods.weaponBonus ?? 0) }
+          : {}),
+      },
+    };
   return { ...next, effects: [...rest, effect] };
 }
 

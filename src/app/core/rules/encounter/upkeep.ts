@@ -25,6 +25,7 @@ import { T, condT, spellT } from '../i18n';
 import { guardBites, tickSummons } from './summon';
 import { inRunningWater, isSunlit } from './environment';
 import { shriekTurn } from './alerts';
+import { offerTrigger } from './reactions';
 
 /**
  * Tudo que dura só enquanto o conjurador mantém a concentração some junto com ela: efeitos,
@@ -201,7 +202,7 @@ export function beginUpkeep(state: EncounterState, actorId: string, ctx: Context
     if ((z.on === 'start' || z.on === 'both') && zoneContains(s, z, actorId))
       s = triggerZone(s, z, actorId, ctx);
   }
-  return s;
+  return offerTrigger(s, actorId, 'turnStart');
 }
 
 export function dealDot(

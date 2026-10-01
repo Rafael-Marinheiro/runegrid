@@ -224,15 +224,33 @@ export function spellReaction(
     return dropOnAttack(s, info.hit.attackerId);
   }
 
-  if (info.trigger === 'moved' || info.trigger === 'turnEnd') {
+  if (info.trigger === 'moved' || info.trigger === 'turnEnd' || info.trigger === 'turnStart') {
     const mover = creatureOf(s, info.moverId);
     let point = cmd.point;
     if (spell.teleportNear !== undefined && !point)
       point = freeCellNear(s, who, mover, spell.teleportNear);
     if (spell.teleportNear !== undefined && !point)
       throw new RuleError(T('Não há espaço livre perto.', 'No free space nearby.'));
-    s = attachFx(state, s, spellFx(s, spell, slot, who.id, [who.id], point));
-    return resolveSpell(s, who, spell, slot, [who], 0, ctx, { point, ruleset: cmd.ruleset });
+    const onTrigger =
+      spell.react &&
+      (spell.react.on === 'moved' ||
+        spell.react.on === 'turnEnd' ||
+        spell.react.on === 'turnStart') &&
+      spell.react.target === 'trigger';
+    const targets = onTrigger ? [mover] : [who];
+    s = attachFx(
+      state,
+      s,
+      spellFx(
+        s,
+        spell,
+        slot,
+        who.id,
+        targets.map((t) => t.id),
+        point,
+      ),
+    );
+    return resolveSpell(s, who, spell, slot, targets, 0, ctx, { point, ruleset: cmd.ruleset });
   }
 
   if (info.trigger === 'damaged') {

@@ -54,6 +54,7 @@ export function makeEffect(
     ...(e.ends ? { ends: e.ends } : {}),
     ...(spell.concentration ? { concentration: true } : {}),
     ...(e.endsOnDamage ? { endsOnDamage: true } : {}),
+    ...(e.stack ? { stack: true } : {}),
     mods,
   };
 }

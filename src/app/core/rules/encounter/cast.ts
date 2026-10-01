@@ -13,8 +13,10 @@ import {
   allMods,
   autoFailsSave,
   effectiveAc,
+  effectsOf,
   heal,
   proficiencyBonus,
+  removeEffects,
   RuleError,
   saveBonus,
   spellSaveDc,
@@ -440,6 +442,38 @@ const narrativeNote = (spell: Spell): string =>
     `${spellName(spell)}: narrative effect, the GM runs it.`,
   );
 
+/** Aceleração, Agilidade Imortal, Furtividade Sombria: Correr, Desengajar e Esconder sem gastar outra ação. */
+function grantActions(state: EncounterState, caster: Creature, spell: Spell): EncounterState {
+  let s = state;
+  const done: string[] = [];
+  for (const g of spell.grants ?? []) {
+    if (g === 'hide') {
+      s = {
+        ...s,
+        tokens: s.tokens.map((t) => (t.creatureId === caster.id ? { ...t, hidden: true } : t)),
+      };
+      done.push(T('Esconder', 'Hide'));
+    } else if (s.combat.turn?.actorId === caster.id) {
+      s = {
+        ...s,
+        combat: {
+          ...s.combat,
+          turn: { ...s.combat.turn, ...(g === 'dash' ? { dashed: true } : { disengaged: true }) },
+        },
+      };
+      done.push(g === 'dash' ? T('Correr', 'Dash') : T('Desengajar', 'Disengage'));
+    }
+  }
+  return addLog(
+    s,
+    T(
+      `${caster.name} usa ${done.join(' e ') || spell.name}.`,
+      `${caster.name} uses ${done.join(' and ') || spellName(spell)}.`,
+    ),
+    [caster.id],
+  );
+}
+
 /** Aplica o efeito da magia (ataque, salvaguarda ou automático) aos alvos já escolhidos. */
 export function resolveSpell(
   state: EncounterState,
@@ -465,6 +499,18 @@ export function resolveSpell(
   const pointOrigin = (t.kind === 'sphere' || t.kind === 'cube') && !t.self;
   const origin = pointOrigin ? cmd.point : tokenOf(s, caster.id)?.pos;
 
+  if (spell.toggle && effectsOf(caster).some((e) => e.spell === spell.id)) {
+    s = withCreature(
+      s,
+      removeEffects(creatureOf(s, caster.id), (e) => e.spell === spell.id),
+    );
+    return addLog(
+      s,
+      T(`${caster.name}: ${spell.name} termina.`, `${caster.name}: ${spellName(spell)} ends.`),
+      [caster.id],
+    );
+  }
+  if (spell.grants) return grantActions(s, caster, spell);
   if (spell.check) return skillCheckAbility(s, caster, spell, ctx.rng);
   if (spell.narrative) return s;
   if (mode !== 'cast' || !spell.noInitial) {

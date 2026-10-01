@@ -918,7 +918,7 @@ export class CombatPage {
   /** Magias de reação que quem reage pode usar agora, conforme o gatilho pendente. */
   protected reactionOptions(r: {
     reactorId: string;
-    spell?: { trigger: 'hit' | 'damaged' | 'cast' | 'moved' | 'turnEnd' };
+    spell?: { trigger: 'hit' | 'damaged' | 'cast' | 'moved' | 'turnEnd' | 'turnStart' };
   }) {
     const c = this.creature(r.reactorId);
     if (!c || !r.spell) return [];

@@ -92,6 +92,8 @@ export type PendingSpellReaction =
   | { trigger: 'moved'; moverId: string }
   /** Alguém termina o turno perto do reator (Tinta do Polvo 2024). */
   | { trigger: 'turnEnd'; moverId: string }
+  /** Alguém começa o turno perto do reator (Olhar Inquietante). */
+  | { trigger: 'turnStart'; moverId: string }
   /** Alguém conjura uma magia (Contrafeitiço): a conjuração inteira aguarda. */
   | { trigger: 'cast'; casterId: string; spellId: string; slotLevel: number; command: string };
 

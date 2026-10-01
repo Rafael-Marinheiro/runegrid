@@ -10,16 +10,16 @@ import { Command, dispatch, newEncounter } from '../encounter';
 import { buildMonsterAbilities, MonsterRules } from '../monsters/build';
 import { abilitiesOf, registerMonsterAbilities } from '../monsters/registry';
 import { monsterToCreature } from '../srd/convert';
+import { splitOnDamage } from './summon';
+import { effectiveAc } from '../creature';
 
 const dm: Role = { kind: 'dm' };
-const rng = () => 0.5; // d20 = 11
 const sheets = monsters24 as unknown as SrdMonster[];
 const old = monsters14 as unknown as SrdMonster[];
+const OLD = new Set(['aboleth', 'green-hag']);
 const mon = (id: string, as: string) => ({
   ...monsterToCreature(
-    id === 'aboleth'
-      ? old.find((m) => m.id === id)!
-      : sheets.find((m) => m.id === `srd-2024_${id}`)!,
+    OLD.has(id) ? old.find((m) => m.id === id)! : sheets.find((m) => m.id === `srd-2024_${id}`)!,
   ),
   id: as,
 });
@@ -36,7 +36,12 @@ beforeAll(() => {
 });
 
 /** O herói (iniciativa 20) ataca `foes`, posicionados em linha na linha 2. */
-function scene(foes: [ReturnType<typeof mon>, number][], bonus: number, range = 5) {
+function scene(
+  foes: [ReturnType<typeof mon>, number][],
+  bonus: number,
+  range = 5,
+  rng: () => number = () => 0.5,
+) {
   let s = newEncounter(mapFromAscii(Array.from({ length: 5 }, () => '..........')));
   const run = (cmd: Command) => (s = dispatch(s, cmd, { rng, role: dm }));
   run({
@@ -211,5 +216,76 @@ describe('testes e perseguição', () => {
     )!;
     t.run({ type: 'reaction', actorId: 'giant', use: true, spellId: spell.id, ruleset: '2024' });
     expect(t.get().creatures.find((c) => c.id === 'pc')!.hp.current).toBeLessThan(90);
+  });
+});
+
+describe('habilidades que antes ficavam com o Mestre', () => {
+  it('Apressar do golem de argila: Correr e Desengajar sem gastar outra ação', () => {
+    const t = scene([[mon('clay-golem', 'golem'), 6]], 5);
+    t.run({ type: 'endTurn', actorId: 'pc' });
+    const ab = abilitiesOf(t.get().creatures.find((c) => c.id === 'golem')!).find(
+      (a) => a.nameEn === 'Hasten',
+    )!;
+    t.run({ type: 'cast', actorId: 'golem', spellId: ab.id, ruleset: '2024' });
+    expect(t.get().combat.turn).toMatchObject({ dashed: true, disengaged: true });
+  });
+
+  it('Antenas do Monstro da Ferrugem: a penalidade de CA é cumulativa', () => {
+    const t = scene([[mon('rust-monster', 'rust'), 1]], 5, 5, () => 0.1);
+    t.run({ type: 'endTurn', actorId: 'pc' });
+    const ab = abilitiesOf(t.get().creatures.find((c) => c.id === 'rust')!).find(
+      (a) => a.nameEn === 'Antennae',
+    )!;
+    const ac0 = effectiveAc(t.get().creatures.find((c) => c.id === 'pc')!);
+    const zap = () =>
+      t.run({
+        type: 'cast',
+        actorId: 'rust',
+        spellId: ab.id,
+        option: 'armor',
+        targetId: 'pc',
+        ruleset: '2024',
+      });
+    zap();
+    expect(effectiveAc(t.get().creatures.find((c) => c.id === 'pc')!)).toBe(ac0 - 1);
+  });
+
+  it('Gosma e Pudim Negro 2024 também se dividem ao ficar Feridos', () => {
+    const t = scene([[mon('black-pudding', 'pud'), 3]], 5);
+    const hurt = {
+      ...t.get(),
+      creatures: t.get().creatures.map((c) =>
+        c.id === 'pud'
+          ? {
+              ...c,
+              hp: { ...c.hp, current: Math.floor(c.hp.max / 2) - 2 },
+              lastHit: { type: 'fire' as const },
+            }
+          : c,
+      ),
+    };
+    const out = splitOnDamage(hurt, 'pud', 20);
+    expect(out.creatures.filter((c) => c.srdId?.endsWith('black-pudding'))).toHaveLength(2);
+  });
+
+  it('Aparência Ilusória: usar de novo encerra a ilusão', () => {
+    const t = scene([[mon('green-hag', 'hag'), 6]], 5);
+    t.run({ type: 'endTurn', actorId: 'pc' });
+    const ab = abilitiesOf(t.get().creatures.find((c) => c.id === 'hag')!).find(
+      (a) => a.nameEn === 'Illusory Appearance',
+    )!;
+    const cast = () => t.run({ type: 'cast', actorId: 'hag', spellId: ab.id, ruleset: '2014' });
+    cast();
+    expect(t.get().creatures.find((c) => c.id === 'hag')!.effects?.length).toBe(1);
+    t.run({ type: 'endTurn', actorId: 'hag' });
+    t.run({ type: 'endTurn', actorId: 'pc' });
+    cast();
+    expect(t.get().creatures.find((c) => c.id === 'hag')!.effects?.length ?? 0).toBe(0);
+  });
+
+  it('Olhar Inquietante: no início do turno de quem chega perto o diabo pode reagir', () => {
+    const t = scene([[mon('chain-devil', 'dev'), 3]], 5);
+    // o turno do herói já começou ao iniciar o combate
+    expect(t.get().combat.pending?.map((p) => p.reactorId)).toEqual(['dev']);
   });
 });

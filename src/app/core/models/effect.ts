@@ -4,6 +4,8 @@ import type { Ability, ConditionName, DamageType } from './creature';
 export interface EffectMods {
   /** Bônus de CA (Escudo +5, Escudo da Fé +2). */
   ac?: number;
+  /** Bônus (ou penalidade) nas jogadas de ataque (Antenas do Monstro da Ferrugem). */
+  attackBonus?: number;
   /** CA mínima (Pele de Árvore: a CA não pode ser menor que 16). */
   acMin?: number;
   /** Base de CA sem armadura (Armadura Arcana: 13 + Des); só vale se maior que a CA atual. */
@@ -123,6 +125,8 @@ export interface EffectMods {
   mistyEscape?: boolean;
   /** Divide-se em dois ao sofrer dano de raio ou cortante (gosmas, Dividir). */
   split?: boolean;
+  /** Dividir do 2024: também divide ao ficar Ferido (PV caem a metade ou menos). */
+  splitBloodied?: boolean;
   /** Implacável: uma vez por descanso, dano de até `maxDamage` que o levaria a 0 PV o deixa com 1 PV. */
   relentless?: number;
   /** Vantagem Marcial: uma vez por turno, dano extra se um aliado capaz de agir está a até 5 ft do alvo. */
@@ -142,6 +146,8 @@ export interface ActiveEffect {
   name: string;
   /** Quem conjurou. */
   by: string;
+  /** Conjurar de novo soma `ac` e `attackBonus` em vez de substituir (penalidade cumulativa). */
+  stack?: boolean;
   /** Rodadas restantes; sem valor = até ser encerrado (concentração, dissipar, descanso). */
   rounds?: number;
   /**

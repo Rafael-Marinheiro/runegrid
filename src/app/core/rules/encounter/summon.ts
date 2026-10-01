@@ -389,7 +389,11 @@ const SMALLER: Record<Creature['size'], Creature['size']> = {
 export function splitOnDamage(state: EncounterState, id: string, dealt: number): EncounterState {
   const c = state.creatures.find((x) => x.id === id);
   if (!c || dealt <= 0 || c.status !== 'alive' || !allMods(c).some((m) => m.split)) return state;
-  if (c.lastHit?.type !== 'lightning' && c.lastHit?.type !== 'slashing') return state;
+  const bloodied =
+    allMods(c).some((m) => m.splitBloodied) &&
+    c.hp.current <= c.hp.max / 2 &&
+    c.hp.current + dealt > c.hp.max / 2;
+  if (c.lastHit?.type !== 'lightning' && c.lastHit?.type !== 'slashing' && !bloodied) return state;
   if (c.hp.current < 10 || sizeOf(c) < 1 || c.size === 'small' || c.size === 'tiny') return state;
   const at = tokenOf(state, id);
   if (!at) return state;

@@ -338,7 +338,9 @@
                     ? ui.text('vê terminar o movimento de', 'sees the move end of')
                     : r.spell?.trigger === 'turnEnd'
                       ? ui.text('vê terminar o turno de', 'sees the turn end of')
-                      : ui.text('vê uma conjuração de', 'sees a spell cast by')
+                      : r.spell?.trigger === 'turnStart'
+                        ? ui.text('vê começar o turno de', 'sees the turn start of')
+                        : ui.text('vê uma conjuração de', 'sees a spell cast by')
             }}
             <b>{{ nameOf(r.targetId) }}</b
             >.

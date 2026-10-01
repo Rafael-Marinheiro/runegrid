@@ -341,6 +341,9 @@ describe('cobertura das regras de monstros (F13)', () => {
           sp.table ||
           sp.react ||
           sp.check ||
+          sp.grants ||
+          sp.options?.length ||
+          sp.toggle ||
           sp.manual ||
           sp.ability?.rider ||
           sp.ability?.attack ||

@@ -80,6 +80,8 @@ export interface SpellEffect {
   scale?: { from: number; mods: EffectMods }[];
   /** O efeito acaba quando quem o tem sofre dano (Padrão Hipnótico). */
   endsOnDamage?: boolean;
+  /** Cumulativo: usar de novo soma CA e bônus de ataque ao que já há. */
+  stack?: boolean;
   /** A quem se aplica: ao alvo atingido/que falhou (padrão), só ao conjurador, ou aos dois. */
   to?: 'targets' | 'self' | 'both';
 }
@@ -346,8 +348,9 @@ export interface Spell {
         /** Se o dano chegar a 0, a força volta contra quem atacou (salvaguarda, dano). */
         reflect?: { ability: Ability; dc: number; dice: string; type: DamageType; range: number };
       }
-    | { on: 'moved'; within: number }
-    | { on: 'turnEnd'; within: number }
+    | { on: 'moved'; within: number; target?: 'trigger' }
+    | { on: 'turnEnd'; within: number; target?: 'trigger' }
+    | { on: 'turnStart'; within: number; target?: 'trigger' }
     | { on: 'damaged' }
     | { on: 'cast'; save?: boolean };
   /** Alcance em pés (5 = toque, 0 = pessoal). */
@@ -421,6 +424,10 @@ export interface Spell {
   zone?: SpellZone;
   /** Efeito visual no mapa, escrito a partir da descrição desta magia. */
   vfx?: SpellVfx;
+  /** Concede ações ao turno de quem usa (Aceleração: Correr e Desengajar; Esconder). */
+  grants?: ('dash' | 'disengage' | 'hide')[];
+  /** Usar de novo encerra o efeito que a habilidade criou (Aparência Ilusória). */
+  toggle?: boolean;
   /** Teste de perícia do conjurador, rolado pelo motor (Detectar); revela quem está escondido e perde no teste. */
   check?: { skill: Skill };
   /** O destino do teletransporte tem de ficar a até tantos pés de um inimigo (Perseguição). */

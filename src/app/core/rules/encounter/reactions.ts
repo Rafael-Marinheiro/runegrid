@@ -151,7 +151,7 @@ export function redirectAllies(state: EncounterState, reactor: Creature): Creatu
 export function offerTrigger(
   state: EncounterState,
   moverId: string,
-  on: 'moved' | 'turnEnd',
+  on: 'moved' | 'turnEnd' | 'turnStart',
 ): EncounterState {
   const mover = creatureOf(state, moverId);
   const mt = tokenOf(state, moverId);
@@ -164,7 +164,9 @@ export function offerTrigger(
     const dist = distanceFt(t.pos, sizeOf(r), mt.pos, sizeOf(mover), state.rule);
     const options = reactionSpells(r, on).filter((o) => {
       const re = o.spell.react;
-      return (re?.on === 'moved' || re?.on === 'turnEnd') && dist <= re.within;
+      return (
+        (re?.on === 'moved' || re?.on === 'turnEnd' || re?.on === 'turnStart') && dist <= re.within
+      );
     });
     if (!options.length) continue;
     s = addPending(

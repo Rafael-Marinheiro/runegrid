@@ -97,7 +97,8 @@ export const dmgT = (t: DamageType): string => T(DAMAGE_LABEL[t].toLowerCase(), 
 export const abilityT = (a: Ability): string => T(ABILITY_LABEL[a], ABILITY_EN[a]);
 
 /** Nome da magia nos dois idiomas. */
-export const spellName = (s: Pick<Spell, 'name'>): string => spellT(s.name);
+export const spellName = (s: Pick<Spell, 'name' | 'nameEn'>): string =>
+  s.nameEn ? T(s.name, s.nameEn) : spellT(s.name);
 /** Nota `manual` da magia nos dois idiomas. */
 export const manualT = (s: Pick<Spell, 'manual' | 'manualEn'>): string =>
   T(s.manual ?? '', s.manualEn ?? s.manual ?? '');

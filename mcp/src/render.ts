@@ -1,6 +1,7 @@
 /** Text views of the scene for the LLM: an ASCII map (per role) and the game/combat status. */
 import { CONDITION_LABEL, DAMAGE_LABEL, type Creature } from '@core/models/creature';
 import type { EncounterState } from '@core/models/encounter';
+import { abilitiesOf } from '@core/rules/monsters/registry';
 import { getSpell } from '@core/rules/spells/data';
 import { creatureOf, project, sizeOf, teamOf, tokenOf } from '@core/rules/encounter';
 import { effectiveSpeed } from '@core/rules/creature';
@@ -190,6 +191,26 @@ function combatBlock(s: EncounterState, lab: Map<string, string>): string[] {
           .map(([lv, v]) => `L${lv} ${v.max - v.used}/${v.max}`)
           .join(' ') || 'none'
       }`,
+    );
+  const abilities = abilitiesOf(actor);
+  if (abilities.length)
+    L.push(
+      `Abilities (act "cast" with spell:"<name>"): ${abilities
+        .map((x) => {
+          const st = actor.abilityState?.[x.id];
+          const ab = x.ability!;
+          const state = ab.recharge
+            ? st?.recharging
+              ? ` RECHARGING (${ab.recharge}-6)`
+              : ` ready (Recharge ${ab.recharge}-6)`
+            : ab.uses
+              ? ` ${ab.uses.n - (st?.used ?? 0)}/${ab.uses.n} left`
+              : '';
+          return `${x.nameEn ?? x.name} [${ab.cost}${ab.cost === 'legendary' ? ' ' + (ab.legendary ?? 1) : ''}${state}, ${x.range} ft]`;
+        })
+        .join(
+          ' | ',
+        )}${actor.legendary ? ` · Legendary actions ${actor.legendary.left}/${actor.legendary.max}` : ''}`,
     );
   for (const p of combat.pending ?? []) {
     const who = creatureOf(s, p.reactorId).name;

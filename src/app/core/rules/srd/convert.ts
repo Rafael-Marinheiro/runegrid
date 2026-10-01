@@ -52,6 +52,7 @@ export function monsterToCreature(
     resistances: [...m.resistances],
     immunities: [...m.immunities],
     vulnerabilities: [...m.vulnerabilities],
+    srdId: m.id,
     ...(features.length ? { features } : {}),
     ...(tokenArt ? { tokenArt } : {}),
   });

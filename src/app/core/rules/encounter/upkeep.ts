@@ -18,6 +18,8 @@ import { resolveSpell } from './cast';
 import { aftermath, checkOutcome, Context, dtype, notes } from './helpers';
 import { addLog, creatureOf, tokenOf, withCreature } from './state';
 import { zoneContains } from './zones';
+import { abilitiesAtTurnStart } from './ability';
+import { abilitiesOf } from '../monsters/registry';
 import { T, condT, spellT } from '../i18n';
 
 /**
@@ -99,7 +101,7 @@ function triggerZone(
 
 /** Começa o turno de `actorId`: efeitos que acabam, regeneração, dano contínuo e zonas. */
 export function beginUpkeep(state: EncounterState, actorId: string, ctx: Context): EncounterState {
-  let s = state;
+  let s = abilitiesAtTurnStart(state, actorId, ctx.rng, abilitiesOf(creatureOf(state, actorId)));
   const ex = startTurnExpiry(s.creatures, actorId);
   s = { ...s, creatures: ex.creatures };
   for (const { holder, effect } of ex.expired)

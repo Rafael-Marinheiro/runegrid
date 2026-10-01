@@ -755,7 +755,15 @@ const BUILTIN_ALIASES: Readonly<Record<string, string>> = {
 let spellReverse: Map<string, string> | undefined;
 
 /** Inverso de `spellNamePt`: o nome em inglês de uma magia guardada em pt-BR (sem entrada, devolve o próprio). */
+/** Nomes extras (habilidades de monstro, registradas ao carregar as regras). */
+export function registerSpellNameEn(pt: string, en: string): void {
+  extraNames.set(pt, en);
+}
+const extraNames = new Map<string, string>();
+
 export const spellNameEn = (namePt: string): string => {
+  const extra = extraNames.get(namePt);
+  if (extra) return extra;
   spellReverse ??= new Map([
     ...Object.entries(SPELL_NAMES_PT).map(([en, pt]): [string, string] => [pt, en]),
     ...Object.entries(BUILTIN_ALIASES),

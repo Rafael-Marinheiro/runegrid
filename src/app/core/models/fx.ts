@@ -30,7 +30,7 @@ export type Fx =
   | { kind: 'bolts'; from: FxPoint; to: FxPoint; count: number; color: FxColor }
   | { kind: 'arrow'; from: FxPoint; to: FxPoint; color: FxColor }
   /** Raio contínuo do conjurador ao alvo. */
-  | { kind: 'ray'; from: FxPoint; to: FxPoint; color: FxColor }
+  | { kind: 'ray'; from: FxPoint; to: FxPoint; color: FxColor; width?: number }
   /** O alvo brilha por um instante (cura, bênção, radiância). */
   | { kind: 'glow'; at: FxPoint; color: FxColor }
   /** Onda que se expande a partir de um ponto (`radius` em células). */

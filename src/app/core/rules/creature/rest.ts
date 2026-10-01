@@ -1,4 +1,5 @@
 import { T } from '../i18n';
+import { restAbilities } from '../monsters/registry';
 import { Creature } from '../../models/creature';
 import { RuleError } from './stats';
 
@@ -61,6 +62,10 @@ export function spendResource(c: Creature, name: string): Creature {
  * espaços de magia, recursos e salvaguardas contra a morte (PV temporários não mudam).
  */
 export function rest(c: Creature, kind: 'short' | 'long'): Creature {
+  return restAbilities(restBody(c, kind), kind);
+}
+
+function restBody(c: Creature, kind: 'short' | 'long'): Creature {
   if (c.status === 'dead') return c;
   const resources = c.resources.map((r) =>
     kind === 'long' || r.recharge === 'short' ? { ...r, used: 0 } : r,

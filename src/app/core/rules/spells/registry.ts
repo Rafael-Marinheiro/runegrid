@@ -1,5 +1,6 @@
 import { Spell } from '../../models/spell';
 import { SPELLS } from './builtin';
+import { getMonsterAbility, isAbilityId } from '../monsters/registry';
 
 export type SpellRuleset = '2014' | '2024';
 
@@ -16,6 +17,7 @@ export function registerSpells(ruleset: SpellRuleset, spells: Spell[]): void {
 
 /** Magia pelo id; o 2024 cai no 2014 (mesma mecânica) e ambos caem nas magias embutidas e, por fim, nas só do 2024. */
 export function getSpell(id: string, ruleset: SpellRuleset = '2014'): Spell | undefined {
+  if (isAbilityId(id)) return getMonsterAbility(id);
   const base = baseSpellId(id);
   return (
     tables[ruleset].get(base) ??

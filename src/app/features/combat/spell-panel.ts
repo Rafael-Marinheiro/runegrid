@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { Creature } from '@core/models/creature';
 import { Spell } from '@core/models/spell';
+import { abilitiesOf } from '@core/rules/monsters/registry';
 import { getSpell } from '@core/rules/spells/data';
 import { spellNameEn } from '@core/rules/srd/names-pt';
 import { SpellStore } from '@state/spell.store';
@@ -26,16 +27,20 @@ import { UiPrefs } from '@state/ui-prefs';
           type="button"
           class="spell"
           [class.active]="picked()?.id === sp.id"
-          [disabled]="!available(sp).length || !!sp.react || sp.castTime === 'long'"
+          [disabled]="!available(sp).length || !!sp.react || sp.castTime === 'long' || spent(sp)"
           [attr.title]="sp.description"
           (click)="pick(sp)"
         >
-          <span class="name">{{ ui.text(sp.name, nameEn(sp.name)) }}</span>
-          <span class="meta">{{
-            sp.level === 0
-              ? ui.text('Truque', 'Cantrip')
-              : ui.text(sp.level + 'º', 'Level ' + sp.level)
-          }}</span>
+          <span class="name">{{ ui.text(sp.name, sp.nameEn ?? nameEn(sp.name)) }}</span>
+          @if (sp.ability) {
+            <span class="meta">{{ abilityTag(sp) }}</span>
+          } @else {
+            <span class="meta">{{
+              sp.level === 0
+                ? ui.text('Truque', 'Cantrip')
+                : ui.text(sp.level + 'º', 'Level ' + sp.level)
+            }}</span>
+          }
           @if (sp.narrative) {
             <span
               class="tag"
@@ -187,11 +192,37 @@ export class SpellPanel {
   protected readonly known = computed(() => {
     this.spellStore.version(); // recalcula quando a mecânica do SRD termina de carregar
     const rs = this.ui.ruleset();
-    return (this.caster().spellcasting?.spells ?? [])
+    const spells = (this.caster().spellcasting?.spells ?? [])
       .map((id) => getSpell(id, rs))
       .filter((s): s is Spell => !!s)
       .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
+    return [...spells, ...abilitiesOf(this.caster())];
   });
+
+  /** Habilidade de monstro sem recarga ou sem usos: não dá para escolher agora. */
+  protected spent(sp: Spell): boolean {
+    const ab = sp.ability;
+    if (!ab) return false;
+    const st = this.caster().abilityState?.[sp.id];
+    return (!!ab.recharge && !!st?.recharging) || (!!ab.uses && (st?.used ?? 0) >= ab.uses.n);
+  }
+
+  /** Rótulo curto da habilidade: custo, recarga ou usos restantes. */
+  protected abilityTag(sp: Spell): string {
+    const ab = sp.ability!;
+    const st = this.caster().abilityState?.[sp.id];
+    if (ab.recharge)
+      return st?.recharging
+        ? this.ui.text(`recarrega ${ab.recharge}–6`, `recharge ${ab.recharge}–6`)
+        : this.ui.text(`pronta · ${ab.recharge}–6`, `ready · ${ab.recharge}–6`);
+    if (ab.uses)
+      return `${ab.uses.n - (st?.used ?? 0)}/${ab.uses.n}${ab.uses.per === 'day' ? this.ui.text(' por dia', '/day') : ''}`;
+    if (ab.cost === 'legendary')
+      return this.ui.text(`lendária ${ab.legendary ?? 1}`, `legendary ${ab.legendary ?? 1}`);
+    if (ab.cost === 'bonus') return this.ui.text('bônus', 'bonus');
+    if (ab.cost === 'reaction') return this.ui.text('reação', 'reaction');
+    return this.ui.text('ação', 'action');
+  }
 
   /** Magias mantidas (Arma Espiritual…) que dão uma ação a cada turno. */
   protected readonly kept = computed(() => {

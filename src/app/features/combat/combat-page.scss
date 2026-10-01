@@ -616,3 +616,11 @@ button.active {
   align-items: end;
   margin-bottom: var(--space-2);
 }
+
+.legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-1) 0;
+}

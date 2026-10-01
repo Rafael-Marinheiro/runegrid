@@ -49,6 +49,7 @@ export interface FxView {
             @let g = geom(f.from, f.to);
             <line
               class="ray-glow"
+              [style.stroke-width.px]="f.width ? f.width * C * 0.9 : null"
               [attr.x1]="g.x1"
               [attr.y1]="g.y1"
               [attr.x2]="g.x2"

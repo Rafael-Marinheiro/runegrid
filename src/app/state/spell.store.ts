@@ -1,6 +1,8 @@
 import { Injectable, signal } from '@angular/core';
 import { SrdSpell } from '@core/models/srd';
 import { buildSpells, mergeRules, SpellRules } from '@core/rules/spells/build';
+import { buildMonsterAbilities, MonsterRules } from '@core/rules/monsters/build';
+import { registerMonsterAbilities } from '@core/rules/monsters/registry';
 import { registerSpells } from '@core/rules/spells/registry';
 import { Ruleset } from './ui-prefs';
 
@@ -35,12 +37,14 @@ export class SpellStore {
 
   private async load(ruleset: Ruleset): Promise<void> {
     const is24 = ruleset === '2024';
-    const [srd, base, over] = await Promise.all([
+    const [srd, base, over, monsters] = await Promise.all([
       this.json<SrdSpell[]>(is24 ? 'spells-2024.json' : 'spells.json'),
       this.json<SpellRules>('spell-rules.json'),
       is24 ? this.json<SpellRules>('spell-rules-2024.json') : Promise.resolve({} as SpellRules),
+      this.json<MonsterRules>(is24 ? 'monster-rules-2024.json' : 'monster-rules.json'),
     ]);
     registerSpells(ruleset, buildSpells(srd, is24 ? mergeRules(base, over) : base));
+    registerMonsterAbilities(ruleset, buildMonsterAbilities(ruleset, monsters));
     this.version.update((v) => v + 1);
   }
 }

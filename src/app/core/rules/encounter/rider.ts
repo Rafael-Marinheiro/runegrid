@@ -16,6 +16,7 @@ import { canStand } from '../grid/movement';
 import { allSpells, getSpell } from '../spells/data';
 import { flatTemp } from '../spells/scaling';
 import { aftermath } from './helpers';
+import { spellSave } from './cast';
 import { addLog, creatureOf, occupiedCells, sizeOf, tokenOf, withCreature } from './state';
 import { T, condT, spellName, spellT } from '../i18n';
 import { distT } from '../units';
@@ -197,6 +198,22 @@ export function applyRiders(
       });
       s = addLog(s, T(`${cur.name} está estável.`, `${cur.name} is stable.`), [caster.id, cur.id]);
     }
+  }
+
+  // monstros: o golpe que acertou ainda exige uma salvaguarda (veneno, paralisia…)
+  const h = spell.onHitSave;
+  if (h && creatureOf(s, t.id).status !== 'dead') {
+    const derived: Spell = {
+      ...spell,
+      onHitSave: undefined,
+      damage: h.damage,
+      extraDamage: h.extraDamage,
+      condition: h.condition,
+      effect: h.effect,
+      push: undefined,
+      resolution: { kind: 'save', ability: h.ability, onSave: h.onSave },
+    };
+    s = spellSave(s, caster, [creatureOf(s, t.id)], derived, 0, 1, rng, ability, dc, casterPoint);
   }
 
   if (spell.push) s = forcedMove(s, t.id, casterPoint ?? tokenOf(s, caster.id)?.pos, spell.push);

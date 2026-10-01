@@ -416,14 +416,16 @@
                 {{ w.name }} {{ fmt(w.bonus) }} · {{ w.damage }}
               </button>
             }
-            @if (a.spellcasting) {
+            @if (a.spellcasting || hasAbilities(a)) {
               <button
                 type="button"
                 [class.active]="spellsOpen()"
                 [disabled]="a.status !== 'alive'"
                 (click)="toggleSpells()"
               >
-                {{ ui.text('Conjurar', 'Cast') }}
+                {{
+                  a.spellcasting ? ui.text('Conjurar', 'Cast') : ui.text('Habilidades', 'Abilities')
+                }}
               </button>
             }
             @if (isProne()) {
@@ -771,6 +773,28 @@
       </section>
     }
 
+    @if (legendary().length && store.role().kind === 'dm') {
+      <section class="panel" [attr.aria-label]="ui.text('Ações lendárias', 'Legendary actions')">
+        <h2>{{ ui.text('Ações lendárias', 'Legendary actions') }}</h2>
+        @for (l of legendary(); track l.c.id) {
+          <div class="legend-row">
+            <strong>{{ l.c.name }}</strong> ({{ l.left }}/{{ l.max }})
+            @for (sp of l.acts; track sp.id) {
+              <button
+                type="button"
+                [class.active]="legendActorId() === l.c.id && mode().kind === 'cast'"
+                (click)="pickLegendary(l.c, sp)"
+              >
+                {{ ui.text(sp.name, sp.nameEn ?? sp.name) }}
+                @if ((sp.ability?.legendary ?? 1) > 1) {
+                  ({{ sp.ability?.legendary }})
+                }
+              </button>
+            }
+          </div>
+        }
+      </section>
+    }
     <section class="panel log" [attr.aria-label]="ui.text('Registro do combate', 'Combat log')">
       <h2>{{ ui.text('Registro', 'Log') }}</h2>
       @if (isDm()) {

@@ -12,6 +12,10 @@ import rules2014 from '../../public/data/spell-rules.json';
 import rules2024 from '../../public/data/spell-rules-2024.json';
 import { buildSpells, mergeRules, type SpellRules } from '@core/rules/spells/build';
 import { registerSpells } from '@core/rules/spells/registry';
+import monsterRules2014 from '../../public/data/monster-rules.json';
+import monsterRules2024 from '../../public/data/monster-rules-2024.json';
+import { buildMonsterAbilities, type MonsterRules } from '@core/rules/monsters/build';
+import { registerMonsterAbilities } from '@core/rules/monsters/registry';
 
 export const monstersOf = (r: Ruleset): SrdMonster[] =>
   (r === '2024' ? monsters2024 : monsters2014) as unknown as SrdMonster[];
@@ -30,4 +34,13 @@ registerSpells(
     spells2024 as unknown as SrdSpell[],
     mergeRules(base, rules2024 as unknown as SpellRules),
   ),
+);
+
+registerMonsterAbilities(
+  '2014',
+  buildMonsterAbilities('2014', monsterRules2014 as unknown as MonsterRules),
+);
+registerMonsterAbilities(
+  '2024',
+  buildMonsterAbilities('2024', monsterRules2024 as unknown as MonsterRules),
 );

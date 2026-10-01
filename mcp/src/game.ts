@@ -17,6 +17,7 @@ import {
 import type { AdvMode } from '@core/rules/dice';
 import { canStand, distanceFt, reachable } from '@core/rules/grid/movement';
 import { getItem } from '@core/rules/inventory/catalog';
+import { abilitiesOf } from '@core/rules/monsters/registry';
 import { allSpells } from '@core/rules/spells/data';
 import { monsterNamePt } from '@core/rules/srd/names-pt';
 import type { Game, Ruleset } from './campaign';
@@ -272,7 +273,12 @@ export function toCommand(g: Game, actorRef: string, a: Act): Command {
         ...(a.knock_out ? { knockOut: true } : {}),
       };
     case 'cast': {
-      const spell = spellOf(need(a.spell, 'spell', 'cast'));
+      const wanted = need(a.spell, 'spell', 'cast');
+      // habilidade de monstro (Sopro, Teleporte…) tem preferência sobre uma magia de mesmo nome
+      const own = abilitiesOf(actor).find((x) =>
+        [x.nameEn, x.name, x.id.split('/').pop()].some((n) => plain(n ?? '') === plain(wanted)),
+      );
+      const spell = own ?? spellOf(wanted);
       const point = a.point ?? (a.at ? tokenOf(g.scene, who(g, a.at).id)?.pos : undefined);
       const targetIds = (a.targets ?? []).map((t) => who(g, t).id);
       return {

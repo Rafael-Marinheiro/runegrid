@@ -2,6 +2,8 @@ import { Ability, Creature } from '../../models/creature';
 import { EncounterState } from '../../models/encounter';
 import { Pos } from '../../models/grid';
 import { Spell } from '../../models/spell';
+import { abilitiesOf } from '../monsters/registry';
+import { abilityReady, legendaryGate, payAbility } from './ability';
 import {
   abilityMod,
   addEffect,
@@ -160,7 +162,11 @@ export function cast(state: EncounterState, cmd: CastCmd, ctx: Context): Encount
   const spell = getSpell(cmd.spellId, cmd.ruleset);
   const known = (id: string) => {
     const who = creatureOf(state, cmd.actorId);
-    return who.spellcasting?.spells.includes(id) || who.sustained?.some((x) => x.spellId === id);
+    return (
+      who.spellcasting?.spells.includes(id) ||
+      who.sustained?.some((x) => x.spellId === id) ||
+      abilitiesOf(who).some((a) => a.id === id)
+    );
   };
   if (!spell || !known(spell.id)) {
     throw new RuleError(
@@ -198,9 +204,13 @@ export function cast(state: EncounterState, cmd: CastCmd, ctx: Context): Encount
         `${spellName(spell)} takes more than one action to cast: outside combat.`,
       ),
     );
-  const { actor, turn } = long
-    ? { actor: creatureOf(state, cmd.actorId), turn: null }
-    : actorTurn(state, cmd.actorId);
+  const legendary = spell.ability?.cost === 'legendary';
+  const { actor, turn } =
+    long || legendary
+      ? { actor: creatureOf(state, cmd.actorId), turn: null }
+      : actorTurn(state, cmd.actorId);
+  if (legendary) legendaryGate(state, actor, spell);
+  abilityReady(actor, spell);
 
   const kept = actor.sustained?.find((x) => x.spellId === spell.id);
   if (sustain && !kept)
@@ -218,7 +228,13 @@ export function cast(state: EncounterState, cmd: CastCmd, ctx: Context): Encount
   if (slotLevel < spell.level || slotLevel > 9)
     throw new RuleError(T('Espaço de magia inválido.', 'Invalid spell slot.'));
 
-  const cost = sustain ? spell.sustain!.cost : spell.castTime === 'bonus' ? 'bonus' : 'action';
+  const cost = sustain
+    ? spell.sustain!.cost
+    : spell.ability?.cost === 'free'
+      ? 'free'
+      : spell.castTime === 'bonus'
+        ? 'bonus'
+        : 'action';
   if (turn) {
     if (cost === 'action' && !turn.action)
       throw new RuleError(T('Sem ação disponível neste turno.', 'No action left this turn.'));
@@ -268,6 +284,7 @@ export function cast(state: EncounterState, cmd: CastCmd, ctx: Context): Encount
     };
   }
   s = withCreature(s, caster);
+  if (!sustain) s = payAbility(s, caster.id, spell);
   if (turn) {
     s = setTurn(s, {
       ...turn,
@@ -310,7 +327,7 @@ export function cast(state: EncounterState, cmd: CastCmd, ctx: Context): Encount
     ]);
   if (moveOnly) return moveZone(s, caster, spell, cmd.point!, slotLevel, ctx, cmd.ruleset);
   // alguém pode reagir à conjuração (Contrafeitiço): a resolução espera a decisão
-  if (!sustain) {
+  if (!sustain && !spell.ability) {
     const held = offerCast(s, caster.id, spell, slotLevel, JSON.stringify(cmd));
     if (held) return held;
   }
@@ -408,7 +425,7 @@ export function resolveSpell(
   const level = caster.kind === 'monster' ? Math.max(1, Math.ceil(caster.cr ?? 1)) : caster.level;
   const source = dcFrom ?? caster;
   const ability = source.spellcasting?.ability ?? 'int';
-  const dc = source.spellcasting ? spellSaveDc(source, ability) : 8;
+  const dc = spell.ability?.dc ?? (source.spellcasting ? spellSaveDc(source, ability) : 8);
   const t = spell.target;
   const pointOrigin = (t.kind === 'sphere' || t.kind === 'cube') && !t.self;
   const origin = pointOrigin ? cmd.point : tokenOf(s, caster.id)?.pos;
@@ -617,7 +634,8 @@ function spellAttack(
   ruleset?: '2014' | '2024',
 ): EncounterState {
   const target = creatureOf(state, targetId);
-  const bonus = proficiencyBonus(caster) + abilityMod(caster.abilities[ability]);
+  const bonus =
+    spell.ability?.attackBonus ?? proficiencyBonus(caster) + abilityMod(caster.abilities[ability]);
   const modes: AdvMode[] = [];
   if (state.combat.dodging.includes(target.id)) modes.push('disadvantage');
   const from = tokenOf(state, caster.id)!;
@@ -686,7 +704,7 @@ function spellAttack(
   );
 }
 
-function spellSave(
+export function spellSave(
   state: EncounterState,
   caster: Creature,
   targets: Creature[],

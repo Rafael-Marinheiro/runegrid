@@ -12,6 +12,7 @@ import { CONDITION_LABEL, CONDITIONS, ConditionName, Creature } from '@core/mode
 import { Pos } from '@core/models/grid';
 import { Spell } from '@core/models/spell';
 import { FEATURE_RESOURCE, featureUses, fmtBonus, LimitedFeature } from '@core/rules/creature';
+import { abilitiesOf, legendaryActionsOf } from '@core/rules/monsters/registry';
 import { spellNameEn } from '@core/rules/srd/names-pt';
 import {
   moveQuery,
@@ -185,6 +186,27 @@ export class CombatPage {
   protected readonly knockOut = signal(false);
 
   protected readonly active = computed(() => this.creature(this.combat().turn?.actorId));
+  /** Monstro que usa uma ação lendária fora do turno dele (senão, quem está na vez). */
+  protected readonly legendActorId = signal<string | null>(null);
+  protected readonly castActor = computed(() =>
+    this.legendActorId() ? this.creature(this.legendActorId()!) : this.active(),
+  );
+  /** Monstros com ações lendárias sobrando que podem agir agora (fora do próprio turno). */
+  protected readonly legendary = computed(() => {
+    this.spellStore.version();
+    if (!this.running() || this.combat().pending?.length) return [];
+    const turn = this.combat().turn?.actorId;
+    return this.s().creatures.flatMap((c) => {
+      if (c.id === turn || c.status !== 'alive' || !this.combat().order.includes(c.id)) return [];
+      const max = legendaryActionsOf(c);
+      if (!max) return [];
+      const left = c.legendary?.left ?? max;
+      const acts = abilitiesOf(c).filter(
+        (a) => a.ability?.cost === 'legendary' && (a.ability.legendary ?? 1) <= left,
+      );
+      return acts.length && left > 0 ? [{ c, left, max, acts }] : [];
+    });
+  });
   /** SRD 2024 e a arma escolhida é corpo a corpo: dá para oferecer o nocaute. */
   protected readonly canKnockOut = computed(() => {
     const weapon = this.active()?.attacks[this.attackIndex()];
@@ -285,7 +307,7 @@ export class CombatPage {
   /** Prévia da área da magia em preparo (esfera no cursor, cone na direção do cursor). */
   protected readonly preview = computed<AreaPreview | null>(() => {
     const m = this.mode();
-    const a = this.active();
+    const a = this.castActor();
     const h = this.hover();
     if (m.kind !== 'cast' || !a) return null;
     const from = tokenOf(this.s(), a.id);
@@ -469,9 +491,9 @@ export class CombatPage {
   /** Criaturas destacadas: alvos válidos do ataque/magia ou atingidas pela área em prévia. */
   protected readonly targetIds = computed(() => {
     const m = this.mode();
-    const a = this.active();
+    const a = this.castActor();
     const out = new Set<string>();
-    if (m.kind === 'move' || !a || !this.canAct()) return out;
+    if (m.kind === 'move' || !a || !(this.canAct() || this.legendActorId())) return out;
     const st = this.s();
     const from = tokenOf(st, a.id);
     if (!from) return out;
@@ -560,6 +582,7 @@ export class CombatPage {
   }
 
   private resetMode(): void {
+    this.legendActorId.set(null);
     this.mode.set({ kind: 'move' });
     this.spellsOpen.set(false);
     this.hover.set(null);
@@ -580,7 +603,7 @@ export class CombatPage {
 
   protected onCell(pos: Pos): void {
     const m = this.mode();
-    const a = this.active();
+    const a = this.castActor();
     if (m.kind === 'cast' && a && this.castTarget(m).kind !== 'creature' && !this.selfOnly(m)) {
       // magia de área: o clique define o ponto (esfera) ou a direção (cone)
       if (this.sendCast(m, a.id, { point: pos })) this.resetMode();
@@ -613,14 +636,15 @@ export class CombatPage {
       }
       return;
     }
-    if (m.kind === 'cast' && a) {
+    const ca = this.castActor();
+    if (m.kind === 'cast' && ca) {
       if (this.selfOnly(m)) return;
       if (this.castTarget(m).kind !== 'creature') {
-        if (this.sendCast(m, a.id, { point: tokenOf(this.s(), id)?.pos })) this.resetMode();
+        if (this.sendCast(m, ca.id, { point: tokenOf(this.s(), id)?.pos })) this.resetMode();
         return;
       }
       if (this.maxTargets(m) <= 1) {
-        if (this.sendCast(m, a.id, { targetId: id })) this.resetMode();
+        if (this.sendCast(m, ca.id, { targetId: id })) this.resetMode();
         return;
       }
       // vários alvos: marca/desmarca e confirma em "Conjurar"
@@ -696,7 +720,7 @@ export class CombatPage {
   /** "Conjurar": magia sem alvo a clicar (em você, aura) ou com vários alvos já marcados. */
   protected confirmCast(): void {
     const m = this.mode();
-    const a = this.active();
+    const a = this.castActor();
     if (m.kind !== 'cast' || !a) return;
     const over = m.picked.length ? { targetIds: m.picked } : {};
     if (this.sendCast(m, a.id, over)) this.resetMode();
@@ -759,6 +783,17 @@ export class CombatPage {
     if (!a) return;
     this.store.send({ type: 'feature', actorId: a.id, feature });
     this.resetMode();
+  }
+
+  /** Escolhe uma ação lendária de um monstro (fora do turno dele): o alvo é escolhido no mapa. */
+  protected pickLegendary(c: Creature, spell: Spell): void {
+    this.legendActorId.set(c.id);
+    this.mode.set({ kind: 'cast', spell, slot: 0, picked: [] });
+  }
+
+  protected hasAbilities(c: Creature): boolean {
+    this.spellStore.version(); // as regras dos monstros chegam junto com as das magias
+    return abilitiesOf(c).length > 0;
   }
 
   protected bonusAct(type: BonusAction): void {

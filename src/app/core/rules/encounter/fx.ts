@@ -89,6 +89,7 @@ export function spellFx(
           from,
           to: { x: from.x + (dx / len) * reach, y: from.y + (dy / len) * reach },
           color: v.color,
+          width: t.width / 5,
         });
       } else for (const to of tos) out.push({ kind: 'ray', from, to, color: v.color });
       break;

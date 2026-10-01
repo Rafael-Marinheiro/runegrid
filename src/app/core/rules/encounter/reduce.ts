@@ -34,6 +34,8 @@ import { hasLineOfSight } from '../grid/visibility';
 import { consume, itemDef } from '../inventory/inventory';
 import { markSneak, sneakAttack, useFeature } from './abilities';
 import { keepRage, meleeDamageBonus, rageEndOfTurn } from './rage';
+import { riderOf } from '../monsters/registry';
+import { damageParts } from '../spells/scaling';
 import { cast } from './cast';
 import { freeReaction, spellReaction } from './reaction-flow';
 import { holdOrApply } from './hits';
@@ -1057,6 +1059,17 @@ function strike(
       type: rider.type === 'weapon' ? weapon.type : rider.type,
     });
   }
+  // monstro: o ataque traz dano extra ou uma salvaguarda (mordida envenenada, agarrar…)
+  const monsterRider = riderOf(actor, weapon.name);
+  if (monsterRider?.damage || monsterRider?.extraDamage) {
+    for (const p of damageParts(monsterRider)) {
+      const rexpr = parseDice(p.dice);
+      parts.push({
+        amount: Math.max(0, roll(crit ? criticalExpr(rexpr) : rexpr, rng).total),
+        type: p.type,
+      });
+    }
+  }
   const onHit = effectsOf(actor).flatMap((e) =>
     e.mods.once && e.mods.onHit
       ? [
@@ -1081,6 +1094,16 @@ function strike(
       nat20: d20.crit,
       crit,
       parts,
+      ...(monsterRider
+        ? {
+            rider: {
+              spellId: monsterRider.id,
+              slot: 0,
+              dc: monsterRider.ability?.dc ?? 10,
+              ability: 'str',
+            },
+          }
+        : {}),
       ...(knockOut && weapon.range <= 5 ? { knockOut: true } : {}),
     },
     rng,

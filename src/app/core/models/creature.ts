@@ -190,6 +190,12 @@ export interface Creature {
   conditions: ActiveCondition[];
   /** Características com efeito mecânico no motor (ver `rules/creature/features`). */
   features?: FeatureId[];
+  /** Id do monstro do SRD de origem: dele vêm as habilidades ativas (ver `rules/monsters`). */
+  srdId?: string;
+  /** Estado das habilidades de monstro: usos gastos e recarga pendente, por id da habilidade. */
+  abilityState?: Record<string, { used?: number; recharging?: boolean }>;
+  /** Ações lendárias: máximo por rodada e as que restam (volta ao começar o turno do monstro). */
+  legendary?: { max: number; left: number };
   /** Ícone do token (ver `token-icons`); se ausente, deduzido do nome. */
   icon?: string;
   /** Retrato próprio do token, compactado como data URL local. */

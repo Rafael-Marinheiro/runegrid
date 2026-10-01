@@ -124,9 +124,49 @@ export interface SpellOption {
   >;
 }
 
+/**
+ * Habilidade de monstro (F13): uma `Spell` de nível 0 com esta marca. Não gasta espaço; o custo é a
+ * ação (ou ação bônus/lendária), e a recarga ou os usos por dia valem por criatura.
+ */
+export interface AbilityMeta {
+  cost: 'action' | 'bonus' | 'reaction' | 'legendary' | 'free';
+  /** Custo em ações lendárias (padrão 1). */
+  legendary?: number;
+  /** "Recharge 5-6": no início do turno do monstro, d6 maior ou igual a isto a devolve. */
+  recharge?: number;
+  /** "3/Day", "Recharges after a Short or Long Rest" (`rest`). */
+  uses?: { n: number; per: 'day' | 'rest' };
+  /** CD fixa das salvaguardas do texto do monstro. */
+  dc?: number;
+  /** Bônus fixo do ataque do texto do monstro. */
+  attackBonus?: number;
+  /**
+   * Consequência extra dos golpes do ataque de arma com este nome (mordida envenenada, agarrar…):
+   * não é usada sozinha, vai junto com o ataque (ver `Attack`).
+   */
+  rider?: string;
+}
+
+/** Depois de um acerto: salvaguarda do alvo com dano e/ou condição (ataque com veneno, paralisia…). */
+export interface SpellOnHitSave {
+  ability: Ability;
+  /** `negate`: passar anula tudo; `half`: metade do dano; `none`: sem dano mas a condição não vale. */
+  onSave: 'half' | 'none';
+  damage?: SpellDamage;
+  extraDamage?: SpellDamage[];
+  condition?: SpellCondition | SpellCondition[];
+  effect?: SpellEffect;
+}
+
 export interface Spell {
   id: string;
   name: string;
+  /** Nome em inglês quando não vem do glossário (habilidades de monstro). */
+  nameEn?: string;
+  /** Habilidade de monstro (ver `AbilityMeta`). */
+  ability?: AbilityMeta;
+  /** Salvaguarda depois de um acerto de ataque (monstros). */
+  onHitSave?: SpellOnHitSave;
   /** 0 = truque. */
   level: number;
   school: string;

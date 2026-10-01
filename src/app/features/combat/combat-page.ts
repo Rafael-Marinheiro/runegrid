@@ -16,6 +16,7 @@ import { abilitiesOf, legendaryActionsOf } from '@core/rules/monsters/registry';
 import { spellNameEn } from '@core/rules/srd/names-pt';
 import {
   moveQuery,
+  ownsCreature,
   occupiedCells,
   sizeOf,
   summarizeCombat,
@@ -216,7 +217,7 @@ export class CombatPage {
   protected readonly canAct = computed(() => {
     const a = this.active();
     const role = this.store.role();
-    return !!a && this.running() && (role.kind === 'dm' || role.owns.includes(a.id));
+    return !!a && this.running() && ownsCreature(this.s(), role, a.id);
   });
   protected readonly selected = computed(() =>
     this.creature(this.selectedId() ?? this.active()?.id),
@@ -562,7 +563,8 @@ export class CombatPage {
   /** Jogador vê só a porcentagem de PV dos inimigos. */
   protected hpLabel(c: Creature): string {
     const role = this.store.role();
-    const hiddenExact = role.kind === 'player' && teamOf(c) === 'foes' && !role.owns.includes(c.id);
+    const hiddenExact =
+      role.kind === 'player' && teamOf(c) === 'foes' && !ownsCreature(this.s(), role, c.id);
     return hiddenExact ? `${c.hp.current}%` : `${c.hp.current}/${c.hp.max}`;
   }
 

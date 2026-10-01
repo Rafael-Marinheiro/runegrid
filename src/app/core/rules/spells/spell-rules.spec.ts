@@ -14,6 +14,11 @@ import { parseDice } from '../dice';
 import { dispatch, newEncounter } from '../encounter';
 import { buildSpells, mergeRules, SpellRules } from './build';
 import { allSpells, getSpell, registerSpells } from './registry';
+import { registerSummonSource } from '../encounter';
+import { monsterToCreature } from '../srd/convert';
+import monsters2014 from '../../../../../public/data/monsters.json';
+import monsters2024 from '../../../../../public/data/monsters-2024.json';
+import { SrdMonster } from '../../models/srd';
 
 const COLORS = [
   'violet',
@@ -85,6 +90,18 @@ const sets: { name: '2014' | '2024'; srd: SrdSpell[]; rules: SpellRules }[] = [
 /** Nível máximo já conferido pela cobertura; sobe a cada lote até o 9 (ver PLANO.md, F12). */
 const DONE_LEVEL = { '2014': 9, '2024': 9 };
 
+// as invocações pedem a ficha da criatura ao Bestiário
+const sheets: Record<'2014' | '2024', Map<string, SrdMonster>> = {
+  '2014': new Map((monsters2014 as unknown as SrdMonster[]).map((m) => [m.id, m])),
+  '2024': new Map(
+    (monsters2024 as unknown as SrdMonster[]).map((m) => [m.id.replace(/^srd-2024_/, ''), m]),
+  ),
+};
+registerSummonSource((id, rs) => {
+  const m = sheets[rs].get(id);
+  return m ? monsterToCreature(m) : undefined;
+});
+
 const dice = (d: string) => expect(() => parseDice(d), d).not.toThrow();
 
 function checkSpell(s: Spell) {
@@ -142,6 +159,8 @@ function checkSpell(s: Spell) {
       s.kill ||
       s.table ||
       s.teleport ||
+      s.summon ||
+      s.options?.some((o) => o.patch.summon) ||
       s.zone ||
       s.sustain;
     expect(!!real, `${at}: sem mecânica nem narrativa`).toBe(true);

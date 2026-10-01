@@ -16,6 +16,8 @@ import monsterRules2014 from '../../public/data/monster-rules.json';
 import monsterRules2024 from '../../public/data/monster-rules-2024.json';
 import { buildMonsterAbilities, type MonsterRules } from '@core/rules/monsters/build';
 import { registerMonsterAbilities } from '@core/rules/monsters/registry';
+import { registerSummonSource } from '@core/rules/encounter';
+import { monsterToCreature } from '@core/rules/srd/convert';
 
 export const monstersOf = (r: Ruleset): SrdMonster[] =>
   (r === '2024' ? monsters2024 : monsters2014) as unknown as SrdMonster[];
@@ -44,3 +46,13 @@ registerMonsterAbilities(
   '2024',
   buildMonsterAbilities('2024', monsterRules2024 as unknown as MonsterRules),
 );
+
+// Criaturas invocadas por magias e habilidades (Conjurar Animais, Convocar Demônio…).
+const sheets = {
+  '2014': new Map(monstersOf('2014').map((m) => [m.id, m])),
+  '2024': new Map(monstersOf('2024').map((m) => [m.id.replace(/^srd-2024_/, ''), m])),
+};
+registerSummonSource((id, rs) => {
+  const m = sheets[rs].get(id);
+  return m ? monsterToCreature(m) : undefined;
+});

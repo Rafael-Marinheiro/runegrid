@@ -443,7 +443,7 @@ function write(file, rules, monsters) {
         a.desc = a.section ? sectionOf(hit.desc, a.section) : hit.desc;
       }
       if (!isTrait) {
-        if (!a.parse) applyPattern(a, m);
+        if (!a.parse) applyPattern(a, m, file.includes('2024') ? '2024' : '2014');
         let r = a;
         if (a.parse) {
           const { rule: p } = parseAbility(a.desc);

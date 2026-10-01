@@ -70,7 +70,7 @@ const ActionSchema = z.object({
     .string()
     .optional()
     .describe(
-      'cast: the spell choice when it has one (e.g. Protection from Energy: fire|acid|cold|lightning|thunder; Bestow Curse: attack|ability|turns|necrotic)',
+      'cast: the spell choice when it has one (e.g. Protection from Energy: fire|acid|cold|lightning|thunder; Bestow Curse: attack|ability|turns|necrotic; summons: the SRD creature id, e.g. Conjure Animals: wolf, Animate Dead: skeleton|zombie, Find Familiar: owl — also needs point)',
     ),
   sustain: z
     .boolean()

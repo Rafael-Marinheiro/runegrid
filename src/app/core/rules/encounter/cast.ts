@@ -55,6 +55,7 @@ import { createZone, inArea, zoneContains } from './zones';
 import { T, manualT, spellName, spellT } from '../i18n';
 import { distT } from '../units';
 import { isRaging } from './rage';
+import { summonCreatures } from './summon';
 
 const LEVEL = (n: number) => (n === 0 ? T('truque', 'cantrip') : T(`${n}º nível`, `level ${n}`));
 
@@ -375,6 +376,8 @@ export function finishCast(state: EncounterState, cmd: CastCmd, ctx: Context): E
     sustain ? 'sustain' : 'cast',
     dcFrom,
   );
+  if (use.summon && !sustain)
+    done = summonCreatures(done, caster, use, slotLevel, cmd.point, cmd.ruleset ?? '2014', ctx);
   if (spell.grantSustain && !sustain) {
     for (const t of targets) {
       const cur = creatureOf(done, t.id);

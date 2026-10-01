@@ -200,6 +200,19 @@ export interface Creature {
   regenBlocked?: boolean;
   /** Ações lendárias: máximo por rodada e as que restam (volta ao começar o turno do monstro). */
   legendary?: { max: number; left: number };
+  /** Criatura invocada: quem a invocou, por qual magia e quanto tempo falta (ver `encounter/summon`). */
+  summon?: {
+    by: string;
+    spell: string;
+    /** Rodadas restantes (conta no fim do turno de quem invocou); ausente = sem prazo. */
+    rounds?: number;
+    /** Some junto com a concentração de quem invocou. */
+    concentration?: boolean;
+    onBreak?: 'vanish' | 'hostile';
+    corpse?: boolean;
+    /** Chave de invocação única (Familiar, Montaria). */
+    unique?: string;
+  };
   /** Ícone do token (ver `token-icons`); se ausente, deduzido do nome. */
   icon?: string;
   /** Retrato próprio do token, compactado como data URL local. */

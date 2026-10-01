@@ -102,21 +102,23 @@ import {
   ForbiddenError,
   occupiedCells,
   sizeOf,
+  ownsCreature,
   teamOf,
   tokenOf,
   withCreature,
 } from './state';
 import { T, condT, spellName } from '../i18n';
+import { syncSummons } from './summon';
 import { distT } from '../units';
 
 /** O jogador só age por criaturas suas; o Mestre pode tudo. */
-export function authorize(cmd: Command, role: Role): void {
+export function authorize(cmd: Command, role: Role, state?: EncounterState): void {
   if (role.kind === 'dm') return;
   if (!PLAYER_COMMANDS.includes(cmd.type)) {
     throw new ForbiddenError(T('Só o Mestre pode fazer isso.', 'Only the GM can do that.'));
   }
   const actorId = (cmd as { actorId: string }).actorId;
-  if (!role.owns.includes(actorId))
+  if (!(state ? ownsCreature(state, role, actorId) : role.owns.includes(actorId)))
     throw new ForbiddenError(
       T('Você só controla os seus personagens.', 'You only control your own characters.'),
     );
@@ -129,7 +131,10 @@ export function dispatch(state: EncounterState, cmd: Command, ctx: Context): Enc
     record: (sides: number, rolled: { value: number; dropped: boolean }[]) =>
       dice.push(...rolled.map((d) => ({ sides, value: d.value, dropped: d.dropped }))),
   });
-  const next = syncConcentration(apply(state, cmd, { ...ctx, rng }));
+  const next = syncSummons(syncConcentration(apply(state, cmd, { ...ctx, rng })), {
+    ...ctx,
+    rng,
+  });
   if (!dice.length) return next;
   // os dados vão na primeira linha nova do registro (a tela junta os de todas as linhas novas)
   const i = next.log.findIndex((e) => e.id >= state.seq);
@@ -138,7 +143,7 @@ export function dispatch(state: EncounterState, cmd: Command, ctx: Context): Enc
 }
 
 function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterState {
-  authorize(cmd, ctx.role);
+  authorize(cmd, ctx.role, state);
   switch (cmd.type) {
     case 'addCreature':
       return addCreature(state, cmd);
@@ -537,7 +542,12 @@ function addCreature(
   return addLog(s, T(`${c.name} entrou no encontro.`, `${c.name} joined the encounter.`), [c.id]);
 }
 
-function removeCreature(state: EncounterState, id: string, ctx: Context): EncounterState {
+export function removeCreature(
+  state: EncounterState,
+  id: string,
+  ctx: Context,
+  log = true,
+): EncounterState {
   const c = creatureOf(state, id);
   let s: EncounterState = {
     ...state,
@@ -553,10 +563,12 @@ function removeCreature(state: EncounterState, id: string, ctx: Context): Encoun
   const initiative = { ...combat.initiative };
   delete initiative[id];
   if (idx < 0)
-    return addLog(
-      { ...s, combat: { ...combat, initiative } },
-      T(`${c.name} saiu do encontro.`, `${c.name} left the encounter.`),
-    );
+    return log
+      ? addLog(
+          { ...s, combat: { ...combat, initiative } },
+          T(`${c.name} saiu do encontro.`, `${c.name} left the encounter.`),
+        )
+      : { ...s, combat: { ...combat, initiative } };
 
   const order = combat.order.filter((x) => x !== id);
   const wasCurrent = combat.phase === 'running' && idx === combat.turnIndex;
@@ -567,7 +579,7 @@ function removeCreature(state: EncounterState, id: string, ctx: Context): Encoun
     round++;
   }
   s = { ...s, combat: { ...combat, order, initiative, turnIndex, round } };
-  s = addLog(s, T(`${c.name} saiu do encontro.`, `${c.name} left the encounter.`));
+  if (log) s = addLog(s, T(`${c.name} saiu do encontro.`, `${c.name} left the encounter.`));
   if (combat.phase !== 'running') return s;
   if (order.length === 0) return { ...s, combat: emptyCombat() };
   const outcome = checkOutcome(s);
@@ -639,6 +651,15 @@ function startCombat(state: EncounterState, ctx: Context): EncounterState {
     throw new RuleError(
       T('Role a iniciativa antes de começar.', 'Roll initiative before starting.'),
     );
+  // invocações agem logo depois de quem as invocou, qualquer que seja o desempate
+  const owned = (id: string) => state.creatures.find((c) => c.id === id)?.summon?.by;
+  const grouped = order.filter((id) => !(owned(id) && order.includes(owned(id)!)));
+  for (const id of order.filter((x) => owned(x) && order.includes(owned(x)!))) {
+    let at = grouped.indexOf(owned(id)!);
+    while (grouped[at + 1] && owned(grouped[at + 1]) === owned(id)) at++;
+    grouped.splice(at + 1, 0, id);
+  }
+  order.splice(0, order.length, ...grouped);
 
   let s: EncounterState = {
     ...state,

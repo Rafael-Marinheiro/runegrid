@@ -2,7 +2,7 @@ import { Creature } from '../../models/creature';
 import { EncounterState, Role } from '../../models/encounter';
 import { footprint } from '../grid/movement';
 import { visibleCells } from '../grid/visibility';
-import { sizeOf, teamOf } from './state';
+import { sizeOf, teamOf, withSummons } from './state';
 
 /** Esconde de um inimigo o que o jogador não deve saber: PV exatos, ataques, magias. */
 function mask(c: Creature): Creature {
@@ -22,8 +22,9 @@ function mask(c: Creature): Creature {
  * Visão do encontro para um papel. O Mestre vê tudo; o jogador não recebe tokens ocultos
  * nem os dados exatos dos inimigos (PV viram porcentagem). Só isso viaja pela rede.
  */
-export function project(state: EncounterState, role: Role): EncounterState {
-  if (role.kind === 'dm') return state;
+export function project(state: EncounterState, viewer: Role): EncounterState {
+  if (viewer.kind === 'dm') return state;
+  const role = withSummons(state, viewer);
   const { map } = state;
   const fog = map.fog;
   const dynamic = map.vision?.enabled === true;

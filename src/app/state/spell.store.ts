@@ -1,10 +1,13 @@
-import { Injectable, signal } from '@angular/core';
-import { SrdSpell } from '@core/models/srd';
+import { inject, Injectable, signal } from '@angular/core';
+import { SrdMonster, SrdSpell } from '@core/models/srd';
+import { registerSummonSource } from '@core/rules/encounter';
+import { monsterToCreature } from '@core/rules/srd/convert';
+import { monsterNamePt } from '@core/rules/srd/names-pt';
 import { buildSpells, mergeRules, SpellRules } from '@core/rules/spells/build';
 import { buildMonsterAbilities, MonsterRules } from '@core/rules/monsters/build';
 import { registerMonsterAbilities } from '@core/rules/monsters/registry';
 import { registerSpells } from '@core/rules/spells/registry';
-import { Ruleset } from './ui-prefs';
+import { Ruleset, UiPrefs } from './ui-prefs';
 
 /**
  * Mecânica das magias do SRD: junta o texto oficial (`spells*.json`) com a mecânica escrita a mão
@@ -14,6 +17,8 @@ import { Ruleset } from './ui-prefs';
 @Injectable({ providedIn: 'root' })
 export class SpellStore {
   readonly version = signal(0);
+  private readonly ui = inject(UiPrefs);
+  private readonly sheets = new Map<Ruleset, Map<string, SrdMonster>>();
   private readonly loading = new Map<Ruleset, Promise<void>>();
 
   /** Garante que as magias do conjunto de regras estão registradas no motor. */
@@ -37,12 +42,20 @@ export class SpellStore {
 
   private async load(ruleset: Ruleset): Promise<void> {
     const is24 = ruleset === '2024';
-    const [srd, base, over, monsters] = await Promise.all([
+    const [srd, base, over, monsters, creatures] = await Promise.all([
       this.json<SrdSpell[]>(is24 ? 'spells-2024.json' : 'spells.json'),
       this.json<SpellRules>('spell-rules.json'),
       is24 ? this.json<SpellRules>('spell-rules-2024.json') : Promise.resolve({} as SpellRules),
       this.json<MonsterRules>(is24 ? 'monster-rules-2024.json' : 'monster-rules.json'),
+      this.json<SrdMonster[]>(is24 ? 'monsters-2024.json' : 'monsters.json'),
     ]);
+    this.sheets.set(ruleset, new Map(creatures.map((m) => [m.id.replace(/^srd-2024_/, ''), m])));
+    registerSummonSource((id, rs) => {
+      const m = this.sheets.get(rs)?.get(id);
+      return m
+        ? monsterToCreature(m, this.ui.locale() === 'en' ? m.name : monsterNamePt(m.name))
+        : undefined;
+    });
     registerSpells(ruleset, buildSpells(srd, is24 ? mergeRules(base, over) : base));
     registerMonsterAbilities(ruleset, buildMonsterAbilities(ruleset, monsters));
     this.version.update((v) => v + 1);

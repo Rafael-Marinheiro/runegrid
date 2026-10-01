@@ -15,6 +15,7 @@ import { condT, dmgT, spellT, T } from '../i18n';
 import { endRageIfDown, keepRage } from './rage';
 import { triggerDeath } from './death';
 import { undeadFortitude } from './traits';
+import { splitOnDamage } from './summon';
 
 export interface Context {
   rng: Rng;
@@ -155,6 +156,7 @@ export function aftermath(
 ): EncounterState {
   if (dealt > 0) state = keepRage(state, targetId);
   state = undeadFortitude(state, targetId, dealt, rng);
+  state = splitOnDamage(state, targetId, dealt);
   state = triggerDeath(state, targetId, rng);
   state = endRageIfDown(state, targetId);
   let t = creatureOf(state, targetId);

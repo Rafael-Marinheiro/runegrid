@@ -1,5 +1,5 @@
 import { Creature } from '../../models/creature';
-import { Combat, EncounterState, LogEntry, Token } from '../../models/encounter';
+import { Combat, EncounterState, LogEntry, Role, Token } from '../../models/encounter';
 import { DiagonalRule, GridMap, SIZE_CELLS } from '../../models/grid';
 import { RuleError } from '../creature';
 import { footprint, key } from '../grid/movement';
@@ -90,4 +90,22 @@ export function addLog(
     ...(secret ? { secret } : {}),
   };
   return { ...state, seq: state.seq + 1, log: [...state.log, entry].slice(-MAX_LOG) };
+}
+
+/** O jogador controla as próprias criaturas e as que invocou (o Mestre controla tudo). */
+export function ownsCreature(state: EncounterState, role: Role, id: string): boolean {
+  if (role.kind === 'dm' || role.owns.includes(id)) return true;
+  const sm = state.creatures.find((c) => c.id === id);
+  return sm?.kind === 'npc' && !!sm.summon && role.owns.includes(sm.summon.by);
+}
+
+/** Papel com os ids das invocações somados aos que o jogador já controla. */
+export function withSummons(
+  state: EncounterState,
+  role: Extract<Role, { kind: 'player' }>,
+): Extract<Role, { kind: 'player' }> {
+  const extra = state.creatures.filter(
+    (c) => !role.owns.includes(c.id) && ownsCreature(state, role, c.id),
+  );
+  return extra.length ? { kind: 'player', owns: [...role.owns, ...extra.map((c) => c.id)] } : role;
 }

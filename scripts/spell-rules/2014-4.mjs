@@ -64,14 +64,6 @@ export default {
     }),
     vfx: vfx('burst', 'psychic'),
   },
-  'conjure-minor-elementals': narrative(vfx('glow', 'fire'), {
-    manual:
-      'Invocação: o Mestre adiciona os elementais (ND conforme a opção) ao combate como grupo amigo.',
-  }),
-  'conjure-woodland-beings': narrative(vfx('glow', 'life'), {
-    manual:
-      'Invocação: o Mestre adiciona as criaturas feéricas (ND conforme a opção) ao combate como grupo amigo.',
-  }),
   'control-water': narrative(vfx('burst', 'frost', { radius: 50 })),
   'death-ward': {
     resolution: auto,

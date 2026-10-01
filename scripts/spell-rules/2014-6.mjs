@@ -36,14 +36,7 @@ export default {
     damage: dmg('8d6', 'necrotic', { perLevel: '2d6' }),
     vfx: vfx('burst', 'shadow'),
   },
-  'conjure-fey': narrative(vfx('glow', 'life'), {
-    manual:
-      'Invocação: o Mestre adiciona a criatura feérica (ND 6 ou menor) ao combate; se a concentração quebrar ela fica hostil.',
-  }),
   contingency: narrative(vfx('glow', 'arcane')),
-  'create-undead': narrative(vfx('glow', 'shadow'), {
-    manual: 'Invocação: o Mestre adiciona os carniçais ao combate (só à noite).',
-  }),
   disintegrate: {
     resolution: save('dex'),
     damage: dmg('10d6+40', 'force', { perLevel: '3d6' }),

@@ -98,7 +98,9 @@ import { UiPrefs } from '@state/ui-prefs';
             {{ ui.text('Escolha', 'Choice') }}
             <select #opt (change)="setOption(opt.value)">
               @for (o of sp.options; track o.id) {
-                <option [value]="o.id" [selected]="o.id === option()">{{ o.label }}</option>
+                <option [value]="o.id" [selected]="o.id === option()">
+                  {{ ui.text(o.label, o.labelEn ?? o.label) }}
+                </option>
               }
             </select>
           </label>

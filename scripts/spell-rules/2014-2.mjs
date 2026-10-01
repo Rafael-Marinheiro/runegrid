@@ -124,7 +124,6 @@ export default {
     }),
     vfx: vfx('glow', 'psychic'),
   },
-  'find-steed': narrative(vfx('glow', 'holy')),
   'find-traps': narrative(vfx('burst', 'arcane', { radius: 120 })),
   'flame-blade': {
     // ação bônus cria a lâmina; o ataque é uma ação por turno (repetição)

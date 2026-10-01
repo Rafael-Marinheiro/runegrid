@@ -116,10 +116,20 @@ export interface SpellZone {
 export interface SpellOption {
   id: string;
   label: string;
+  /** Rótulo em inglês, se diferir. */
+  labelEn?: string;
   patch: Partial<
     Pick<
       Spell,
-      'effect' | 'condition' | 'damage' | 'extraDamage' | 'tempHp' | 'vfx' | 'manual' | 'manualEn'
+      | 'effect'
+      | 'condition'
+      | 'damage'
+      | 'extraDamage'
+      | 'tempHp'
+      | 'vfx'
+      | 'manual'
+      | 'manualEn'
+      | 'summon'
     >
   >;
 }
@@ -170,6 +180,40 @@ export interface SpellOnHitSave {
   extraDamage?: SpellDamage[];
   condition?: SpellCondition | SpellCondition[];
   effect?: SpellEffect;
+}
+
+/** Invocação: criaturas do SRD que aparecem no mapa (Conjurar Animais, Familiar, Convocar Demônio…). */
+export interface SummonSpec {
+  /** Id da criatura no SRD (sem o prefixo do conjunto); vem da opção escolhida ao conjurar. */
+  srd?: string;
+  /** Quantas aparecem com o espaço base. */
+  n?: number;
+  /** Em vez de `n` fixo, quantas aparecem é rolado ("1d8 vrocks"). */
+  dice?: string;
+  /** No máximo tantas criaturas suas deste tipo ao mesmo tempo (Criar Espectro: sete). */
+  cap?: number;
+  /** As invocadas não repetem a invocação ("não pode invocar outros demônios"). */
+  blockSelf?: boolean;
+  /** Mais criaturas com espaços maiores (Conjurar Animais: o dobro no 5º, o triplo no 7º…). */
+  countScale?: { from: number; mult: number }[];
+  /** Criaturas a mais por nível de espaço acima de `from` (Animar Mortos: duas a mais por nível). */
+  extraPerLevel?: { from: number; add: number };
+  /** ND máximo da criatura: `base` no nível `from`, +1 por nível acima. */
+  maxCr?: { base: number; from: number };
+  /** Se a concentração quebra: some (padrão) ou fica hostil (Conjurar Elemental/Fada). */
+  onBreak?: 'vanish' | 'hostile';
+  /** Continua depois da duração e da concentração (Animar Mortos, Criar Mortos-vivos, Familiar). */
+  permanent?: boolean;
+  /** Ao chegar a 0 PV fica no mapa como cadáver, em vez de sumir (mortos-vivos, demônios). */
+  corpse?: boolean;
+  /** Chave de uma invocação única: conjurar de novo troca a anterior (Familiar, Montaria). */
+  unique?: string;
+  /** Rodadas até sumir sozinhas (1 min = 10); se ausente vale a duração da magia. */
+  rounds?: number;
+  /** Chance (0–1) de a invocação funcionar (Convocar Demônio, Convocar Mefits). */
+  chance?: number;
+  /** Sorteia a criatura entre estas, em vez de usar `srd` (Convocar Demônio). */
+  pick?: { srd: string; weight?: number }[];
 }
 
 export interface Spell {
@@ -263,6 +307,8 @@ export interface Spell {
   zone?: SpellZone;
   /** Efeito visual no mapa, escrito a partir da descrição desta magia. */
   vfx?: SpellVfx;
+  /** Cria criaturas no mapa (ver `SummonSpec`). */
+  summon?: SummonSpec;
   /** Puramente narrativa: o motor gasta espaço/concentração e registra o texto oficial, nada mais. */
   narrative?: boolean;
   /** Parte do efeito o Mestre resolve (texto dito ao conjurar); o que o motor faz está nos campos acima. */

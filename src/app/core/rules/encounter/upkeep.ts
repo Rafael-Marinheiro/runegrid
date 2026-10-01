@@ -21,6 +21,7 @@ import { zoneContains } from './zones';
 import { abilitiesAtTurnStart } from './ability';
 import { abilitiesOf, monsterEntry } from '../monsters/registry';
 import { T, condT, spellT } from '../i18n';
+import { tickSummons } from './summon';
 
 /**
  * Tudo que dura só enquanto o conjurador mantém a concentração some junto com ela: efeitos,
@@ -297,7 +298,7 @@ export function endUpkeep(state: EncounterState, actorId: string, ctx: Context):
     s = withCreature(s, { ...me, sustained: sustained.length ? sustained : undefined });
     for (const n of ended) s = addLog(s, T(`${n} termina.`, `${spellT(n)} ends.`), [actorId]);
   }
-  return s;
+  return tickSummons(s, actorId, ctx);
 }
 
 /** Virou a rodada: as zonas gastam uma rodada de duração. */

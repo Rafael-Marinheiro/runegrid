@@ -26,10 +26,6 @@ export default {
     sustain: { cost: 'bonus' },
     vfx: vfx('ray', 'force'),
   },
-  'conjure-celestial': narrative(vfx('glow', 'holy'), {
-    manual:
-      'Invocação: o Mestre adiciona o celestial (ND 4 ou menor; 5 com espaço de 9º nível) ao combate.',
-  }),
   'delayed-blast-fireball': {
     target: sphere(20),
     resolution: save('dex', 'half'),

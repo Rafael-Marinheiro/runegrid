@@ -1,6 +1,38 @@
 // Versão em inglês das notas `manual` e `note` das magias (chave = texto em pt-BR). O build exige uma entrada para cada nota.
 export default new Map([
   [
+    'Se a concentração quebrar, a criatura fica hostil e some 1 hora depois; se for uma fera, é uma fera feérica.',
+    'If concentration breaks, the creature turns hostile and disappears 1 hour later; a beast form is a fey spirit.',
+  ],
+  [
+    'Se a concentração quebrar, o elemental fica hostil e some 1 hora depois. Escolha o elemental que combina com o ponto (fogo de uma fogueira, terra do chão…).',
+    'If concentration breaks, the elemental turns hostile and disappears 1 hour later. Choose the elemental that fits the spot (fire from a bonfire, earth from the ground…).',
+  ],
+  [
+    'Esqueleto (ossos) ou zumbi (cadáver). Com espaço de 4º nível ou mais, mais dois por nível. Obedecem por 24 horas; como ação bônus você comanda os que estiverem a até 18 m.',
+    'Skeleton (bones) or zombie (corpse). With a 4th-level slot or higher, two more per level. They obey for 24 hours; as a bonus action you command those within 60 ft.',
+  ],
+  [
+    'Só à noite. Obedecem por 24 horas. Com espaço de 8º nível ou mais, o Mestre pode trocar carniçais por aparições ou múmias.',
+    'Night only. They obey for 24 hours. With an 8th-level slot or higher, the DM may swap ghouls for wights or mummies.',
+  ],
+  [
+    'O familiar não ataca e some ao chegar a 0 PV; conjure a magia de novo para chamá-lo.',
+    'The familiar cannot attack and disappears at 0 hit points; cast the spell again to call it back.',
+  ],
+  [
+    'A montaria é um espírito celestial, feérico ou ínfero; some ao chegar a 0 PV e volta ao conjurar de novo.',
+    'The steed is a celestial, fey or fiend spirit; it disappears at 0 hit points and returns when you cast the spell again.',
+  ],
+  [
+    'O familiar é celestial, feérico ou ínfero; some ao chegar a 0 PV; conjure a magia de novo para chamá-lo.',
+    'The familiar is a celestial, fey or fiend; it disappears at 0 hit points; cast the spell again to call it back.',
+  ],
+  [
+    'O 2024 usa o bloco Otherworldly Steed (Celestial, Feérico ou Ínfero); aqui entra a ficha de um cavalo como aproximação. Substitui a montaria anterior.',
+    'The 2024 spell uses the Otherworldly Steed stat block (Celestial, Fey or Fiend); a horse stat block stands in as an approximation. It replaces the previous steed.',
+  ],
+  [
     'Se o alvo for morto-vivo, ele tem desvantagem nos ataques contra você até o fim do seu próximo turno.',
     'If the target is undead, it has disadvantage on attack rolls against you until the end of your next turn.',
   ],

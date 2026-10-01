@@ -191,7 +191,6 @@ export default {
     narrative: true,
     vfx: vfx('glow', 'arcane'),
   },
-  'find-familiar': narrative(vfx('glow', 'arcane')),
   'floating-disk': narrative(vfx('glow', 'force')),
   'fog-cloud': {
     target: sphere(20),

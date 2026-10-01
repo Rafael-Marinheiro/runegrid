@@ -101,6 +101,8 @@ export interface EffectMods {
   retaliate?: { dice: string; type: DamageType; melee?: boolean };
   /** Fortitude de Morto-vivo: a 0 PV, salvaguarda de Constituição CD 5 + dano; sucesso = 1 PV (exceto radiante/crítico). */
   undeadFortitude?: boolean;
+  /** Divide-se em dois ao sofrer dano de raio ou cortante (gosmas, Dividir). */
+  split?: boolean;
   /** Implacável: uma vez por descanso, dano de até `maxDamage` que o levaria a 0 PV o deixa com 1 PV. */
   relentless?: number;
   /** Vantagem Marcial: uma vez por turno, dano extra se um aliado capaz de agir está a até 5 ft do alvo. */

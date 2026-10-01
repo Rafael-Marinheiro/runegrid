@@ -20,10 +20,6 @@ import {
 } from './helpers.mjs';
 
 export default {
-  'animate-dead': narrative(vfx('glow', 'shadow'), {
-    manual:
-      'Invocação: o Mestre adiciona o esqueleto ou zumbi ao combate (as estatísticas estão no Bestiário).',
-  }),
   'beacon-of-hope': {
     target: creature(12),
     resolution: auto,
@@ -73,10 +69,6 @@ export default {
     vfx: vfx('burst', 'lightning'),
   },
   clairvoyance: narrative(vfx('glow', 'arcane')),
-  'conjure-animals': narrative(vfx('glow', 'life'), {
-    manual:
-      'Invocação: o Mestre adiciona as feras (ND conforme a opção) ao combate como grupo amigo.',
-  }),
   counterspell: {
     react: { on: 'cast' },
     target: self,

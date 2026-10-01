@@ -60,10 +60,6 @@ export default {
     damage: dmg('8d8', 'cold', { perLevel: '1d8' }),
     vfx: vfx('cone', 'frost'),
   },
-  'conjure-elemental': narrative(vfx('glow', 'fire'), {
-    manual:
-      'Invocação: o Mestre adiciona o elemental (ND 5 ou menor) ao combate; se a concentração quebrar ele fica hostil.',
-  }),
   'contact-other-plane': narrative(vfx('glow', 'psychic'), {
     manual:
       'Faça uma salvaguarda de Inteligência CD 15: se falhar, 6d6 psíquico e insanidade até o descanso longo (aplique à mão).',

@@ -122,6 +122,12 @@
                 @if (isHidden(c.id)) {
                   · {{ ui.text('oculto', 'hidden') }}
                 }
+                @if (c.summon; as sm) {
+                  · {{ ui.text('invocado', 'summoned') }}
+                  @if (sm.rounds !== undefined) {
+                    ({{ sm.rounds }} {{ ui.text('rod.', 'rds') }})
+                  }
+                }
               </span>
               <span class="bar" aria-hidden="true"
                 ><span [class.low]="hpPct(c) <= 25" [style.width.%]="hpPct(c)"></span

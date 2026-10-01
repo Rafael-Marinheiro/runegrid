@@ -7,7 +7,6 @@ import { ActiveEffect } from '../../models/effect';
 import { EncounterState, TurnState } from '../../models/encounter';
 import {
   addEffect,
-  canAct,
   effectsOf,
   FEATURE_RESOURCE,
   heal,
@@ -20,12 +19,11 @@ import {
   withFeatureResource,
 } from '../creature';
 import { roll, Rng } from '../dice';
-import { distanceFt } from '../grid/movement';
 import { T } from '../i18n';
 import { Command } from './commands';
 import { attachFx, centerOf } from './fx';
 import { actorTurn, setTurn } from './helpers';
-import { addLog, creatureOf, withCreature } from './state';
+import { addLog, withCreature } from './state';
 import { allyAdjacent } from './traits';
 
 type FeatureCmd = Extract<Command, { type: 'feature' }>;

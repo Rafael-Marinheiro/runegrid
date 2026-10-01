@@ -19,7 +19,7 @@ import { aftermath, checkOutcome, Context, dtype, notes } from './helpers';
 import { addLog, creatureOf, tokenOf, withCreature } from './state';
 import { zoneContains } from './zones';
 import { abilitiesAtTurnStart } from './ability';
-import { abilitiesOf } from '../monsters/registry';
+import { abilitiesOf, monsterEntry } from '../monsters/registry';
 import { T, condT, spellT } from '../i18n';
 
 /**
@@ -112,6 +112,35 @@ export function beginUpkeep(state: EncounterState, actorId: string, ctx: Context
     );
 
   const actor = creatureOf(s, actorId);
+  // Regeneração dos monstros (traço): suspensa por certos tipos de dano até este turno
+  for (const tr of monsterEntry(actor.srdId)?.traits ?? []) {
+    if (!tr.mods.regen || actor.status !== 'alive') continue;
+    if (actor.regenBlocked)
+      s = addLog(
+        s,
+        T(
+          `${actor.name} não regenera neste turno (${tr.name}).`,
+          `${actor.name} does not regenerate this turn (${tr.nameEn}).`,
+        ),
+        [actorId],
+      );
+    else {
+      const before = creatureOf(s, actorId);
+      const after = heal(before, tr.mods.regen);
+      s = withCreature(s, after);
+      if (after.hp.current !== before.hp.current)
+        s = addLog(
+          s,
+          T(
+            `${actor.name} regenera ${after.hp.current - before.hp.current} PV (${tr.name}).`,
+            `${actor.name} regenerates ${after.hp.current - before.hp.current} HP (${tr.nameEn}).`,
+          ),
+          [actorId],
+        );
+    }
+  }
+  if (actor.regenBlocked)
+    s = withCreature(s, { ...creatureOf(s, actorId), regenBlocked: undefined });
   for (const e of actor.effects ?? []) {
     const m = e.mods;
     if (m.regen && actor.status === 'alive') {

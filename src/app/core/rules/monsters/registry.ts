@@ -3,12 +3,25 @@
  * ficam num registro próprio (por conjunto de regras) e o motor as acha pelo id, como as magias.
  */
 import { Creature } from '../../models/creature';
+import { EffectMods } from '../../models/effect';
 import { Spell } from '../../models/spell';
 import { registerSpellNameEn } from '../srd/names-pt';
 
 export type MonsterRuleset = '2014' | '2024';
 
+/** Traço passivo com efeito de regra (Resistência à Magia, Táticas de Matilha…). */
+export interface TraitDef {
+  id: string;
+  name: string;
+  nameEn: string;
+  mods: EffectMods;
+  manual?: string;
+  manualEn?: string;
+}
+
 export interface MonsterEntry {
+  /** Traços passivos com efeito de regra. */
+  traits: TraitDef[];
   /** Ações lendárias por rodada (0/ausente = não tem). */
   legendary?: number;
   /** Habilidades que se usam sozinhas. */
@@ -74,6 +87,9 @@ export function restAbilities(c: Creature, kind: 'short' | 'long'): Creature {
   const abilities = abilitiesOf(c);
   if (!c.abilityState) return c;
   const state = { ...c.abilityState };
+  // traços com usos: Implacável volta em qualquer descanso, Resistência Lendária no longo
+  if (state['relentless']) state['relentless'] = { used: 0 };
+  if (state['legendary-resistance'] && kind === 'long') state['legendary-resistance'] = { used: 0 };
   for (const sp of abilities) {
     const ab = sp.ability;
     if (!ab || !state[sp.id]) continue;
@@ -83,3 +99,7 @@ export function restAbilities(c: Creature, kind: 'short' | 'long'): Creature {
   }
   return { ...c, abilityState: state };
 }
+
+/** Modificadores permanentes dos traços do monstro (somam-se aos dos efeitos ativos). */
+export const traitModsOf = (c: Pick<Creature, 'srdId'>): EffectMods[] =>
+  monsterEntry(c.srdId)?.traits.map((t) => t.mods) ?? [];

@@ -1,3 +1,4 @@
+import { EffectMods } from '../../models/effect';
 import { Spell, SpellRule, AbilityMeta } from '../../models/spell';
 import { abilityId, MonsterEntry, MonsterRuleset } from './registry';
 
@@ -11,9 +12,20 @@ export type AbilityRule = SpellRule & {
   ability: AbilityMeta;
 };
 
+/** Traço passivo em `monster-rules*.json`. */
+export interface TraitRule {
+  pt: string;
+  en: string;
+  desc: string;
+  mods: EffectMods;
+  manual?: string;
+  manualEn?: string;
+}
+
 export interface MonsterRule {
   legendary?: number;
   abilities: Record<string, AbilityRule>;
+  traits?: Record<string, TraitRule>;
 }
 
 export type MonsterRules = Record<string, MonsterRule>;
@@ -24,6 +36,7 @@ const CAST_TIME = {
   reaction: 'reaction',
   legendary: 'action',
   free: 'action',
+  death: 'action',
 } as const;
 
 function toSpell(ruleset: MonsterRuleset, monster: string, slug: string, r: AbilityRule): Spell {
@@ -57,6 +70,13 @@ export function buildMonsterAbilities(
       ...(rule.legendary ? { legendary: rule.legendary } : {}),
       abilities: [],
       riders: {},
+      traits: Object.entries(rule.traits ?? {}).map(([id, t]) => ({
+        id,
+        name: t.pt,
+        nameEn: t.en,
+        mods: t.mods,
+        ...(t.manual ? { manual: t.manual, manualEn: t.manualEn } : {}),
+      })),
     };
     for (const [slug, r] of Object.entries(rule.abilities)) {
       const spell = toSpell(ruleset, monster, slug, r);

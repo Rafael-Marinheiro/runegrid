@@ -194,6 +194,10 @@ export interface Creature {
   srdId?: string;
   /** Estado das habilidades de monstro: usos gastos e recarga pendente, por id da habilidade. */
   abilityState?: Record<string, { used?: number; recharging?: boolean }>;
+  /** Último dano sofrido (tipo e se foi crítico): Fortitude de Morto-vivo olha para ele. */
+  lastHit?: { type?: DamageType; crit?: boolean };
+  /** Regeneração suspensa até o início do próximo turno (dano de ácido/fogo no troll). */
+  regenBlocked?: boolean;
   /** Ações lendárias: máximo por rodada e as que restam (volta ao começar o turno do monstro). */
   legendary?: { max: number; left: number };
   /** Ícone do token (ver `token-icons`); se ausente, deduzido do nome. */

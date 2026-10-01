@@ -3,12 +3,14 @@ import { EncounterState } from '../../models/encounter';
 import { Pos } from '../../models/grid';
 import { Spell } from '../../models/spell';
 import { abilitiesOf } from '../monsters/registry';
+import { useLegendaryResistance } from './traits';
 import { abilityReady, legendaryGate, payAbility } from './ability';
 import {
   abilityMod,
   addEffect,
   applyDamage,
   attackModifiers,
+  allMods,
   autoFailsSave,
   effectiveAc,
   heal,
@@ -738,16 +740,33 @@ export function spellSave(
     const auto = autoFailsSave(t, res.ability);
     const sv = saveExtra(s, t.id, res.ability, rng);
     s = sv.state;
-    const r = rollD20(saveBonus(t, res.ability), sv.mode, rng);
+    // Resistência à Magia: vantagem contra magias (não contra as habilidades de outros monstros)
+    const smode =
+      !spell.ability && allMods(t).some((m) => m.magicResistance)
+        ? combineModes([sv.mode, 'advantage'])
+        : sv.mode;
+    const r = rollD20(saveBonus(t, res.ability), smode, rng);
     const total = r.roll.total + sv.bonus;
-    const saved = !auto && total >= dc;
+    let saved = !auto && total >= dc;
     const modeTxt = T(
-      sv.mode === 'normal' ? '' : sv.mode === 'advantage' ? ' (vantagem)' : ' (desvantagem)',
-      sv.mode === 'normal' ? '' : sv.mode === 'advantage' ? ' (advantage)' : ' (disadvantage)',
+      smode === 'normal' ? '' : smode === 'advantage' ? ' (vantagem)' : ' (desvantagem)',
+      smode === 'normal' ? '' : smode === 'advantage' ? ' (advantage)' : ' (disadvantage)',
     );
+    // Resistência Lendária: a salvaguarda falha, mas o monstro escolhe passar
+    const resisted = saved ? null : useLegendaryResistance(s, t.id);
+    if (resisted?.used) {
+      s = resisted.state;
+      saved = true;
+    }
+    const lr = resisted?.used
+      ? T(
+          ` (Resistência Lendária, restam ${resisted.left}/${resisted.max})`,
+          ` (Legendary Resistance, ${resisted.left}/${resisted.max} left)`,
+        )
+      : '';
     const head = T(
-      `${t.name}: salvaguarda de ${res.ability.toUpperCase()} ${auto ? 'falha automática' : `d20 ${r.natural}${sv.text} = ${total}`}${modeTxt} vs CD ${dc} — ${saved ? 'passou' : 'falhou'}`,
-      `${t.name}: ${res.ability.toUpperCase()} saving throw ${auto ? 'automatic failure' : `d20 ${r.natural}${sv.text} = ${total}`}${modeTxt} vs DC ${dc} — ${saved ? 'passed' : 'failed'}`,
+      `${t.name}: salvaguarda de ${res.ability.toUpperCase()} ${auto ? 'falha automática' : `d20 ${r.natural}${sv.text} = ${total}`}${modeTxt} vs CD ${dc} — ${saved ? 'passou' : 'falhou'}${lr}`,
+      `${t.name}: ${res.ability.toUpperCase()} saving throw ${auto ? 'automatic failure' : `d20 ${r.natural}${sv.text} = ${total}`}${modeTxt} vs DC ${dc} — ${saved ? 'passed' : 'failed'}${lr}`,
     );
 
     if (rolled.length) {

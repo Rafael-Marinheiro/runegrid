@@ -62,6 +62,8 @@ export interface HeldHit {
   /** Dano já rolado (dobrado se crítico), por tipo, antes de resistências. */
   parts: { amount: number; type: string }[];
   knockOut?: boolean;
+  /** Golpe corpo a corpo (Corpo Aquecido só reage a ele). */
+  melee?: boolean;
   /** Consequências no alvo dos golpes marcados (Golpe Aprisionador): de quem, salvaguarda e CD. */
   onHit?: {
     spell: string;

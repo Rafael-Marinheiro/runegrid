@@ -1,7 +1,15 @@
 import { Ability, DamageType } from '../../models/creature';
 import { EncounterState, HeldHit } from '../../models/encounter';
-import { addCondition, addEffect, applyDamage, autoFailsSave, heal, saveBonus } from '../creature';
-import { rollD20, Rng } from '../dice';
+import {
+  addCondition,
+  addEffect,
+  allMods,
+  applyDamage,
+  autoFailsSave,
+  heal,
+  saveBonus,
+} from '../creature';
+import { roll, rollD20, Rng } from '../dice';
 import { getSpell } from '../spells/data';
 import { aftermath, checkOutcome, dtype, notes } from './helpers';
 import { offerDamaged, offerHit } from './reactions';
@@ -67,6 +75,23 @@ export function applyHeldHit(state: EncounterState, hit: HeldHit, rng: Rng): Enc
         rng,
         r.point,
       );
+  }
+  // Corpo Aquecido e afins: quem acerta o monstro (de perto) sofre dano
+  const back = allMods(creatureOf(s, hit.targetId)).find(
+    (m) => m.retaliate && (!m.retaliate.melee || hit.melee),
+  )?.retaliate;
+  if (back && creatureOf(s, hit.attackerId).status !== 'dead') {
+    const atk = creatureOf(s, hit.attackerId);
+    const r = applyDamage(atk, Math.max(0, roll(back.dice, rng).total), { type: back.type });
+    s = addLog(
+      withCreature(s, r.creature),
+      T(
+        `${atk.name} sofre ${r.dealt} de dano ${dtype(back.type)} ao acertar ${creatureOf(s, hit.targetId).name}${notes(r)}.`,
+        `${atk.name} takes ${r.dealt} ${dtype(back.type)} damage for hitting ${creatureOf(s, hit.targetId).name}${notes(r)}.`,
+      ),
+      [atk.id, hit.targetId],
+    );
+    s = aftermath(s, atk.id, r.dealt, rng);
   }
   for (const o of hit.onHit ?? []) s = applyOnHit(s, hit, o, rng);
   s = dropOnAttack(s, hit.attackerId);

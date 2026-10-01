@@ -29,3 +29,6 @@ export const rider = (pt, en, dc, rule = {}) => ({
   ability: { cost: 'free', rider: en, dc },
   ...rule,
 });
+
+/** Traço passivo com efeito de regra (`mods`: ver `EffectMods`). */
+export const T = (pt, en, mods, extra = {}) => ({ pt, en, mods, ...extra });

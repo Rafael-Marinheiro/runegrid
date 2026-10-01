@@ -4,6 +4,7 @@ import { newCreature } from '../../models/creature-factory';
 import { mapFromAscii } from '../../models/grid';
 import { SrdMonster } from '../../models/srd';
 import { RuleError } from '../creature';
+import { sizeOf } from '../encounter/state';
 import { Command, dispatch, newEncounter } from '../encounter';
 import { monsterToCreature } from '../srd/convert';
 import { buildMonsterAbilities, MonsterRules } from './build';
@@ -95,5 +96,200 @@ describe('habilidades de monstros', () => {
     const log = t.get().log.at(-2)!;
     expect(log.en).toMatch(/DC 21/);
     expect(t.get().log.some((e) => e.fx?.some((f) => f.kind === 'cone'))).toBe(true);
+  });
+});
+
+describe('traços passivos de monstros', () => {
+  /** Monstro em (5,5) e heróis encostados nele; `allies` = outros monstros do mesmo id que agem depois. */
+  function duel(monsterId: string, rng: () => number, opts: { allies?: number } = {}) {
+    let s = newEncounter(map);
+    const run = (cmd: Command) => (s = dispatch(s, cmd, { rng, role: dm }));
+    const mon = monsterToCreature(srd(monsterId), 'Monstro');
+    const cells = sizeOf(mon);
+    run({ type: 'addCreature', creature: { ...mon, id: 'mon' }, pos: { x: 5, y: 5 } });
+    run({ type: 'setInitiative', id: 'mon', value: 20 });
+    run({
+      type: 'addCreature',
+      creature: newCreature('pc', {
+        id: 'pc0',
+        name: 'Herói',
+        ac: 10,
+        hp: { max: 300, current: 300, temp: 0 },
+        attacks: [{ name: 'Espada', bonus: 5, damage: '1d8+3', type: 'slashing', range: 5 }],
+      }),
+      pos: { x: 5 + cells, y: 5 },
+    });
+    run({ type: 'setInitiative', id: 'pc0', value: 10 });
+    for (let i = 0; i < (opts.allies ?? 0); i++) {
+      run({
+        type: 'addCreature',
+        creature: { ...monsterToCreature(srd(monsterId), `Aliado ${i}`), id: `ally${i}` },
+        pos: { x: 5 + cells, y: 5 + 1 + i },
+      });
+      run({ type: 'setInitiative', id: `ally${i}`, value: 5 - i });
+    }
+    run({ type: 'startCombat' });
+    return {
+      get: () => s,
+      run,
+      mon: () => s.creatures.find((c) => c.id === 'mon')!,
+      pc: () => s.creatures.find((c) => c.id === 'pc0')!,
+      log: () => s.log.map((e) => e.en ?? e.text),
+    };
+  }
+  const hit = (actor: string, target: string): Command => ({
+    type: 'attack',
+    actorId: actor,
+    attackIndex: 0,
+    targetId: target,
+  });
+
+  it('Fortitude de Morto-vivo: sobrevive com 1 PV se passar na salvaguarda', () => {
+    const d = duel('zombie', () => 0.99); // d20 = 20 (+1 de Con) contra CD 5 + dano
+    d.run({ type: 'damage', targetId: 'mon', amount: 12, damageType: 'slashing' });
+    d.run({ type: 'damage', targetId: 'mon', amount: 10, damageType: 'slashing' }); // 22 PV no total
+    expect(d.mon()).toMatchObject({ status: 'alive', hp: { current: 1 } });
+    expect(d.log().some((l) => /Undead Fortitude/.test(l))).toBe(true);
+    // radiante não deixa tentar
+    const r = duel('zombie', () => 0.99);
+    r.run({ type: 'damage', targetId: 'mon', amount: 12, damageType: 'slashing' });
+    r.run({ type: 'damage', targetId: 'mon', amount: 10, damageType: 'radiant' });
+    expect(r.mon().status).toBe('dead');
+    // CD alta demais: falha
+    const f = duel('zombie', () => 0.01);
+    f.run({ type: 'damage', targetId: 'mon', amount: 22, damageType: 'slashing' });
+    expect(f.mon().status).toBe('dead');
+  });
+
+  it('Regeneração do troll: cura 10 PV e para depois de dano de fogo', () => {
+    const d = duel('troll', () => 0.5);
+    d.run({ type: 'damage', targetId: 'mon', amount: 30, damageType: 'slashing' });
+    const hp = d.mon().hp.current;
+    for (const who of ['mon', 'pc0']) d.run({ type: 'endTurn', actorId: who });
+    expect(d.mon().hp.current).toBe(hp + 10);
+    d.run({ type: 'damage', targetId: 'mon', amount: 5, damageType: 'fire' });
+    const after = d.mon().hp.current;
+    for (const who of ['mon', 'pc0']) d.run({ type: 'endTurn', actorId: who });
+    expect(d.mon().hp.current).toBe(after);
+    expect(d.log().some((l) => /does not regenerate/.test(l))).toBe(true);
+    // e volta no turno seguinte
+    for (const who of ['mon', 'pc0']) d.run({ type: 'endTurn', actorId: who });
+    expect(d.mon().hp.current).toBe(after + 10);
+  });
+
+  it('Táticas de Matilha: vantagem só com aliado ao lado do alvo', () => {
+    const alone = duel('wolf', () => 0.5);
+    alone.run(hit('mon', 'pc0'));
+    expect(alone.log().at(-1)).not.toMatch(/advantage/);
+    const pack = duel('wolf', () => 0.5, { allies: 1 });
+    pack.run(hit('mon', 'pc0'));
+    expect(pack.log().at(-1)).toMatch(/advantage/);
+  });
+
+  it('Corpo Aquecido: quem acerta o azer corpo a corpo sofre 1d10 de fogo', () => {
+    const d = duel('azer', () => 0.99); // d20 20 sempre acerta; 1d10 = 10
+    d.run({ type: 'endTurn', actorId: 'mon' });
+    d.run(hit('pc0', 'mon'));
+    expect(d.pc().hp.current).toBe(300 - 10);
+    expect(d.log().some((l) => /for hitting/.test(l))).toBe(true);
+  });
+
+  it('Implacável do javali: sobrevive uma vez com 1 PV', () => {
+    const d = duel('boar', () => 0.5);
+    d.run({
+      type: 'damage',
+      targetId: 'mon',
+      amount: d.mon().hp.current - 5,
+      damageType: 'slashing',
+    });
+    d.run({ type: 'damage', targetId: 'mon', amount: 5, damageType: 'slashing' });
+    expect(d.mon()).toMatchObject({ status: 'alive', hp: { current: 1 } });
+    d.run({ type: 'damage', targetId: 'mon', amount: 1, damageType: 'slashing' });
+    expect(d.mon().status).toBe('dead');
+  });
+
+  it('Investida do javali: só vale depois de andar 20 ft', () => {
+    // sem andar: só o dano da presa
+    const still = duel('boar', () => 0.99);
+    still.run(hit('mon', 'pc0'));
+    const plain = 300 - still.pc().hp.current;
+    // andando 20 ft (4 casas) para longe e voltando: 20 ft gastos e a investida vale
+    const run = duel('boar', () => 0.99);
+    run.run({ type: 'move', actorId: 'mon', to: { x: 2, y: 5 } });
+    run.run({ type: 'move', actorId: 'mon', to: { x: 5, y: 5 } });
+    run.run(hit('mon', 'pc0'));
+    expect(300 - run.pc().hp.current).toBeGreaterThan(plain);
+    expect(run.log().some((l) => /STR saving throw/.test(l))).toBe(true);
+  });
+
+  it('Mordida venenosa da aranha: salvaguarda de Constituição e dano de veneno', () => {
+    const d = duel('giant-spider', () => 0.99); // acerta e o herói passa (20): metade do veneno
+    d.run(hit('mon', 'pc0'));
+    expect(300 - d.pc().hp.current).toBeGreaterThan(7);
+    expect(d.log().some((l) => /CON saving throw/.test(l))).toBe(true);
+  });
+
+  it('Teia da aranha: ataque à distância que prende e recarrega', () => {
+    const d = duel('giant-spider', () => 0.99);
+    const web = abilitiesOf(d.mon()).find((a) => a.nameEn === 'Web')!;
+    d.run({ type: 'cast', actorId: 'mon', spellId: web.id, targetId: 'pc0' });
+    expect(d.pc().conditions.some((c) => c.name === 'restrained')).toBe(true);
+    expect(d.mon().abilityState?.[web.id]?.recharging).toBe(true);
+  });
+
+  it('Vantagem Marcial: +2d6 com aliado ao lado do alvo, uma vez por turno', () => {
+    const d = duel('hobgoblin', () => 0.99, { allies: 1 });
+    const w = d.pc().hp.current;
+    d.run(hit('mon', 'pc0'));
+    const first = w - d.pc().hp.current;
+    expect(first).toBeGreaterThan(12); // arma + 2d6 (12 com d6 = 6)
+  });
+
+  it('Explosão de Morte do magmin atinge quem está a 10 ft', () => {
+    const d = duel('magmin', () => 0.01); // salvaguarda falha; d6 = 1
+    d.run({ type: 'damage', targetId: 'mon', amount: 100, damageType: 'slashing' });
+    expect(d.mon().status).toBe('dead');
+    expect(d.pc().hp.current).toBeLessThan(300);
+    expect(d.log().some((l) => /Death Burst/.test(l))).toBe(true);
+  });
+
+  it('Passagem Rápida: a coruja não provoca ataque de oportunidade', () => {
+    const d = duel('flying-snake', () => 0.5);
+    d.run({ type: 'move', actorId: 'mon', to: { x: 2, y: 5 } });
+    expect(d.get().combat.pending ?? []).toHaveLength(0);
+  });
+
+  it('Resistência Lendária: o dragão falha e passa na salvaguarda, 3 vezes por dia', () => {
+    const d = duel('adult-red-dragon', () => 0.01); // d20 = 1: falha sempre
+    const caster = newCreature('pc', {
+      id: 'c',
+      name: 'Mago',
+      level: 9,
+      abilities: { str: 10, dex: 10, con: 10, int: 18, wis: 10, cha: 10 },
+      spellSlots: { 3: { max: 9, used: 0 } },
+      spellcasting: { ability: 'int', spells: ['fireball'] },
+    });
+    let s = d.get();
+    s = {
+      ...s,
+      creatures: [...s.creatures, caster],
+      tokens: [...s.tokens, { creatureId: 'c', pos: { x: 12, y: 12 } }],
+    };
+    const dragon = s.creatures.find((c) => c.id === 'mon')!;
+    for (let i = 0; i < 4; i++) {
+      s = {
+        ...s,
+        combat: { ...s.combat, turn: { ...s.combat.turn!, actorId: 'c', action: true } },
+      };
+      s = dispatch(
+        s,
+        { type: 'cast', actorId: 'c', spellId: 'fireball', slotLevel: 3, point: { x: 6, y: 6 } },
+        { rng: () => 0.01, role: dm },
+      );
+    }
+    const used = s.creatures.find((c) => c.id === dragon.id)!.abilityState?.['legendary-resistance']
+      ?.used;
+    expect(used).toBe(3);
+    expect(s.log.filter((e) => /Legendary Resistance/.test(e.en ?? '')).length).toBe(3);
   });
 });

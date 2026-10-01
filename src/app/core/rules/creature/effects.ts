@@ -1,11 +1,17 @@
 import { Creature, DamageType } from '../../models/creature';
 import { ActiveEffect, EffectMods } from '../../models/effect';
 import { AdvMode } from '../dice';
+import { traitModsOf } from '../monsters/registry';
 import { abilityMod } from './stats';
 
 export const effectsOf = (c: Pick<Creature, 'effects'>): ActiveEffect[] => c.effects ?? [];
 
-const mods = (c: Pick<Creature, 'effects'>): EffectMods[] => effectsOf(c).map((e) => e.mods);
+/** Modificadores dos efeitos ativos e dos traços permanentes do monstro. */
+export const allMods = (c: Pick<Creature, 'effects' | 'srdId'>): EffectMods[] => [
+  ...effectsOf(c).map((e) => e.mods),
+  ...traitModsOf(c),
+];
+const mods = allMods;
 
 /** CA efetiva: base, ou a base sem armadura se maior, ou o mínimo, mais os bônus dos efeitos. */
 export function effectiveAc(c: Creature): number {

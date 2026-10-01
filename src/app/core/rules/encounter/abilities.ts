@@ -25,7 +25,8 @@ import { T } from '../i18n';
 import { Command } from './commands';
 import { attachFx, centerOf } from './fx';
 import { actorTurn, setTurn } from './helpers';
-import { addLog, creatureOf, sizeOf, teamOf, tokenOf, withCreature } from './state';
+import { addLog, creatureOf, withCreature } from './state';
+import { allyAdjacent } from './traits';
 
 type FeatureCmd = Extract<Command, { type: 'feature' }>;
 
@@ -175,20 +176,7 @@ export function sneakAttack(
   if (!(weapon.finesse || weapon.range > 5)) return null;
   if ((state.combat.sneakUsed ?? []).includes(actor.id)) return null;
   if (mode === 'disadvantage') return null;
-  if (mode !== 'advantage') {
-    const at = tokenOf(state, target.id);
-    if (!at) return null;
-    const flanked = state.tokens.some((t) => {
-      if (t.creatureId === actor.id || t.creatureId === target.id) return false;
-      const o = creatureOf(state, t.creatureId);
-      return (
-        teamOf(o) === teamOf(actor) &&
-        canAct(o) &&
-        distanceFt(t.pos, sizeOf(o), at.pos, sizeOf(target), state.rule) <= 5
-      );
-    });
-    if (!flanked) return null;
-  }
+  if (mode !== 'advantage' && !allyAdjacent(state, actor, target)) return null;
   return sneakAttackDice(actor.level);
 }
 

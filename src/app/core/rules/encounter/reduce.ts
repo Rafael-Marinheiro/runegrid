@@ -24,6 +24,7 @@ import {
   skillBonus,
   hasNoReactions,
   effectiveAc,
+  allMods,
   weaponBonus,
   weaponRiders,
   effectsOf,
@@ -35,6 +36,10 @@ import { consume, itemDef } from '../inventory/inventory';
 import { markSneak, sneakAttack, useFeature } from './abilities';
 import { keepRage, meleeDamageBonus, rageEndOfTurn } from './rage';
 import { riderOf } from '../monsters/registry';
+import { allyAdjacent } from './traits';
+import { abilityReady, legendaryGate, payAbility } from './ability';
+import { Spell } from '../../models/spell';
+import { getSpell } from '../spells/data';
 import { damageParts } from '../spells/scaling';
 import { cast } from './cast';
 import { freeReaction, spellReaction } from './reaction-flow';
@@ -101,7 +106,7 @@ import {
   tokenOf,
   withCreature,
 } from './state';
-import { T, condT } from '../i18n';
+import { T, condT, spellName } from '../i18n';
 import { distT } from '../units';
 
 /** O jogador só age por criaturas suas; o Mestre pode tudo. */
@@ -290,8 +295,13 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
         [target.id],
       );
     }
-    case 'cast':
-      return revealToken(cast(state, cmd, ctx), cmd.actorId);
+    case 'cast': {
+      const sp = getSpell(cmd.spellId, cmd.ruleset);
+      return revealToken(
+        sp?.ability?.attack ? abilityStrike(state, cmd, sp, ctx) : cast(state, cmd, ctx),
+        cmd.actorId,
+      );
+    }
     case 'standUp': {
       const { actor, turn } = actorTurn(state, cmd.actorId);
       if (!actor.conditions.some((c) => c.name === 'prone'))
@@ -819,6 +829,7 @@ function queueOpportunities(
   to: Pos,
 ): EncounterState {
   const mover = creatureOf(state, moverId);
+  if (allMods(mover).some((m) => m.noOpportunity)) return state;
   const pending = [...(state.combat.pending ?? [])];
   let seq = pending.reduce((n, p) => Math.max(n, p.id), 0);
   for (const t of state.tokens) {
@@ -903,6 +914,72 @@ function reaction(
     [reactorId, target.id],
   );
   return strike(announced, reactor, target, p.attackIndex, p.reach, [], rng);
+}
+
+/**
+ * Habilidade que é um ataque de arma comum do monstro (Ataque de Cauda lendário, mordida com ação
+ * bônus): paga o custo da habilidade e resolve o golpe como qualquer outro.
+ */
+function abilityStrike(
+  state: EncounterState,
+  cmd: Extract<Command, { type: 'cast' }>,
+  sp: Spell,
+  ctx: Context,
+): EncounterState {
+  const ab = sp.ability!;
+  const actor = creatureOf(state, cmd.actorId);
+  const index = actor.attacks.findIndex((a) => a.name === ab.attack);
+  if (index < 0)
+    throw new RuleError(
+      T(
+        `${actor.name} não tem o ataque ${ab.attack}.`,
+        `${actor.name} has no ${ab.attack} attack.`,
+      ),
+    );
+  const targetId = cmd.targetId ?? cmd.targetIds?.[0];
+  if (!targetId) throw new RuleError(T('Escolha um alvo.', 'Choose a target.'));
+  const target = creatureOf(state, targetId);
+  if (target.id === actor.id)
+    throw new RuleError(T('Não é possível atacar a si mesmo.', 'You cannot attack yourself.'));
+  if (target.status === 'dead')
+    throw new RuleError(T(`${target.name} já está morto.`, `${target.name} is already dead.`));
+  const from = tokenOf(state, actor.id);
+  const at = tokenOf(state, target.id);
+  if (!from || !at) throw new RuleError(T('Criatura fora do mapa.', 'Creature is off the map.'));
+  const weapon = actor.attacks[index];
+  const dist = distanceFt(from.pos, sizeOf(actor), at.pos, sizeOf(target), state.rule);
+  if (dist > weapon.range)
+    throw new RuleError(
+      T(
+        `Alvo fora de alcance (${distT(dist)}; alcance ${distT(weapon.range)}).`,
+        `Target out of range (${distT(dist)}; range ${distT(weapon.range)}).`,
+      ),
+    );
+  let s = state;
+  if (ab.cost === 'legendary') legendaryGate(state, actor, sp);
+  else {
+    const { turn } = actorTurn(state, actor.id);
+    abilityReady(actor, sp);
+    if (ab.cost === 'bonus') {
+      if (!turn.bonus)
+        throw new RuleError(
+          T('Sem ação bônus disponível neste turno.', 'No bonus action left this turn.'),
+        );
+      s = setTurn(s, { ...turn, bonus: false });
+    } else if (ab.cost === 'action') {
+      spendAction(turn);
+      s = setTurn(s, { ...turn, action: false });
+    }
+  }
+  s = payAbility(s, actor.id, sp);
+  s = addLog(s, T(`${actor.name} usa ${sp.name}.`, `${actor.name} uses ${spellName(sp)}.`), [
+    actor.id,
+  ]);
+  return attachFx(
+    s,
+    strike(s, creatureOf(s, actor.id), target, index, dist, [], ctx.rng),
+    attackFx(s, actor.id, target.id, weapon.range, weapon.type),
+  );
 }
 
 /** Resolve o ataque e pendura o efeito visual (talho ou flecha) na primeira linha nova do registro. */
@@ -1003,6 +1080,12 @@ function strike(
     });
     if (meleeFoe) modes.push('disadvantage'); // atirar com inimigo adjacente
   }
+  // Táticas de Matilha e Frenesi Sanguinário (traços de monstros)
+  const tmods = allMods(actor);
+  if (tmods.some((m) => m.packTactics) && allyAdjacent(state, actor, target))
+    modes.push('advantage');
+  if (tmods.some((m) => m.bloodFrenzy) && target.hp.current < target.hp.max)
+    modes.push('advantage');
   const cond = attackModifiers(actor, target, dist, weapon.range > 5);
   const helped = consumeHelp(state, target.id);
   state = helped.state;
@@ -1060,7 +1143,10 @@ function strike(
     });
   }
   // monstro: o ataque traz dano extra ou uma salvaguarda (mordida envenenada, agarrar…)
-  const monsterRider = riderOf(actor, weapon.name);
+  const moved = state.combat.turn?.actorId === actor.id ? state.combat.turn.movedFt : 0;
+  const found = riderOf(actor, weapon.name);
+  // Investida/Bote: só vale se o monstro se moveu o bastante antes do golpe
+  const monsterRider = found && (found.ability?.moveFt ?? 0) > moved ? undefined : found;
   if (monsterRider?.damage || monsterRider?.extraDamage) {
     for (const p of damageParts(monsterRider)) {
       const rexpr = parseDice(p.dice);
@@ -1069,6 +1155,20 @@ function strike(
         type: p.type,
       });
     }
+  }
+  // Vantagem Marcial (monstro): dano extra uma vez por turno com aliado ao lado do alvo
+  const bonusDice = tmods.find((m) => m.allyBonus)?.allyBonus;
+  if (
+    bonusDice &&
+    !(state.combat.sneakUsed ?? []).includes(actor.id) &&
+    allyAdjacent(state, actor, target)
+  ) {
+    const bexpr = parseDice(bonusDice.dice);
+    parts.push({
+      amount: Math.max(0, roll(crit ? criticalExpr(bexpr) : bexpr, rng).total),
+      type: weapon.type as string,
+    });
+    state = markSneak(state, actor.id);
   }
   const onHit = effectsOf(actor).flatMap((e) =>
     e.mods.once && e.mods.onHit
@@ -1094,6 +1194,7 @@ function strike(
       nat20: d20.crit,
       crit,
       parts,
+      ...(weapon.range <= 5 ? { melee: true } : {}),
       ...(monsterRider
         ? {
             rider: {

@@ -85,6 +85,26 @@ export interface EffectMods {
   rage?: boolean;
   /** Dano fixo somado aos golpes corpo a corpo de arma (Fúria). */
   meleeDamage?: number;
+  /** Resistência à Magia: vantagem nas salvaguardas contra magias e outros efeitos mágicos. */
+  magicResistance?: boolean;
+  /** Táticas de Matilha: vantagem no ataque se um aliado capaz de agir está a até 5 ft do alvo. */
+  packTactics?: boolean;
+  /** Resistência Lendária: vezes por dia em que uma salvaguarda falha vira sucesso (gasta sozinha). */
+  legendaryResistance?: number;
+  /** Passagem Rápida: não provoca ataques de oportunidade. */
+  noOpportunity?: boolean;
+  /** Regeneração: tipos de dano que a suspendem até o início do próximo turno. */
+  regenStops?: DamageType[];
+  /** Frenesi Sanguinário: vantagem contra criaturas que não estão com todos os PV. */
+  bloodFrenzy?: boolean;
+  /** Dano devolvido a quem acerta quem carrega (Corpo Aquecido); `melee`: só ataques corpo a corpo. */
+  retaliate?: { dice: string; type: DamageType; melee?: boolean };
+  /** Fortitude de Morto-vivo: a 0 PV, salvaguarda de Constituição CD 5 + dano; sucesso = 1 PV (exceto radiante/crítico). */
+  undeadFortitude?: boolean;
+  /** Implacável: uma vez por descanso, dano de até `maxDamage` que o levaria a 0 PV o deixa com 1 PV. */
+  relentless?: number;
+  /** Vantagem Marcial: uma vez por turno, dano extra se um aliado capaz de agir está a até 5 ft do alvo. */
+  allyBonus?: { dice: string };
   /** Sem efeito no motor: só lembrete para o Mestre (testes de atributo, sentidos…). */
   note?: string;
   /** `note` em inglês. */

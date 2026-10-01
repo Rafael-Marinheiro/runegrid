@@ -13,6 +13,8 @@ import { addLog, creatureOf, teamOf, withCreature } from './state';
 import { xpForCr } from '../srd/xp';
 import { condT, dmgT, spellT, T } from '../i18n';
 import { endRageIfDown, keepRage } from './rage';
+import { triggerDeath } from './death';
+import { undeadFortitude } from './traits';
 
 export interface Context {
   rng: Rng;
@@ -152,6 +154,8 @@ export function aftermath(
   rng: Rng,
 ): EncounterState {
   if (dealt > 0) state = keepRage(state, targetId);
+  state = undeadFortitude(state, targetId, dealt, rng);
+  state = triggerDeath(state, targetId, rng);
   state = endRageIfDown(state, targetId);
   let t = creatureOf(state, targetId);
   if (dealt > 0 && t.conditions.some((c) => c.endsOnDamage)) {

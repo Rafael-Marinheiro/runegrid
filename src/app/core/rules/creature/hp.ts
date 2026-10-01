@@ -1,6 +1,6 @@
 import { Creature, DamageType } from '../../models/creature';
 import { Rng } from '../dice';
-import { cannotHeal, effectsOf, extraResist, removeEffects } from './effects';
+import { allMods, cannotHeal, effectsOf, extraResist, removeEffects } from './effects';
 import { RuleError } from './stats';
 import { T } from '../i18n';
 
@@ -45,6 +45,21 @@ function adjust(c: Creature, amount: number, type?: DamageType): number {
 }
 
 export function applyDamage(c: Creature, amount: number, opts: DamageOptions = {}): DamageResult {
+  const r = damage(c, amount, opts);
+  if (r.dealt <= 0) return r;
+  // marcas para os traços dos monstros: último dano e Regeneração suspensa
+  const stops = allMods(c).some((m) => opts.type && m.regenStops?.includes(opts.type));
+  return {
+    ...r,
+    creature: {
+      ...r.creature,
+      lastHit: { ...(opts.type ? { type: opts.type } : {}), ...(opts.crit ? { crit: true } : {}) },
+      ...(stops ? { regenBlocked: true } : {}),
+    },
+  };
+}
+
+function damage(c: Creature, amount: number, opts: DamageOptions): DamageResult {
   const dealt = adjust(c, nonNeg(amount, T('Dano', 'Damage')), opts.type);
   if (c.status === 'dead' || dealt === 0) {
     return {
@@ -88,6 +103,28 @@ export function applyDamage(c: Creature, amount: number, opts: DamageOptions = {
     const warded = removeEffects(c, (e) => !!e.mods.deathWard);
     return {
       creature: { ...warded, hp: { ...c.hp, current: 1, temp: c.hp.temp - absorbedByTemp } },
+      dealt,
+      absorbedByTemp,
+      hpLost: hpLost - 1,
+      dropped: false,
+      instantDeath: false,
+    };
+  }
+  // Implacável (monstro): uma vez por descanso, dano pequeno que o derrubaria o deixa com 1 PV
+  const rel = allMods(c).find((m) => m.relentless);
+  if (
+    dropped &&
+    !instantDeath &&
+    rel &&
+    dealt <= rel.relentless! &&
+    !c.abilityState?.['relentless']?.used
+  ) {
+    return {
+      creature: {
+        ...c,
+        hp: { ...c.hp, current: 1, temp: c.hp.temp - absorbedByTemp },
+        abilityState: { ...c.abilityState, relentless: { used: 1 } },
+      },
       dealt,
       absorbedByTemp,
       hpLost: hpLost - 1,

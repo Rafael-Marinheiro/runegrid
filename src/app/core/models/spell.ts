@@ -129,7 +129,7 @@ export interface SpellOption {
  * ação (ou ação bônus/lendária), e a recarga ou os usos por dia valem por criatura.
  */
 export interface AbilityMeta {
-  cost: 'action' | 'bonus' | 'reaction' | 'legendary' | 'free';
+  cost: 'action' | 'bonus' | 'reaction' | 'legendary' | 'free' | 'death';
   /** Custo em ações lendárias (padrão 1). */
   legendary?: number;
   /** "Recharge 5-6": no início do turno do monstro, d6 maior ou igual a isto a devolve. */
@@ -145,6 +145,10 @@ export interface AbilityMeta {
    * não é usada sozinha, vai junto com o ataque (ver `Attack`).
    */
   rider?: string;
+  /** Rider que só vale se o monstro se moveu ao menos tanto neste turno (Investida, Bote). */
+  moveFt?: number;
+  /** Faz um ataque de arma comum do monstro (nome do ataque no SRD) em vez de um efeito próprio (ação lendária: Ataque de Cauda). */
+  attack?: string;
 }
 
 /** Depois de um acerto: salvaguarda do alvo com dano e/ou condição (ataque com veneno, paralisia…). */

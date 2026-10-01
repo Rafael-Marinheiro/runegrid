@@ -25,7 +25,24 @@ export interface SrdMonster {
   attacks: Attack[];
   attacksPerAction: number;
   traits: { name: string; desc: string }[];
-  actions: { name: string; desc: string }[];
+  /** SRD 5.2: `type` distingue ação bônus, reação e ação lendária; `uses` traz recarga e usos por dia. */
+  actions: {
+    name: string;
+    desc: string;
+    type?: 'bonus' | 'reaction' | 'legendary';
+    cost?: number;
+    uses?: { type: 'recharge' | 'rest' | 'day'; n?: number };
+  }[];
+  /** SRD 5.1: reações (as do 5.2 vêm em `actions` com `type: 'reaction'`). */
+  reactions?: { name: string; desc: string }[];
+  /** SRD 5.1: ações lendárias (`count` por rodada) e a regra geral delas. */
+  legendary?: {
+    desc: string;
+    count: number;
+    actions: { name: string; desc: string; cost: number }[];
+  };
+  /** SRD 5.1: magias do bloco de conjuração (nomes em inglês). */
+  spells?: string[];
 }
 
 export interface SrdSpell {

@@ -425,3 +425,65 @@ describe('Corcel de Outro Mundo (SRD 5.2)', () => {
     expect(steeds[0].name).toContain('Celestial');
   });
 });
+
+describe('Espírito Dracônico (SRD 5.2)', () => {
+  beforeAll(() => {
+    registerSpells(
+      '2024',
+      buildSpells(
+        spells2024 as unknown as SrdSpell[],
+        mergeRules(rules2014 as unknown as SpellRules, rules2024 as unknown as SpellRules),
+      ),
+    );
+  });
+
+  it('a ficha escala com o espaço e o sopro segue o tipo escolhido; quem conjura ganha a resistência', () => {
+    const id = getSpell('summon-dragon', '2024')!.id;
+    const t = scene(id);
+    t.run({
+      type: 'cast',
+      actorId: 'c',
+      spellId: id,
+      slotLevel: 7,
+      option: 'fire',
+      ruleset: '2024',
+      point: { x: 7, y: 5 },
+    });
+    const d = t.get().creatures.find((c) => c.summon)!;
+    expect(d.size).toBe('large');
+    expect(d.ac).toBe(21);
+    expect(d.hp.max).toBe(70);
+    expect(d.attacksPerAction).toBe(3);
+    expect(d.attacks[0]).toMatchObject({ name: 'Rend', damage: '1d6+11', range: 10, bonus: 8 });
+    expect(d.summon).toMatchObject({ by: 'c', concentration: true, dc: 16 });
+    expect(t.get().combat.order.slice(0, 2)).toEqual(['c', d.id]);
+    const breath = abilitiesOf(d).find((a) => a.nameEn === 'Breath Weapon')!;
+    expect(breath.damage).toEqual({ dice: '2d6', type: 'fire' });
+    expect(breath.target).toEqual({ kind: 'cone', length: 30 });
+    const caster = t.get().creatures.find((c) => c.id === 'c')!;
+    expect(caster.effects?.some((e) => e.mods.resist?.includes('fire'))).toBe(true);
+  });
+
+  it('o espírito some quando a concentração quebra', () => {
+    const id = getSpell('summon-dragon', '2024')!.id;
+    const t = scene(id);
+    t.run({
+      type: 'cast',
+      actorId: 'c',
+      spellId: id,
+      slotLevel: 5,
+      option: 'cold',
+      ruleset: '2024',
+      point: { x: 7, y: 5 },
+    });
+    expect(t.get().creatures.filter((c) => c.summon)).toHaveLength(1);
+    const lost = {
+      ...t.get(),
+      creatures: t
+        .get()
+        .creatures.map((x) => (x.id === 'c' ? { ...x, concentration: undefined } : x)),
+    };
+    const out = dispatch(lost, { type: 'heal', targetId: 'c', amount: 0 }, { rng, role: dm });
+    expect(out.creatures.filter((c) => c.summon)).toHaveLength(0);
+  });
+});

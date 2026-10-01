@@ -1,6 +1,10 @@
 // Versão em inglês das notas `manual` e `note` das magias (chave = texto em pt-BR). O build exige uma entrada para cada nota.
 export default new Map([
   [
+    'Espírito Dracônico: Grande, CA 14 + nível, PV 50 + 10 por nível acima de 5, imune a enfeitiçado, amedrontado e envenenado (o Mestre aplica), visão às cegas 9 m. Você tem resistência ao tipo escolhido enquanto a magia durar. Faz Rend (metade do nível, arredondada para baixo) e usa o Sopro no mesmo turno, logo depois do seu.',
+    'Draconic Spirit: Large, AC 14 + level, HP 50 + 10 per level above 5, immune to charmed, frightened and poisoned (the DM applies it), blindsight 30 ft. You have resistance to the chosen damage type while the spell lasts. It makes Rend attacks (half the level, rounded down) and uses Breath Weapon on the same turn, right after yours.',
+  ],
+  [
     'Se a concentração quebrar, a criatura fica hostil e some 1 hora depois; se for uma fera, é uma fera feérica.',
     'If concentration breaks, the creature turns hostile and disappears 1 hour later; a beast form is a fey spirit.',
   ],

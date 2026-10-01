@@ -1,5 +1,5 @@
 // SRD 5.2 (2024) — 5º nível. Lido a partir de public/data/spells-2024.json; o que não aparece é igual ao 2014.
-import { cond, creature, dmg, narrative, opt, point, save, vfx } from './helpers.mjs';
+import { auto, cond, creature, dmg, narrative, opt, point, save, vfx } from './helpers.mjs';
 
 const SPIRIT = [
   ['lightning', 'Ar (elétrico)', 'lightning'],
@@ -45,8 +45,27 @@ export default {
   },
   'hold-monster': { manual: '' },
   'mass-cure-wounds': { heal: { dice: '5d8', perLevel: '1d8', addModifier: true } },
-  'summon-dragon': narrative(vfx('glow', 'fire'), {
+  'summon-dragon': {
+    // Espírito Dracônico (SRD 5.2): a ficha é montada na hora; o tipo escolhido vira o sopro e a resistência de quem conjura
+    target: point,
+    resolution: auto,
+    options: [
+      ['acid', 'Ácido', 'Acid', 'acid'],
+      ['cold', 'Gélido', 'Cold', 'frost'],
+      ['fire', 'Fogo', 'Fire', 'fire'],
+      ['lightning', 'Elétrico', 'Lightning', 'lightning'],
+      ['poison', 'Veneno', 'Poison', 'poison'],
+    ].map(([id, pt, en]) => ({
+      id,
+      label: `Espírito ${pt}`,
+      labelEn: `${en} spirit`,
+      patch: {
+        summon: { custom: 'draconic-spirit', srd: id, n: 1 },
+        effect: { to: 'self', mods: { resist: [id] } },
+      },
+    })),
     manual:
-      'Invocação: o Mestre adiciona o espírito dracônico (bloco Draconic Spirit) ao combate; ele age logo depois de você.',
-  }),
+      'Espírito Dracônico: Grande, CA 14 + nível, PV 50 + 10 por nível acima de 5, imune a enfeitiçado, amedrontado e envenenado (o Mestre aplica), visão às cegas 9 m. Você tem resistência ao tipo escolhido enquanto a magia durar. Faz Rend (metade do nível, arredondada para baixo) e usa o Sopro no mesmo turno, logo depois do seu.',
+    vfx: vfx('burst', 'fire', { radius: 5 }),
+  },
 };

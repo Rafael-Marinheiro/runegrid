@@ -3,7 +3,7 @@ import { EncounterState } from '../../models/encounter';
 import { Pos, SIZE_CELLS } from '../../models/grid';
 import { Spell, SummonSpec } from '../../models/spell';
 import { allMods, RuleError, spellSaveDc } from '../creature';
-import { otherworldlySteed, SteedKind } from '../monsters/custom';
+import { draconicSpirit, DragonType, otherworldlySteed, SteedKind } from '../monsters/custom';
 import { canStand, footprint, key } from '../grid/movement';
 import { roll } from '../dice';
 import { T, spellName } from '../i18n';
@@ -22,19 +22,24 @@ let source: SummonSource = () => undefined;
 export const registerSummonSource = (fn: SummonSource): void => {
   source = fn;
 };
+/** Idioma dos nomes das fichas montadas na hora (a tela registra o idioma da interface). */
+let nameLang: () => 'pt' | 'en' = () => 'en';
+export const registerSummonLang = (fn: () => 'pt' | 'en'): void => {
+  nameLang = fn;
+};
+
 export const summonTemplate: SummonSource = (id, ruleset) => source(id, ruleset);
 
 /** Ficha de um bloco que escala com o espaço (Corcel de Outro Mundo). */
 function customTemplate(
-  kind: 'otherworldly-steed',
+  kind: 'otherworldly-steed' | 'draconic-spirit',
   variant: string,
   slot: number,
   caster: Creature,
-) {
-  const v = variant as SteedKind;
+): Creature {
   return kind === 'otherworldly-steed'
-    ? otherworldlySteed(caster, Math.max(2, slot), v)
-    : undefined;
+    ? otherworldlySteed(caster, Math.max(2, slot), variant as SteedKind, nameLang() === 'en')
+    : draconicSpirit(caster, Math.max(5, slot), variant as DragonType, nameLang() === 'en');
 }
 
 const casterDc = (caster: Creature): number =>

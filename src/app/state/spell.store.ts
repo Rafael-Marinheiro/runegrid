@@ -1,6 +1,6 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { SrdMonster, SrdSpell } from '@core/models/srd';
-import { registerSummonSource } from '@core/rules/encounter';
+import { registerSummonLang, registerSummonSource } from '@core/rules/encounter';
 import { monsterToCreature } from '@core/rules/srd/convert';
 import { monsterNamePt } from '@core/rules/srd/names-pt';
 import { buildSpells, mergeRules, SpellRules } from '@core/rules/spells/build';
@@ -50,6 +50,7 @@ export class SpellStore {
       this.json<SrdMonster[]>(is24 ? 'monsters-2024.json' : 'monsters.json'),
     ]);
     this.sheets.set(ruleset, new Map(creatures.map((m) => [m.id.replace(/^srd-2024_/, ''), m])));
+    registerSummonLang(() => (this.ui.locale() === 'en' ? 'en' : 'pt'));
     registerSummonSource((id, rs) => {
       const m = this.sheets.get(rs)?.get(id);
       return m

@@ -188,8 +188,8 @@ export interface SummonSpec {
   srd?: string;
   /** Quantas aparecem com o espaço base. */
   n?: number;
-  /** Ficha montada na hora, escalando com o espaço (Corcel de Outro Mundo); `srd` é o tipo (celestial|fey|fiend). */
-  custom?: 'otherworldly-steed';
+  /** Ficha montada na hora, escalando com o espaço (Corcel de Outro Mundo); `srd` é o tipo (celestial|fey|fiend; acid|cold|fire|lightning|poison). */
+  custom?: 'otherworldly-steed' | 'draconic-spirit';
   /** Em vez de `n` fixo, quantas aparecem é rolado ("1d8 vrocks"). */
   dice?: string;
   /** No máximo tantas criaturas suas deste tipo ao mesmo tempo (Criar Espectro: sete). */

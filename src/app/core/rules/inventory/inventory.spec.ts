@@ -2,7 +2,7 @@ import { newCreature } from '../../models/creature-factory';
 import { mapFromAscii } from '../../models/grid';
 import { RuleError } from '../creature';
 import { dispatch, newEncounter } from '../encounter';
-import { addItem, carriedWeight, consume, toggleEquip } from './inventory';
+import { addItem, carriedWeight, consume, corrode, toggleEquip } from './inventory';
 
 const hero = () =>
   newCreature('pc', {
@@ -82,5 +82,36 @@ describe('inventário', () => {
     expect(h.hp.current).toBeGreaterThan(5);
     expect(h.inventory).toHaveLength(0);
     expect(() => dispatch(s, use, { rng: () => 0.5, role: { kind: 'dm' } })).toThrow(RuleError);
+  });
+});
+
+describe('ferrugem', () => {
+  const equip = (ref: string) => {
+    const c = addItem(hero(), ref);
+    return toggleEquip(c, c.inventory![0].id);
+  };
+
+  it('a arma de metal perde 1 de dano por toque e some em −5', () => {
+    let c = equip('longsword');
+    for (let i = 1; i <= 4; i++) {
+      const r = corrode(c, 'weapon', 'damage')!;
+      expect(r.destroyed).toBe(false);
+      c = r.creature;
+    }
+    expect(c.inventory![0].corrosion?.n).toBe(4);
+    const dmg = (x: typeof c) => x.attacks.find((a) => a.name === 'Espada longa')!.damage;
+    const base = dmg(toggleEquip(toggleEquip(c, c.inventory![0].id), c.inventory![0].id));
+    expect(base).toBe(dmg(c));
+    const last = corrode(c, 'weapon', 'damage')!;
+    expect(last.destroyed).toBe(true);
+    expect(last.creature.inventory).toHaveLength(0);
+  });
+
+  it('o escudo some ao chegar a +0 e o que não é de metal não enferruja', () => {
+    let c = equip('shield');
+    c = corrode(c, 'shield', 'damage')!.creature;
+    expect(corrode(c, 'shield', 'damage')!.destroyed).toBe(true);
+    expect(corrode(equip('leather'), 'armor', 'damage')).toBeNull();
+    expect(corrode(equip('quarterstaff'), 'weapon', 'damage')).toBeNull();
   });
 });

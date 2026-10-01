@@ -1437,6 +1437,7 @@ function strike(
       nat20: d20.crit,
       crit,
       parts,
+      weapon: weapon.name,
       ...(weapon.range <= 5 ? { melee: true } : {}),
       ...(monsterRider
         ? {

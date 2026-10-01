@@ -4,6 +4,7 @@ import { ItemDef } from '../../models/item';
 export const CATALOG: ItemDef[] = [
   {
     id: 'dagger',
+    metal: true,
     name: 'Adaga',
     kind: 'weapon',
     weight: 1,
@@ -11,6 +12,7 @@ export const CATALOG: ItemDef[] = [
   },
   {
     id: 'shortsword',
+    metal: true,
     name: 'Espada curta',
     kind: 'weapon',
     weight: 2,
@@ -18,6 +20,7 @@ export const CATALOG: ItemDef[] = [
   },
   {
     id: 'rapier',
+    metal: true,
     name: 'Rapieira',
     kind: 'weapon',
     weight: 2,
@@ -25,6 +28,7 @@ export const CATALOG: ItemDef[] = [
   },
   {
     id: 'longsword',
+    metal: true,
     name: 'Espada longa',
     kind: 'weapon',
     weight: 3,
@@ -32,6 +36,7 @@ export const CATALOG: ItemDef[] = [
   },
   {
     id: 'greataxe',
+    metal: true,
     name: 'Machado grande',
     kind: 'weapon',
     weight: 7,
@@ -39,6 +44,7 @@ export const CATALOG: ItemDef[] = [
   },
   {
     id: 'mace',
+    metal: true,
     name: 'Maça',
     kind: 'weapon',
     weight: 4,
@@ -53,6 +59,7 @@ export const CATALOG: ItemDef[] = [
   },
   {
     id: 'handaxe',
+    metal: true,
     name: 'Machadinha',
     kind: 'weapon',
     weight: 2,
@@ -89,6 +96,7 @@ export const CATALOG: ItemDef[] = [
   },
   {
     id: 'chain-shirt',
+    metal: true,
     name: 'Camisão de malha',
     kind: 'armor',
     weight: 20,
@@ -96,6 +104,7 @@ export const CATALOG: ItemDef[] = [
   },
   {
     id: 'chain-mail',
+    metal: true,
     name: 'Cota de malha',
     kind: 'armor',
     weight: 55,
@@ -103,12 +112,13 @@ export const CATALOG: ItemDef[] = [
   },
   {
     id: 'plate',
+    metal: true,
     name: 'Armadura de placas',
     kind: 'armor',
     weight: 65,
     armor: { base: 18, dex: 'none' },
   },
-  { id: 'shield', name: 'Escudo', kind: 'shield', weight: 6, shield: 2 },
+  { id: 'shield', name: 'Escudo', kind: 'shield', weight: 6, shield: 2, metal: true },
 
   {
     id: 'potion-healing',

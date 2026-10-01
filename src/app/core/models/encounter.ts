@@ -54,6 +54,8 @@ export interface HeldHit {
   targetId: string;
   /** Linha do registro com a jogada (sem o desfecho). */
   head: string;
+  /** Nome do ataque (para a ferrugem). */
+  weapon?: string;
   /** Jogada total e CA contra a qual ela acertou (já com cobertura e bônus). */
   total: number;
   ac: number;

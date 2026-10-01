@@ -11,12 +11,19 @@ import { buildMonsterAbilities, MonsterRules } from '../monsters/build';
 import { abilitiesOf, registerMonsterAbilities } from '../monsters/registry';
 import { monsterToCreature } from '../srd/convert';
 import { splitOnDamage } from './summon';
-import { effectiveAc } from '../creature';
+import { refresh as refreshGear } from '../inventory/inventory';
 
 const dm: Role = { kind: 'dm' };
 const sheets = monsters24 as unknown as SrdMonster[];
 const old = monsters14 as unknown as SrdMonster[];
-const OLD = new Set(['aboleth', 'green-hag', 'bulette', '14:stone-giant', 'androsphinx']);
+const OLD = new Set([
+  'aboleth',
+  'green-hag',
+  'bulette',
+  '14:stone-giant',
+  '14:rust-monster',
+  'androsphinx',
+]);
 const mon = (id: string, as: string) => ({
   ...monsterToCreature(
     OLD.has(id)
@@ -44,6 +51,7 @@ function scene(
   range = 5,
   rng: () => number = () => 0.5,
   dmgType: 'slashing' | 'bludgeoning' = 'slashing',
+  pcExtra: Partial<ReturnType<typeof newCreature>> = {},
 ) {
   let s = newEncounter(mapFromAscii(Array.from({ length: 5 }, () => '..........')));
   const run = (cmd: Command) => (s = dispatch(s, cmd, { rng, role: dm }));
@@ -54,6 +62,7 @@ function scene(
       name: 'Herói',
       hp: { max: 90, current: 90, temp: 0 },
       attacks: [{ name: 'Golpe', bonus, damage: '2d6', type: dmgType, range }],
+      ...pcExtra,
     }),
     pos: { x: 0, y: 2 },
   });
@@ -233,14 +242,20 @@ describe('habilidades que antes ficavam com o Mestre', () => {
     expect(t.get().combat.turn).toMatchObject({ dashed: true, disengaged: true });
   });
 
-  it('Antenas do Monstro da Ferrugem: a penalidade de CA é cumulativa', () => {
-    const t = scene([[mon('rust-monster', 'rust'), 1]], 5, 5, () => 0.1);
+  const gear = (ref: string, id = 'g1') => ({
+    inventory: [{ id, ref, qty: 1, equipped: true }],
+  });
+
+  it('Antenas: a armadura de metal enferruja a cada toque e é destruída ao chegar a CA 10', () => {
+    const t = scene([[mon('rust-monster', 'rust'), 1]], 5, 5, () => 0.1, 'slashing', {
+      ...gear('chain-mail'),
+      ac: 16,
+    });
     t.run({ type: 'endTurn', actorId: 'pc' });
     const ab = abilitiesOf(t.get().creatures.find((c) => c.id === 'rust')!).find(
       (a) => a.nameEn === 'Antennae',
     )!;
-    const ac0 = effectiveAc(t.get().creatures.find((c) => c.id === 'pc')!);
-    const zap = () =>
+    const zap = () => {
       t.run({
         type: 'cast',
         actorId: 'rust',
@@ -249,8 +264,101 @@ describe('habilidades que antes ficavam com o Mestre', () => {
         targetId: 'pc',
         ruleset: '2024',
       });
+      // devolve o turno ao monstro (uma ação por turno)
+      t.run({ type: 'endTurn', actorId: 'rust' });
+      t.run({ type: 'endTurn', actorId: 'pc' });
+    };
     zap();
-    expect(effectiveAc(t.get().creatures.find((c) => c.id === 'pc')!)).toBe(ac0 - 1);
+    const pc = () => t.get().creatures.find((c) => c.id === 'pc')!;
+    expect(pc().ac).toBe(15);
+    expect(pc().inventory?.[0].corrosion?.n).toBe(1);
+    for (let i = 0; i < 4; i++) zap();
+    expect(pc().ac).toBe(11);
+    zap(); // CA 10: a armadura é destruída
+    expect(pc().inventory).toHaveLength(0);
+  });
+
+  it('Antenas 2014 na arma: −1 cumulativo no dano; a arma some em −5', () => {
+    const t = scene([[mon('14:rust-monster', 'rust'), 1]], 5, 5, () => 0.1, 'slashing', {
+      ...gear('longsword'),
+      attacks: [],
+    });
+    const run = t.run;
+    run({ type: 'endTurn', actorId: 'pc' });
+    // reaplica o equipamento para criar o ataque da arma
+    t.patch((x) => ({
+      ...x,
+      creatures: x.creatures.map((c) => (c.id === 'pc' ? refreshGear(c) : c)),
+    }));
+    expect(
+      t
+        .get()
+        .creatures.find((c) => c.id === 'pc')!
+        .attacks.some((a) => a.name === 'Espada longa'),
+    ).toBe(true);
+    const ab = abilitiesOf(t.get().creatures.find((c) => c.id === 'rust')!).find(
+      (a) => a.nameEn === 'Antennae',
+    )!;
+    run({
+      type: 'cast',
+      actorId: 'rust',
+      spellId: ab.id,
+      option: 'weapon',
+      targetId: 'pc',
+      ruleset: '2014',
+    });
+    const sword = t
+      .get()
+      .creatures.find((c) => c.id === 'pc')!
+      .attacks.find((a) => a.name === 'Espada longa')!;
+    expect(sword.damage).toMatch(/-1$/);
+  });
+
+  it('Ferrugem do Metal: a arma de metal que acerta o monstro perde 1 de dano; arma mágica não', () => {
+    const t = scene([[mon('14:rust-monster', 'rust'), 1]], 20, 5, () => 0.9, 'slashing', {
+      ...gear('longsword'),
+      attacks: [],
+    });
+    t.patch((x) => ({
+      ...x,
+      creatures: x.creatures.map((c) => (c.id === 'pc' ? refreshGear(c) : c)),
+    }));
+    t.run({ type: 'attack', actorId: 'pc', targetId: 'rust', attackIndex: 0 });
+    const sword = () => t.get().creatures.find((c) => c.id === 'pc')!.inventory![0].corrosion?.n;
+    expect(sword()).toBe(1);
+  });
+
+  it('Destruir Metal: destrói o objeto de metal do mapa ao alcance', () => {
+    const t = scene([[mon('rust-monster', 'rust'), 3]], 5);
+    t.patch((x) => ({
+      ...x,
+      map: {
+        ...x.map,
+        objects: [
+          {
+            id: 'bars',
+            kind: (x.map.objects?.[0]?.kind ?? 'chest') as never,
+            pos: { x: 4, y: 2 },
+            rotation: 0,
+            texture: 'metal',
+            blocksMovement: true,
+            blocksSight: false,
+          },
+        ],
+      },
+    }));
+    t.run({ type: 'endTurn', actorId: 'pc' });
+    const ab = abilitiesOf(t.get().creatures.find((c) => c.id === 'rust')!).find(
+      (a) => a.nameEn === 'Destroy Metal',
+    )!;
+    t.run({
+      type: 'cast',
+      actorId: 'rust',
+      spellId: ab.id,
+      point: { x: 4, y: 2 },
+      ruleset: '2024',
+    });
+    expect(t.get().map.objects ?? []).toHaveLength(0);
   });
 
   it('Gosma e Pudim Negro 2024 também se dividem ao ficar Feridos', () => {

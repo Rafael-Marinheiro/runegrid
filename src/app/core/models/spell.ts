@@ -444,6 +444,10 @@ export interface Spell {
   immuneOnSave?: number;
   /** Depois da reação, se o Mestre indicar um ponto, a criatura se move até a velocidade de natação (Tinta do Polvo). */
   moveAfter?: 'swim';
+  /** Ferrugem: o toque corrói uma peça de metal não mágica do alvo que falhou na salvaguarda (Antenas). */
+  corrode?: { kind: 'armor' | 'shield' | 'weapon'; on: 'attack' | 'damage' };
+  /** Destrói um objeto do cenário dessa textura no ponto, ao alcance (Destruir Metal). */
+  destroyObject?: 'metal';
   /** Concede ações ao turno de quem usa (Aceleração: Correr e Desengajar; Esconder). */
   grants?: ('dash' | 'disengage' | 'hide')[];
   /** Usar de novo encerra o efeito que a habilidade criou (Aparência Ilusória). */

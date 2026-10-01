@@ -1,5 +1,5 @@
 // Habilidades do SRD 2024 que usavam só nota para o Mestre e agora têm mecânica no motor.
-import { man } from './helpers.mjs';
+import { man, T } from './helpers.mjs';
 
 const arcane = { kind: 'glow', color: 'arcane' };
 const R = (from, pt, en, ability, rule) => ({ replace: true, from, pt, en, ability, ...rule });
@@ -152,6 +152,16 @@ export default {
     },
   },
   'rust-monster': {
+    traits: {
+      'corrosive-bite': T(
+        'Mordida Corrosiva',
+        'Corrosive Bite',
+        { corrodeOnHit: 'Bite' },
+        {
+          desc: 'A Bite hit also corrodes the target’s nonmagical metal armor by −1 (cumulative).',
+        },
+      ),
+    },
     abilities: {
       antennae: R(
         'Antennae',
@@ -165,22 +175,39 @@ export default {
           options: [
             {
               id: 'armor',
-              label: 'Armadura',
-              labelEn: 'Armor',
-              patch: { effect: { stack: true, mods: { ac: -1 } } },
+              label: 'Armadura de metal',
+              labelEn: 'Metal armor',
+              patch: { corrode: { kind: 'armor', on: 'attack' } },
             },
             {
               id: 'weapon',
-              label: 'Arma',
-              labelEn: 'Weapon',
-              patch: { effect: { stack: true, mods: { attackBonus: -1 } } },
+              label: 'Arma de metal',
+              labelEn: 'Metal weapon',
+              patch: { corrode: { kind: 'weapon', on: 'attack' } },
             },
           ],
           ...man(
-            'Penalidade cumulativa de −1 na CA (armadura) ou nas jogadas de ataque (arma); armadura some se a CA cair a 10 e arma ao chegar a −5 (o Mestre confere). Remove-se com Consertar.',
-            'Cumulative −1 penalty to AC (armor) or attack rolls (weapon); armor is destroyed if its AC drops to 10 and a weapon at −5 (the DM checks). Mending removes it.',
+            'Objeto de metal não mágico usado ou carregado a até 1,5 m: salvaguarda de Destreza CD 11 ou −1 cumulativo na CA (armadura) ou nas jogadas de ataque (arma). Armadura destruída ao chegar a CA 10, arma a −5. Consertar remove a penalidade (o Mestre). Itens mágicos não sofrem.',
+            'A nonmagical metal object worn or carried within 5 ft: Dexterity save DC 11 or a cumulative −1 to AC (armor) or attack rolls (weapon). Armor is destroyed at AC 10, a weapon at −5. Mending removes the penalty (the DM). Magic items are unaffected.',
           ),
-          vfx: { kind: 'glow', color: 'arcane' },
+          vfx: arcane,
+        },
+      ),
+      'destroy-metal': R(
+        'Destroy Metal',
+        'Destruir Metal',
+        'Destroy Metal',
+        { cost: 'action' },
+        {
+          range: 5,
+          target: { kind: 'point' },
+          resolution: { kind: 'auto' },
+          destroyObject: 'metal',
+          ...man(
+            'Objeto de metal não mágico, solto, a até 1,5 m: indique o ponto no mapa e o objeto é destruído.',
+            'A loose nonmagical metal object within 5 ft: give the map point and the object is destroyed.',
+          ),
+          vfx: arcane,
         },
       ),
       'reflexive-antennae': R(
@@ -194,12 +221,12 @@ export default {
           target: { kind: 'creature' },
           resolution: { kind: 'save', ability: 'dex', onSave: 'none' },
           react: { on: 'damaged' },
-          effect: { stack: true, mods: { attackBonus: -1 } },
+          corrode: { kind: 'weapon', on: 'attack' },
           ...man(
-            'Corrói a arma de quem acertou o monstro (−1 cumulativo nas jogadas de ataque; a arma some em −5).',
-            'Corrodes the weapon of whoever hit the monster (cumulative −1 to attack rolls; the weapon is destroyed at −5).',
+            'Corrói a arma de metal de quem acertou o monstro (−1 cumulativo nas jogadas de ataque; some em −5).',
+            'Corrodes the metal weapon of whoever hit the monster (cumulative −1 to attack rolls; destroyed at −5).',
           ),
-          vfx: { kind: 'glow', color: 'arcane' },
+          vfx: arcane,
         },
       ),
     },

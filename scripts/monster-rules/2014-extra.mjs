@@ -1,5 +1,5 @@
 // Habilidades do SRD 2014 que usavam só nota para o Mestre e agora têm mecânica no motor.
-import { man } from './helpers.mjs';
+import { man, T } from './helpers.mjs';
 
 const arcane = { kind: 'glow', color: 'arcane' };
 const R = (from, pt, en, ability, rule) => ({ replace: true, from, pt, en, ability, ...rule });
@@ -172,6 +172,14 @@ export default {
     },
   },
   'rust-monster': {
+    traits: {
+      'rust-metal': T(
+        'Ferrugem do Metal',
+        'Rust Metal',
+        { rustMetal: true, corrodeOnHit: 'Bite' },
+        { from: 'Rust Metal' },
+      ),
+    },
     abilities: {
       antennae: R(
         'Antennae',
@@ -185,20 +193,36 @@ export default {
           options: [
             {
               id: 'armor',
-              label: 'Armadura ou escudo',
-              labelEn: 'Armor or shield',
-              patch: { effect: { stack: true, mods: { ac: -1 } } },
+              label: 'Armadura de metal',
+              labelEn: 'Metal armor',
+              patch: { corrode: { kind: 'armor', on: 'damage' } },
+            },
+            {
+              id: 'shield',
+              label: 'Escudo de metal',
+              labelEn: 'Metal shield',
+              patch: { corrode: { kind: 'shield', on: 'damage' } },
             },
             {
               id: 'weapon',
-              label: 'Arma',
-              labelEn: 'Weapon',
-              patch: { effect: { stack: true, mods: { weaponBonus: -1 } } },
+              label: 'Arma de metal',
+              labelEn: 'Metal weapon',
+              patch: { corrode: { kind: 'weapon', on: 'damage' } },
+            },
+            {
+              id: 'object',
+              label: 'Objeto solto (cenário)',
+              labelEn: 'Loose object (scenery)',
+              patch: {
+                target: { kind: 'point' },
+                resolution: { kind: 'auto' },
+                destroyObject: 'metal',
+              },
             },
           ],
           ...man(
-            'Penalidade cumulativa de −1 na CA (armadura/escudo some a CA 10 ou +0) ou no dano da arma (some a −5; aqui também reduz o acerto). Objeto solto: destrói um cubo de 30 cm (o Mestre).',
-            'Cumulative −1 penalty to AC (armor/shield destroyed at AC 10 or +0) or to weapon damage (destroyed at −5; here it also lowers the attack roll). A loose object: destroys a 1-foot cube (the DM).',
+            'Item de metal não mágico, usado ou carregado: salvaguarda de Destreza CD 11 ou perde 1 cumulativo (CA da armadura/escudo; dano da arma). Armadura que chega a CA 10, escudo a +0 e arma a −5 são destruídos. Itens mágicos e de outros materiais não sofrem. Objeto solto: indique o ponto no mapa e ele é destruído.',
+            'A nonmagical metal item worn or carried: Dexterity save DC 11 or it loses 1 cumulatively (armor/shield AC; weapon damage). Armor reaching AC 10, a shield at +0 and a weapon at −5 are destroyed. Magic items and other materials are unaffected. A loose object: give the map point and it is destroyed.',
           ),
           vfx: arcane,
         },

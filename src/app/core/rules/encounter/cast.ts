@@ -60,6 +60,7 @@ import { isRaging } from './rage';
 import { summonCreatures } from './summon';
 import { moveByAbility } from './jump';
 import { skillCheckAbility } from './check';
+import { corrodeTarget } from './corrosion';
 import { isShapechanger, planeError, samePlane, shapeShift, togglePlane } from './forms';
 
 const LEVEL = (n: number) => (n === 0 ? T('truque', 'cantrip') : T(`${n}º nível`, `level ${n}`));
@@ -461,6 +462,44 @@ const narrativeNote = (spell: Spell): string =>
     `${spellName(spell)}: narrative effect, the GM runs it.`,
   );
 
+/** Destruir Metal: um objeto metálico do cenário, solto, ao alcance, é destruído. */
+function destroyObject(
+  state: EncounterState,
+  caster: Creature,
+  spell: Spell,
+  point?: Pos,
+): EncounterState {
+  const from = tokenOf(state, caster.id);
+  if (!point || !from)
+    throw new RuleError(T('Escolha o objeto no mapa.', 'Choose the object on the map.'));
+  const obj = (state.map.objects ?? []).find(
+    (o) => o.pos.x === point.x && o.pos.y === point.y && o.texture === 'metal',
+  );
+  if (!obj)
+    throw new RuleError(
+      T('Não há objeto de metal nesse ponto.', 'There is no metal object at that point.'),
+    );
+  const dist = distanceFt(from.pos, sizeOf(caster), obj.pos, 1, state.rule);
+  if (dist > spell.range)
+    throw new RuleError(
+      T(
+        `Objeto fora de alcance (${distT(dist)}; alcance ${distT(spell.range)}).`,
+        `Object out of range (${distT(dist)}; range ${distT(spell.range)}).`,
+      ),
+    );
+  return addLog(
+    {
+      ...state,
+      map: { ...state.map, objects: (state.map.objects ?? []).filter((o) => o.id !== obj.id) },
+    },
+    T(
+      `${caster.name} corrói e destrói o objeto de metal (${obj.kind}).`,
+      `${caster.name} corrodes and destroys the metal object (${obj.kind}).`,
+    ),
+    [caster.id],
+  );
+}
+
 /** Solta quem `caster` agarrava (Mergulho do Roc). */
 function dropGrappled(state: EncounterState, caster: Creature): EncounterState {
   let s = state;
@@ -595,6 +634,7 @@ export function resolveSpell(
       [caster.id],
     );
   }
+  if (spell.destroyObject) return destroyObject(s, caster, spell, cmd.point);
   if (spell.grants) return grantActions(s, caster, spell);
   if (spell.check) return skillCheckAbility(s, caster, spell, ctx.rng);
   if (spell.narrative) return s;
@@ -618,6 +658,7 @@ export function resolveSpell(
       spell.kill ||
       spell.table ||
       spell.push ||
+      spell.corrode ||
       spell.form?.onTarget
     ) {
       // Palavra de Poder: só quem tem PV de menos é afetado
@@ -1009,6 +1050,8 @@ export function spellSave(
           },
         }),
       );
+    if (!saved && spell.corrode)
+      s = corrodeTarget(s, caster.id, t.id, spell.corrode.kind, spell.corrode.on);
     if (!saved) s = applyRiders(s, caster, t.id, spell, slot, dc, ability, rng, point);
   }
   return checkOutcome(s);

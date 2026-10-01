@@ -6,6 +6,10 @@ export interface EffectMods {
   ac?: number;
   /** Bônus (ou penalidade) nas jogadas de ataque (Antenas do Monstro da Ferrugem). */
   attackBonus?: number;
+  /** Ferrugem do Metal: arma de metal não mágica que acerta a criatura sofre −1 cumulativo no dano. */
+  rustMetal?: boolean;
+  /** O golpe com este ataque (nome em inglês) corrói a armadura de metal do alvo (Mordida do Monstro da Ferrugem). */
+  corrodeOnHit?: string;
   /** CA mínima (Pele de Árvore: a CA não pode ser menor que 16). */
   acMin?: number;
   /** Base de CA sem armadura (Armadura Arcana: 13 + Des); só vale se maior que a CA atual. */

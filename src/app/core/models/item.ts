@@ -9,6 +9,10 @@ export interface ItemDef {
   kind: ItemKind;
   /** Peso em libras. */
   weight: number;
+  /** Feito de metal ferroso: o Monstro da Ferrugem o corrói. */
+  metal?: boolean;
+  /** Item mágico: imune à ferrugem. */
+  magic?: boolean;
   weapon?: {
     damage: string;
     type: DamageType;
@@ -41,4 +45,6 @@ export interface InventoryItem {
   ref: string;
   qty: number;
   equipped: boolean;
+  /** Corrosão acumulada (Monstro da Ferrugem): −1 por toque, no dano ou no acerto da arma, na CA da armadura. */
+  corrosion?: { n: number; on: 'attack' | 'damage' };
 }

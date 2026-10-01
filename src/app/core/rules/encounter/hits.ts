@@ -13,6 +13,7 @@ import { roll, rollD20, Rng } from '../dice';
 import { getSpell } from '../spells/data';
 import { aftermath, checkOutcome, dtype, notes } from './helpers';
 import { offerDamaged, offerHit } from './reactions';
+import { rustOnHit } from './corrosion';
 import { applyRiders } from './rider';
 import { dropOnAttack } from './rolls';
 import { addLog, creatureOf, withCreature } from './state';
@@ -49,6 +50,7 @@ export function applyHeldHit(state: EncounterState, hit: HeldHit, rng: Rng): Enc
     hit.targetId,
   ]);
   if (dealtTotal > 0) s = aftermath(s, hit.targetId, dealtTotal, rng);
+  s = rustOnHit(s, hit.attackerId, hit.targetId, hit.weapon, dealtTotal);
   const r = hit.rider;
   if (r) {
     const spell = getSpell(r.spellId, r.ruleset);

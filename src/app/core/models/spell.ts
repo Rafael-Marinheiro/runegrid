@@ -195,6 +195,8 @@ export interface FormSpec {
   size?: Size;
   /** Deslocamento da forma (o voo conta como deslocamento: o motor não separa voo de caminhada). */
   speed?: number;
+  /** Voo, natação e escalada da forma (o deslocamento a pé é `speed`). */
+  speeds?: { fly?: number; swim?: number; climb?: number; hover?: boolean };
   ac?: number;
   attacksPerAction?: number;
   /** Palavras da lista "(Wolf or Hybrid Form Only)" que esta forma aceita; vazio = nenhum ataque. */
@@ -253,6 +255,20 @@ export interface FormFrom {
   noSpells?: boolean;
   meldsGear?: boolean;
   onTarget?: boolean;
+}
+
+/** Deslocamento de uma habilidade (Salto, Investida, Espreita, ação lendária Mover): anda pelo mapa de verdade. */
+export interface SpellMove {
+  /** Até quantos pés ao longo do caminho. */
+  ft: number;
+  /** Quanto do deslocamento do turno gasta (Salto: 10 ft); sem isto não gasta nada. */
+  spend?: number;
+  /** Não provoca ataques de oportunidade. */
+  noOpportunity?: boolean;
+  /** Tem de terminar mais perto de um inimigo (Investida: "em linha reta rumo a um inimigo"). */
+  towardEnemy?: boolean;
+  /** Como anda: a pé (terreno difícil custa o dobro), voando ou saltando (ignora terreno difícil). */
+  mode?: 'walk' | 'fly' | 'swim';
 }
 
 /** Invocação: criaturas do SRD que aparecem no mapa (Conjurar Animais, Familiar, Convocar Demônio…). */
@@ -386,6 +402,8 @@ export interface Spell {
   zone?: SpellZone;
   /** Efeito visual no mapa, escrito a partir da descrição desta magia. */
   vfx?: SpellVfx;
+  /** Anda pelo mapa até o ponto (ver `SpellMove`). */
+  move?: SpellMove;
   /** Muda a forma de quem usa (ver `FormSpec`). */
   form?: FormSpec;
   /** Gera uma opção de forma por criatura do Bestiário (ver `FormFrom`); preenchido ao carregar. */

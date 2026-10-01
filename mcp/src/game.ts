@@ -199,6 +199,7 @@ export interface Act {
   option?: string;
   slot_level?: number;
   to?: Pos;
+  move_mode?: 'walk' | 'fly' | 'swim' | 'climb' | 'burrow';
   adjacent_to?: string;
   at?: string;
   point?: Pos;
@@ -261,7 +262,12 @@ export function toCommand(g: Game, actorRef: string, a: Act): Command {
     case 'move': {
       if (!a.to && !a.adjacent_to)
         throw new GameError('Action "move" needs "to" or "adjacent_to".');
-      return { type: 'move', actorId, to: a.to ?? approach(g, actor, a.adjacent_to!) };
+      return {
+        type: 'move',
+        actorId,
+        to: a.to ?? approach(g, actor, a.adjacent_to!),
+        ...(a.move_mode ? { mode: a.move_mode } : {}),
+      };
     }
     case 'attack':
       return {

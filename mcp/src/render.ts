@@ -4,6 +4,7 @@ import type { EncounterState } from '@core/models/encounter';
 import { abilitiesOf } from '@core/rules/monsters/registry';
 import { getSpell } from '@core/rules/spells/data';
 import { creatureOf, project, sizeOf, teamOf, tokenOf } from '@core/rules/encounter';
+import { attackAllowed } from '@core/rules/encounter/forms';
 import { effectiveSpeed } from '@core/rules/creature';
 import { distanceFt, footprint } from '@core/rules/grid/movement';
 import type { Game } from './campaign';
@@ -173,13 +174,25 @@ function combatBlock(s: EncounterState, lab: Map<string, string>): string[] {
     `## Combat — round ${combat.round} — turn of ${actor.name}`,
     `Budget: action ${yes(turn.action)} · bonus ${yes(turn.bonus)} · reaction ${yes(turn.reaction)} · movement ${turn.movedFt}/${speed} ft used · extra attacks left ${turn.attacksLeft}${turn.dashed ? ' · dashed' : ''}${turn.disengaged ? ' · disengaged' : ''}`,
   ];
+  const sp = actor.speeds ?? {};
+  const modes = [
+    `walk ${effectiveSpeed(actor)} ft`,
+    ...(sp.fly ? [`fly ${sp.fly} ft${sp.hover ? ' (hover)' : ''} — default mode`] : []),
+    ...(sp.swim ? [`swim ${sp.swim} ft`] : []),
+    ...(sp.climb ? [`climb ${sp.climb} ft`] : []),
+    ...(sp.burrow ? [`burrow ${sp.burrow} ft`] : []),
+  ];
+  if (modes.length > 1 || actor.form || actor.plane)
+    L.push(
+      `Movement: ${modes.join(' · ')} (move_mode picks one)${actor.form ? ` · Form: ${actor.form.labelEn}` : ''}${actor.plane ? ' · On the Ethereal Plane (passes through walls, only interacts with the ethereal)' : ''}`,
+    );
   if (actor.status === 'dying')
     L.push(
       `${actor.name} is DYING (${actor.deathSaves.successes}✓ ${actor.deathSaves.failures}✗): act "death_save", then "end_turn".`,
     );
   if (actor.attacks.length)
     L.push(
-      `Attacks: ${actor.attacks.map((a, i) => `[${i}] ${a.name} ${fmt(a.bonus)} ${a.damage} ${DAMAGE_LABEL[a.type].toLowerCase()} (${a.range} ft)`).join(' | ')}`,
+      `Attacks: ${actor.attacks.map((a, i) => `[${i}] ${a.name} ${fmt(a.bonus)} ${a.damage} ${DAMAGE_LABEL[a.type].toLowerCase()} (${a.range} ft)${attackAllowed(actor, a.name) ? '' : ' — not usable in this form'}`).join(' | ')}`,
     );
   const known = (actor.spellcasting?.spells ?? [])
     .map((id) => getSpell(id, '2024'))

@@ -18,6 +18,7 @@ import {
   addCondition,
   attackModifiers,
   effectiveSpeed,
+  effectiveSpeedOf,
   removeCondition,
   tickConditions,
   canAct,
@@ -30,7 +31,7 @@ import {
   effectsOf,
 } from '../creature';
 import { AdvMode, criticalExpr, parseDice, roll, rollD20, Rng } from '../dice';
-import { canStand, distanceFt, findPath, footprint, MoveQuery } from '../grid/movement';
+import { canStand, distanceFt, findPath, footprint, MoveMode, MoveQuery } from '../grid/movement';
 import { hasLineOfSight } from '../grid/visibility';
 import { consume, itemDef } from '../inventory/inventory';
 import { markSneak, sneakAttack, useFeature } from './abilities';
@@ -73,7 +74,7 @@ import {
 } from './mapedit';
 import { isTokenArt } from '../srd/miniature';
 import { attachFx, attackFx } from './fx';
-import { Command, PLAYER_COMMANDS } from './commands';
+import { Command, MoveKind, PLAYER_COMMANDS } from './commands';
 import {
   addFloor,
   removeFloor,
@@ -336,7 +337,7 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       );
     }
     case 'move':
-      return move(state, cmd.actorId, cmd.to, ctx);
+      return move(state, cmd.actorId, cmd.to, ctx, cmd.mode);
     case 'attack':
       return attack(state, cmd, ctx);
     case 'dash': {
@@ -801,21 +802,43 @@ function advanceTurn(state: EncounterState, ctx: Context): EncounterState {
  * Consulta de movimento da criatura na vez: a mesma usada para validar `move`
  * e para a interface destacar as células alcançáveis.
  */
-export function moveQuery(state: EncounterState, actorId: string): MoveQuery {
+/** O modo de quem não escolheu: voa quem voa, senão anda. */
+export const defaultMoveKind = (c: Creature): MoveKind => (c.speeds?.fly ? 'fly' : 'walk');
+
+/** Modo e velocidade de movimento: etéreo atravessa tudo; senão o que a ficha permite (voa por padrão quem voa). */
+export function movementMode(
+  actor: Creature,
+  requested?: MoveKind,
+): { mode: MoveMode; speed: number } {
+  const sp = actor.speeds ?? {};
+  const base = (n: number) => effectiveSpeedOf(actor, n);
+  if (actor.plane === 'ethereal')
+    return { mode: 'phase', speed: base(Math.max(actor.speed, sp.fly ?? 0)) };
+  const kind = requested ?? (sp.fly ? 'fly' : 'walk');
+  if (kind === 'fly' && sp.fly) return { mode: 'fly', speed: base(sp.fly) };
+  if (kind === 'swim' && sp.swim) return { mode: 'swim', speed: base(sp.swim) };
+  if (kind === 'climb' && sp.climb) return { mode: 'walk', speed: base(sp.climb) };
+  if (kind === 'burrow' && sp.burrow) return { mode: 'phase', speed: base(sp.burrow) };
+  return { mode: 'walk', speed: base(actor.speed) };
+}
+
+export function moveQuery(state: EncounterState, actorId: string, requested?: MoveKind): MoveQuery {
   const { actor, turn } = actorTurn(state, actorId);
   const from = tokenOf(state, actorId);
   if (!from)
     throw new RuleError(T(`${actor.name} não está no mapa.`, `${actor.name} is not on the map.`));
-  const remaining = effectiveSpeed(actor) * (turn.dashed ? 2 : 1) - turn.movedFt;
+  const { mode, speed } = movementMode(actor, requested);
+  const remaining = speed * (turn.dashed ? 2 : 1) - turn.movedFt;
   if (remaining <= 0) throw new RuleError(T('Sem deslocamento restante.', 'No movement left.'));
   return {
     map: state.map,
     start: from.pos,
     size: sizeOf(actor),
     budgetFt: remaining,
-    // atravessa aliados, mas não hostis
+    // atravessa aliados, mas não hostis (etéreo e escavar atravessam todos)
     blocked: occupiedCells(state, (o) => teamOf(o) !== teamOf(actor)),
     rule: state.rule,
+    mode,
   };
 }
 
@@ -824,11 +847,12 @@ function move(
   actorId: string,
   to: { x: number; y: number },
   ctx: Context,
+  kind?: MoveKind,
 ): EncounterState {
   const rng = ctx.rng;
   const { actor, turn } = actorTurn(state, actorId);
-  const q = moveQuery(state, actorId);
-  // não pode terminar sobre ninguém
+  const q = moveQuery(state, actorId, kind);
+  // não pode terminar sobre ninguém (nem dentro de parede, mesmo atravessando)
   const anyone = occupiedCells(state, (o) => o.id !== actorId);
   if (!canStand(state.map, to, q.size, anyone))
     throw new RuleError(T('Destino bloqueado ou ocupado.', 'Destination is blocked or occupied.'));
@@ -855,7 +879,7 @@ function move(
 }
 
 /** Quem estava ao alcance e deixou de estar (sem Desengajar) dá uma reação a cada inimigo capaz. */
-function queueOpportunities(
+export function queueOpportunities(
   state: EncounterState,
   moverId: string,
   from: Pos,

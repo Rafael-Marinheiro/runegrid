@@ -41,8 +41,11 @@ const any = (c: Creature, list: ConditionName[]): boolean => list.some((n) => ha
 export const canAct = (c: Creature): boolean => c.status === 'alive' && !any(c, CANT_ACT);
 
 /** Deslocamento efetivo (0 se agarrado, contido, paralisado…). */
-export const effectiveSpeed = (c: Creature): number =>
-  any(c, NO_SPEED) || isDown(c) ? 0 : speedWithEffects(c, c.speed);
+export const effectiveSpeed = (c: Creature): number => effectiveSpeedOf(c, c.speed);
+
+/** O mesmo para outra velocidade da criatura (voo, natação…): condições e efeitos valem para todas. */
+export const effectiveSpeedOf = (c: Creature, base: number): number =>
+  any(c, NO_SPEED) || isDown(c) ? 0 : speedWithEffects(c, base);
 
 export const autoFailsSave = (c: Creature, ability: Ability): boolean =>
   (ability === 'str' || ability === 'dex') && (any(c, AUTO_FAIL_STR_DEX) || isDown(c));

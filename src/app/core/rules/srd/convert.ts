@@ -42,6 +42,7 @@ export function monsterToCreature(
     cr: m.cr,
     size: m.size,
     speed: m.speed,
+    ...speedsOf(m),
     darkvision: Number(/darkvision\s+(\d+)/i.exec(m.senses)?.[1] ?? 0),
     ac: m.ac,
     abilities,
@@ -71,4 +72,18 @@ function casting(
 ): Pick<Creature, 'spellcasting' | 'spellSlots'> | Record<string, never> {
   const c = parseSpellcasting(m);
   return c ? { spellcasting: { ability: c.ability, spells: c.spells }, spellSlots: c.slots } : {};
+}
+
+/** Voo, natação, escalada e escavar da ficha (a caminhada é `speed`). */
+function speedsOf(m: SrdMonster): Pick<Creature, 'speeds'> {
+  const sp = m.speeds;
+  if (!sp) return {};
+  const speeds: NonNullable<Creature['speeds']> = {
+    ...(sp.fly ? { fly: sp.fly } : {}),
+    ...(sp.swim ? { swim: sp.swim } : {}),
+    ...(sp.climb ? { climb: sp.climb } : {}),
+    ...(sp.burrow ? { burrow: sp.burrow } : {}),
+    ...(sp.hover ? { hover: true } : {}),
+  };
+  return Object.keys(speeds).length ? { speeds } : {};
 }

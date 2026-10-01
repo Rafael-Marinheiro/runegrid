@@ -6,14 +6,15 @@ const f = (id, label, labelEn, rest = {}) => ({ id, label, labelEn, ...rest });
 const D = {
   2014: {
     vampire: {
-      note: 'Só fora da luz do sol e da água corrente (o Mestre confere). Morcego: não fala, Tamanho Miúdo, voo 9 m; só a Mordida. Névoa: não age nem fala, voo 6 m, resistência a todo dano (no SRD, imune a dano não mágico), vantagem em Força/Destreza/Constituição (o Mestre aplica).',
+      note: 'Só fora da luz do sol e da água corrente (o Mestre confere). Morcego: não fala, Tamanho Miúdo, anda 1,5 m e voa 9 m; só a Mordida. Névoa: não age nem fala, voo 6 m, resistência a todo dano (no SRD, imune a dano não mágico), vantagem em Força/Destreza/Constituição (o Mestre aplica).',
       noteEn:
         "Only outside sunlight and running water (the DM checks). Bat: can't speak, Tiny, fly 30 ft; only the Bite. Mist: takes no actions and can't speak, fly 20 ft, resistance to all damage (immune to nonmagical damage in the SRD), advantage on Str/Dex/Con saves (the DM applies it).",
       forms: [
-        f('bat', 'Morcego', 'Bat', { size: 'tiny', speed: 30, keys: ['bat'] }),
+        f('bat', 'Morcego', 'Bat', { size: 'tiny', speed: 5, speeds: { fly: 30 }, keys: ['bat'] }),
         f('mist', 'Névoa', 'Mist', {
           size: 'medium',
-          speed: 20,
+          speed: 5,
+          speeds: { fly: 20, hover: true },
           keys: [],
           resistAll: true,
           noActions: true,
@@ -38,8 +39,14 @@ const D = {
       noteEn:
         "Only outside sunlight and running water (the DM checks). Bat: Tiny, fly 30 ft, can't speak. Mist: Medium, fly 20 ft, takes no actions or speech, resistance to all damage except sunlight.",
       forms: [
-        f('bat', 'Morcego', 'Bat', { size: 'tiny', speed: 30 }),
-        f('mist', 'Névoa', 'Mist', { size: 'medium', speed: 20, resistAll: true, noActions: true }),
+        f('bat', 'Morcego', 'Bat', { size: 'tiny', speed: 5, speeds: { fly: 30 } }),
+        f('mist', 'Névoa', 'Mist', {
+          size: 'medium',
+          speed: 5,
+          speeds: { fly: 20, hover: true },
+          resistAll: true,
+          noActions: true,
+        }),
         rev,
       ],
     },
@@ -113,17 +120,17 @@ Object.assign(D[2014], {
     'Beast form: rat, raven or spider; only the speed changes (the raven flies 60 ft).',
     [
       f('rat', 'Rato', 'Rat', { speed: 20 }),
-      f('raven', 'Corvo', 'Raven', { speed: 60 }),
-      f('spider', 'Aranha', 'Spider', { speed: 20 }),
+      f('raven', 'Corvo', 'Raven', { speed: 20, speeds: { fly: 60 } }),
+      f('spider', 'Aranha', 'Spider', { speed: 20, speeds: { climb: 20 } }),
     ],
   ),
   quasit: beast(
     'Forma de fera: morcego, centopeia ou sapo; só o deslocamento muda.',
     'Beast form: bat, centipede or toad; only the speed changes.',
     [
-      f('bat', 'Morcego', 'Bat', { speed: 40 }),
-      f('centipede', 'Centopeia', 'Centipede', { speed: 40 }),
-      f('toad', 'Sapo', 'Toad', { speed: 40 }),
+      f('bat', 'Morcego', 'Bat', { speed: 10, speeds: { fly: 40 } }),
+      f('centipede', 'Centopeia', 'Centipede', { speed: 40, speeds: { climb: 40 } }),
+      f('toad', 'Sapo', 'Toad', { speed: 40, speeds: { swim: 40 } }),
     ],
   ),
   succubusincubus: beast(
@@ -207,17 +214,17 @@ Object.assign(D[2024], {
     'Rat, raven or spider form; only the speed changes (the raven flies 60 ft).',
     [
       f('rat', 'Rato', 'Rat', { speed: 20 }),
-      f('raven', 'Corvo', 'Raven', { speed: 60 }),
-      f('spider', 'Aranha', 'Spider', { speed: 20 }),
+      f('raven', 'Corvo', 'Raven', { speed: 20, speeds: { fly: 60 } }),
+      f('spider', 'Aranha', 'Spider', { speed: 20, speeds: { climb: 20 } }),
     ],
   ),
   quasit: beast(
     'Forma de morcego, centopeia ou sapo; só o deslocamento muda.',
     'Bat, centipede or toad form; only the speed changes.',
     [
-      f('bat', 'Morcego', 'Bat', { speed: 40 }),
-      f('centipede', 'Centopeia', 'Centipede', { speed: 40 }),
-      f('toad', 'Sapo', 'Toad', { speed: 40 }),
+      f('bat', 'Morcego', 'Bat', { speed: 10, speeds: { fly: 40 } }),
+      f('centipede', 'Centopeia', 'Centipede', { speed: 40, speeds: { climb: 40 } }),
+      f('toad', 'Sapo', 'Toad', { speed: 40, speeds: { swim: 40 } }),
     ],
   ),
   succubus: beast(

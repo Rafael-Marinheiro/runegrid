@@ -15,7 +15,9 @@ import { FEATURE_RESOURCE, featureUses, fmtBonus, LimitedFeature } from '@core/r
 import { abilitiesOf, legendaryActionsOf } from '@core/rules/monsters/registry';
 import { spellNameEn } from '@core/rules/srd/names-pt';
 import {
+  defaultMoveKind,
   moveQuery,
+  type MoveKind,
   ownsCreature,
   occupiedCells,
   sizeOf,
@@ -182,6 +184,32 @@ export class CombatPage {
   protected readonly artFor = signal<string | null>(null);
   protected readonly mode = signal<Mode>({ kind: 'move' });
   protected readonly spellsOpen = signal(false);
+  /** Como a criatura se move agora (voo, natação…); `null` = o padrão do motor. */
+  protected readonly moveKindSig = signal<MoveKind | null>(null);
+  protected moveKind(): MoveKind {
+    const a = this.active();
+    const want = this.moveKindSig();
+    return a && want && this.moveKinds(a).includes(want) ? want : a ? defaultMoveKind(a) : 'walk';
+  }
+  /** Modos de deslocamento da criatura; só aparecem quando há mais de um. */
+  protected moveKinds(c: Creature): MoveKind[] {
+    const sp = c.speeds ?? {};
+    const all: MoveKind[] = ['walk'];
+    if (sp.fly) all.push('fly');
+    if (sp.swim) all.push('swim');
+    if (sp.climb) all.push('climb');
+    if (sp.burrow) all.push('burrow');
+    return all.length > 1 ? all : [];
+  }
+  protected moveLabel(k: MoveKind): string {
+    return {
+      walk: this.ui.text('Andar', 'Walk'),
+      fly: this.ui.text('Voar', 'Fly'),
+      swim: this.ui.text('Nadar', 'Swim'),
+      climb: this.ui.text('Escalar', 'Climb'),
+      burrow: this.ui.text('Escavar', 'Burrow'),
+    }[k];
+  }
   /** Célula sob o cursor (para a prévia de área). */
   protected readonly hover = signal<Pos | null>(null);
   /** Nocaute (SRD 2024): declarado junto com o próximo ataque corpo a corpo. */
@@ -457,7 +485,7 @@ export class CombatPage {
     if (!a || !this.canAct() || this.mode().kind !== 'move') return [];
     const st = this.s();
     try {
-      const q = moveQuery(st, a.id);
+      const q = moveQuery(st, a.id, this.moveKind());
       const others = occupiedCells(st, (o) => o.id !== a.id);
       return reachable(q)
         .filter((r) => canStand(st.map, r.pos, q.size, others))
@@ -474,7 +502,7 @@ export class CombatPage {
     if (!a || !h || !this.canAct() || this.mode().kind !== 'move' || this.rulerOn()) return null;
     if (!this.reach().some((c) => c.x === h.x && c.y === h.y)) return null;
     try {
-      const found = findPath(moveQuery(this.s(), a.id), h);
+      const found = findPath(moveQuery(this.s(), a.id, this.moveKind()), h);
       const start = tokenOf(this.s(), a.id)?.pos;
       return found && start
         ? { cells: [start, ...found.path], label: this.ui.dist(found.costFt) }
@@ -681,8 +709,11 @@ export class CombatPage {
   /** Em montagem o Mestre posiciona livremente; em combate só se move a criatura na vez. */
   private tryMove(id: string | undefined, pos: Pos): void {
     if (!id) return;
-    if (this.running()) this.store.send({ type: 'move', actorId: id, to: pos });
-    else this.store.send({ type: 'placeToken', id, pos });
+    if (this.running()) {
+      const a = this.active();
+      const mode = a && a.id === id && this.moveKinds(a).length ? this.moveKind() : undefined;
+      this.store.send({ type: 'move', actorId: id, to: pos, ...(mode ? { mode } : {}) });
+    } else this.store.send({ type: 'placeToken', id, pos });
   }
 
   // ---------- ações ----------

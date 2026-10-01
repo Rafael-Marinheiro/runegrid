@@ -11,6 +11,15 @@ export interface SrdMonster {
   hp: number;
   hitDice: string;
   speed: number;
+  /** Todas as velocidades (a de `speed` é a de caminhada): voo, natação, escalada, escavar. */
+  speeds?: {
+    walk?: number;
+    fly?: number;
+    swim?: number;
+    climb?: number;
+    burrow?: number;
+    hover?: number;
+  };
   /** For, Des, Con, Int, Sab, Car. */
   abilities: [number, number, number, number, number, number];
   saves: Partial<Record<Ability, number>>;

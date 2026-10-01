@@ -51,7 +51,14 @@ export interface MoveQuery {
   /** Células ocupadas por outras criaturas (não podem ser atravessadas nem ocupadas). */
   blocked: ReadonlySet<string>;
   rule?: DiagonalRule;
+  /**
+   * Como a criatura se move: `walk` (terreno difícil custa o dobro), `fly` (ignora terreno difícil e água),
+   * `swim` (a água custa o normal) ou `phase` (atravessa paredes e criaturas: etéreo, escavar).
+   */
+  mode?: MoveMode;
 }
+
+export type MoveMode = 'walk' | 'fly' | 'swim' | 'phase';
 
 export interface Reachable {
   pos: Pos;
@@ -64,17 +71,22 @@ export function canStand(
   p: Pos,
   size: number,
   blocked: ReadonlySet<string>,
+  phase = false,
 ): boolean {
   return footprint(p, size).every(
-    (c) => inBounds(map, c) && !blocksMovementAt(map, c) && !blocked.has(key(c)),
+    (c) =>
+      inBounds(map, c) && (phase || !blocksMovementAt(map, c)) && (phase || !blocked.has(key(c))),
   );
 }
 
-const noWalls = (map: GridMap, p: Pos, size: number): boolean =>
-  footprint(p, size).every((c) => inBounds(map, c) && !blocksMovementAt(map, c));
+const noWalls = (map: GridMap, p: Pos, size: number, phase = false): boolean =>
+  footprint(p, size).every((c) => inBounds(map, c) && (phase || !blocksMovementAt(map, c)));
 
-const isDifficult = (map: GridMap, p: Pos, size: number): boolean =>
-  footprint(p, size).some((c) => DIFFICULT.includes(terrainAt(map, c)));
+const isDifficult = (map: GridMap, p: Pos, size: number, swim = false): boolean =>
+  footprint(p, size).some((c) => {
+    const t = terrainAt(map, c);
+    return DIFFICULT.includes(t) && !(swim && t === 'water');
+  });
 
 interface Node {
   pos: Pos;
@@ -100,6 +112,7 @@ const DIRS: Pos[] = [
 /** Dijkstra por baldes (custos múltiplos de 5 ft): melhor custo e caminho até cada célula alcançável. */
 function search(q: MoveQuery): Map<string, Node> {
   const rule = q.rule ?? 'simple';
+  const phase = q.mode === 'phase';
   const nodes = new Map<string, Node>();
   const buckets: string[][] = [];
   const maxBucket = Math.floor(q.budgetFt / CELL_FT);
@@ -114,13 +127,13 @@ function search(q: MoveQuery): Map<string, Node> {
       if (node.cost !== b * CELL_FT) continue; // entrada antiga: já achamos caminho melhor
       for (const d of DIRS) {
         const next: Pos = { x: node.pos.x + d.x, y: node.pos.y + d.y };
-        if (!canStand(q.map, next, q.size, q.blocked)) continue;
+        if (!canStand(q.map, next, q.size, q.blocked, phase)) continue;
         const diagonal = d.x !== 0 && d.y !== 0;
         // não corta quina de parede
         if (diagonal) {
           const ox: Pos = { x: node.pos.x + d.x, y: node.pos.y };
           const oy: Pos = { x: node.pos.x, y: node.pos.y + d.y };
-          if (!noWalls(q.map, ox, q.size) || !noWalls(q.map, oy, q.size)) continue;
+          if (!noWalls(q.map, ox, q.size, phase) || !noWalls(q.map, oy, q.size, phase)) continue;
         }
         let step = CELL_FT;
         let parity = node.parity;
@@ -128,7 +141,12 @@ function search(q: MoveQuery): Map<string, Node> {
           step = node.parity === 1 ? 2 * CELL_FT : CELL_FT;
           parity = node.parity === 1 ? 0 : 1;
         }
-        if (isDifficult(q.map, next, q.size)) step *= 2;
+        if (
+          q.mode !== 'fly' &&
+          q.mode !== 'phase' &&
+          isDifficult(q.map, next, q.size, q.mode === 'swim')
+        )
+          step *= 2;
         const cost = node.cost + step;
         if (cost > q.budgetFt) continue;
         const nk = skey(next, parity);

@@ -56,6 +56,7 @@ import { T, manualT, spellName, spellT } from '../i18n';
 import { distT } from '../units';
 import { isRaging } from './rage';
 import { summonCreatures } from './summon';
+import { moveByAbility } from './jump';
 import { isShapechanger, planeError, samePlane, shapeShift, togglePlane } from './forms';
 
 const LEVEL = (n: number) => (n === 0 ? T('truque', 'cantrip') : T(`${n}º nível`, `level ${n}`));
@@ -466,6 +467,7 @@ export function resolveSpell(
   if (spell.narrative) return s;
   if (mode !== 'cast' || !spell.noInitial) {
     if (spell.teleport) s = teleport(s, caster, cmd.point);
+    else if (spell.move) s = moveByAbility(s, caster, spell.move, cmd.point, ctx);
     else if (
       spell.damage ||
       spell.heal ||

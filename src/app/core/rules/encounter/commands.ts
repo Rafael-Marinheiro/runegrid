@@ -16,6 +16,9 @@ import {
 import { AdvMode } from '../dice';
 
 /** Tudo que muda o encontro passa por um destes comandos. */
+/** Como se move: a pé, voando, nadando, escalando ou escavando (as velocidades extras vêm da ficha). */
+export type MoveKind = 'walk' | 'fly' | 'swim' | 'climb' | 'burrow';
+
 export type Command =
   // Mestre: montagem
   | { type: 'addCreature'; creature: Creature; pos?: Pos; hidden?: boolean }
@@ -67,7 +70,7 @@ export type Command =
   | { type: 'addCondition'; targetId: string; condition: ConditionName; rounds?: number }
   | { type: 'removeCondition'; targetId: string; condition: ConditionName }
   // Ações de turno (jogador dono da criatura ou Mestre)
-  | { type: 'move'; actorId: string; to: Pos }
+  | { type: 'move'; actorId: string; to: Pos; mode?: MoveKind }
   | {
       type: 'attack';
       actorId: string;

@@ -442,6 +442,16 @@
                 }}
               </button>
             }
+            @for (k of moveKinds(a); track k) {
+              <button
+                type="button"
+                [class.active]="moveKind() === k"
+                [attr.aria-pressed]="moveKind() === k"
+                (click)="moveKindSig.set(k)"
+              >
+                {{ moveLabel(k) }}
+              </button>
+            }
             @if (isProne()) {
               <button type="button" (click)="act('standUp')">
                 {{ ui.text('Levantar-se', 'Stand up') }}

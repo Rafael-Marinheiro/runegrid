@@ -87,10 +87,12 @@ export function shapeShift(
         darkvision: c.darkvision,
         abilities: c.abilities,
         attacks: c.attacks,
+        speeds: c.speeds,
       },
     },
     ...(spec.size ? { size: spec.size } : {}),
     ...(spec.speed !== undefined ? { speed: spec.speed } : {}),
+    ...(spec.speeds ? { speeds: spec.speeds } : {}),
     ...(spec.ac !== undefined ? { ac: spec.ac } : {}),
     ...(spec.attacksPerAction !== undefined ? { attacksPerAction: spec.attacksPerAction } : {}),
     ...(spec.resistAll ? { resistances: [...DAMAGE_TYPES] } : {}),
@@ -112,7 +114,10 @@ function takeFrom(c: Creature, model: Creature, spec: FormSpec): Creature {
   const take = new Set(spec.take ?? []);
   const out: Creature = { ...c };
   if (take.has('size')) out.size = model.size;
-  if (take.has('speed')) out.speed = model.speed;
+  if (take.has('speed')) {
+    out.speed = model.speed;
+    out.speeds = model.speeds;
+  }
   if (take.has('ac')) out.ac = model.ac;
   if (take.has('senses')) out.darkvision = model.darkvision;
   if (take.has('resist')) {

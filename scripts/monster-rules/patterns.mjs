@@ -327,22 +327,6 @@ function shapeShift(a, m, ruleset) {
   });
 }
 
-/** Redemoinho de Areia (2014): vira areia, anda até 18 m e volta ao normal (aproximado por um salto ao ponto). */
-function whirlwind(a) {
-  const ft = num(/moves up to (\d+) feet/i, a.desc);
-  if (!ft || /_Trigger:_/.test(a.desc)) return a;
-  return flat(a, {
-    target: { kind: 'point' },
-    range: ft,
-    teleport: true,
-    manual:
-      'Enquanto é redemoinho é imune a todo dano e não pode ser agarrado, petrificado, derrubado, contido ou atordoado; como o movimento é instantâneo, isso só importa se o Mestre o interromper. O motor leva o monstro direto ao ponto.',
-    manualEn:
-      'While a whirlwind it is immune to all damage and cannot be grappled, petrified, knocked prone, restrained or stunned; since the move is instant, this only matters if the DM interrupts it. The engine takes the monster straight to the point.',
-    vfx: { kind: 'glow', color: 'arcane' },
-  });
-}
-
 /** Canalizar Energia Negativa (Senhor das Múmias): ninguém na área recupera PV até o fim do próximo turno dele. */
 function negativeEnergy(a) {
   const ft = num(/within (\d+) feet/i, a.desc);
@@ -356,36 +340,57 @@ function negativeEnergy(a) {
   });
 }
 
-/** Saltos e deslocamentos de ação bônus (Salto, Investida, Espreita, Passo por Árvores): salto ao ponto, sem checar o caminho. */
+/** Saltos e deslocamentos de ação bônus (Salto, Investida, Espreita): andam pelo mapa (`Spell.move`). */
 function hop(a, m) {
   const d = a.desc;
   const jump = num(/jumps up to (\d+) feet/i, d);
+  const spend = num(/spending (\d+) feet of movement/i, d);
   const move = /moves up to (half )?its Speed/i.exec(d);
   const tree = /second Large or bigger tree that is within (\d+) feet/i.exec(d);
-  const range =
-    jump ??
-    (tree
-      ? Number(tree[1])
-      : move && m.speed
-        ? move[1]
-          ? Math.floor(m.speed / 2)
-          : m.speed
-        : undefined);
-  if (!range) return a;
+  if (tree)
+    return flat(a, {
+      target: { kind: 'point' },
+      range: Number(tree[1]),
+      teleport: true,
+      manual:
+        'Precisa estar a até 1,5 m de uma árvore Grande ou maior e chegar a até 1,5 m de outra a até 18 m (o motor leva ao ponto; confira as árvores).',
+      manualEn:
+        'Must be within 5 ft of a Large or bigger tree and arrive within 5 ft of another within 60 ft (the engine takes it to the point; check the trees).',
+      vfx: { kind: 'glow', color: 'arcane' },
+    });
+  const swim = /swims up to (half )?its Swim Speed|moves up to (half )?its Swim Speed/i.exec(d);
+  if (swim && m.speeds?.swim) {
+    const ft = swim[1] || swim[2] ? Math.floor(m.speeds.swim / 2) : m.speeds.swim;
+    return flat(a, {
+      target: { kind: 'point' },
+      range: ft,
+      move: {
+        ft,
+        mode: 'swim',
+        ...(/without provoking/i.test(d) ? { noOpportunity: true } : {}),
+        ...(/straight toward an enemy/i.test(d) ? { towardEnemy: true } : {}),
+      },
+      manual: "Só debaixo d'água (o Mestre confere).",
+      manualEn: 'Underwater only (the DM checks).',
+      vfx: { kind: 'glow', color: 'frost' },
+    });
+  }
+  const flies = !!m.speeds?.fly;
+  const base = flies ? m.speeds.fly : m.speed;
+  const ft = jump ?? (move && base ? (move[1] ? Math.floor(base / 2) : base) : undefined);
+  if (!ft) return a;
+  const toward = /straight toward an enemy/i.test(d);
+  const free = /without provoking/i.test(d);
   return flat(a, {
     target: { kind: 'point' },
-    range,
-    teleport: true,
-    manual: jump
-      ? 'Gasta 3 m do seu deslocamento (o Mestre desconta); o motor leva o monstro direto ao ponto, sem checar o caminho.'
-      : tree
-        ? 'Precisa estar a até 1,5 m de uma árvore Grande ou maior e chegar a até 1,5 m de outra a até 18 m (o Mestre confere).'
-        : 'Anda sem checar o caminho, em linha reta rumo ao inimigo se o texto pedir; o motor leva o monstro direto ao ponto e o Mestre confere.',
-    manualEn: jump
-      ? 'Costs 10 ft of its movement (the DM deducts it); the engine takes the monster straight to the point without checking the path.'
-      : tree
-        ? 'Must be within 5 ft of a Large or bigger tree and arrive within 5 ft of another within 60 ft (the DM checks).'
-        : 'Moves without a path check, in a straight line toward the enemy if the text says so; the engine takes the monster straight to the point and the DM checks.',
+    range: ft,
+    move: {
+      ft,
+      ...(spend ? { spend } : {}),
+      ...(free ? { noOpportunity: true } : {}),
+      ...(toward ? { towardEnemy: true } : {}),
+      mode: jump || flies ? 'fly' : 'walk',
+    },
     vfx: { kind: 'glow', color: 'arcane' },
   });
 }
@@ -472,18 +477,33 @@ function leadership(a) {
   });
 }
 
-/** Mover (ação lendária): vai até a velocidade sem provocar ataques de oportunidade (aproximado por um salto ao ponto). */
+/** Mover (ação lendária): anda até a velocidade (ou metade) sem provocar ataques de oportunidade. */
 function legendaryMove(a, m) {
   const mv = /moves up to (half )?its speed/i.exec(a.desc);
-  if (!mv || !m.speed) return a;
+  const flies = !!m.speeds?.fly;
+  const base = flies ? m.speeds.fly : m.speed;
+  if (!mv || !base) return a;
+  const ft = mv[1] ? Math.floor(base / 2) : base;
   return flat(a, {
     target: { kind: 'point' },
-    range: mv[1] ? Math.floor(m.speed / 2) : m.speed,
-    teleport: true,
+    range: ft,
+    move: { ft, noOpportunity: true, mode: flies ? 'fly' : 'walk' },
+    vfx: { kind: 'glow', color: 'arcane' },
+  });
+}
+
+/** Redemoinho de Areia (2014): anda até 18 m sem provocar; enquanto dura, imune a dano (instantâneo). */
+function whirlwind(a) {
+  const ft = num(/moves up to (\d+) feet/i, a.desc);
+  if (!ft || /_Trigger:_/.test(a.desc)) return a;
+  return flat(a, {
+    target: { kind: 'point' },
+    range: ft,
+    move: { ft, noOpportunity: true, mode: 'fly' },
     manual:
-      'Move-se até a velocidade (ou metade dela, como diz o texto) sem provocar ataques de oportunidade; o Mestre confere o caminho (o motor leva direto ao ponto).',
+      'Enquanto é redemoinho é imune a todo dano e não pode ser agarrado, petrificado, derrubado, contido ou atordoado; como o movimento é instantâneo, isso só importa se o Mestre o interromper.',
     manualEn:
-      'Moves up to its speed (or half of it, as the text says) without provoking opportunity attacks; the DM checks the path (the engine takes it straight to the point).',
+      'While a whirlwind it is immune to all damage and cannot be grappled, petrified, knocked prone, restrained or stunned; since the move is instant, this only matters if the DM interrupts it.',
     vfx: { kind: 'glow', color: 'arcane' },
   });
 }
@@ -576,6 +596,8 @@ export function applyPattern(a, m, ruleset = '2014') {
     case 'Leap':
     case 'Charge':
     case 'Prowl':
+    case 'Aquatic Charge':
+    case 'Bubble Dash':
     case 'Tree Stride':
       return hop(a, m);
     case 'Ignited Illumination':

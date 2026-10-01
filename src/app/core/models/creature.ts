@@ -167,6 +167,8 @@ export interface Creature {
   size: Size;
   /** Deslocamento em pés. */
   speed: number;
+  /** Outras velocidades em pés (a de caminhada é `speed`): voo, natação, escalada, escavar; `hover` = paira. */
+  speeds?: { fly?: number; swim?: number; climb?: number; burrow?: number; hover?: boolean };
   /** Alcance de visão no escuro em pés. Ausente ou zero = sem visão no escuro. */
   darkvision?: number;
   ac: number;
@@ -228,6 +230,7 @@ export interface Creature {
       | 'abilities'
       | 'attacks'
       | 'hp'
+      | 'speeds'
     >;
   };
   /** No plano Etéreo: só interage com quem também está nele; o token fica a 50% de opacidade. */

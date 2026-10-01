@@ -336,6 +336,7 @@ describe('cobertura das regras de monstros (F13)', () => {
           sp.push ||
           sp.cure ||
           sp.teleport ||
+          sp.move ||
           sp.zone ||
           sp.table ||
           sp.react ||
@@ -412,7 +413,7 @@ describe('cobertura das regras de monstros (F13)', () => {
   it('Mover (ação lendária) leva o vampiro até o ponto sem ataque de oportunidade', () => {
     const t = scene('vampire', () => 0.5);
     const mv = abilitiesOf(t.get().creatures[0]).find((a) => a.nameEn === 'Move')!;
-    expect(mv).toMatchObject({ teleport: true, range: 30 });
+    expect(mv).toMatchObject({ move: { ft: 30, noOpportunity: true }, range: 30 });
     expect(mv.ability?.cost).toBe('legendary');
   });
 
@@ -559,6 +560,6 @@ describe('cobertura das regras de monstros (F13)', () => {
     expect(wisp).toMatchObject({ kill: true, ifHpAtMost: 0, range: 5 });
     expect(wisp.resolution).toMatchObject({ kind: 'save', ability: 'con' });
     const troll = rules24.get('troll')!.abilities.find((a) => a.nameEn === 'Charge')!;
-    expect(troll).toMatchObject({ teleport: true });
+    expect(troll.move).toMatchObject({ towardEnemy: true });
   });
 });

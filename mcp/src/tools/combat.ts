@@ -86,6 +86,12 @@ const ActionSchema = z.object({
     .optional()
     .describe("Spell slot level to spend (upcasting); default: the spell's level"),
   to: PosSchema.optional().describe('move: destination cell'),
+  move_mode: z
+    .enum(['walk', 'fly', 'swim', 'climb', 'burrow'])
+    .optional()
+    .describe(
+      'move: how to move when the creature has other speeds (flyers fly by default: flying ignores difficult terrain and water; ethereal creatures pass through walls and creatures)',
+    ),
   adjacent_to: z
     .string()
     .optional()

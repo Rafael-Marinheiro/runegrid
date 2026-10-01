@@ -1,5 +1,38 @@
 // Habilidades de monstros do SRD 2014 que o leitor automático não entende (texto em public/data/monsters.json).
 import { man } from './helpers.mjs';
+import FORMS from './forms.mjs';
+
+// o SRD 2014 traz "Shapechanger" como traço; aqui vira uma habilidade usável (ver `patterns.mjs`)
+const TRAIT_ID = [
+  'vampire',
+  'werewolf',
+  'wereboar',
+  'wererat',
+  'weretiger',
+  'werebear',
+  'doppelganger',
+  'mimic',
+  'imp',
+  'quasit',
+  'succubusincubus',
+];
+const shapechangers = () =>
+  Object.fromEntries(
+    TRAIT_ID.filter((id) => FORMS[2014][id]).map((id) => [
+      id,
+      {
+        abilities: {
+          shapechanger: {
+            replace: true,
+            from: 'Shapechanger',
+            pt: 'Mudar de Forma',
+            en: 'Shapechanger',
+            ability: { cost: 'action' },
+          },
+        },
+      },
+    ]),
+  );
 
 const arcane = { kind: 'glow', color: 'arcane' };
 const noteEffect = (rounds, note, noteEn, extra = {}) => ({
@@ -8,6 +41,7 @@ const noteEffect = (rounds, note, noteEn, extra = {}) => ({
 });
 
 export default {
+  ...shapechangers(),
   'stone-golem': {
     abilities: {
       slow: {

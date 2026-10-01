@@ -122,6 +122,12 @@
                 @if (isHidden(c.id)) {
                   · {{ ui.text('oculto', 'hidden') }}
                 }
+                @if (c.form; as f) {
+                  · {{ ui.text(f.label, f.labelEn) }}
+                }
+                @if (c.plane === 'ethereal') {
+                  · {{ ui.text('etéreo', 'ethereal') }}
+                }
                 @if (c.summon; as sm) {
                   · {{ ui.text('invocado', 'summoned') }}
                   @if (sm.rounds !== undefined) {
@@ -413,14 +419,16 @@
               </button>
             }
             @for (w of a.attacks; track $index) {
-              <button
-                type="button"
-                [class.active]="attackIndex() === $index"
-                [disabled]="a.status !== 'alive'"
-                (click)="chooseAttack($index)"
-              >
-                {{ w.name }} {{ fmt(w.bonus) }} · {{ w.damage }}
-              </button>
+              @if (attackOk(a, w.name)) {
+                <button
+                  type="button"
+                  [class.active]="attackIndex() === $index"
+                  [disabled]="a.status !== 'alive'"
+                  (click)="chooseAttack($index)"
+                >
+                  {{ w.name }} {{ fmt(w.bonus) }} · {{ w.damage }}
+                </button>
+              }
             }
             @if (a.spellcasting || hasAbilities(a)) {
               <button

@@ -1,5 +1,6 @@
 // Habilidades que o leitor automático não entende e que se repetem entre monstros (Engolir, sopros de
 // controle). Lê os números do texto oficial; o que não cabe no motor vai para a nota `manual`.
+import FORMS from './forms.mjs';
 import { monsterPt, sheetOf } from '../spell-rules/summon-helpers.mjs';
 
 const num = (re, text) => {
@@ -279,6 +280,39 @@ function phantasms(a) {
   });
 }
 
+/** Etereidade / Passo Etéreo: alterna entre o plano Material e o Etéreo (o token fica a 50% de opacidade). */
+function ethereal(a) {
+  return flat(a, {
+    target: { kind: 'self' },
+    range: 0,
+    resolution: { kind: 'auto' },
+    plane: 'toggle',
+    manual:
+      'No plano Etéreo só interage com quem também está nele; continua visível no plano Material como silhueta, mas não afeta nem é afetado por nada de lá. Companheiros levados junto (Passo Etéreo) o Mestre move.',
+    manualEn:
+      'On the Ethereal Plane it only interacts with creatures there; it stays visible on the Material Plane as a silhouette but cannot affect or be affected by anything there. Companions taken along (Ethereal Stride) are moved by the DM.',
+    vfx: { kind: 'glow', color: 'arcane' },
+  });
+}
+
+/** Mudar de Forma: uma opção por forma, trocando tamanho, velocidade, CA e ataques permitidos. */
+function shapeShift(a, m, ruleset) {
+  const def = FORMS[ruleset]?.[m.id.replace(/^srd-2024_/, '')];
+  if (!def) return a;
+  return flat(a, {
+    target: { kind: 'self' },
+    range: 0,
+    resolution: { kind: 'auto' },
+    options: def.forms.map((fm) => {
+      const { id, label, labelEn, ...rest } = fm;
+      return { id, label, labelEn, patch: { form: { id, label, labelEn, ...rest } } };
+    }),
+    manual: def.note,
+    manualEn: def.noteEn,
+    vfx: { kind: 'glow', color: 'shadow' },
+  });
+}
+
 /** Liderança (Cavaleiro): aliados escolhidos somam 1d4 em ataques e salvaguardas por 1 minuto (como a Bênção). */
 function leadership(a) {
   const dice = /add a (d\d+)/i.exec(a.desc)?.[1];
@@ -390,6 +424,14 @@ export function applyPattern(a, m, ruleset = '2014') {
       return reel(a);
     case 'Phantasms':
       return phantasms(a);
+    case 'Etherealness':
+    case 'Ethereal Jaunt':
+    case 'Ethereal Stride':
+      return ethereal(a);
+    case 'Shapechanger':
+    case 'Change Shape':
+    case 'Shape-Shift':
+      return shapeShift(a, m, ruleset);
     case 'Leadership':
       return leadership(a);
     case 'Move':

@@ -6,6 +6,7 @@ import { mapFromAscii } from '../../models/grid';
 import { SrdMonster } from '../../models/srd';
 import { RuleError } from '../creature';
 import { sizeOf } from '../encounter/state';
+import { attackAllowed } from '../encounter/forms';
 import { Command, dispatch, newEncounter } from '../encounter';
 import { attackFx } from '../encounter/fx';
 import { monsterToCreature } from '../srd/convert';
@@ -404,5 +405,89 @@ describe('cobertura das regras de monstros (F13)', () => {
     const mv = abilitiesOf(t.get().creatures[0]).find((a) => a.nameEn === 'Move')!;
     expect(mv).toMatchObject({ teleport: true, range: 30 });
     expect(mv.ability?.cost).toBe('legendary');
+  });
+
+  const shift = (t: ReturnType<typeof scene>, name: string, option: string) => {
+    const ab = abilitiesOf(t.get().creatures[0]).find((a) => a.nameEn === name)!;
+    t.run({ type: 'cast', actorId: 'mon', spellId: ab.id, option, ruleset: '2014' });
+  };
+
+  it('Vampiro vira morcego: Miúdo, deslocamento de voo e só a Mordida; volta à forma verdadeira', () => {
+    const t = scene('vampire', () => 0.5);
+    const base = t.get().creatures[0];
+    shift(t, 'Shapechanger', 'bat');
+    const bat = t.get().creatures[0];
+    expect(bat.size).toBe('tiny');
+    expect(bat.speed).toBe(30);
+    expect(bat.form?.id).toBe('bat');
+    expect(attackAllowed(bat, 'Bite (Bat or Vampire Form Only)')).toBe(true);
+    expect(attackAllowed(bat, 'Unarmed Strike (Vampire Form Only)')).toBe(false);
+    expect(attackAllowed(base, 'Unarmed Strike (Vampire Form Only)')).toBe(true);
+    // gastou a ação; voltar à forma verdadeira custa outra
+    expect(t.get().combat.turn?.action).toBe(false);
+    t.run({ type: 'endTurn', actorId: 'mon' });
+    for (const id of ['pc0', 'pc1']) t.run({ type: 'endTurn', actorId: id });
+    shift(t, 'Shapechanger', 'true');
+    const back = t.get().creatures[0];
+    expect(back.form).toBeUndefined();
+    expect(back.size).toBe(base.size);
+    expect(back.speed).toBe(base.speed);
+  });
+
+  it('Vampiro em névoa: resistente a tudo, sem ações; reverter não custa ação', () => {
+    const t = scene('vampire', () => 0.5);
+    shift(t, 'Shapechanger', 'mist');
+    const mist = t.get().creatures[0];
+    expect(mist.resistances).toContain('slashing');
+    expect(mist.form?.noActions).toBe(true);
+    t.run({ type: 'endTurn', actorId: 'mon' });
+    for (const id of ['pc0', 'pc1']) t.run({ type: 'endTurn', actorId: id });
+    expect(t.get().combat.turn).toMatchObject({ actorId: 'mon', action: false, bonus: false });
+    shift(t, 'Shapechanger', 'true');
+    expect(t.get().creatures[0].form).toBeUndefined();
+  });
+
+  it('Lobisomem híbrido: CA 12 e Mordida + Garras, sem a Lança; lobo corre mais', () => {
+    const t = scene('werewolf', () => 0.5);
+    shift(t, 'Shapechanger', 'hybrid');
+    const h = t.get().creatures[0];
+    expect(h.ac).toBe(12);
+    expect(h.attacksPerAction).toBe(2);
+    expect(attackAllowed(h, 'Claws (Hybrid Form Only)')).toBe(true);
+    expect(attackAllowed(h, 'Spear (Humanoid Form Only)')).toBe(false);
+    expect(attackAllowed(h, 'Bite (Wolf or Hybrid Form Only)')).toBe(true);
+    expect(() =>
+      t.run({ type: 'attack', actorId: 'mon', targetId: 'pc0', attackIndex: 2 }),
+    ).toThrow(/forma/);
+  });
+
+  it('quem muda de forma e morre volta à forma verdadeira', () => {
+    const t = scene('werewolf', () => 0.5);
+    shift(t, 'Shapechanger', 'wolf');
+    const dead = {
+      ...t.get(),
+      creatures: t
+        .get()
+        .creatures.map((c) =>
+          c.id === 'mon' ? { ...c, status: 'dead' as const, hp: { ...c.hp, current: 0 } } : c,
+        ),
+    };
+    const out = dispatch(
+      dead,
+      { type: 'heal', targetId: 'pc0', amount: 0 },
+      { rng: () => 0.5, role: dm },
+    );
+    expect(out.creatures[0].form).toBeUndefined();
+  });
+
+  it('Etereidade: o token vai ao plano Etéreo e só interage com quem também está nele', () => {
+    const t = scene('ghost', () => 0.5);
+    const eth = abilitiesOf(t.get().creatures[0]).find((a) => a.nameEn === 'Etherealness')!;
+    expect(eth.plane).toBe('toggle');
+    t.run({ type: 'cast', actorId: 'mon', spellId: eth.id, ruleset: '2014' });
+    expect(t.get().creatures[0].plane).toBe('ethereal');
+    expect(() =>
+      t.run({ type: 'attack', actorId: 'mon', targetId: 'pc0', attackIndex: 0 }),
+    ).toThrow(/Etéreo/);
   });
 });

@@ -29,6 +29,8 @@ export interface TokenView {
   /** 0–100. */
   hpPct: number;
   hidden: boolean;
+  /** No plano Etéreo: token a 50% de opacidade. */
+  ethereal?: boolean;
   dead: boolean;
   active: boolean;
   selected: boolean;

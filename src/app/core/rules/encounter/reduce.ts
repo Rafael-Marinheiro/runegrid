@@ -109,6 +109,7 @@ import {
 } from './state';
 import { T, condT, spellName } from '../i18n';
 import { syncSummons } from './summon';
+import { attackAllowed, planeError, samePlane, syncForms } from './forms';
 import { distT } from '../units';
 
 /** O jogador só age por criaturas suas; o Mestre pode tudo. */
@@ -131,10 +132,12 @@ export function dispatch(state: EncounterState, cmd: Command, ctx: Context): Enc
     record: (sides: number, rolled: { value: number; dropped: boolean }[]) =>
       dice.push(...rolled.map((d) => ({ sides, value: d.value, dropped: d.dropped }))),
   });
-  const next = syncSummons(syncConcentration(apply(state, cmd, { ...ctx, rng })), {
-    ...ctx,
-    rng,
-  });
+  const next = syncForms(
+    syncSummons(syncConcentration(apply(state, cmd, { ...ctx, rng })), {
+      ...ctx,
+      rng,
+    }),
+  );
   if (!dice.length) return next;
   // os dados vão na primeira linha nova do registro (a tela junta os de todas as linhas novas)
   const i = next.log.findIndex((e) => e.id >= state.seq);
@@ -747,7 +750,9 @@ function beginTurn(state: EncounterState, ctx: Context): EncounterState {
     ...state,
     combat: {
       ...state.combat,
-      turn: newTurn(actor.id),
+      turn: actor.form?.noActions
+        ? { ...newTurn(actor.id), action: false, bonus: false, reaction: false }
+        : newTurn(actor.id),
       dodging: state.combat.dodging.filter((id) => id !== actor.id),
       helped: (state.combat.helped ?? []).filter((h) => h.by !== actor.id),
       reactionUsed: (state.combat.reactionUsed ?? []).filter((id) => id !== actor.id),
@@ -964,6 +969,7 @@ function abilityStrike(
     throw new RuleError(T('Não é possível atacar a si mesmo.', 'You cannot attack yourself.'));
   if (target.status === 'dead')
     throw new RuleError(T(`${target.name} já está morto.`, `${target.name} is already dead.`));
+  if (!samePlane(actor, target)) throw planeError();
   const from = tokenOf(state, actor.id);
   const at = tokenOf(state, target.id);
   if (!from || !at) throw new RuleError(T('Criatura fora do mapa.', 'Creature is off the map.'));
@@ -1022,7 +1028,15 @@ function resolveAttack(
   const { actor, turn } = actorTurn(state, cmd.actorId);
   const weapon = actor.attacks[cmd.attackIndex];
   if (!weapon) throw new RuleError(T('Ataque inexistente.', 'No such attack.'));
+  if (!attackAllowed(actor, weapon.name))
+    throw new RuleError(
+      T(
+        `${weapon.name} não vale na forma atual.`,
+        `${weapon.name} does not work in the current form.`,
+      ),
+    );
   const target = creatureOf(state, cmd.targetId);
+  if (!samePlane(actor, target)) throw planeError();
   if (target.id === actor.id)
     throw new RuleError(T('Não é possível atacar a si mesmo.', 'You cannot attack yourself.'));
   if (target.status === 'dead')

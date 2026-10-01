@@ -1,4 +1,4 @@
-import { Ability, ConditionName, DamageType } from './creature';
+import { Ability, ConditionName, DamageType, Size } from './creature';
 import { EffectMods } from './effect';
 import { SpellVfx } from './fx';
 
@@ -130,6 +130,7 @@ export interface SpellOption {
       | 'manual'
       | 'manualEn'
       | 'summon'
+      | 'form'
     >
   >;
 }
@@ -180,6 +181,30 @@ export interface SpellOnHitSave {
   extraDamage?: SpellDamage[];
   condition?: SpellCondition | SpellCondition[];
   effect?: SpellEffect;
+}
+
+/**
+ * Mudança de forma (Vampiro: morcego/névoa; Lobisomem: híbrido/lobo): troca tamanho, velocidade, CA e os
+ * ataques permitidos (pelo "(… Form Only)" do nome do ataque) até voltar à forma verdadeira.
+ */
+export interface FormSpec {
+  id: string;
+  /** Nome da forma nos dois idiomas, para o registro e a lista. */
+  label: string;
+  labelEn: string;
+  size?: Size;
+  /** Deslocamento da forma (o voo conta como deslocamento: o motor não separa voo de caminhada). */
+  speed?: number;
+  ac?: number;
+  attacksPerAction?: number;
+  /** Palavras da lista "(Wolf or Hybrid Form Only)" que esta forma aceita; vazio = nenhum ataque. */
+  keys?: string[];
+  /** Resistência a todo dano (névoa). */
+  resistAll?: boolean;
+  /** Não pode agir nem usar ação bônus (névoa). */
+  noActions?: boolean;
+  /** Volta à forma verdadeira. */
+  revert?: boolean;
 }
 
 /** Invocação: criaturas do SRD que aparecem no mapa (Conjurar Animais, Familiar, Convocar Demônio…). */
@@ -313,6 +338,10 @@ export interface Spell {
   zone?: SpellZone;
   /** Efeito visual no mapa, escrito a partir da descrição desta magia. */
   vfx?: SpellVfx;
+  /** Muda a forma de quem usa (ver `FormSpec`). */
+  form?: FormSpec;
+  /** Alterna entre o plano Material e o Etéreo (Etereidade, Passo Etéreo). */
+  plane?: 'toggle';
   /** Cria criaturas no mapa (ver `SummonSpec`). */
   summon?: SummonSpec;
   /** Puramente narrativa: o motor gasta espaço/concentração e registra o texto oficial, nada mais. */

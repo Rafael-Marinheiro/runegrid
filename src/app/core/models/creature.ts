@@ -200,6 +200,17 @@ export interface Creature {
   regenBlocked?: boolean;
   /** Ações lendárias: máximo por rodada e as que restam (volta ao começar o turno do monstro). */
   legendary?: { max: number; left: number };
+  /** Forma assumida (Mudar de Forma): a ficha original fica guardada para voltar. */
+  form?: {
+    id: string;
+    label: string;
+    labelEn: string;
+    keys: string[];
+    noActions?: boolean;
+    original: Pick<Creature, 'size' | 'speed' | 'ac' | 'attacksPerAction' | 'resistances'>;
+  };
+  /** No plano Etéreo: só interage com quem também está nele; o token fica a 50% de opacidade. */
+  plane?: 'ethereal';
   /** Criatura invocada: quem a invocou, por qual magia e quanto tempo falta (ver `encounter/summon`). */
   summon?: {
     by: string;

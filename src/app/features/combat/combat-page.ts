@@ -24,6 +24,7 @@ import {
   tokenOf,
 } from '@core/rules/encounter';
 import { inArea } from '@core/rules/encounter/zones';
+import { attackAllowed } from '@core/rules/encounter/forms';
 import { reactionSpells } from '@core/rules/encounter/reactions';
 import { canStand, distanceFt, findPath, reachable } from '@core/rules/grid/movement';
 import { DiceTray3d } from '@features/dice/dice-3d/dice-tray-3d';
@@ -436,6 +437,7 @@ export class CombatPage {
           team: teamOf(c),
           hpPct: this.hpPct(c),
           hidden: !!t.hidden,
+          ethereal: c.plane === 'ethereal',
           dead: c.status === 'dead',
           active: c.id === active,
           selected: c.id === sel,
@@ -558,6 +560,11 @@ export class CombatPage {
 
   protected hpPct(c: Creature): number {
     return c.hp.max ? Math.max(0, Math.min(100, (c.hp.current / c.hp.max) * 100)) : 0;
+  }
+
+  /** Jogador vê só a porcentagem de PV dos inimigos. */
+  protected attackOk(c: Creature, name: string): boolean {
+    return attackAllowed(c, name);
   }
 
   /** Jogador vê só a porcentagem de PV dos inimigos. */

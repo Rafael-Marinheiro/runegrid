@@ -10,6 +10,7 @@ import {
   effect,
   narrative,
   save,
+  self,
   sphere,
   vfx,
 } from './helpers.mjs';
@@ -61,7 +62,13 @@ export default {
       'Celestiais, elementais, fadas e ínferos que falham são mandados de volta ao plano de origem (por 24 horas).',
     vfx: vfx('burst', 'holy'),
   },
-  etherealness: narrative(vfx('glow', 'arcane')),
+  etherealness: {
+    // entra no plano Etéreo (o token fica a 50% de opacidade); usar de novo volta ao Material
+    target: self,
+    resolution: auto,
+    plane: 'toggle',
+    vfx: vfx('glow', 'arcane'),
+  },
   'finger-of-death': {
     resolution: save('con', 'half'),
     damage: dmg('7d8+30', 'necrotic'),

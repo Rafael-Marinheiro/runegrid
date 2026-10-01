@@ -56,6 +56,7 @@ import { T, manualT, spellName, spellT } from '../i18n';
 import { distT } from '../units';
 import { isRaging } from './rage';
 import { summonCreatures } from './summon';
+import { planeError, samePlane, shapeShift, togglePlane } from './forms';
 
 const LEVEL = (n: number) => (n === 0 ? T('truque', 'cantrip') : T(`${n}º nível`, `level ${n}`));
 
@@ -97,6 +98,7 @@ export function affectedBy(
         );
       if (role.kind === 'player' && at.hidden)
         throw new RuleError(T('Alvo não visível.', 'Target not visible.'));
+      if (target.id !== caster.id && !samePlane(caster, target)) throw planeError();
       if (target.status === 'dead' && !spell.heal && !spell.revive)
         throw new RuleError(T(`${target.name} já está morto.`, `${target.name} is already dead.`));
       const d = distanceFt(from.pos, sizeOf(caster), at.pos, sizeOf(target), state.rule);
@@ -231,9 +233,10 @@ export function cast(state: EncounterState, cmd: CastCmd, ctx: Context): Encount
   if (slotLevel < spell.level || slotLevel > 9)
     throw new RuleError(T('Espaço de magia inválido.', 'Invalid spell slot.'));
 
+  const reverting = withOption(spell, cmd.option).form?.revert && actor.form?.noActions;
   const cost = sustain
     ? spell.sustain!.cost
-    : spell.ability?.cost === 'free'
+    : spell.ability?.cost === 'free' || reverting
       ? 'free'
       : spell.castTime === 'bonus'
         ? 'bonus'
@@ -376,6 +379,8 @@ export function finishCast(state: EncounterState, cmd: CastCmd, ctx: Context): E
     sustain ? 'sustain' : 'cast',
     dcFrom,
   );
+  if (use.form && !sustain) done = shapeShift(done, caster.id, use.form, ctx);
+  if (use.plane && !sustain) done = togglePlane(done, caster.id);
   if (use.summon && !sustain)
     done = summonCreatures(done, caster, use, slotLevel, cmd.point, cmd.ruleset ?? '2014', ctx);
   if (spell.grantSustain && !sustain) {

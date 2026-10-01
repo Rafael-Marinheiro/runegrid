@@ -160,6 +160,9 @@ function checkSpell(s: Spell) {
       s.table ||
       s.teleport ||
       s.summon ||
+      s.plane ||
+      s.form ||
+      s.options?.some((o) => o.patch.form) ||
       s.options?.some((o) => o.patch.summon) ||
       s.zone ||
       s.sustain;

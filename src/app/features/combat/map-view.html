@@ -355,6 +355,7 @@
         class="token"
         [class.foe]="t.team === 'foes'"
         [class.hidden]="t.hidden"
+        [class.ethereal]="t.ethereal"
         [class.dead]="t.dead"
         [class.dragging]="drag()?.id === t.id && drag()?.moved"
         [attr.transform]="'translate(' + p.x + ' ' + p.y + ')'"

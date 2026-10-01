@@ -35,6 +35,7 @@ export type Command =
   | { type: 'setTexture'; texture: Texture }
   | { type: 'setMapBackground'; background?: MapBackground }
   | { type: 'setVision'; vision: MapVision }
+  | { type: 'setEnvironment'; sunlight?: boolean; runningWater?: boolean }
   | { type: 'addFloor'; id: string; name: string; map: GridMap }
   | { type: 'removeFloor'; id: string }
   | { type: 'switchFloor'; id: string }
@@ -51,6 +52,8 @@ export type Command =
   | { type: 'removeRoom'; id: string }
   /** Revela (ou oculta) toda a sala e publica o texto de leitura. */
   | { type: 'revealRoom'; id: string; hidden?: boolean }
+  | { type: 'setResidence'; id: string; residence?: boolean; invite?: string; uninvite?: string }
+  | { type: 'stake'; targetId: string; remove?: boolean }
   | { type: 'upsertTrap'; trap: Trap }
   | { type: 'removeTrap'; id: string }
   | { type: 'upsertItem'; item: PlacedItem }

@@ -1,16 +1,23 @@
 // Formas alternativas dos que mudam de forma (Vampiro, Lobisomem…). Os números vêm do texto do SRD
 // (data/monsters*.json); onde o texto não dá o valor (CA e velocidade do lobisomem), foi anotado à parte.
 const rev = { id: 'true', label: 'Forma verdadeira', labelEn: 'True form', revert: true };
+const revShade = { ...rev, needsShade: true };
 const f = (id, label, labelEn, rest = {}) => ({ id, label, labelEn, ...rest });
 
 const D = {
   2014: {
     vampire: {
-      note: 'Só fora da luz do sol e da água corrente (o Mestre confere). Morcego: não fala, Tamanho Miúdo, anda 1,5 m e voa 9 m; só a Mordida. Névoa: não age nem fala, voo 6 m, resistência a todo dano (no SRD, imune a dano não mágico), vantagem em Força/Destreza/Constituição (o Mestre aplica).',
+      note: 'Só fora da luz do sol e da água corrente (o motor confere). Morcego: não fala, Tamanho Miúdo, anda 1,5 m e voa 9 m; só a Mordida. Névoa: não age nem fala, voo 6 m, resistência a todo dano (no SRD, imune a dano não mágico), vantagem em Força/Destreza/Constituição (o Mestre aplica).',
       noteEn:
-        "Only outside sunlight and running water (the DM checks). Bat: can't speak, Tiny, fly 30 ft; only the Bite. Mist: takes no actions and can't speak, fly 20 ft, resistance to all damage (immune to nonmagical damage in the SRD), advantage on Str/Dex/Con saves (the DM applies it).",
+        "Only outside sunlight and running water (the engine checks). Bat: can't speak, Tiny, fly 30 ft; only the Bite. Mist: takes no actions and can't speak, fly 20 ft, resistance to all damage (immune to nonmagical damage in the SRD), advantage on Str/Dex/Con saves (the DM applies it).",
       forms: [
-        f('bat', 'Morcego', 'Bat', { size: 'tiny', speed: 5, speeds: { fly: 30 }, keys: ['bat'] }),
+        f('bat', 'Morcego', 'Bat', {
+          size: 'tiny',
+          speed: 5,
+          speeds: { fly: 30 },
+          keys: ['bat'],
+          needsShade: true,
+        }),
         f('mist', 'Névoa', 'Mist', {
           size: 'medium',
           speed: 5,
@@ -18,8 +25,9 @@ const D = {
           keys: [],
           resistAll: true,
           noActions: true,
+          needsShade: true,
         }),
-        rev,
+        revShade,
       ],
     },
     werewolf: {
@@ -35,11 +43,16 @@ const D = {
   },
   2024: {
     vampire: {
-      note: 'Só fora da luz do sol e da água corrente (o Mestre confere). Morcego: Miúdo, voo 9 m, não fala. Névoa: Média, voo 6 m, não age nem fala, resistência a todo dano menos o da luz do sol.',
+      note: 'Só fora da luz do sol e da água corrente (o motor confere). Morcego: Miúdo, voo 9 m, não fala. Névoa: Média, voo 6 m, não age nem fala, resistência a todo dano menos o da luz do sol.',
       noteEn:
-        "Only outside sunlight and running water (the DM checks). Bat: Tiny, fly 30 ft, can't speak. Mist: Medium, fly 20 ft, takes no actions or speech, resistance to all damage except sunlight.",
+        "Only outside sunlight and running water (the engine checks). Bat: Tiny, fly 30 ft, can't speak. Mist: Medium, fly 20 ft, takes no actions or speech, resistance to all damage except sunlight.",
       forms: [
-        f('bat', 'Morcego', 'Bat', { size: 'tiny', speed: 5, speeds: { fly: 30 } }),
+        f('bat', 'Morcego', 'Bat', {
+          size: 'tiny',
+          speed: 5,
+          speeds: { fly: 30 },
+          needsShade: true,
+        }),
         f('mist', 'Névoa', 'Mist', {
           size: 'medium',
           speed: 5,
@@ -47,7 +60,7 @@ const D = {
           resistAll: true,
           noActions: true,
         }),
-        rev,
+        revShade,
       ],
     },
     werewolf: {

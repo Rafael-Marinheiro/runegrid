@@ -263,6 +263,10 @@ export class CombatPage {
   protected names(creatures: Creature[]): string {
     return creatures.map((c) => c.name).join(', ');
   }
+  protected setEnvironment(e: { sunlight?: boolean; runningWater?: boolean }): void {
+    this.store.send({ type: 'setEnvironment', ...e });
+  }
+
   protected resetCombat(): void {
     if (this.store.send({ type: 'resetCombat' })) this.showXp.set(false);
   }

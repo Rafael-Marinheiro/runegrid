@@ -207,6 +207,10 @@ export interface FormSpec {
   noActions?: boolean;
   /** Volta à forma verdadeira. */
   revert?: boolean;
+  /** Só fora da luz do sol e da água corrente (Vampiro). */
+  needsShade?: boolean;
+  /** Só volta à forma verdadeira com PV acima de 0. */
+  noRevert?: boolean;
   /** Criatura do SRD cuja ficha serve de modelo (Mudar de Forma dos dragões metálicos: fera ou humanoide). */
   srd?: string;
   /** O que da ficha do modelo substitui o do monstro. */

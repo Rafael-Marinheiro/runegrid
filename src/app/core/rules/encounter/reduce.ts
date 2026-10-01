@@ -110,6 +110,7 @@ import {
 } from './state';
 import { T, condT, spellName } from '../i18n';
 import { syncSummons } from './summon';
+import { sunPenalty } from './environment';
 import { attackAllowed, planeError, samePlane, syncForms } from './forms';
 import { distT } from '../units';
 
@@ -190,6 +191,28 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       return { ...state, map: { ...state.map, background: cmd.background } };
     case 'setVision':
       return { ...state, map: { ...state.map, vision: cmd.vision } };
+    case 'setEnvironment': {
+      const map = {
+        ...state.map,
+        ...(cmd.sunlight !== undefined ? { sunlight: cmd.sunlight } : {}),
+        ...(cmd.runningWater !== undefined ? { runningWater: cmd.runningWater } : {}),
+      };
+      const note = [
+        cmd.sunlight !== undefined
+          ? T(
+              `Luz do sol ${cmd.sunlight ? 'ligada' : 'desligada'}.`,
+              `Sunlight ${cmd.sunlight ? 'on' : 'off'}.`,
+            )
+          : '',
+        cmd.runningWater !== undefined
+          ? T(
+              `Água corrente ${cmd.runningWater ? 'ligada' : 'desligada'}.`,
+              `Running water ${cmd.runningWater ? 'on' : 'off'}.`,
+            )
+          : '',
+      ].filter(Boolean);
+      return note.length ? addLog({ ...state, map }, note.join(' ')) : { ...state, map };
+    }
     case 'addFloor':
       return addFloor(state, cmd);
     case 'removeFloor':
@@ -208,6 +231,27 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       return upsertRoom(state, cmd.room);
     case 'removeRoom':
       return removeRoom(state, cmd.id);
+    case 'setResidence': {
+      const room = (state.map.rooms ?? []).find((r) => r.id === cmd.id);
+      if (!room) throw new RuleError(T('Sala não encontrada.', 'Room not found.'));
+      const invited = new Set(room.invited ?? []);
+      if (cmd.invite) invited.add(cmd.invite);
+      if (cmd.uninvite) invited.delete(cmd.uninvite);
+      const next = {
+        ...room,
+        ...(cmd.residence !== undefined ? { residence: cmd.residence } : {}),
+        invited: [...invited],
+      };
+      return {
+        ...state,
+        map: {
+          ...state.map,
+          rooms: (state.map.rooms ?? []).map((r) => (r.id === room.id ? next : r)),
+        },
+      };
+    }
+    case 'stake':
+      return stake(state, cmd.targetId, cmd.remove === true);
     case 'revealRoom':
       return revealRoom(state, cmd.id, cmd.hidden);
     case 'upsertTrap':
@@ -842,6 +886,54 @@ export function moveQuery(state: EncounterState, actorId: string, requested?: Mo
   };
 }
 
+/** Estaca no Coração: o vampiro incapacitado fica paralisado até tirarem a estaca; a cria de vampiro é destruída. */
+function stake(state: EncounterState, id: string, remove: boolean): EncounterState {
+  const c = creatureOf(state, id);
+  const mode = allMods(c).find((m) => m.stake)?.stake;
+  if (!mode)
+    throw new RuleError(
+      T(`${c.name} não é afetado pela estaca.`, `${c.name} is not affected by a stake.`),
+    );
+  if (remove) {
+    const s = withCreature(state, removeCondition(c, 'paralyzed'));
+    return addLog(
+      s,
+      T(`A estaca é retirada de ${c.name}.`, `The stake is removed from ${c.name}.`),
+      [id],
+    );
+  }
+  const down =
+    c.status === 'dying' ||
+    c.status === 'stable' ||
+    c.conditions.some(
+      (k) => k.name === 'incapacitated' || k.name === 'paralyzed' || k.name === 'unconscious',
+    );
+  if (!down)
+    throw new RuleError(
+      T(
+        `${c.name} precisa estar incapacitado para receber a estaca.`,
+        `${c.name} must be incapacitated to take the stake.`,
+      ),
+    );
+  if (mode === 'destroy')
+    return addLog(
+      withCreature(state, { ...c, status: 'dead', hp: { ...c.hp, current: 0 } }),
+      T(
+        `${c.name} é destruído pela estaca no coração.`,
+        `${c.name} is destroyed by the stake through its heart.`,
+      ),
+      [id],
+    );
+  return addLog(
+    withCreature(state, addCondition(c, 'paralyzed', 0, { spell: 'Estaca no Coração' })),
+    T(
+      `${c.name} fica paralisado pela estaca no coração.`,
+      `${c.name} is paralyzed by the stake through its heart.`,
+    ),
+    [id],
+  );
+}
+
 function move(
   state: EncounterState,
   actorId: string,
@@ -852,6 +944,24 @@ function move(
   const rng = ctx.rng;
   const { actor, turn } = actorTurn(state, actorId);
   const q = moveQuery(state, actorId, kind);
+  // Proibição: não entra numa moradia sem ser convidado
+  if (allMods(actor).some((m) => m.forbiddance)) {
+    const room = (state.map.rooms ?? []).find(
+      (r) =>
+        r.residence &&
+        !(r.invited ?? []).includes(actorId) &&
+        footprint(to, q.size).some(
+          (p) => p.x >= r.x && p.y >= r.y && p.x < r.x + r.w && p.y < r.y + r.h,
+        ),
+    );
+    if (room)
+      throw new RuleError(
+        T(
+          `${actor.name} não pode entrar em ${room.name} sem convite.`,
+          `${actor.name} cannot enter ${room.name} without an invitation.`,
+        ),
+      );
+  }
   // não pode terminar sobre ninguém (nem dentro de parede, mesmo atravessando)
   const anyone = occupiedCells(state, (o) => o.id !== actorId);
   if (!canStand(state.map, to, q.size, anyone))
@@ -1152,6 +1262,7 @@ function strike(
     modes.push('advantage');
   if (tmods.some((m) => m.bloodFrenzy) && target.hp.current < target.hp.max)
     modes.push('advantage');
+  if (sunPenalty(state, actor)) modes.push('disadvantage');
   const cond = attackModifiers(actor, target, dist, weapon.range > 5);
   const helped = consumeHelp(state, target.id);
   state = helped.state;

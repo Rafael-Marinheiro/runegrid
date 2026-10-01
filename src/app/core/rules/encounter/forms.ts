@@ -1,7 +1,8 @@
 import { Creature, DAMAGE_TYPES } from '../../models/creature';
 import { EncounterState } from '../../models/encounter';
 import { FormSpec } from '../../models/spell';
-import { RuleError, revertForm } from '../creature';
+import { allMods, RuleError, revertForm } from '../creature';
+import { inRunningWater, isSunlit } from './environment';
 import { T } from '../i18n';
 import { abilitiesOf } from '../monsters/registry';
 import { summonTemplate } from './summon';
@@ -35,7 +36,21 @@ export function shapeShift(
   by?: { id: string; spell: string },
 ): EncounterState {
   const c = creatureOf(state, id);
+  if (spec.needsShade && !spec.noRevert && (isSunlit(state, c) || inRunningWater(state, c)))
+    throw new RuleError(
+      T(
+        'Não dá para mudar de forma à luz do sol ou em água corrente.',
+        'It cannot shape-shift in sunlight or running water.',
+      ),
+    );
   if (spec.revert) {
+    if (c.form?.noRevert && c.hp.current <= 0)
+      throw new RuleError(
+        T(
+          `${c.name} não volta à forma verdadeira com 0 PV.`,
+          `${c.name} cannot return to its true form at 0 HP.`,
+        ),
+      );
     if (!c.form)
       throw new RuleError(T('Já está na forma verdadeira.', 'Already in its true form.'));
     return addLog(
@@ -72,6 +87,7 @@ export function shapeShift(
       keys: spec.keys ?? [],
       ...(spec.noActions ? { noActions: true } : {}),
       ...(spec.noSpells ? { noSpells: true } : {}),
+      ...(spec.noRevert ? { noRevert: true } : {}),
       ...(spec.meldsGear ? { meldsGear: true } : {}),
       ...(spec.hp ? { hp: spec.hp } : {}),
       ...(by ? { by } : {}),
@@ -157,10 +173,12 @@ export function syncForms(state: EncounterState): EncounterState {
   for (const c of state.creatures) {
     const f = c.form;
     if (!f) continue;
+    // névoa da Fuga Nebulosa: com PV de novo, volta à forma verdadeira
+    const risen = !!f.noRevert && c.hp.current > 0;
     const spent = (f.hp === 'replace' && c.hp.current <= 0) || (f.hp === 'temp' && c.hp.temp <= 0);
     const holder = f.by ? state.creatures.find((x) => x.id === f.by!.id) : undefined;
     const lost = !!f.by && holder?.concentration !== f.by.spell;
-    if (spent || lost) {
+    if (spent || lost || risen) {
       const base = restore(creatureOf(s, c.id));
       s = addLog(
         withCreature(s, {
@@ -216,4 +234,40 @@ export const planeError = (): RuleError =>
 /** Quem muda de forma por natureza passa sozinho na salvaguarda da Metamorfose. */
 export function isShapechanger(c: Creature): boolean {
   return abilitiesOf(c).some((a) => a.options?.some((o) => o.patch.form && !o.patch.form.onTarget));
+}
+
+/**
+ * Fuga Nebulosa: a 0 PV fora do sol e da água corrente, em vez de morrer vira névoa (e fica a 0 PV,
+ * sem poder voltar à forma de vampiro até recuperar PV: o Mestre cura 1 PV quando ele chega ao esquife).
+ */
+export function mistyEscape(state: EncounterState, id: string): EncounterState {
+  const c = creatureOf(state, id);
+  if (c.status !== 'dead' || c.form?.id === 'mist' || !allMods(c).some((m) => m.mistyEscape))
+    return state;
+  if (isSunlit(state, c) || inRunningWater(state, c)) return state;
+  const mist = abilitiesOf(c)
+    .flatMap((a) => a.options ?? [])
+    .find((o) => o.patch.form?.id === 'mist')?.patch.form;
+  if (!mist) return state;
+  let s = shapeShift(
+    state,
+    id,
+    { ...mist, noRevert: true, needsShade: false },
+    c.srdId?.startsWith('srd-2024_') ? '2024' : '2014',
+  );
+  const now = creatureOf(s, id);
+  s = withCreature(s, {
+    ...now,
+    status: 'alive',
+    hp: { ...now.hp, current: 0 },
+    deathSaves: { successes: 0, failures: 0 },
+  });
+  return addLog(
+    s,
+    T(
+      `${c.name} vira névoa em vez de cair (Fuga Nebulosa): precisa chegar ao esquife.`,
+      `${c.name} turns to mist instead of falling (Misty Escape): it must reach its resting place.`,
+    ),
+    [id],
+  );
 }

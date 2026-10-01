@@ -3,6 +3,7 @@ import { EncounterState, Zone } from '../../models/encounter';
 import { Pos } from '../../models/grid';
 import {
   addTempHp,
+  allMods,
   applyDamage,
   autoFailsSave,
   endCasterExpiry,
@@ -22,6 +23,7 @@ import { abilitiesAtTurnStart } from './ability';
 import { abilitiesOf, monsterEntry } from '../monsters/registry';
 import { T, condT, spellT } from '../i18n';
 import { guardBites, tickSummons } from './summon';
+import { inRunningWater, isSunlit } from './environment';
 
 /**
  * Tudo que dura só enquanto o conjurador mantém a concentração some junto com ela: efeitos,
@@ -113,11 +115,24 @@ export function beginUpkeep(state: EncounterState, actorId: string, ctx: Context
     );
 
   s = guardBites(s, actorId, ctx);
+  // luz do sol: Fraqueza do Vampiro (20 radiante no início do turno)
+  for (const m of allMods(creatureOf(s, actorId))) {
+    if (
+      !m.sunDamage ||
+      !isSunlit(s, creatureOf(s, actorId)) ||
+      creatureOf(s, actorId).status === 'dead'
+    )
+      continue;
+    s = dealDot(s, actorId, m.sunDamage, T('luz do sol', 'sunlight'), ctx);
+  }
   const actor = creatureOf(s, actorId);
   // Regeneração dos monstros (traço): suspensa por certos tipos de dano até este turno
   for (const tr of monsterEntry(actor.srdId)?.traits ?? []) {
     if (!tr.mods.regen || actor.status !== 'alive') continue;
-    if (actor.regenBlocked)
+    const noShade =
+      allMods(actor).some((m) => m.regenNeedsShade) &&
+      (isSunlit(s, actor) || inRunningWater(s, actor));
+    if (actor.regenBlocked || noShade)
       s = addLog(
         s,
         T(
@@ -205,6 +220,16 @@ export function endUpkeep(state: EncounterState, actorId: string, ctx: Context):
 
   for (const e of actor.effects ?? []) {
     if (e.mods.dotEnd) s = dealDot(s, actorId, e.mods.dotEnd, e.name, ctx);
+  }
+  // água corrente: Fraqueza do Vampiro (20 ácido ao terminar o turno)
+  for (const m of allMods(creatureOf(s, actorId))) {
+    if (
+      !m.waterDamage ||
+      !inRunningWater(s, creatureOf(s, actorId)) ||
+      creatureOf(s, actorId).status === 'dead'
+    )
+      continue;
+    s = dealDot(s, actorId, m.waterDamage, T('água corrente', 'running water'), ctx);
   }
 
   // salvaguardas repetidas: passar encerra a condição ou o efeito

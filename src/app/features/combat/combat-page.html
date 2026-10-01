@@ -822,6 +822,24 @@
     <section class="panel log" [attr.aria-label]="ui.text('Registro do combate', 'Combat log')">
       <h2>{{ ui.text('Registro', 'Log') }}</h2>
       @if (isDm()) {
+        <div class="env" role="group" [attr.aria-label]="ui.text('Ambiente', 'Environment')">
+          <label class="toggle">
+            <input
+              type="checkbox"
+              [checked]="s().map.sunlight === true"
+              (change)="setEnvironment({ sunlight: $any($event.target).checked })"
+            />
+            {{ ui.text('Luz do sol (ao ar livre)', 'Sunlight (outdoors)') }}
+          </label>
+          <label class="toggle">
+            <input
+              type="checkbox"
+              [checked]="s().map.runningWater === true"
+              (change)="setEnvironment({ runningWater: $any($event.target).checked })"
+            />
+            {{ ui.text('Água corrente', 'Running water') }}
+          </label>
+        </div>
         <form class="secret-roll" (submit)="$event.preventDefault(); secretRoll(sr.value)">
           <label class="field">
             {{ ui.text('Rolagem secreta', 'Secret roll') }}

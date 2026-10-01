@@ -209,6 +209,8 @@ export interface Creature {
     labelEn: string;
     keys: string[];
     noActions?: boolean;
+    /** Só volta à forma verdadeira com PV acima de 0 (a névoa da Fuga Nebulosa). */
+    noRevert?: boolean;
     /** Não conjura (Metamorfose). */
     noSpells?: boolean;
     /** O equipamento se funde à forma e não pode ser usado (Metamorfose). */

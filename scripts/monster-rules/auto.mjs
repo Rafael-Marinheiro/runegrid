@@ -19,6 +19,16 @@ const cleanName = (n) =>
     .trim();
 const num = (s) => Number(String(s).replace(',', '.'));
 
+/** Fraquezas do vampiro: sol (20 radiante e desvantagem), água corrente (20 ácido) e Regeneração suspensa. */
+const vampire = (desc) => ({
+  sunDamage: { dice: '20', type: 'radiant' },
+  waterDamage: { dice: '20', type: 'acid' },
+  sunDisadvantage: true,
+  regenNeedsShade: true,
+  forbiddance: true,
+  stake: /is destroyed/i.test(desc) ? 'destroy' : 'paralyze',
+});
+
 /** Traços que o motor aplica sozinhos, por nome. Cada função recebe o texto e devolve `mods` (ou null). */
 const TRAITS = {
   'Magic Resistance': () => ({ magicResistance: true }),
@@ -26,6 +36,12 @@ const TRAITS = {
   'Pack Tactics': () => ({ packTactics: true }),
   Flyby: () => ({ noOpportunity: true }),
   'Blood Frenzy': () => ({ bloodFrenzy: true }),
+  'Sunlight Sensitivity': () => ({ sunDisadvantage: true }),
+  'Sunlight Weakness': () => ({ sunDisadvantage: true }),
+  'Light Sensitivity': () => ({ sunDisadvantage: true }),
+  'Vampire Weaknesses': (d) => vampire(d),
+  'Vampire Weakness': (d) => vampire(d),
+  'Misty Escape': () => ({ mistyEscape: true }),
   'Undead Fortitude': () => ({ undeadFortitude: true }),
   'Legendary Resistance': (d, name) => {
     const m = /\((\d+)\/Day\)/i.exec(name);

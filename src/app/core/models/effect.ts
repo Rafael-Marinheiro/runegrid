@@ -101,6 +101,20 @@ export interface EffectMods {
   retaliate?: { dice: string; type: DamageType; melee?: boolean };
   /** Fortitude de Morto-vivo: a 0 PV, salvaguarda de Constituição CD 5 + dano; sucesso = 1 PV (exceto radiante/crítico). */
   undeadFortitude?: boolean;
+  /** Desvantagem nos ataques à luz do sol (Sensibilidade à Luz Solar, Fraqueza à Luz Solar). */
+  sunDisadvantage?: boolean;
+  /** Dano no início do turno à luz do sol (Fraqueza do Vampiro: 20 radiante). */
+  sunDamage?: { dice: string; type: DamageType };
+  /** Dano ao terminar o turno em água corrente (Fraqueza do Vampiro: 20 ácido). */
+  waterDamage?: { dice: string; type: DamageType };
+  /** A Regeneração não funciona à luz do sol nem em água corrente. */
+  regenNeedsShade?: boolean;
+  /** Proibição: não entra numa moradia sem convite. */
+  forbiddance?: boolean;
+  /** Estaca no Coração: paralisa (`paralyze`) ou destrói (`destroy`) quem está incapacitado. */
+  stake?: 'paralyze' | 'destroy';
+  /** A 0 PV, em vez de morrer vira névoa (Fuga Nebulosa). */
+  mistyEscape?: boolean;
   /** Divide-se em dois ao sofrer dano de raio ou cortante (gosmas, Dividir). */
   split?: boolean;
   /** Implacável: uma vez por descanso, dano de até `maxDamage` que o levaria a 0 PV o deixa com 1 PV. */

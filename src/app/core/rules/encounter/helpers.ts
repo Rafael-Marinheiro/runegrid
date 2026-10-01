@@ -15,6 +15,7 @@ import { condT, dmgT, spellT, T } from '../i18n';
 import { endRageIfDown, keepRage } from './rage';
 import { triggerDeath } from './death';
 import { undeadFortitude } from './traits';
+import { mistyEscape } from './forms';
 import { splitOnDamage } from './summon';
 
 export interface Context {
@@ -166,6 +167,7 @@ export function aftermath(
     );
   }
   state = undeadFortitude(state, targetId, dealt, rng);
+  state = mistyEscape(state, targetId);
   state = splitOnDamage(state, targetId, dealt);
   state = triggerDeath(state, targetId, rng);
   state = endRageIfDown(state, targetId);

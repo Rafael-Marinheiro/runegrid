@@ -200,6 +200,8 @@ Args: actor (creature name); actions (1–8).`,
 • place_token {target, position | near | room} — move anything without spending movement (exploration, teleports, reinforcements); set_hidden {target, hidden}
 • remove_creature {target}; remove_defeated {} (clears dead monsters from the map)
 • reveal_room {room} / hide_room {room} — lifts the fog over a room and logs its read-aloud text; reveal_area / hide_area {area}
+• set_environment {sunlight?, running_water?} — turns daylight (outdoors; rooms stay shaded) and flowing water on/off: vampires burn in sunlight and are harmed by running water, sun-sensitive monsters get disadvantage, etc., all applied by the engine
+• set_residence {room, residence?, target?, invite?} — marks a room as a dwelling and (un)invites a creature; stake {target, remove?} — a wooden stake through an incapacitated vampire's heart (paralyzes it; destroys a vampire spawn)
 • open_door {position} — opens a closed/locked door (outside a creature's turn); set_terrain {area, terrain}
 • secret_roll {expr} — a roll the players never see (logged to Mestre/)
 • set_initiative {target, value} (before combat starts), join_combat {target} (late arrival), end_combat {}
@@ -220,6 +222,9 @@ Use it for traps you adjudicate, environmental damage, spells the engine does no
           'hide_area',
           'open_door',
           'set_terrain',
+          'set_environment',
+          'set_residence',
+          'stake',
           'secret_roll',
           'set_initiative',
           'join_combat',
@@ -246,6 +251,27 @@ Use it for traps you adjudicate, environmental damage, spells the engine does no
           .optional(),
         expr: z.string().max(40).optional().describe('Dice expression, e.g. "1d20+4"'),
         value: z.number().int().min(-10).max(60).optional(),
+        residence: z
+          .boolean()
+          .optional()
+          .describe(
+            'set_residence: mark the room as a dwelling (vampires need an invitation to enter)',
+          ),
+        invite: z
+          .boolean()
+          .optional()
+          .describe(
+            'set_residence: true = invite target to the room, false = withdraw the invitation',
+          ),
+        remove: z.boolean().optional().describe('stake: true = pull the stake out'),
+        sunlight: z
+          .boolean()
+          .optional()
+          .describe('set_environment: sunlight outdoors (rooms are always shaded)'),
+        running_water: z
+          .boolean()
+          .optional()
+          .describe('set_environment: the water cells are a flowing river'),
       },
       annotations: WRITE,
     },
@@ -272,6 +298,37 @@ Use it for traps you adjudicate, environmental damage, spells the engine does no
                   type: 'heal',
                   targetId: t().id,
                   amount: need(a.amount, 'amount', a.op),
+                }),
+              );
+              break;
+            case 'set_environment':
+              lines.push(
+                ...exec(g, {
+                  type: 'setEnvironment',
+                  ...(a.sunlight !== undefined ? { sunlight: a.sunlight } : {}),
+                  ...(a.running_water !== undefined ? { runningWater: a.running_water } : {}),
+                }),
+              );
+              break;
+            case 'set_residence': {
+              const room = roomOf(g.scene, need(a.room, 'room', a.op));
+              lines.push(
+                ...exec(g, {
+                  type: 'setResidence',
+                  id: room.id,
+                  ...(a.residence !== undefined ? { residence: a.residence } : {}),
+                  ...(a.target && a.invite !== false ? { invite: t().id } : {}),
+                  ...(a.target && a.invite === false ? { uninvite: t().id } : {}),
+                }),
+              );
+              break;
+            }
+            case 'stake':
+              lines.push(
+                ...exec(g, {
+                  type: 'stake',
+                  targetId: t().id,
+                  ...(a.remove ? { remove: true } : {}),
                 }),
               );
               break;

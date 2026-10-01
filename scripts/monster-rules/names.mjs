@@ -319,6 +319,12 @@ export default {
   shred: 'Retalhar',
   // traços
   'magic resistance': 'Resistência à Magia',
+  'vampire weaknesses': 'Fraquezas do Vampiro',
+  'vampire weakness': 'Fraquezas do Vampiro',
+  'misty escape': 'Fuga Nebulosa',
+  'sunlight sensitivity': 'Sensibilidade à Luz Solar',
+  'sunlight weakness': 'Fraqueza à Luz Solar',
+  'light sensitivity': 'Sensibilidade à Luz',
   'greater magic resistance': 'Resistência Maior à Magia',
   'legendary resistance': 'Resistência Lendária',
   'pack tactics': 'Táticas de Matilha',

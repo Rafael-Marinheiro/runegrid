@@ -29,6 +29,10 @@ export interface Room {
   y: number;
   w: number;
   h: number;
+  /** Moradia: quem tem a Proibição (vampiro) só entra se for convidado. */
+  residence?: boolean;
+  /** Ids das criaturas convidadas a entrar (moradia). */
+  invited?: string[];
 }
 
 export interface Trap {
@@ -161,6 +165,10 @@ export interface GridMap {
   texture?: Texture;
   background?: MapBackground;
   vision?: MapVision;
+  /** Há luz do sol fora das salas (ao ar livre); dentro de uma sala nunca há. */
+  sunlight?: boolean;
+  /** A água do mapa é corrente (rio): vale para a água corrente do vampiro. */
+  runningWater?: boolean;
   /** Escadas, alçapões ou portais que levam a outro andar. */
   portals?: Portal[];
 }

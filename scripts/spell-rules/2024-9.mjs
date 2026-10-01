@@ -36,6 +36,7 @@ export default {
     resolution: { kind: 'save', ability: 'wis', onSave: 'half' },
     condition: cond('frightened', 10, { repeatSave: true }),
     effect: effect({ dotEnd: { dice: '5d10', type: 'psychic' } }),
-    manual: 'No fim de cada turno o alvo faz salvaguarda de Sabedoria: se falhar, sofre 5d10 psíquico; se passar, a magia acaba para ele.',
+    manual:
+      'No fim de cada turno o alvo faz salvaguarda de Sabedoria: se falhar, sofre 5d10 psíquico; se passar, a magia acaba para ele.',
   },
 };

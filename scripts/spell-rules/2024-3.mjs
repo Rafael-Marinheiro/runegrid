@@ -1,16 +1,5 @@
 // SRD 5.2 (2024) — 3º nível. Lido a partir de public/data/spells-2024.json; o que não aparece é igual ao 2014.
-import {
-  cond,
-  creature,
-  dmg,
-  effect,
-  opt,
-  point,
-  save,
-  sphere,
-  vfx,
-  auto,
-} from './helpers.mjs';
+import { cond, creature, dmg, effect, opt, point, save, sphere, vfx, auto } from './helpers.mjs';
 
 export default {
   'bestow-curse': {
@@ -19,10 +8,14 @@ export default {
         effect: effect({ note: 'Amaldiçoado: desvantagem nos ataques contra o conjurador.' }),
       }),
       opt('ability', 'Desvantagem num atributo', {
-        effect: effect({ note: 'Amaldiçoado: desvantagem em testes e salvaguardas do atributo escolhido.' }),
+        effect: effect({
+          note: 'Amaldiçoado: desvantagem em testes e salvaguardas do atributo escolhido.',
+        }),
       }),
       opt('turns', 'Esquiva forçada (Sabedoria no início do turno)', {
-        effect: effect({ note: 'Amaldiçoado: no início de cada turno de combate faz salvaguarda de Sabedoria; se falhar, é forçado a usar a ação Esquivar.' }),
+        effect: effect({
+          note: 'Amaldiçoado: no início de cada turno de combate faz salvaguarda de Sabedoria; se falhar, é forçado a usar a ação Esquivar.',
+        }),
       }),
       opt('necrotic', '+1d8 necrótico nos seus ataques e magias contra ele', {
         effect: effect(
@@ -33,7 +26,8 @@ export default {
     ],
   },
   blink: {
-    manual: 'No fim de cada turno role 1d6: com 4 a 6 você vai ao Plano Etéreo e volta no início do próximo turno.',
+    manual:
+      'No fim de cada turno role 1d6: com 4 a 6 você vai ao Plano Etéreo e volta no início do próximo turno.',
   },
   counterspell: {
     // 2024: o conjurador faz salvaguarda de Constituição; se falhar a magia se dissipa e o espaço não é gasto
@@ -49,7 +43,8 @@ export default {
     zone: { on: 'both', radius: 10, color: 'life' },
     // ao se mover no seu turno você também move a alcateia até 30 ft (clique no novo ponto)
     sustain: { cost: 'free' },
-    manual: 'A alcateia é intangível: use uma salvaguarda de Destreza por criatura por turno (o motor aplica ao entrar na área ou terminar o turno nela).',
+    manual:
+      'A alcateia é intangível: use uma salvaguarda de Destreza por criatura por turno (o motor aplica ao entrar na área ou terminar o turno nela).',
     vfx: vfx('burst', 'life'),
   },
   'gaseous-form': {

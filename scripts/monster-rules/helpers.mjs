@@ -11,7 +11,11 @@ export const bonus = (o = {}) => ({ cost: 'bonus', ...o });
 export const reaction = (o = {}) => ({ cost: 'reaction', ...o });
 export const free = (o = {}) => ({ cost: 'free', ...o });
 /** Ação lendária de `n` pontos. */
-export const legendary = (n = 1, o = {}) => ({ cost: 'legendary', ...(n > 1 ? { legendary: n } : {}), ...o });
+export const legendary = (n = 1, o = {}) => ({
+  cost: 'legendary',
+  ...(n > 1 ? { legendary: n } : {}),
+  ...o,
+});
 /** "Recharge 5-6" → `recharge(5)`. */
 export const recharge = (n, o = {}) => action({ recharge: n, ...o });
 /** "3/Day". */

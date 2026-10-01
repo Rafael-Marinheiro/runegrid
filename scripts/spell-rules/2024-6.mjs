@@ -17,7 +17,8 @@ export default {
     damage: dmg('3d12', 'psychic', { perLevel: '1d12', addModifier: true }),
     condition: cond('frightened', 1),
     sustain: { cost: 'bonus' },
-    manual: 'O espírito aparece a até 60 ft e o alvo precisa estar a até 5 ft dele; nos turnos seguintes você o teletransporta até 30 ft e ataca de novo.',
+    manual:
+      'O espírito aparece a até 60 ft e o alvo precisa estar a até 5 ft dele; nos turnos seguintes você o teletransporta até 30 ft e ataca de novo.',
     vfx: vfx('ray', 'psychic'),
   },
   eyebite: {

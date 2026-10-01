@@ -197,7 +197,7 @@ function combatBlock(s: EncounterState, lab: Map<string, string>): string[] {
     L.push(
       `Abilities (act "cast" with spell:"<name>"): ${abilities
         .map((x) => {
-          const st = actor.abilityState?.[x.id];
+          const st = actor.abilityState?.[x.ability?.group ?? x.id];
           const ab = x.ability!;
           const state = ab.recharge
             ? st?.recharging

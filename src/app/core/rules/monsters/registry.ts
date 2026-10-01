@@ -92,10 +92,11 @@ export function restAbilities(c: Creature, kind: 'short' | 'long'): Creature {
   if (state['legendary-resistance'] && kind === 'long') state['legendary-resistance'] = { used: 0 };
   for (const sp of abilities) {
     const ab = sp.ability;
-    if (!ab || !state[sp.id]) continue;
-    if (ab.recharge && kind) state[sp.id] = { ...state[sp.id], recharging: false };
+    const key = ab?.group ?? sp.id;
+    if (!ab || !state[key]) continue;
+    if (ab.recharge && kind) state[key] = { ...state[key], recharging: false };
     if (ab.uses && (kind === 'long' || ab.uses.per === 'rest'))
-      state[sp.id] = { ...state[sp.id], used: 0 };
+      state[key] = { ...state[key], used: 0 };
   }
   return { ...c, abilityState: state };
 }

@@ -21,7 +21,8 @@ import {
 
 export default {
   'animate-dead': narrative(vfx('glow', 'shadow'), {
-    manual: 'Invocação: o Mestre adiciona o esqueleto ou zumbi ao combate (as estatísticas estão no Bestiário).',
+    manual:
+      'Invocação: o Mestre adiciona o esqueleto ou zumbi ao combate (as estatísticas estão no Bestiário).',
   }),
   'beacon-of-hope': {
     target: creature(12),
@@ -40,10 +41,14 @@ export default {
         effect: effect({ note: 'Amaldiçoado: desvantagem nos ataques contra o conjurador.' }),
       }),
       opt('ability', 'Desvantagem num atributo', {
-        effect: effect({ note: 'Amaldiçoado: desvantagem em testes e salvaguardas do atributo escolhido.' }),
+        effect: effect({
+          note: 'Amaldiçoado: desvantagem em testes e salvaguardas do atributo escolhido.',
+        }),
       }),
       opt('turns', 'Perde a ação (Sabedoria no início do turno)', {
-        effect: effect({ note: 'Amaldiçoado: no início de cada turno faz salvaguarda de Sabedoria; se falhar, perde a ação.' }),
+        effect: effect({
+          note: 'Amaldiçoado: no início de cada turno faz salvaguarda de Sabedoria; se falhar, perde a ação.',
+        }),
       }),
       opt('necrotic', '+1d8 necrótico nos seus ataques contra ele', {
         effect: effect(
@@ -55,7 +60,8 @@ export default {
     vfx: vfx('glow', 'shadow'),
   },
   blink: narrative(vfx('glow', 'arcane'), {
-    manual: 'No fim de cada turno role d20: 11 ou mais, você vai ao Plano Etéreo e volta no início do próximo turno.',
+    manual:
+      'No fim de cada turno role d20: 11 ou mais, você vai ao Plano Etéreo e volta no início do próximo turno.',
   }),
   'call-lightning': {
     target: sphere(5),
@@ -68,7 +74,8 @@ export default {
   },
   clairvoyance: narrative(vfx('glow', 'arcane')),
   'conjure-animals': narrative(vfx('glow', 'life'), {
-    manual: 'Invocação: o Mestre adiciona as feras (ND conforme a opção) ao combate como grupo amigo.',
+    manual:
+      'Invocação: o Mestre adiciona as feras (ND conforme a opção) ao combate como grupo amigo.',
   }),
   counterspell: {
     react: { on: 'cast' },
@@ -87,7 +94,8 @@ export default {
     target: cone(30),
     resolution: save('wis'),
     condition: cond('frightened', 10),
-    manual: 'Larga o que segura e deve Correr para longe de você; ao terminar o turno sem linha de visão, repete a salvaguarda.',
+    manual:
+      'Larga o que segura e deve Correr para longe de você; ao terminar o turno sem linha de visão, repete a salvaguarda.',
     vfx: vfx('cone', 'psychic'),
   },
   fly: {
@@ -179,7 +187,8 @@ export default {
     condition: cond('prone', 0),
     noInitial: true,
     zone: { on: 'both', difficult: true, obscures: true, color: 'frost' },
-    manual: 'Quem se concentra dentro da área faz salvaguarda de Constituição contra a sua CD ou perde a concentração.',
+    manual:
+      'Quem se concentra dentro da área faz salvaguarda de Constituição contra a sua CD ou perde a concentração.',
     vfx: vfx('burst', 'frost'),
   },
   slow: {
@@ -208,19 +217,19 @@ export default {
     noInitial: true,
     zone: { aura: true, on: 'both', color: 'holy' },
     options: [
-      opt('good', 'Bom ou neutro (radiante)', { damage: dmg('3d8', 'radiant', { perLevel: '1d8' }) }),
+      opt('good', 'Bom ou neutro (radiante)', {
+        damage: dmg('3d8', 'radiant', { perLevel: '1d8' }),
+      }),
       opt('evil', 'Mau (necrótico)', { damage: dmg('3d8', 'necrotic', { perLevel: '1d8' }) }),
     ],
-    manual: 'Você escolhe quem não é afetado; os espíritos causam radiante (bom/neutro) ou necrótico (mau).',
+    manual:
+      'Você escolhe quem não é afetado; os espíritos causam radiante (bom/neutro) ou necrótico (mau).',
     vfx: vfx('burst', 'holy'),
   },
   'stinking-cloud': {
     target: sphere(20),
     resolution: save('con'),
-    effect: effect(
-      { note: 'Gasta a ação vomitando e cambaleando neste turno.' },
-      { rounds: 1 },
-    ),
+    effect: effect({ note: 'Gasta a ação vomitando e cambaleando neste turno.' }, { rounds: 1 }),
     noInitial: true,
     zone: { on: 'start', obscures: true, color: 'poison' },
     vfx: vfx('burst', 'poison'),
@@ -253,7 +262,8 @@ export default {
     resolution: save('str', 'half'),
     damage: dmg('3d8', 'bludgeoning'),
     zone: { on: 'cast', color: 'steel' },
-    manual: 'A parede desvia projéteis comuns e impede criaturas voadoras Pequenas de atravessá-la.',
+    manual:
+      'A parede desvia projéteis comuns e impede criaturas voadoras Pequenas de atravessá-la.',
     vfx: vfx('ray', 'steel'),
   },
 };

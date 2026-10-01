@@ -5,32 +5,70 @@ import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseAbility, report } from './monster-rules/parse.mjs';
-import { autoAbility, autoInnate, autoTraits, castingNumbers, isSkipped, parseAttackRider, slug } from './monster-rules/auto.mjs';
+import {
+  autoAbility,
+  autoInnate,
+  autoTraits,
+  castingNumbers,
+  isSkipped,
+  parseAttackRider,
+  slug,
+} from './monster-rules/auto.mjs';
 import PT_NAMES from './monster-rules/names.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const dir = join(root, 'scripts', 'monster-rules');
 const srd = (f) => JSON.parse(readFileSync(join(root, 'public', 'data', f), 'utf8'));
 const base = (id) => id.replace(/^srd-2024_/, '');
-const cleanName = (n) => n.replace(/\s*\(.*\)\s*$/, '').replace(/^Variant: /, '').trim();
+const cleanName = (n) =>
+  n
+    .replace(/\s*\(.*\)\s*$/, '')
+    .replace(/^Variant: /, '')
+    .trim();
 const plainName = (n) => cleanName(n).toLowerCase();
 
 /** Pés/milhas do texto em pt-BR viram metros/km (mesma regra de `core/rules/units.ts`). */
 function ptUnits(text) {
   const dec = (n) => String(Math.round(n * 10) / 10).replace('.', ',');
   return text
-    .replace(/(\d+(?:[.,]\d+)?)[- ]?(?:ft\.?|feet|foot)(?![a-z])/gi, (_, n) => `${dec(Number(n.replace(',', '.')) * 0.3)} m`)
-    .replace(/(\d+(?:[.,]\d+)?)[- ]?miles?/gi, (_, n) => `${dec(Number(n.replace(',', '.')) * 1.6)} km`);
+    .replace(
+      /(\d+(?:[.,]\d+)?)[- ]?(?:ft\.?|feet|foot)(?![a-z])/gi,
+      (_, n) => `${dec(Number(n.replace(',', '.')) * 0.3)} m`,
+    )
+    .replace(
+      /(\d+(?:[.,]\d+)?)[- ]?miles?/gi,
+      (_, n) => `${dec(Number(n.replace(',', '.')) * 1.6)} km`,
+    );
 }
 
-const COLOR = { fire: 'fire', cold: 'frost', lightning: 'lightning', poison: 'poison', acid: 'acid', thunder: 'thunder', necrotic: 'shadow', radiant: 'holy', psychic: 'psychic', force: 'force' };
-const COND_COLOR = { frightened: 'psychic', charmed: 'psychic', paralyzed: 'steel', restrained: 'steel', poisoned: 'poison', blinded: 'arcane', stunned: 'arcane' };
+const COLOR = {
+  fire: 'fire',
+  cold: 'frost',
+  lightning: 'lightning',
+  poison: 'poison',
+  acid: 'acid',
+  thunder: 'thunder',
+  necrotic: 'shadow',
+  radiant: 'holy',
+  psychic: 'psychic',
+  force: 'force',
+};
+const COND_COLOR = {
+  frightened: 'psychic',
+  charmed: 'psychic',
+  paralyzed: 'steel',
+  restrained: 'steel',
+  poisoned: 'poison',
+  blinded: 'arcane',
+  stunned: 'arcane',
+};
 
 /** Efeito visual padrão a partir do que a habilidade faz (a regra pode escrever o seu). */
 function defaultVfx(r) {
   const dmgType = r.damage?.type;
   const first = [].concat(r.condition ?? [])[0]?.name;
-  const color = (dmgType && COLOR[dmgType]) || (first && COND_COLOR[first]) || (dmgType ? 'steel' : 'arcane');
+  const color =
+    (dmgType && COLOR[dmgType]) || (first && COND_COLOR[first]) || (dmgType ? 'steel' : 'arcane');
   const t = r.target ?? {};
   if (t.kind === 'cone') return { kind: 'cone', color };
   if (t.kind === 'line') return { kind: 'ray', color };
@@ -71,7 +109,9 @@ function inferCost(monster, name, rules) {
 
 async function collect(prefix) {
   const out = {};
-  for (const f of readdirSync(dir).filter((f) => f.startsWith(prefix) && f.endsWith('.mjs')).sort()) {
+  for (const f of readdirSync(dir)
+    .filter((f) => f.startsWith(prefix) && f.endsWith('.mjs'))
+    .sort()) {
     const mod = (await import(pathToFileURL(join(dir, f)).href)).default;
     for (const [id, rule] of Object.entries(mod)) {
       const cur = (out[id] ??= { abilities: {} });
@@ -92,14 +132,19 @@ async function collect(prefix) {
 
 const review = [];
 const flags = [];
-const SPELL_IDS = new Set([...srd('spells.json').map((x) => x.id), ...srd('spells-2024.json').map((x) => x.id.replace(/^srd-2024_/, ''))]);
+const SPELL_IDS = new Set([
+  ...srd('spells.json').map((x) => x.id),
+  ...srd('spells-2024.json').map((x) => x.id.replace(/^srd-2024_/, '')),
+]);
 
 /** Confere o que foi lido contra o texto: CD, dados de dano e condições citados que não entraram na regra. */
-function audit(id, slugName, a, file = "") {
+function audit(id, slugName, a, file = '') {
   const text = a.desc.replace(/\*\*/g, '');
   const issues = [];
   const json = JSON.stringify({ ...a, desc: undefined });
-  for (const m of text.matchAll(/DC (\d+)/g)) if (!json.includes(`"dc":${m[1]}`) && !json.includes(`CD ${m[1]}`) && !a.narrative) issues.push(`DC ${m[1]} não lida`);
+  for (const m of text.matchAll(/DC (\d+)/g))
+    if (!json.includes(`"dc":${m[1]}`) && !json.includes(`CD ${m[1]}`) && !a.narrative)
+      issues.push(`DC ${m[1]} não lida`);
   let first = !!a.ability?.rider;
   for (const m of text.matchAll(/\((\d+d\d+(?: ?[+-] ?\d+)?)\) (\w+) damage/gi)) {
     if (first) {
@@ -107,13 +152,37 @@ function audit(id, slugName, a, file = "") {
       continue;
     }
     const dice = m[1].replace(/\s+/g, '');
-    if (!json.includes(`"dice":"${dice}"`) && !a.narrative) issues.push(`dano ${dice} ${m[2]} não lido`);
+    if (!json.includes(`"dice":"${dice}"`) && !a.narrative)
+      issues.push(`dano ${dice} ${m[2]} não lido`);
   }
-  for (const c of ['blinded', 'charmed', 'deafened', 'frightened', 'grappled', 'incapacitated', 'paralyzed', 'petrified', 'poisoned', 'prone', 'restrained', 'stunned', 'unconscious']) {
-    if (new RegExp(`\\b${c}\\b`, 'i').test(text) && !json.includes(`"name":"${c}"`) && !a.narrative && !a.manual) issues.push(`condição ${c} não lida`);
+  for (const c of [
+    'blinded',
+    'charmed',
+    'deafened',
+    'frightened',
+    'grappled',
+    'incapacitated',
+    'paralyzed',
+    'petrified',
+    'poisoned',
+    'prone',
+    'restrained',
+    'stunned',
+    'unconscious',
+  ]) {
+    if (
+      new RegExp(`\\b${c}\\b`, 'i').test(text) &&
+      !json.includes(`"name":"${c}"`) &&
+      !a.narrative &&
+      !a.manual
+    )
+      issues.push(`condição ${c} não lida`);
   }
   if (a.narrative) issues.push('narrativa');
-  if (issues.length) flags.push(`${file.includes("2024") ? "24" : "14"} ${id} / ${slugName} [${issues.join('; ')}]\n    ${text.slice(0, 420).replace(/\n/g, ' ')}`);
+  if (issues.length)
+    flags.push(
+      `${file.includes('2024') ? '24' : '14'} ${id} / ${slugName} [${issues.join('; ')}]\n    ${text.slice(0, 420).replace(/\n/g, ' ')}`,
+    );
 }
 
 /** Trecho de uma ação com várias opções ("**Fire Breath.** …"). */
@@ -126,13 +195,21 @@ function sectionOf(desc, name) {
 }
 
 /** Tradução pt-BR dos nomes de habilidades (sem entrada, fica o nome em inglês). */
-const ptName = (name) => PT_NAMES[plainName(name)] ?? name.replace(/\s*\(.*\)\s*$/, '').replace(/^Variant: /, '');
+const ptName = (name) =>
+  PT_NAMES[plainName(name)] ?? name.replace(/\s*\(.*\)\s*$/, '').replace(/^Variant: /, '');
 
 /** Itens do SRD que podem virar habilidade, com o tipo (ação, bônus, reação, lendária). */
 function itemsOf(m) {
   const items = [];
   for (const a of m.actions) {
-    const kind = a.type === 'legendary' ? 'legendary' : a.type === 'reaction' ? 'reaction' : a.type === 'bonus' ? 'bonus' : 'action';
+    const kind =
+      a.type === 'legendary'
+        ? 'legendary'
+        : a.type === 'reaction'
+          ? 'reaction'
+          : a.type === 'bonus'
+            ? 'bonus'
+            : 'action';
     items.push({ item: a, kind });
   }
   for (const a of m.reactions ?? []) items.push({ item: a, kind: 'reaction' });
@@ -158,39 +235,78 @@ function autoEntry(m) {
         en: cleanName(item.name),
         desc: item.desc,
         auto: true,
-        ability: { cost: 'free', rider: atk.name, ...(dc ? { dc } : {}), ...(moveFt ? { moveFt } : {}) },
+        ability: {
+          cost: 'free',
+          rider: atk.name,
+          ...(dc ? { dc } : {}),
+          ...(moveFt ? { moveFt } : {}),
+        },
         ...fields,
         target: { kind: 'creature' },
       };
       continue;
     }
-    const made = autoAbility(item, kind, m, ptName);
-    if (made.multi) for (const sub of made.multi) {
-      const { suffix, ...rest } = sub;
-      entry.abilities[`${key}-${suffix}`] = rest;
+    // "Breath Weapons": várias opções com a mesma recarga ("**Fire Breath.** … **Sleep Breath.** …")
+    const heads = [...item.desc.matchAll(/\*\*([A-Z][A-Za-z' ]+?)\.\*\*/g)];
+    if (heads.length >= 2 && /one of the following|following breath/i.test(item.desc)) {
+      heads.forEach((h, i) => {
+        const body = item.desc
+          .slice(h.index + h[0].length, heads[i + 1]?.index ?? undefined)
+          .trim();
+        const sub = autoAbility({ name: h[1], desc: `${h[1]}. ${body}` }, kind, m, ptName);
+        sub.from = item.name;
+        sub.ability = { ...(sub.ability ?? {}), group: slug(item.name) };
+        entry.abilities[`${key}-${slug(h[1])}`] = sub;
+      });
+      continue;
     }
+    const made = autoAbility(item, kind, m, ptName);
+    if (made.multi)
+      for (const sub of made.multi) {
+        const { suffix, ...rest } = sub;
+        entry.abilities[`${key}-${suffix}`] = rest;
+      }
     else entry.abilities[key] = made;
   }
   Object.assign(entry.abilities, autoInnate(m, null, ptName));
   // Explosão de Morte / Estertor (traço): dispara quando o monstro morre
   for (const t of m.traits) {
-    if (!/^(Death Burst|Death Throes)$/i.test(plainName(t.name)) && !/^Death (Burst|Throes)/i.test(t.name)) continue;
+    if (
+      !/^(Death Burst|Death Throes)$/i.test(plainName(t.name)) &&
+      !/^Death (Burst|Throes)/i.test(t.name)
+    )
+      continue;
     const { rule: p } = parseAbility(t.desc);
     if (p.resolution?.kind !== 'save') {
       flags.push(`14 ${m.id} / ${slug(t.name)} [narrativa]\n    ${t.desc.slice(0, 300)}`);
       continue;
     }
     const { dc, ...fields } = p;
-    entry.abilities[slug(t.name)] = { pt: ptName(t.name), en: cleanName(t.name), desc: t.desc, auto: true, ...fields, ability: { cost: 'death', ...(dc ? { dc } : {}) } };
+    entry.abilities[slug(t.name)] = {
+      pt: ptName(t.name),
+      en: cleanName(t.name),
+      desc: t.desc,
+      auto: true,
+      ...fields,
+      ability: { cost: 'death', ...(dc ? { dc } : {}) },
+    };
   }
   // Investida / Bote / Investida Atropeladora (5.1, em traços): vira consequência do ataque citado
   for (const t of m.traits) {
-    const mv = /moves at least (\d+) (?:ft|feet)\.? straight toward (?:a|the) (?:target|creature)(?: and then hits (?:it|that target) with an? ([\w' ]+?) attack on the same turn)/i.exec(t.desc);
+    const mv =
+      /moves at least (\d+) (?:ft|feet)\.? straight toward (?:a|the) (?:target|creature)(?: and then hits (?:it|that target) with an? ([\w' ]+?) attack on the same turn)/i.exec(
+        t.desc,
+      );
     if (!mv) continue;
-    const atk = m.attacks.find((a) => a.name.toLowerCase() === mv[2].toLowerCase() || mv[2].toLowerCase().startsWith(a.name.toLowerCase()));
+    const atk = m.attacks.find(
+      (a) =>
+        a.name.toLowerCase() === mv[2].toLowerCase() ||
+        mv[2].toLowerCase().startsWith(a.name.toLowerCase()),
+    );
     if (!atk) continue;
     const extra = /extra (\d+) \((\d+d\d+)\)(?: (\w+))? damage/i.exec(t.desc);
-    const save = /DC (\d+) (Strength|Dexterity|Constitution) saving throw or be knocked prone/i.exec(t.desc);
+    const save =
+      /DC (\d+) (Strength|Dexterity|Constitution) saving throw or be knocked prone/i.exec(t.desc);
     const key = `rider-${slug(atk.name)}`;
     const AB = { Strength: 'str', Dexterity: 'dex', Constitution: 'con' };
     const rider = {
@@ -198,15 +314,36 @@ function autoEntry(m) {
       en: cleanName(t.name),
       desc: t.desc,
       auto: true,
-      ability: { cost: 'free', rider: atk.name, moveFt: Number(mv[1]), ...(save ? { dc: Number(save[1]) } : {}) },
+      ability: {
+        cost: 'free',
+        rider: atk.name,
+        moveFt: Number(mv[1]),
+        ...(save ? { dc: Number(save[1]) } : {}),
+      },
       target: { kind: 'creature' },
       ...(extra ? { damage: { dice: extra[2], type: (extra[3] ?? atk.type).toLowerCase() } } : {}),
-      ...(save ? { onHitSave: { ability: AB[save[2]], onSave: 'none', condition: { name: 'prone', rounds: 0 } } } : {}),
+      ...(save
+        ? {
+            onHitSave: {
+              ability: AB[save[2]],
+              onSave: 'none',
+              condition: { name: 'prone', rounds: 0 },
+            },
+          }
+        : {}),
       ...(/bonus action/i.test(t.desc)
-        ? { manual: 'Se o alvo está caído, o monstro pode fazer um ataque extra contra ele com uma ação bônus.', manualEn: 'If the target is prone, the monster can make one extra attack against it as a bonus action.' }
+        ? {
+            manual:
+              'Se o alvo está caído, o monstro pode fazer um ataque extra contra ele com uma ação bônus.',
+            manualEn:
+              'If the target is prone, the monster can make one extra attack against it as a bonus action.',
+          }
         : {}),
     };
-    if (entry.abilities[key]) flags.push(`14 ${m.id} / ${key} [conflito: Investida e rider do mesmo ataque]\n    ${t.desc.slice(0, 200)}`);
+    if (entry.abilities[key])
+      flags.push(
+        `14 ${m.id} / ${key} [conflito: Investida e rider do mesmo ataque]\n    ${t.desc.slice(0, 200)}`,
+      );
     else entry.abilities[key] = rider;
   }
   if (m.legendary?.count) entry.legendary = m.legendary.count;
@@ -224,22 +361,36 @@ function write(file, rules, monsters) {
     const auto = autoEntry(m);
     const skip = new Set(explicit.skip ?? []);
     const entry = {
-      ...(auto.legendary || explicit.legendary ? { legendary: explicit.legendary ?? auto.legendary } : {}),
+      ...(auto.legendary || explicit.legendary
+        ? { legendary: explicit.legendary ?? auto.legendary }
+        : {}),
       abilities: {},
       traits: {},
     };
     for (const [k, a] of Object.entries(auto.abilities)) if (!skip.has(k)) entry.abilities[k] = a;
     for (const [k, a] of Object.entries(auto.traits)) if (!skip.has(k)) entry.traits[k] = a;
     for (const [k, a] of Object.entries(explicit.abilities ?? {}))
-      entry.abilities[k] = a.replace ? a : { ...(entry.abilities[k] ?? {}), ...a, ability: { ...(entry.abilities[k]?.ability ?? {}), ...(a.ability ?? {}) } };
+      entry.abilities[k] = a.replace
+        ? a
+        : {
+            ...(entry.abilities[k] ?? {}),
+            ...a,
+            ability: { ...(entry.abilities[k]?.ability ?? {}), ...(a.ability ?? {}) },
+          };
     for (const [k, a] of Object.entries(explicit.traits ?? {})) entry.traits[k] = a;
     out[id] = entry;
   }
-  for (const id of Object.keys(rules)) if (!byId.has(id)) problems.push(`${file}: monstro inexistente: ${id}`);
+  for (const id of Object.keys(rules))
+    if (!byId.has(id)) problems.push(`${file}: monstro inexistente: ${id}`);
 
   for (const [id, rule] of Object.entries(out)) {
     const m = byId.get(id);
-    const texts = [...m.traits, ...m.actions, ...(m.reactions ?? []), ...(m.legendary?.actions ?? [])];
+    const texts = [
+      ...m.traits,
+      ...m.actions,
+      ...(m.reactions ?? []),
+      ...(m.legendary?.actions ?? []),
+    ];
     for (const [slugName, a] of [
       ...Object.entries(rule.abilities),
       ...Object.entries(rule.traits),
@@ -248,7 +399,9 @@ function write(file, rules, monsters) {
       if (!a.desc) {
         const hit = texts.find((t) => plainName(t.name) === plainName(a.from ?? a.en));
         if (!hit) {
-          problems.push(`${file}: ${id}/${slugName}: não achei "${a.from ?? a.en}" no SRD (${texts.map((t) => t.name).join(' | ')})`);
+          problems.push(
+            `${file}: ${id}/${slugName}: não achei "${a.from ?? a.en}" no SRD (${texts.map((t) => t.name).join(' | ')})`,
+          );
           continue;
         }
         a.desc = a.section ? sectionOf(hit.desc, a.section) : hit.desc;
@@ -258,22 +411,38 @@ function write(file, rules, monsters) {
         if (a.parse) {
           const { rule: p } = parseAbility(a.desc);
           const { dc, attackBonus, ...fields } = p;
-          r = { ...fields, ...a, ability: { ...(dc ? { dc } : {}), ...(attackBonus !== undefined ? { attackBonus } : {}), ...a.ability } };
+          r = {
+            ...fields,
+            ...a,
+            ability: {
+              ...(dc ? { dc } : {}),
+              ...(attackBonus !== undefined ? { attackBonus } : {}),
+              ...a.ability,
+            },
+          };
         }
         r.ability = { ...inferCost(m, a.from ?? a.en, rules), ...r.ability };
         if (r.ability.spell) {
           if (!SPELL_IDS.has(r.ability.spell.id)) {
-            flags.push(`${file.includes('2024') ? '24' : '14'} ${id} / ${slugName} [magia desconhecida: ${r.ability.spell.id}]\n    ${a.desc.slice(0, 200)}`);
+            flags.push(
+              `${file.includes('2024') ? '24' : '14'} ${id} / ${slugName} [magia desconhecida: ${r.ability.spell.id}]\n    ${a.desc.slice(0, 200)}`,
+            );
             delete r.ability.spell;
             r.narrative = true;
             r.target = { kind: 'self' };
           } else {
             // CD e ataque do monstro: do texto da conjuração, senão dos atributos
             const cast = [...m.traits, ...m.actions].find((t) => /Spellcasting/i.test(t.name));
-            const abilityName = /(?:spellcasting ability is|using) (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)/i.exec(cast?.desc ?? a.desc)?.[1];
+            const abilityName =
+              /(?:spellcasting ability is|using) (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)/i.exec(
+                cast?.desc ?? a.desc,
+              )?.[1];
             const nums = castingNumbers(m, abilityName);
-            const dcText = /spell save DC (\d+)/i.exec(a.desc) ?? /spell save DC (\d+)/i.exec(cast?.desc ?? '');
-            const atkText = /\+(\d+) to hit with spell attacks/i.exec(a.desc) ?? /\+(\d+) to hit with spell attacks/i.exec(cast?.desc ?? '');
+            const dcText =
+              /spell save DC (\d+)/i.exec(a.desc) ?? /spell save DC (\d+)/i.exec(cast?.desc ?? '');
+            const atkText =
+              /\+(\d+) to hit with spell attacks/i.exec(a.desc) ??
+              /\+(\d+) to hit with spell attacks/i.exec(cast?.desc ?? '');
             r.ability.dc ??= dcText ? Number(dcText[1]) : nums.dc;
             r.ability.attackBonus ??= atkText ? Number(atkText[1]) : nums.attack;
           }
@@ -283,8 +452,13 @@ function write(file, rules, monsters) {
         if (r.narrative && !r.vfx) r.vfx = { kind: 'glow', color: 'arcane' };
         Object.assign(a, r);
         audit(id, slugName, a, file);
-        review.push(`${id} / ${slugName} [${a.ability.cost}${a.ability.recharge ? ' R' + a.ability.recharge : ''}${a.ability.uses ? ' ' + a.ability.uses.n + '/' + a.ability.uses.per : ''}${a.ability.attack ? ' attack:' + a.ability.attack : ''}${a.auto ? ' auto' : ''}] ${a.narrative ? 'NARRATIVA' : report(a) + (a.onHitSave ? ' ONHIT:' + JSON.stringify(a.onHitSave) : '')}`);
-      } else review.push(`${id} / trait ${slugName} ${JSON.stringify(a.mods)}`);
+        review.push(
+          `${file.includes('2024') ? '24' : '14'} ${id} / ${slugName} [${a.ability.cost}${a.ability.recharge ? ' R' + a.ability.recharge : ''}${a.ability.uses ? ' ' + a.ability.uses.n + '/' + a.ability.uses.per : ''}${a.ability.attack ? ' attack:' + a.ability.attack : ''}${a.auto ? ' auto' : ''}] ${a.narrative ? 'NARRATIVA' : report(a) + (a.onHitSave ? ' ONHIT:' + JSON.stringify(a.onHitSave) : '')}`,
+        );
+      } else
+        review.push(
+          `${file.includes('2024') ? '24' : '14'} ${id} / trait ${slugName} ${JSON.stringify(a.mods)}`,
+        );
       delete a.from;
       delete a.parse;
       delete a.section;
@@ -293,9 +467,11 @@ function write(file, rules, monsters) {
       delete a.innate;
       delete a.spellName;
       if (a.manual) a.manual = ptUnits(a.manual);
-      for (const k of ['pt', 'en', 'desc']) if (!a[k]) problems.push(`${file}: ${id}/${slugName}: falta ${k}`);
+      for (const k of ['pt', 'en', 'desc'])
+        if (!a[k]) problems.push(`${file}: ${id}/${slugName}: falta ${k}`);
     }
-    if (!Object.keys(rule.abilities).length && !Object.keys(rule.traits).length && !rule.legendary) delete out[id];
+    if (!Object.keys(rule.abilities).length && !Object.keys(rule.traits).length && !rule.legendary)
+      delete out[id];
   }
   if (problems.length) throw new Error(problems.join('\n'));
   const ids = Object.keys(out).sort();

@@ -37,7 +37,8 @@ export default {
     vfx: vfx('burst', 'shadow'),
   },
   'conjure-fey': narrative(vfx('glow', 'life'), {
-    manual: 'Invocação: o Mestre adiciona a criatura feérica (ND 6 ou menor) ao combate; se a concentração quebrar ela fica hostil.',
+    manual:
+      'Invocação: o Mestre adiciona a criatura feérica (ND 6 ou menor) ao combate; se a concentração quebrar ela fica hostil.',
   }),
   contingency: narrative(vfx('glow', 'arcane')),
   'create-undead': narrative(vfx('glow', 'shadow'), {
@@ -46,7 +47,8 @@ export default {
   disintegrate: {
     resolution: save('dex'),
     damage: dmg('10d6+40', 'force', { perLevel: '3d6' }),
-    manual: 'Se o dano reduzir o alvo a 0 PV, ele é desintegrado (só o true resurrection ou o wish o trazem de volta).',
+    manual:
+      'Se o dano reduzir o alvo a 0 PV, ele é desintegrado (só o true resurrection ou o wish o trazem de volta).',
     vfx: vfx('ray', 'acid'),
   },
   eyebite: {
@@ -74,7 +76,8 @@ export default {
   'flesh-to-stone': {
     resolution: save('con'),
     condition: cond('restrained', 10),
-    manual: 'O alvo repete a salvaguarda a cada turno: três falhas o petrificam (aplique a condição Petrificado); três sucessos encerram a magia.',
+    manual:
+      'O alvo repete a salvaguarda a cada turno: três falhas o petrificam (aplique a condição Petrificado); três sucessos encerram a magia.',
     vfx: vfx('glow', 'steel'),
   },
   forbiddance: narrative(vfx('burst', 'holy', { radius: 100 })),
@@ -88,14 +91,16 @@ export default {
     target: sphere(10, { self: true }),
     resolution: auto,
     zone: { aura: true, on: 'cast', color: 'arcane' },
-    manual: 'Magias de 5º nível ou menor lançadas de fora da esfera não a afetam (+1 nível por espaço acima do 6º).',
+    manual:
+      'Magias de 5º nível ou menor lançadas de fora da esfera não a afetam (+1 nível por espaço acima do 6º).',
     vfx: vfx('burst', 'arcane'),
   },
   'guards-and-wards': narrative(vfx('burst', 'arcane', { radius: 50 })),
   harm: {
     resolution: save('con', 'half'),
     damage: dmg('14d6', 'necrotic'),
-    manual: 'O dano não reduz os PV do alvo abaixo de 1; se falhar, os PV máximos dele caem pelo mesmo valor por 1 hora (aplique à mão).',
+    manual:
+      'O dano não reduz os PV do alvo abaixo de 1; se falhar, os PV máximos dele caem pelo mesmo valor por 1 hora (aplique à mão).',
     vfx: vfx('ray', 'shadow'),
   },
   heal: {
@@ -143,7 +148,9 @@ export default {
   'transport-via-plants': narrative(vfx('glow', 'life')),
   'true-seeing': {
     resolution: auto,
-    effect: effect({ note: 'Visão verdadeira, vê portas secretas mágicas e o Plano Etéreo até 120 ft.' }),
+    effect: effect({
+      note: 'Visão verdadeira, vê portas secretas mágicas e o Plano Etéreo até 120 ft.',
+    }),
     vfx: vfx('glow', 'arcane'),
   },
   'wall-of-ice': {
@@ -151,7 +158,8 @@ export default {
     resolution: save('dex', 'half'),
     damage: dmg('10d6', 'cold', { perLevel: '2d6' }),
     zone: { on: 'cast', color: 'frost' },
-    manual: 'A muralha é um objeto (CA 12, 30 PV por trecho de 10 ft, vulnerável a fogo); ao quebrar deixa ar gélido (5d6 de frio, Constituição).',
+    manual:
+      'A muralha é um objeto (CA 12, 30 PV por trecho de 10 ft, vulnerável a fogo); ao quebrar deixa ar gélido (5d6 de frio, Constituição).',
     vfx: vfx('ray', 'frost'),
   },
   'wall-of-thorns': {
@@ -159,7 +167,8 @@ export default {
     resolution: save('dex', 'half'),
     damage: dmg('7d8', 'piercing', { perLevel: '1d8' }),
     zone: { on: 'both', difficult: true, color: 'life' },
-    manual: 'Ao entrar ou terminar o turno na muralha o alvo sofre 7d8 cortante (aqui o motor repete o dano perfurante); atravessá-la custa 4 ft de movimento por pé.',
+    manual:
+      'Ao entrar ou terminar o turno na muralha o alvo sofre 7d8 cortante (aqui o motor repete o dano perfurante); atravessá-la custa 4 ft de movimento por pé.',
     vfx: vfx('ray', 'life'),
   },
   'wind-walk': narrative(vfx('glow', 'steel')),

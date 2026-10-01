@@ -54,7 +54,8 @@ export default {
     target: creature(1, 1),
     resolution: save('con'),
     condition: cond('blinded', 10, { repeatSave: true }),
-    manual: 'Você escolhe cegar (aplicado) ou ensurdecer: para surdez, troque a condição para Surdo.',
+    manual:
+      'Você escolhe cegar (aplicado) ou ensurdecer: para surdez, troque a condição para Surdo.',
     vfx: vfx('glow', 'shadow'),
   },
   blur: {
@@ -111,7 +112,8 @@ export default {
       weaponDamage: { dice: '1d4', type: 'weapon' },
       note: 'Ampliar: um tamanho maior, vantagem em Força, +1d4 nas armas.',
     }),
-    manual: 'Ampliar está aplicado (+1d4 nas armas); para Reduzir aplique −1d4 e desvantagem em Força à mão. Alvo relutante faz salvaguarda de Constituição.',
+    manual:
+      'Ampliar está aplicado (+1d4 nas armas); para Reduzir aplique −1d4 e desvantagem em Força à mão. Alvo relutante faz salvaguarda de Constituição.',
     vfx: vfx('glow', 'arcane'),
   },
   enthrall: {
@@ -168,7 +170,8 @@ export default {
     damage: dmg('2d8', 'fire', { perLevel: '1d8' }),
     // ação bônus nos turnos seguintes: o mesmo dano de novo
     sustain: { cost: 'bonus' },
-    manual: 'Quem segura ou veste o objeto faz salvaguarda de Constituição para largá-lo; se não largar, tem desvantagem em ataques e testes até o início do seu próximo turno.',
+    manual:
+      'Quem segura ou veste o objeto faz salvaguarda de Constituição para largá-lo; se não largar, tem desvantagem em ataques e testes até o início do seu próximo turno.',
     vfx: vfx('ray', 'fire'),
   },
   invisibility: {
@@ -186,7 +189,9 @@ export default {
   },
   levitate: {
     resolution: auto,
-    effect: effect({ note: 'Flutua 20 ft acima do chão; só se move empurrando/puxando algo fixo.' }),
+    effect: effect({
+      note: 'Flutua 20 ft acima do chão; só se move empurrando/puxando algo fixo.',
+    }),
     manual: 'Alvo relutante faz salvaguarda de Constituição.',
     vfx: vfx('glow', 'force'),
   },
@@ -197,7 +202,12 @@ export default {
     resolution: auto,
     effect: effect(
       { weaponBonus: 1 },
-      { scale: [{ from: 4, mods: { weaponBonus: 2 } }, { from: 6, mods: { weaponBonus: 3 } }] },
+      {
+        scale: [
+          { from: 4, mods: { weaponBonus: 2 } },
+          { from: 6, mods: { weaponBonus: 3 } },
+        ],
+      },
     ),
     vfx: vfx('glow', 'arcane'),
   },
@@ -228,10 +238,7 @@ export default {
   'pass-without-trace': {
     target: sphere(30, { self: true }),
     resolution: auto,
-    effect: effect(
-      { note: '+10 em Destreza (Furtividade) e não deixa rastros.' },
-      { to: 'both' },
-    ),
+    effect: effect({ note: '+10 em Destreza (Furtividade) e não deixa rastros.' }, { to: 'both' }),
     vfx: vfx('burst', 'arcane'),
   },
   'prayer-of-healing': {
@@ -264,12 +271,15 @@ export default {
     target: sphere(20),
     resolution: auto,
     zone: { on: 'cast', color: 'thunder' },
-    manual: 'Dentro da esfera: sem som, imunes a trovejante, surdos; não se conjura magia com componente verbal.',
+    manual:
+      'Dentro da esfera: sem som, imunes a trovejante, surdos; não se conjura magia com componente verbal.',
     vfx: vfx('burst', 'thunder'),
   },
   'spider-climb': {
     resolution: auto,
-    effect: effect({ note: 'Anda em paredes e tetos, velocidade de escalada igual à de caminhada.' }),
+    effect: effect({
+      note: 'Anda em paredes e tetos, velocidade de escalada igual à de caminhada.',
+    }),
     vfx: vfx('glow', 'poison'),
   },
   'spike-growth': {
@@ -278,7 +288,8 @@ export default {
     damage: dmg('2d4', 'piercing'),
     noInitial: true,
     zone: { on: 'enter', difficult: true, color: 'life' },
-    manual: 'Causa 2d4 a cada 5 ft percorridos dentro da área; aqui, uma vez ao entrar (o Mestre acrescenta o resto).',
+    manual:
+      'Causa 2d4 a cada 5 ft percorridos dentro da área; aqui, uma vez ao entrar (o Mestre acrescenta o resto).',
     vfx: vfx('burst', 'life'),
   },
   'spiritual-weapon': {
@@ -299,7 +310,8 @@ export default {
     resolution: auto,
     // +1 CA e salvaguardas, resistência a todo dano; o conjurador sofre o mesmo dano (à mão)
     effect: effect({ ac: 1, save: 1, resist: ALL_DAMAGE }),
-    manual: 'Cada vez que o protegido sofre dano, você sofre o mesmo dano; a magia acaba se vocês se afastarem mais de 60 ft.',
+    manual:
+      'Cada vez que o protegido sofre dano, você sofre o mesmo dano; a magia acaba se vocês se afastarem mais de 60 ft.',
     vfx: vfx('glow', 'holy'),
   },
   web: {
@@ -308,7 +320,8 @@ export default {
     condition: cond('restrained', 600),
     noInitial: true,
     zone: { on: 'both', difficult: true, color: 'steel' },
-    manual: 'Preso: usa a ação para um teste de Força contra a sua CD e se liberta (remova a condição). As teias queimam: 2d4 de fogo.',
+    manual:
+      'Preso: usa a ação para um teste de Força contra a sua CD e se liberta (remova a condição). As teias queimam: 2d4 de fogo.',
     vfx: vfx('burst', 'steel'),
   },
   'zone-of-truth': {

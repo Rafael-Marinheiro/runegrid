@@ -21,7 +21,9 @@ const costOf = (name) => Number(/Costs (\d+) Actions/i.exec(name)?.[1] ?? 1);
   const rows = await get('v1/wotc-srd/Monster.json');
   const bySlug = new Map(rows.map((r) => [r.pk, r.fields]));
   const monsters = JSON.parse(readFileSync(dataFile('monsters.json'), 'utf8'));
-  let reactions = 0, legendary = 0, spells = 0;
+  let reactions = 0,
+    legendary = 0,
+    spells = 0;
   for (const m of monsters) {
     const f = bySlug.get(m.id);
     if (!f) continue;
@@ -32,11 +34,17 @@ const costOf = (name) => Number(/Costs (\d+) Actions/i.exec(name)?.[1] ?? 1);
     }
     const l = parse(f.legendary_actions_json);
     if (l?.length) {
-      const count = Number(/can take (\d+) legendary actions/i.exec(f.legendary_desc ?? '')?.[1] ?? 3);
+      const count = Number(
+        /can take (\d+) legendary actions/i.exec(f.legendary_desc ?? '')?.[1] ?? 3,
+      );
       m.legendary = {
         desc: f.legendary_desc ?? '',
         count,
-        actions: l.map((x) => ({ name: x.name.replace(/\s*\(Costs \d+ Actions\)/i, ''), desc: x.desc, cost: costOf(x.name) })),
+        actions: l.map((x) => ({
+          name: x.name.replace(/\s*\(Costs \d+ Actions\)/i, ''),
+          desc: x.desc,
+          cost: costOf(x.name),
+        })),
       };
       legendary++;
     }
@@ -47,14 +55,19 @@ const costOf = (name) => Number(/Costs (\d+) Actions/i.exec(name)?.[1] ?? 1);
     }
   }
   writeFileSync(dataFile('monsters.json'), JSON.stringify(monsters));
-  console.log(`2014: ${reactions} com reações, ${legendary} com ações lendárias, ${spells} com lista de magias`);
+  console.log(
+    `2014: ${reactions} com reações, ${legendary} com ações lendárias, ${spells} com lista de magias`,
+  );
 }
 
 // ---------- SRD 5.2 ----------
 {
   const rows = await get('v2/wizards-of-the-coast/srd-2024/CreatureAction.json');
   const byMonster = new Map();
-  for (const r of rows) (byMonster.get(r.fields.parent) ?? byMonster.set(r.fields.parent, []).get(r.fields.parent)).push(r.fields);
+  for (const r of rows)
+    (
+      byMonster.get(r.fields.parent) ?? byMonster.set(r.fields.parent, []).get(r.fields.parent)
+    ).push(r.fields);
   const monsters = JSON.parse(readFileSync(dataFile('monsters-2024.json'), 'utf8'));
   const TYPE = { BONUS_ACTION: 'bonus', REACTION: 'reaction', LEGENDARY_ACTION: 'legendary' };
   const USES = { RECHARGE_ON_ROLL: 'recharge', RECHARGE: 'rest', PER_DAY: 'day' };
@@ -66,16 +79,39 @@ const costOf = (name) => Number(/Costs (\d+) Actions/i.exec(name)?.[1] ?? 1);
       if (!f) continue;
       if (TYPE[f.action_type]) a.type = TYPE[f.action_type];
       if (f.action_type === 'LEGENDARY_ACTION') a.cost = f.legendary_action_cost ?? 1;
-      if (f.uses_type) a.uses = { type: USES[f.uses_type] ?? f.uses_type, ...(f.uses_param ? { n: f.uses_param } : {}) };
+      if (f.uses_type)
+        a.uses = {
+          type: USES[f.uses_type] ?? f.uses_type,
+          ...(f.uses_param ? { n: f.uses_param } : {}),
+        };
       n++;
     }
   }
   // ataques que o importador da API não reconheceu (dano fixo "1 Piercing damage", bônus com condição…)
-  const DAMAGE = ['acid', 'bludgeoning', 'cold', 'fire', 'force', 'lightning', 'necrotic', 'piercing', 'poison', 'psychic', 'radiant', 'slashing', 'thunder'];
-  const ATTACK = /^(?:Melee|Ranged)(?: or (?:Melee|Ranged))? Attack Roll: \+(\d+)[^,]*?, (?:reach (\d+) ?(?:ft|feet)\.?(?: or range (\d+)(?:\/\d+)? ?(?:ft|feet)\.?)?|range (\d+)(?:\/\d+)? ?(?:ft|feet)\.?)\s+(?:Hit: )?(\d+)(?: \(([^)]+)\))? (\w+) damage/i;
+  const DAMAGE = [
+    'acid',
+    'bludgeoning',
+    'cold',
+    'fire',
+    'force',
+    'lightning',
+    'necrotic',
+    'piercing',
+    'poison',
+    'psychic',
+    'radiant',
+    'slashing',
+    'thunder',
+  ];
+  const ATTACK =
+    /^(?:Melee|Ranged)(?: or (?:Melee|Ranged))? Attack Roll: \+(\d+)[^,]*?, (?:reach (\d+) ?(?:ft|feet)\.?(?: or range (\d+)(?:\/\d+)? ?(?:ft|feet)\.?)?|range (\d+)(?:\/\d+)? ?(?:ft|feet)\.?)\s+(?:Hit: )?(\d+)(?: \(([^)]+)\))? (\w+) damage/i;
   let added = 0;
   for (const m of monsters) {
-    const strip = (n) => n.replace(/\s*\(.*\)\s*$/, '').trim().toLowerCase();
+    const strip = (n) =>
+      n
+        .replace(/\s*\(.*\)\s*$/, '')
+        .trim()
+        .toLowerCase();
     const have = new Set(m.attacks.map((a) => strip(a.name)));
     for (const a of m.actions) {
       const name = a.name.trim();

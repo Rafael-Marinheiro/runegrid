@@ -43,7 +43,8 @@ export default {
           patch: {
             damage: null,
             condition: cond('restrained', 10),
-            manual: 'Índigo: três falhas de salvaguarda de Constituição (no fim de cada turno) o petrificam; três sucessos encerram.',
+            manual:
+              'Índigo: três falhas de salvaguarda de Constituição (no fim de cada turno) o petrificam; três sucessos encerram.',
           },
         },
         {
@@ -52,10 +53,15 @@ export default {
           patch: {
             damage: null,
             condition: cond('blinded', 10),
-            manual: 'Violeta: no início do seu próximo turno o alvo faz salvaguarda de Sabedoria; se falhar é transportado a outro plano.',
+            manual:
+              'Violeta: no início do seu próximo turno o alvo faz salvaguarda de Sabedoria; se falhar é transportado a outro plano.',
           },
         },
-        { from: 8, to: 8, patch: { damage: dmg('12d6', 'fire'), extraDamage: [dmg('12d6', 'acid')] } },
+        {
+          from: 8,
+          to: 8,
+          patch: { damage: dmg('12d6', 'fire'), extraDamage: [dmg('12d6', 'acid')] },
+        },
       ],
     },
     vfx: vfx('cone', 'arcane'),

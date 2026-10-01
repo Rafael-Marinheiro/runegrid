@@ -11,6 +11,9 @@ import { T, spellName } from '../i18n';
 import { legendaryActionsOf } from '../monsters/registry';
 import { addLog, creatureOf, withCreature } from './state';
 
+/** Chave do estado de recarga/usos: a do grupo (opções de Sopros) ou a da própria habilidade. */
+export const stateKey = (sp: Spell): string => sp.ability?.group ?? sp.id;
+
 /** Ações lendárias: só fora do próprio turno, com o combate em andamento e pontos sobrando. */
 export function legendaryGate(state: EncounterState, actor: Creature, spell: Spell): void {
   const cost = spell.ability?.legendary ?? 1;
@@ -39,7 +42,7 @@ export function legendaryGate(state: EncounterState, actor: Creature, spell: Spe
 export function abilitySpent(actor: Creature, spell: Spell): boolean {
   const ab = spell.ability;
   if (!ab) return false;
-  const st = actor.abilityState?.[spell.id];
+  const st = actor.abilityState?.[stateKey(spell)];
   return (!!ab.recharge && !!st?.recharging) || (!!ab.uses && (st?.used ?? 0) >= ab.uses.n);
 }
 
@@ -47,7 +50,7 @@ export function abilitySpent(actor: Creature, spell: Spell): boolean {
 export function abilityReady(actor: Creature, spell: Spell): void {
   const ab = spell.ability;
   if (!ab) return;
-  const st = actor.abilityState?.[spell.id];
+  const st = actor.abilityState?.[stateKey(spell)];
   if (ab.recharge && st?.recharging)
     throw new RuleError(
       T(
@@ -64,7 +67,7 @@ export function payAbility(state: EncounterState, actorId: string, spell: Spell)
   const ab = spell.ability;
   if (!ab) return state;
   const c = creatureOf(state, actorId);
-  const prev = c.abilityState?.[spell.id] ?? {};
+  const prev = c.abilityState?.[stateKey(spell)] ?? {};
   const next = {
     ...prev,
     ...(ab.recharge ? { recharging: true } : {}),
@@ -81,7 +84,9 @@ export function payAbility(state: EncounterState, actorId: string, spell: Spell)
       : {};
   return withCreature(state, {
     ...c,
-    ...(ab.recharge || ab.uses ? { abilityState: { ...c.abilityState, [spell.id]: next } } : {}),
+    ...(ab.recharge || ab.uses
+      ? { abilityState: { ...c.abilityState, [stateKey(spell)]: next } }
+      : {}),
     ...legendary,
   });
 }
@@ -95,9 +100,13 @@ export function abilitiesAtTurnStart(
 ): EncounterState {
   let s = state;
   const c0 = creatureOf(s, actorId);
+  const rolled = new Set<string>();
   for (const sp of abilities) {
     const need = sp.ability?.recharge;
-    if (!need || !creatureOf(s, actorId).abilityState?.[sp.id]?.recharging) continue;
+    const key = stateKey(sp);
+    if (!need || rolled.has(key) || !creatureOf(s, actorId).abilityState?.[key]?.recharging)
+      continue;
+    rolled.add(key);
     const r = roll('1d6', rng).total;
     const ok = r >= need;
     const c = creatureOf(s, actorId);
@@ -106,7 +115,7 @@ export function abilitiesAtTurnStart(
         ...c,
         abilityState: {
           ...c.abilityState,
-          [sp.id]: { ...c.abilityState![sp.id], recharging: false },
+          [key]: { ...c.abilityState![key], recharging: false },
         },
       });
     s = addLog(

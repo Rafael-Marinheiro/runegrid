@@ -15,8 +15,14 @@ const base = (id) => id.replace(/^srd-2024_/, '');
 function ptUnits(text) {
   const dec = (n) => String(Math.round(n * 10) / 10).replace('.', ',');
   return text
-    .replace(/(\d+(?:[.,]\d+)?)[- ]?(?:ft\.?|feet|foot)(?![a-z])/gi, (_, n) => `${dec(Number(n.replace(',', '.')) * 0.3)} m`)
-    .replace(/(\d+(?:[.,]\d+)?)[- ]?miles?/gi, (_, n) => `${dec(Number(n.replace(',', '.')) * 1.6)} km`);
+    .replace(
+      /(\d+(?:[.,]\d+)?)[- ]?(?:ft\.?|feet|foot)(?![a-z])/gi,
+      (_, n) => `${dec(Number(n.replace(',', '.')) * 0.3)} m`,
+    )
+    .replace(
+      /(\d+(?:[.,]\d+)?)[- ]?miles?/gi,
+      (_, n) => `${dec(Number(n.replace(',', '.')) * 1.6)} km`,
+    );
 }
 
 /** Para cada nota `manual`/`note` em pt-BR acrescenta a versão `manualEn`/`noteEn` (do dicionário `en-notes.mjs`). */

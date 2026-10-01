@@ -61,7 +61,9 @@ export default {
     vfx: vfx('glow', 'fire'),
   },
   resistance: {
-    effect: effect({ note: 'Reduz em 1d4 o dano do tipo escolhido que sofrer (uma vez por turno).' }),
+    effect: effect({
+      note: 'Reduz em 1d4 o dano do tipo escolhido que sofrer (uma vez por turno).',
+    }),
     manual: 'Escolha o tipo de dano; a redução de 1d4 no dano sofrido é aplicada à mão.',
   },
   'sorcerous-burst': {
@@ -81,7 +83,8 @@ export default {
         opt(t, label, { damage: cantrip('1d8', t), vfx: vfx('bolts', color) }),
       ),
     ],
-    manual: 'Se sair 8 em um d8 do dano, role outro d8 e some (no máximo seu modificador de conjuração vezes).',
+    manual:
+      'Se sair 8 em um d8 do dano, role outro d8 e some (no máximo seu modificador de conjuração vezes).',
     vfx: vfx('bolts', 'fire'),
   },
   'starry-wisp': {
@@ -97,7 +100,8 @@ export default {
   'true-strike': {
     replace: true,
     ...narrative(vfx('glow', 'arcane'), {
-      manual: 'Faça um ataque com a arma usando o atributo de conjuração no ataque e no dano (pode causar radiante, +1d6/2d6/3d6 nos níveis 5/11/17): use a ação Atacar.',
+      manual:
+        'Faça um ataque com a arma usando o atributo de conjuração no ataque e no dano (pode causar radiante, +1d6/2d6/3d6 nos níveis 5/11/17): use a ação Atacar.',
     }),
   },
   'vicious-mockery': {
@@ -124,7 +128,8 @@ export default {
     ].map(([t, label, color]) =>
       opt(t, label, { damage: dmg('3d8', t, { perLevel: '1d8' }), vfx: vfx('bolts', color) }),
     ),
-    manual: 'Se dois ou mais d8 saírem iguais, o orbe salta para outra criatura a até 30 ft do alvo (lance um novo ataque à mão).',
+    manual:
+      'Se dois ou mais d8 saírem iguais, o orbe salta para outra criatura a até 30 ft do alvo (lance um novo ataque à mão).',
     vfx: vfx('bolts', 'fire'),
   },
   'color-spray': {
@@ -137,10 +142,7 @@ export default {
   command: {
     options: [
       opt('halt', 'Parar', {
-        effect: effect(
-          { speedSet: 0, note: 'Não se move nem age neste turno.' },
-          { rounds: 1 },
-        ),
+        effect: effect({ speedSet: 0, note: 'Não se move nem age neste turno.' }, { rounds: 1 }),
       }),
       opt('drop', 'Largar', {
         effect: effect({ note: 'Larga o que segura e encerra o turno.' }, { rounds: 1 }),
@@ -184,7 +186,8 @@ export default {
       { once: true, onHit: ENSNARE('1d6') },
       { scale: ladder(2, 9, (s) => ({ onHit: ENSNARE(`${s}d6`) })) },
     ),
-    manual: 'Criatura Grande ou maior tem vantagem na salvaguarda; o alvo (ou alguém ao alcance) pode usar uma ação para um teste de Força (Atletismo) e acabar com a magia.',
+    manual:
+      'Criatura Grande ou maior tem vantagem na salvaguarda; o alvo (ou alguém ao alcance) pode usar uma ação para um teste de Força (Atletismo) e acabar com a magia.',
     vfx: vfx('glow', 'life'),
   },
   'false-life': { tempHp: { dice: '2d4', flat: 4, flatPerLevel: 5 } },
@@ -201,7 +204,8 @@ export default {
       { weaponDamage: { dice: '1d6', type: 'necrotic', onlyAgainst: '@target' } },
       { to: 'self' },
     ),
-    manual: 'Escolha um atributo: o alvo tem desvantagem em testes dele. Se o alvo cair a 0 PV, use uma ação bônus para transferir a maldição.',
+    manual:
+      'Escolha um atributo: o alvo tem desvantagem em testes dele. Se o alvo cair a 0 PV, use uma ação bônus para transferir a maldição.',
     vfx: vfx('glow', 'shadow'),
   },
   'hideous-laughter': { target: creature(1, 1) },
@@ -215,7 +219,12 @@ export default {
     target: creature(),
     resolution: attack,
     damage: dmg('1d10', 'piercing'),
-    splash: { radius: 5, ability: 'dex', onSave: 'none', damage: dmg('2d6', 'cold', { perLevel: '1d6' }) },
+    splash: {
+      radius: 5,
+      ability: 'dex',
+      onSave: 'none',
+      damage: dmg('2d6', 'cold', { perLevel: '1d6' }),
+    },
     vfx: vfx('bolts', 'frost'),
   },
   'inflict-wounds': {
@@ -252,13 +261,17 @@ export default {
           weaponDamage: { dice: `${s}d6`, type: 'fire' },
           onHit: {
             save: 'con',
-            mods: { dotStart: { dice: `${s}d6`, type: 'fire' }, repeatSave: { ability: 'con', dc: 0 } },
+            mods: {
+              dotStart: { dice: `${s}d6`, type: 'fire' },
+              repeatSave: { ability: 'con', dc: 0 },
+            },
             rounds: 10,
           },
         })),
       },
     ),
-    manual: 'O alvo queima: no início de cada turno sofre o dano e faz salvaguarda de Constituição; passar acaba com a magia.',
+    manual:
+      'O alvo queima: no início de cada turno sofre o dano e faz salvaguarda de Constituição; passar acaba com a magia.',
     vfx: vfx('glow', 'fire'),
   },
   sleep: {
@@ -267,7 +280,8 @@ export default {
     target: sphere(5),
     resolution: save('wis'),
     condition: cond('incapacitated', 1, { endsOnDamage: true }),
-    manual: 'Ao fim do próximo turno o alvo repete a salvaguarda: se falhar, fica inconsciente pela duração (aplique a condição); elfos e quem não dorme passam automaticamente.',
+    manual:
+      'Ao fim do próximo turno o alvo repete a salvaguarda: se falhar, fica inconsciente pela duração (aplique a condição); elfos e quem não dorme passam automaticamente.',
     vfx: vfx('burst', 'psychic'),
   },
 };

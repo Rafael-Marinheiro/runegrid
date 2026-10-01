@@ -7,11 +7,14 @@ export default {
     target: creature(),
     resolution: save('int', 'half'),
     damage: dmg('10d12', 'psychic'),
-    effect: effect({ note: 'Não conjura nem usa a ação Magia; repete a salvaguarda a cada 30 dias (ou Restauração Maior, Cura ou Desejo).' }),
+    effect: effect({
+      note: 'Não conjura nem usa a ação Magia; repete a salvaguarda a cada 30 dias (ou Restauração Maior, Cura ou Desejo).',
+    }),
     vfx: vfx('glow', 'psychic'),
   },
   'dominate-monster': {
-    manual: 'Vantagem na salvaguarda se você ou aliados lutam contra o alvo; ao sofrer dano ele repete a salvaguarda; o comando telepático não gasta ação.',
+    manual:
+      'Vantagem na salvaguarda se você ou aliados lutam contra o alvo; ao sofrer dano ele repete a salvaguarda; o comando telepático não gasta ação.',
   },
   'power-word-stun': {
     replace: true,
@@ -41,7 +44,8 @@ export default {
     resolution: save('str', 'half'),
     damage: dmg('6d10', 'bludgeoning'),
     zone: { on: 'cast', difficult: true, color: 'frost' },
-    manual: 'A cada início de turno seu a parede avança 50 ft; Enormes ou menores dentro dela fazem Força ou sofrem 5d10 (−1d10 a cada rodada). Mova e aplique à mão.',
+    manual:
+      'A cada início de turno seu a parede avança 50 ft; Enormes ou menores dentro dela fazem Força ou sofrem 5d10 (−1d10 a cada rodada). Mova e aplique à mão.',
     vfx: vfx('burst', 'frost'),
   },
 };

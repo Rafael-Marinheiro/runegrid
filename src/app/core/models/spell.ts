@@ -132,6 +132,8 @@ export interface AbilityMeta {
   cost: 'action' | 'bonus' | 'reaction' | 'legendary' | 'free' | 'death';
   /** Custo em ações lendárias (padrão 1). */
   legendary?: number;
+  /** Habilidades que dividem a mesma recarga/usos (as opções de "Sopros"): chave comum do estado. */
+  group?: string;
   /** "Recharge 5-6": no início do turno do monstro, d6 maior ou igual a isto a devolve. */
   recharge?: number;
   /** "3/Day", "Recharges after a Short or Long Rest" (`rest`). */

@@ -12,7 +12,11 @@ export const slug = (s) =>
     .replace(/^-|-$/g, '');
 
 const plain = (n) => n.replace(/\s*\(.*\)\s*$/, '').trim();
-const cleanName = (n) => n.replace(/\s*\(.*\)\s*$/, '').replace(/^Variant: /, '').trim();
+const cleanName = (n) =>
+  n
+    .replace(/\s*\(.*\)\s*$/, '')
+    .replace(/^Variant: /, '')
+    .trim();
 const num = (s) => Number(String(s).replace(',', '.'));
 
 /** Traços que o motor aplica sozinhos, por nome. Cada função recebe o texto e devolve `mods` (ou null). */
@@ -34,8 +38,24 @@ const TRAITS = {
   Regeneration: (d) => {
     const m = /regains? (\d+) hit points at the start/i.exec(d);
     if (!m) return null;
-    const stops = ['acid', 'bludgeoning', 'cold', 'fire', 'force', 'lightning', 'necrotic', 'piercing', 'poison', 'psychic', 'radiant', 'slashing', 'thunder'].filter((t) =>
-      new RegExp(`takes? (?:[a-z ,]+ or )?${t}(?: or [a-z]+)? damage`, 'i').test(d) || new RegExp(`\\b${t}\\b[^.]*doesn't function`, 'i').test(d),
+    const stops = [
+      'acid',
+      'bludgeoning',
+      'cold',
+      'fire',
+      'force',
+      'lightning',
+      'necrotic',
+      'piercing',
+      'poison',
+      'psychic',
+      'radiant',
+      'slashing',
+      'thunder',
+    ].filter(
+      (t) =>
+        new RegExp(`takes? (?:[a-z ,]+ or )?${t}(?: or [a-z]+)? damage`, 'i').test(d) ||
+        new RegExp(`\\b${t}\\b[^.]*doesn't function`, 'i').test(d),
     );
     return { regen: Number(m[1]), ...(stops.length ? { regenStops: stops } : {}) };
   },
@@ -49,7 +69,9 @@ const TRAITS = {
 
 function retaliate(d) {
   const m = /takes \d+ \((\d+d\d+)\) (\w+) damage/i.exec(d);
-  return m ? { retaliate: { dice: m[1], type: m[2].toLowerCase(), melee: /melee attack/i.test(d) } } : null;
+  return m
+    ? { retaliate: { dice: m[1], type: m[2].toLowerCase(), melee: /melee attack/i.test(d) } }
+    : null;
 }
 
 export function autoTraits(m, ptName) {
@@ -60,7 +82,13 @@ export function autoTraits(m, ptName) {
     if (!fn) continue;
     const mods = fn(t.desc, t.name);
     if (!mods) continue;
-    out[slug(t.name)] = { pt: ptName(t.name), en: cleanName(t.name), mods, desc: t.desc, auto: true };
+    out[slug(t.name)] = {
+      pt: ptName(t.name),
+      en: cleanName(t.name),
+      mods,
+      desc: t.desc,
+      auto: true,
+    };
   }
   return out;
 }
@@ -80,24 +108,72 @@ export function extraNotes(text) {
   const pt = [];
   const en = [];
   if (/fails by 5 or more|result is 5 or lower/i.test(text)) {
-    pt.push('Se falhar por 5 ou mais, o alvo também fica inconsciente enquanto envenenado; acorda ao sofrer dano ou se alguém usar uma ação para sacudi-lo.');
-    en.push('If the save fails by 5 or more, the target is also unconscious while poisoned; it wakes on taking damage or when someone uses an action to shake it.');
+    pt.push(
+      'Se falhar por 5 ou mais, o alvo também fica inconsciente enquanto envenenado; acorda ao sofrer dano ou se alguém usar uma ação para sacudi-lo.',
+    );
+    en.push(
+      'If the save fails by 5 or more, the target is also unconscious while poisoned; it wakes on taking damage or when someone uses an action to shake it.',
+    );
   }
   if (/reduces the target to 0 hit points, the target is stable but poisoned/i.test(text)) {
-    pt.push('Se o veneno reduzir o alvo a 0 PV, ele fica estável e envenenado por 1 hora, paralisado enquanto envenenado.');
-    en.push('If the poison reduces the target to 0 HP, it is stable but poisoned for 1 hour, paralyzed while poisoned.');
+    pt.push(
+      'Se o veneno reduzir o alvo a 0 PV, ele fica estável e envenenado por 1 hora, paralisado enquanto envenenado.',
+    );
+    en.push(
+      'If the poison reduces the target to 0 HP, it is stable but poisoned for 1 hour, paralyzed while poisoned.',
+    );
   }
   if (/hit point maximum/i.test(text)) {
-    pt.push('Os PV máximos reduzidos voltam depois de um descanso longo (ou magia que remova o efeito); a 0 o alvo morre.');
-    en.push('The reduced hit point maximum returns after a long rest (or a spell that removes it); at 0 the target dies.');
+    pt.push(
+      'Os PV máximos reduzidos voltam depois de um descanso longo (ou magia que remova o efeito); a 0 o alvo morre.',
+    );
+    en.push(
+      'The reduced hit point maximum returns after a long rest (or a spell that removes it); at 0 the target dies.',
+    );
   }
   return pt.length ? { manual: pt.join(' '), manualEn: en.join(' ') } : {};
 }
 
 // ---------- ataques com consequência ----------
 
-const CONDS = ['blinded', 'charmed', 'deafened', 'frightened', 'grappled', 'incapacitated', 'paralyzed', 'petrified', 'poisoned', 'prone', 'restrained', 'stunned', 'unconscious'];
-const AB = { Strength: 'str', Dexterity: 'dex', Constitution: 'con', Intelligence: 'int', Wisdom: 'wis', Charisma: 'cha' };
+const DAMAGE = [
+  'acid',
+  'bludgeoning',
+  'cold',
+  'fire',
+  'force',
+  'lightning',
+  'necrotic',
+  'piercing',
+  'poison',
+  'psychic',
+  'radiant',
+  'slashing',
+  'thunder',
+];
+const CONDS = [
+  'blinded',
+  'charmed',
+  'deafened',
+  'frightened',
+  'grappled',
+  'incapacitated',
+  'paralyzed',
+  'petrified',
+  'poisoned',
+  'prone',
+  'restrained',
+  'stunned',
+  'unconscious',
+];
+const AB = {
+  Strength: 'str',
+  Dexterity: 'dex',
+  Constitution: 'con',
+  Intelligence: 'int',
+  Wisdom: 'wis',
+  Charisma: 'cha',
+};
 
 function rounds(text) {
   const m = /for (?:up to )?(\d+) (round|minute|hour|day)s?/i.exec(text);
@@ -115,7 +191,10 @@ export function parseAttackRider(desc) {
   const hit = desc.replace(/\*\*/g, '').replace(/\s+/g, ' ');
   // 5.1: "... Hit: 7 (1d8 + 3) piercing damage, and ..."; 5.2: "Melee Attack Roll: +4, reach 5 ft. 5 (1d6 + 2) Piercing damage. If ..."
   const h = hit.indexOf('Hit:');
-  let body = h >= 0 ? hit.slice(h + 4) : hit.replace(/^[^.]*?(?:reach|range) [^.]*?ft\.(?:\/\d+ ft\.)?/i, '');
+  let body =
+    h >= 0
+      ? hit.slice(h + 4)
+      : hit.replace(/^[^.]*?(?:reach|range) [^.]*?ft\.(?:\/\d+ ft\.)?/i, '');
   const base = /^\s*(?:\d+ \((\d+d\d+(?: ?[+-] ?\d+)?)\)|\d+) (\w+) damage/i.exec(body);
   if (base) body = body.slice(base[0].length);
   else if (/^\s*Hit: /.test(hit.slice(h)) && h >= 0) body = hit.slice(h + 4);
@@ -133,25 +212,40 @@ export function parseAttackRider(desc) {
     extra.push({ dice: dice.replace(/\s+/g, ''), type: type.toLowerCase() });
     return '';
   });
-  if (extra.length) (rule.damage = extra[0]), extra.length > 1 && (rule.extraDamage = extra.slice(1));
+  if (extra.length)
+    ((rule.damage = extra[0]), extra.length > 1 && (rule.extraDamage = extra.slice(1)));
 
-  const sv = /DC (\d+) (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) saving throw/i.exec(bodyNoPlus) ??
-    /(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) Saving Throw: DC (\d+)/.exec(bodyNoPlus);
+  const sv =
+    /DC (\d+) (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) saving throw/i.exec(
+      bodyNoPlus,
+    ) ??
+    /(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) Saving Throw: DC (\d+)/.exec(
+      bodyNoPlus,
+    );
   const conds = [];
   const effectText = bodyNoPlus
     .split(/(?<=\.)\s+/)
-    .filter((sn) => !/reduces the target to 0 hit points|fails by 5 or more|result is 5 or lower/i.test(sn))
+    .filter(
+      (sn) =>
+        !/reduces the target to 0 hit points|fails by 5 or more|result is 5 or lower/i.test(sn),
+    )
     .join(' ');
   for (const c of CONDS) {
-    const rx = new RegExp(`\\b(?:be|is|becomes?|become|are) (?:instead )?(?:\\w+ )?${c}\\b|knocked ${c}\\b|has the ${c} condition|have the ${c} condition`, 'i');
+    const rx = new RegExp(
+      `\\b(?:be|is|becomes?|become|are|fall|falls) (?:instead )?(?:\\w+ )?${c}\\b|knocked ${c}\\b|has the ${c} condition|have the ${c} condition`,
+      'i',
+    );
     const hitC = rx.exec(effectText);
     if (hitC) conds.push({ name: c, rounds: rounds(effectText.slice(hitC.index)) });
   }
   if (sv) {
-    const [saveDc, saveAb] = /^\d/.test(sv[1]) ? [Number(sv[1]), AB[sv[2]]] : [Number(sv[2]), AB[sv[1]]];
+    const [saveDc, saveAb] = /^\d/.test(sv[1])
+      ? [Number(sv[1]), AB[sv[2]]]
+      : [Number(sv[2]), AB[sv[1]]];
     const dmg = [];
     const rd = /(?:taking|takes?|suffers?) \d+ \((\d+d\d+(?: ?[+-] ?\d+)?)\) (\w+) damage/gi;
-    while ((m = rd.exec(bodyNoPlus))) dmg.push({ dice: m[1].replace(/\s+/g, ''), type: m[2].toLowerCase() });
+    while ((m = rd.exec(bodyNoPlus)))
+      dmg.push({ dice: m[1].replace(/\s+/g, ''), type: m[2].toLowerCase() });
     const half = /half as much damage/i.test(bodyNoPlus);
     rule.dc = saveDc;
     rule.onHitSave = {
@@ -168,24 +262,45 @@ export function parseAttackRider(desc) {
     if (esc) rule.dc = Number(esc[1]);
     const names = new Set(conds.map((c) => c.name));
     if (names.has('grappled') && /restrained/i.test(bodyNoPlus)) names.add('restrained');
-    rule.condition = [...names].map((name) => ({ name, rounds: conds.find((c) => c.name === name)?.rounds ?? 0 }));
+    rule.condition = [...names].map((name) => ({
+      name,
+      rounds: conds.find((c) => c.name === name)?.rounds ?? 0,
+    }));
     if (rule.condition.length === 1) rule.condition = rule.condition[0];
   }
   // Investida/Bote (5.2): "moved 20+ feet straight toward it immediately before the hit"
   const mv = /moved (\d+)\+? (?:feet|ft)\.? straight toward/i.exec(bodyNoPlus);
   if (mv) rule.moveFt = Number(mv[1]);
   // PV máximos reduzidos pelo dano causado (Dreno de Vida, Beijo Drenante)
-  if (/hit point maximum (?:is|decreases|reduced)[^.]*(?:damage taken|amount equal)/i.test(bodyNoPlus) && rule.onHitSave) rule.onHitSave.drainMaxHp = true;
+  if (
+    /hit point maximum (?:is|decreases|reduced)[^.]*(?:damage taken|amount equal)/i.test(
+      bodyNoPlus,
+    ) &&
+    rule.onHitSave
+  )
+    rule.onHitSave.drainMaxHp = true;
   if (!rule.damage && !rule.onHitSave && !rule.condition) return null;
   const a = escapeNote(bodyNoPlus);
   const b = extraNotes(bodyNoPlus);
-  if (a.manual || b.manual) Object.assign(rule, { manual: [a.manual, b.manual].filter(Boolean).join(' '), manualEn: [a.manualEn, b.manualEn].filter(Boolean).join(' ') });
+  if (a.manual || b.manual)
+    Object.assign(rule, {
+      manual: [a.manual, b.manual].filter(Boolean).join(' '),
+      manualEn: [a.manualEn, b.manualEn].filter(Boolean).join(' '),
+    });
   return { rule, rest: bodyNoPlus };
 }
 
 // ---------- ações ----------
 
-const SKIP = new Set(['Multiattack', 'Spellcasting', 'Innate Spellcasting', 'Variant: Innate Spellcasting', 'Shared Spellcasting', 'Nimble Escape', 'Cunning Action']);
+const SKIP = new Set([
+  'Multiattack',
+  'Spellcasting',
+  'Innate Spellcasting',
+  'Variant: Innate Spellcasting',
+  'Shared Spellcasting',
+  'Nimble Escape',
+  'Cunning Action',
+]);
 
 export function isSkipped(name) {
   return SKIP.has(plain(name));
@@ -199,10 +314,20 @@ function teleport(desc) {
 
 /** "makes one X attack" / "makes a tail attack" / "makes one attack with its rotting fist": repete um ataque do monstro. */
 function repeatsAttack(desc, attackNames) {
-  const m = /makes? (?:a|an|one|two) ([\w' -]+?) attacks?\b(?: with (?:its )?([\w' -]+?)(?: or|\.|,|$))?/i.exec(desc);
+  const m =
+    /makes? (?:a|an|one|two) ([\w' -]+?) attacks?\b(?: with (?:its )?([\w' -]+?)(?: or|\.|,|$))?/i.exec(
+      desc,
+    );
   if (!m) return null;
   const want = (m[2] ?? m[1]).toLowerCase();
-  return attackNames.find((n) => n.toLowerCase() === want || n.toLowerCase().startsWith(want) || want.startsWith(n.toLowerCase())) ?? null;
+  return (
+    attackNames.find(
+      (n) =>
+        n.toLowerCase() === want ||
+        n.toLowerCase().startsWith(want) ||
+        want.startsWith(n.toLowerCase()),
+    ) ?? null
+  );
 }
 
 const spellSlug = (name) =>
@@ -216,11 +341,21 @@ const spellSlug = (name) =>
 
 /** Magias citadas em "casts A, B, or C" (com a versão de nível, se o texto a cita). */
 function castsSpells(desc) {
-  const m = /\bcasts?(?: the)? ([A-Z][\w' /]*?(?:(?:, | or | and )(?:or )?[A-Z][\w' /]*?)*?)(?: spell| on itself| on that creature| in response| twice|,? requiring|,? using|,? and it| \(|\.)/.exec(desc);
+  const m =
+    /\bcasts?(?: the)? ([A-Z][\w' /]*?(?:(?:, | or | and )(?:or )?[A-Z][\w' /]*?)*?)(?: spell| on itself| on that creature| in response| twice|,? requiring|,? using|,? and it| \(|\.)/.exec(
+      desc,
+    );
   if (!m) return [];
-  const names = m[1].split(/,\s*(?:or\s+)?|\s+or\s+/).map((x) => x.trim()).filter(Boolean);
+  const names = m[1]
+    .split(/,\s*(?:or\s+)?|\s+or\s+/)
+    .map((x) => x.trim())
+    .filter(Boolean);
   const level = /\(level (\d+) version\)/i.exec(desc);
-  return names.map((n) => ({ id: spellSlug(n), name: n, level: level ? Number(level[1]) : undefined }));
+  return names.map((n) => ({
+    id: spellSlug(n),
+    name: n,
+    level: level ? Number(level[1]) : undefined,
+  }));
 }
 
 export function autoAbility(item, kind, m, ptName) {
@@ -243,7 +378,12 @@ export function autoAbility(item, kind, m, ptName) {
     return rule;
   }
   // invisibilidade em si mesmo
-  if (/(?:magically )?turns invisible|casts Invisibility on itself|have the Invisible condition|has the Invisible condition/i.test(text) && !/each creature|saving throw/i.test(text)) {
+  if (
+    /(?:magically )?turns invisible|casts Invisibility on itself|have the Invisible condition|has the Invisible condition/i.test(
+      text,
+    ) &&
+    !/each creature|saving throw/i.test(text)
+  ) {
     Object.assign(rule, {
       range: 0,
       target: { kind: 'self' },
@@ -254,8 +394,15 @@ export function autoAbility(item, kind, m, ptName) {
     return rule;
   }
   // cura (toque ou em si)
-  const heal = /(?:magically )?regains? \d+ \((\d+d\d+(?: ?\+ ?\d+)?)\) hit points/i.exec(text) ?? /regains? (?:\d+ \()?(\d+d\d+(?: ?\+ ?\d+)?)\)? Hit Points/i.exec(text);
-  if (heal && !/saving throw|damage|bite/i.test(text.replace(/\b(?:poison|curse|disease|neutralizes)\b/gi, ''))) {
+  const heal =
+    /(?:magically )?regains? \d+ \((\d+d\d+(?: ?\+ ?\d+)?)\) hit points/i.exec(text) ??
+    /regains? (?:\d+ \()?(\d+d\d+(?: ?\+ ?\d+)?)\)? Hit Points/i.exec(text);
+  if (
+    heal &&
+    !/saving throw|damage|bite/i.test(
+      text.replace(/\b(?:poison|curse|disease|neutralizes)\b/gi, ''),
+    )
+  ) {
     const self = /regains .* hit points\.?$/i.test(text.trim()) && !/touches/i.test(text);
     Object.assign(rule, {
       range: self ? 0 : 5,
@@ -268,10 +415,21 @@ export function autoAbility(item, kind, m, ptName) {
   }
   const spellsCast = castsSpells(text);
   if (spellsCast.length && !/saving throw|DC \d+ /i.test(text.replace(/spell save DC \d+/i, ''))) {
-    const one = (sp) => ({ ...rule, ability: { spell: { id: sp.id, ...(sp.level ? { level: sp.level } : {}) } }, spellName: sp.name });
+    const one = (sp) => ({
+      ...rule,
+      ability: { spell: { id: sp.id, ...(sp.level ? { level: sp.level } : {}) } },
+      spellName: sp.name,
+    });
     if (spellsCast.length === 1) return one(spellsCast[0]);
     // "casts A, B, or C": uma habilidade por magia
-    return { multi: spellsCast.map((sp) => ({ ...one(sp), pt: `${rule.pt} (${sp.name})`, en: `${rule.en} (${sp.name})`, suffix: sp.id })) };
+    return {
+      multi: spellsCast.map((sp) => ({
+        ...one(sp),
+        pt: `${rule.pt} (${sp.name})`,
+        en: `${rule.en} (${sp.name})`,
+        suffix: sp.id,
+      })),
+    };
   }
   const tp = teleport(text);
   const rep = repeatsAttack(text, attackNames);
@@ -285,15 +443,61 @@ export function autoAbility(item, kind, m, ptName) {
     Object.assign(rule, { range: tp, target: { kind: 'point' }, teleport: true });
     return rule;
   }
+  // ataque de arma/magia fora da lista de ataques (forma híbrida, Teia, Mordida com maldição…)
+  const header =
+    /^(?:Melee|Ranged)(?: or (?:Melee|Ranged))?(?: Weapon| Spell)? Attack(?: Roll)?: \+(\d+)/i.exec(
+      text.trim(),
+    );
+  const base =
+    /(?:Hit: |ft\.\)? |reach \d+ ?(?:ft|feet)\.? )(\d+ \()?(\d+d\d+(?: ?[+-] ?\d+)?)\)? (\w+) damage/i.exec(
+      text,
+    );
+  if (header && base && DAMAGE.includes(base[3].toLowerCase())) {
+    const rg =
+      /range (\d+)(?:\/\d+)? ?(?:ft|feet)/i.exec(text) ?? /reach (\d+) ?(?:ft|feet)/i.exec(text);
+    const r = parseAttackRider(item.desc);
+    Object.assign(rule, {
+      resolution: { kind: 'attack' },
+      target: { kind: 'creature' },
+      range: rg ? Number(rg[1]) : 5,
+      damage: { dice: base[2].replace(/\s+/g, ''), type: base[3].toLowerCase() },
+      ...(r
+        ? {
+            ...r.rule,
+            extraDamage: [...(r.rule.damage ? [r.rule.damage] : []), ...(r.rule.extraDamage ?? [])],
+          }
+        : {}),
+      ability: { attackBonus: Number(header[1]), ...(r?.rule.dc ? { dc: r.rule.dc } : {}) },
+    });
+    if (rule.extraDamage && !rule.extraDamage.length) delete rule.extraDamage;
+    return rule;
+  }
   const { rule: p } = parseAbility(item.desc);
-  if ((p.resolution?.kind === 'save' || p.resolution?.kind === 'attack') && (p.damage || p.condition)) {
+  const grappledOnly =
+    /(?:creature|target|humanoid)s?(?: that is| that's)? grappled by (?:the|it)|Grappled by the \w+/i.test(
+      text,
+    );
+  if (
+    (p.resolution?.kind === 'save' || p.resolution?.kind === 'attack') &&
+    (p.damage || p.condition)
+  ) {
     const { dc, attackBonus, ...fields } = p;
-    Object.assign(rule, fields, { ability: { ...(dc ? { dc } : {}), ...(attackBonus !== undefined ? { attackBonus } : {}) } });
-    if (/can repeat the saving throw|repeats? the saving throw/i.test(item.desc) && rule.condition) {
+    Object.assign(rule, fields, {
+      ability: { ...(dc ? { dc } : {}), ...(attackBonus !== undefined ? { attackBonus } : {}) },
+    });
+    if (
+      /can repeat the saving throw|repeats? the saving throw/i.test(item.desc) &&
+      rule.condition
+    ) {
       const list = [].concat(rule.condition).map((c) => ({ ...c, repeatSave: true }));
       rule.condition = list.length === 1 ? list[0] : list;
     }
     Object.assign(rule, escapeNote(item.desc));
+    if (grappledOnly) {
+      rule.ability = { ...rule.ability, needsGrappled: true };
+      rule.target = { kind: 'creature', ...(/each creature/i.test(text) ? { max: 4 } : {}) };
+      rule.range = 5;
+    }
     return rule;
   }
   rule.narrative = true;
@@ -303,7 +507,14 @@ export function autoAbility(item, kind, m, ptName) {
 
 // ---------- conjuração inata (à vontade, N/dia) ----------
 
-const ABILITY_IDX = { strength: 0, dexterity: 1, constitution: 2, intelligence: 3, wisdom: 4, charisma: 5 };
+const ABILITY_IDX = {
+  strength: 0,
+  dexterity: 1,
+  constitution: 2,
+  intelligence: 3,
+  wisdom: 4,
+  charisma: 5,
+};
 
 /** CD e bônus de ataque de magia a partir dos atributos e do ND (quando o texto não os traz). */
 export function castingNumbers(m, abilityName) {
@@ -313,7 +524,11 @@ export function castingNumbers(m, abilityName) {
   return { dc: 8 + prof + mod, attack: prof + mod };
 }
 
-const cleanSpell = (n) => n.replace(/\(.*?\)/g, '').replace(/[_*]/g, '').trim();
+const cleanSpell = (n) =>
+  n
+    .replace(/\(.*?\)/g, '')
+    .replace(/[_*]/g, '')
+    .trim();
 
 /** Lista de magias inatas de um trecho de conjuração: "At will: a, b" / "1/day each: c" / "**2/Day Each:** d". */
 export function parseInnate(text) {
@@ -338,11 +553,16 @@ export function parseInnate(text) {
 
 export function autoInnate(m, kindOf, ptName) {
   const out = {};
-  const sources = [...m.traits, ...m.actions].filter((t) => /Spellcasting/i.test(t.name) && !/Shared/i.test(t.name));
+  const sources = [...m.traits, ...m.actions].filter(
+    (t) => /Spellcasting/i.test(t.name) && !/Shared/i.test(t.name),
+  );
   for (const t of sources) {
     // conjuradores com espaços (Cantrips + "1st level (3 slots)") são tratados na ficha
     if (/Cantrips \(at will\)|\(\d+ slots?\)/i.test(t.desc)) continue;
-    const abilityName = /(?:spellcasting ability is|using) (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)/i.exec(t.desc)?.[1];
+    const abilityName =
+      /(?:spellcasting ability is|using) (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)/i.exec(
+        t.desc,
+      )?.[1];
     const dcText = /spell save DC (\d+)/i.exec(t.desc);
     const atkText = /\+(\d+) to hit with spell attacks/i.exec(t.desc);
     const nums = castingNumbers(m, abilityName);

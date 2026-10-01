@@ -27,7 +27,8 @@ export default {
     vfx: vfx('ray', 'force'),
   },
   'conjure-celestial': narrative(vfx('glow', 'holy'), {
-    manual: 'Invocação: o Mestre adiciona o celestial (ND 4 ou menor; 5 com espaço de 9º nível) ao combate.',
+    manual:
+      'Invocação: o Mestre adiciona o celestial (ND 4 ou menor; 5 com espaço de 9º nível) ao combate.',
   }),
   'delayed-blast-fireball': {
     target: sphere(20),
@@ -36,7 +37,8 @@ export default {
     noInitial: true,
     // quando você decide encerrar a magia: clique no ponto da esfera para detonar
     sustain: { cost: 'free' },
-    manual: 'A esfera também explode se a concentração quebrar; o dano base sobe 1d6 a cada fim de turno sem detonar (some à mão).',
+    manual:
+      'A esfera também explode se a concentração quebrar; o dano base sobe 1d6 a cada fim de turno sem detonar (some à mão).',
     vfx: vfx('burst', 'fire'),
   },
   'divine-word': {
@@ -59,14 +61,16 @@ export default {
         { from: 41, to: 50, patch: { condition: cond('deafened', 10) } },
       ],
     },
-    manual: 'Celestiais, elementais, fadas e ínferos que falham são mandados de volta ao plano de origem (por 24 horas).',
+    manual:
+      'Celestiais, elementais, fadas e ínferos que falham são mandados de volta ao plano de origem (por 24 horas).',
     vfx: vfx('burst', 'holy'),
   },
   etherealness: narrative(vfx('glow', 'arcane')),
   'finger-of-death': {
     resolution: save('con', 'half'),
     damage: dmg('7d8+30', 'necrotic'),
-    manual: 'Um humanoide morto por esta magia se ergue como zumbi sob seu comando no início do seu próximo turno.',
+    manual:
+      'Um humanoide morto por esta magia se ergue como zumbi sob seu comando no início do seu próximo turno.',
     vfx: vfx('ray', 'shadow'),
   },
   'fire-storm': {
@@ -80,13 +84,15 @@ export default {
     target: cube(20),
     resolution: auto,
     zone: { on: 'cast', color: 'force' },
-    manual: 'Uma prisão de energia (jaula de até 20 ft ou caixa de até 10 ft): quem está dentro não sai por meios não mágicos; ela resiste a Dissipar Magia.',
+    manual:
+      'Uma prisão de energia (jaula de até 20 ft ou caixa de até 10 ft): quem está dentro não sai por meios não mágicos; ela resiste a Dissipar Magia.',
     vfx: vfx('burst', 'force'),
   },
   'magnificent-mansion': narrative(vfx('glow', 'arcane')),
   'mirage-arcane': narrative(vfx('glow', 'arcane')),
   'plane-shift': narrative(vfx('glow', 'arcane'), {
-    manual: 'Para banir uma criatura relutante: ataque corpo a corpo e, se acertar, salvaguarda de Carisma (aplique à mão).',
+    manual:
+      'Para banir uma criatura relutante: ataque corpo a corpo e, se acertar, salvaguarda de Carisma (aplique à mão).',
   }),
   'prismatic-spray': {
     target: cone(60),
@@ -108,7 +114,8 @@ export default {
           patch: {
             damage: null,
             condition: cond('restrained', 10),
-            manual: 'Índigo: três falhas seguidas de salvaguarda de Constituição o petrificam; três sucessos encerram.',
+            manual:
+              'Índigo: três falhas seguidas de salvaguarda de Constituição o petrificam; três sucessos encerram.',
           },
         },
         {
@@ -117,13 +124,19 @@ export default {
           patch: {
             damage: null,
             condition: cond('blinded', 10),
-            manual: 'Violeta: na próxima vez que você agir, o alvo faz salvaguarda de Sabedoria; se falhar é transportado a outro plano.',
+            manual:
+              'Violeta: na próxima vez que você agir, o alvo faz salvaguarda de Sabedoria; se falhar é transportado a outro plano.',
           },
         },
-        { from: 8, to: 8, patch: { damage: dmg('10d6', 'fire'), extraDamage: [dmg('10d6', 'acid')] } },
+        {
+          from: 8,
+          to: 8,
+          patch: { damage: dmg('10d6', 'fire'), extraDamage: [dmg('10d6', 'acid')] },
+        },
       ],
     },
-    manual: 'Raio 8: o alvo é atingido por dois raios (aqui, fogo e ácido); role de novo à mão para raios 6 e 7 se quiser.',
+    manual:
+      'Raio 8: o alvo é atingido por dois raios (aqui, fogo e ácido); role de novo à mão para raios 6 e 7 se quiser.',
     vfx: vfx('cone', 'arcane'),
   },
   'project-image': narrative(vfx('glow', 'arcane')),
@@ -137,7 +150,11 @@ export default {
   resurrection: {
     resolution: auto,
     revive: 'full',
-    effect: effect({ attackDie: '-4', saveDie: '-4', note: '−4 em ataques, salvaguardas e testes; cai 1 por descanso longo.' }),
+    effect: effect({
+      attackDie: '-4',
+      saveDie: '-4',
+      note: '−4 em ataques, salvaguardas e testes; cai 1 por descanso longo.',
+    }),
     manual: 'Só vale se a criatura morreu há no máximo um século e não de velhice.',
     vfx: vfx('glow', 'holy'),
   },
@@ -145,15 +162,18 @@ export default {
     target: sphere(50),
     resolution: auto,
     zone: { on: 'cast', color: 'arcane' },
-    manual: 'Criaturas na área caem para cima (Destreza para se agarrar a algo fixo); ao fim da magia, caem de volta.',
+    manual:
+      'Criaturas na área caem para cima (Destreza para se agarrar a algo fixo); ao fim da magia, caem de volta.',
     vfx: vfx('burst', 'arcane'),
   },
   sequester: narrative(vfx('glow', 'arcane')),
   simulacrum: narrative(vfx('glow', 'frost'), {
-    manual: 'Invocação: o Mestre cria o simulacro (metade dos PV do original) e o adiciona ao combate.',
+    manual:
+      'Invocação: o Mestre cria o simulacro (metade dos PV do original) e o adiciona ao combate.',
   }),
   symbol: narrative(vfx('burst', 'arcane', { radius: 60 })),
   teleport: narrative(vfx('glow', 'arcane'), {
-    manual: 'O destino e a margem de erro seguem a tabela de familiaridade: o Mestre rola e move os tokens.',
+    manual:
+      'O destino e a margem de erro seguem a tabela de familiaridade: o Mestre rola e move os tokens.',
   }),
 };

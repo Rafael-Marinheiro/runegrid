@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { Creature } from '@core/models/creature';
 import { Spell } from '@core/models/spell';
+import { stateKey } from '@core/rules/encounter/ability';
 import { abilitiesOf } from '@core/rules/monsters/registry';
 import { getSpell } from '@core/rules/spells/data';
 import { spellNameEn } from '@core/rules/srd/names-pt';
@@ -203,14 +204,14 @@ export class SpellPanel {
   protected spent(sp: Spell): boolean {
     const ab = sp.ability;
     if (!ab) return false;
-    const st = this.caster().abilityState?.[sp.id];
+    const st = this.caster().abilityState?.[stateKey(sp)];
     return (!!ab.recharge && !!st?.recharging) || (!!ab.uses && (st?.used ?? 0) >= ab.uses.n);
   }
 
   /** Rótulo curto da habilidade: custo, recarga ou usos restantes. */
   protected abilityTag(sp: Spell): string {
     const ab = sp.ability!;
-    const st = this.caster().abilityState?.[sp.id];
+    const st = this.caster().abilityState?.[stateKey(sp)];
     if (ab.recharge)
       return st?.recharging
         ? this.ui.text(`recarrega ${ab.recharge}–6`, `recharge ${ab.recharge}–6`)

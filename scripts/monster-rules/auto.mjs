@@ -425,7 +425,7 @@ export function autoAbility(item, kind, m, ptName) {
     return {
       multi: spellsCast.map((sp) => ({
         ...one(sp),
-        pt: `${rule.pt} (${sp.name})`,
+        pt: `${rule.pt} (${ptName(sp.name)})`,
         en: `${rule.en} (${sp.name})`,
         suffix: sp.id,
       })),
@@ -571,8 +571,10 @@ export function autoInnate(m, kindOf, ptName) {
       const id = spellSlug(sp.name);
       const uses = dailyFromName ? Number(dailyFromName[1]) : sp.uses;
       out[`innate-${id}`] = {
-        pt: sp.name,
-        en: sp.name,
+        pt: ptName(sp.name),
+        en: sp.name
+          .replace(/(^|[ /-])([a-z])/g, (_, a, b) => a + b.toUpperCase())
+          .replace(/ (Of|And|The|Without)\b/g, (x) => x.toLowerCase()),
         desc: t.desc,
         auto: true,
         innate: true,

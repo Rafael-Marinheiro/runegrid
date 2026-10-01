@@ -195,9 +195,24 @@ function sectionOf(desc, name) {
   return (j > 0 ? rest.slice(0, j) : rest).replace(/\*\*/g, '').trim();
 }
 
+/** Nomes de magias em pt-BR, lidos do glossário do app (`names-pt.ts`). */
+const SPELL_PT = new Map(
+  [
+    ...readFileSync(join(root, 'src/app/core/rules/srd/names-pt.ts'), 'utf8')
+      .split('export const SPELL_NAMES_PT')[1]
+      .split('export const monsterNamePt')[0]
+      .matchAll(/^\s*(?:'([^']+)'|(\w+)): '([^']+)',$/gm),
+  ].map((m) => [(m[1] ?? m[2]).toLowerCase(), m[3]]),
+);
+
 /** Tradução pt-BR dos nomes de habilidades (sem entrada, fica o nome em inglês). */
-const ptName = (name) =>
-  PT_NAMES[plainName(name)] ?? name.replace(/\s*\(.*\)\s*$/, '').replace(/^Variant: /, '');
+function ptName(name) {
+  const m = /^(.*?)\s*\((.*)\)\.?\s*$/.exec(name);
+  const one = (n) =>
+    PT_NAMES[plainName(n)] ?? SPELL_PT.get(plainName(n)) ?? n.replace(/^Variant: /, '');
+  if (m && SPELL_PT.has(plainName(m[2]))) return `${one(m[1])} (${one(m[2])})`;
+  return one(m && !/^(Recharge|\d)/.test(m[2]) && !SPELL_PT.has(plainName(m[2])) ? m[1] : name);
+}
 
 /** Itens do SRD que podem virar habilidade, com o tipo (ação, bônus, reação, lendária). */
 function itemsOf(m) {

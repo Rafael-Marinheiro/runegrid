@@ -8,7 +8,9 @@ import { mapFromAscii } from '../../models/grid';
 import { SrdMonster, SrdSpell } from '../../models/srd';
 import { fullCasterSlots } from '../creature/rest';
 import { monsterToCreature } from '../srd/convert';
-import { buildSpells, SpellRules } from '../spells/build';
+import { buildSpells, mergeRules, SpellRules } from '../spells/build';
+import rules2024 from '../../../../../public/data/spell-rules-2024.json';
+import spells2024 from '../../../../../public/data/spells-2024.json';
 import { allSpells, getSpell, registerSpells } from '../spells/registry';
 import { Command, dispatch, newEncounter, project } from '../encounter';
 import { registerSummonSource, splitOnDamage } from './summon';
@@ -339,5 +341,87 @@ describe('invocações de monstros', () => {
       ruleset: '2014',
     });
     expect(t.get().creatures.filter((c) => c.summon)).toHaveLength(1);
+  });
+});
+
+describe('Corcel de Outro Mundo (SRD 5.2)', () => {
+  beforeAll(() => {
+    registerSpells(
+      '2024',
+      buildSpells(
+        spells2024 as unknown as SrdSpell[],
+        mergeRules(rules2014 as unknown as SpellRules, rules2024 as unknown as SpellRules),
+      ),
+    );
+  });
+  const steedCast = (kind: string, slotLevel: number): CastCmd => ({
+    type: 'cast',
+    actorId: 'c',
+    spellId: getSpell('find-steed', '2024')!.id,
+    slotLevel,
+    option: kind,
+    ruleset: '2024',
+    point: { x: 7, y: 5 },
+  });
+
+  it('a ficha escala com o espaço: CA 10 + nível, PV 5 + 10 por nível, Grande, pancada com o ataque de magia', () => {
+    const t = scene(getSpell('find-steed', '2024')!.id);
+    t.run(steedCast('fiend', 4));
+    const steed = t.get().creatures.find((c) => c.summon)!;
+    expect(steed.size).toBe('large');
+    expect(steed.ac).toBe(14);
+    expect(steed.hp.max).toBe(45);
+    expect(steed.speed).toBe(60);
+    expect(steed.attacks[0]).toMatchObject({
+      name: 'Otherworldly Slam',
+      damage: '1d8+4',
+      type: 'necrotic',
+    });
+    // proficiência 4 (nível 9) + Sabedoria 18 (+4)
+    expect(steed.attacks[0].bonus).toBe(8);
+    expect(steed.summon).toMatchObject({ by: 'c', unique: 'steed', dc: 16 });
+    expect(t.get().combat.order.slice(0, 2)).toEqual(['c', steed.id]);
+  });
+
+  it('Olhar Sombrio (Corruptor) usa a CD de magia de quem conjurou', () => {
+    const t = scene(getSpell('find-steed', '2024')!.id);
+    t.run(steedCast('fiend', 2));
+    const steed = t.get().creatures.find((c) => c.summon)!;
+    const glare = abilitiesOf(steed).find((a) => a.nameEn === 'Fell Glare')!;
+    expect(glare).toBeDefined();
+    t.run({ type: 'endTurn', actorId: 'c' });
+    t.run({ type: 'cast', actorId: steed.id, spellId: glare.id, targetId: 'm', ruleset: '2024' });
+    // Ogro (Sabedoria 10): d20 11 + 0 contra CD 16 falha
+    expect(
+      t
+        .get()
+        .creatures.find((c) => c.id === 'm')!
+        .conditions.map((k) => k.name),
+    ).toContain('frightened');
+  });
+
+  it('Toque Curativo (Celestial) cura 2d8 + nível; Passo Feérico (Feérico) teleporta', () => {
+    const c = scene(getSpell('find-steed', '2024')!.id);
+    c.run(steedCast('celestial', 3));
+    const steed = c.get().creatures.find((x) => x.summon)!;
+    const touch = abilitiesOf(steed).find((a) => a.nameEn === 'Healing Touch')!;
+    expect(touch.heal).toEqual({ dice: '2d8', flat: 3 });
+    expect(abilitiesOf(steed).map((a) => a.nameEn)).toEqual(['Healing Touch']);
+    const f = scene(getSpell('find-steed', '2024')!.id);
+    f.run(steedCast('fey', 2));
+    const fey = f.get().creatures.find((x) => x.summon)!;
+    expect(abilitiesOf(fey).map((a) => a.nameEn)).toEqual(['Fey Step']);
+  });
+
+  it('conjurar de novo troca o corcel', () => {
+    const t = scene(getSpell('find-steed', '2024')!.id);
+    t.run(steedCast('fey', 2));
+    t.run({ type: 'endTurn', actorId: 'c' });
+    for (let i = 0; i < 3 && t.get().combat.turn?.actorId !== 'c'; i++)
+      t.run({ type: 'endTurn', actorId: t.get().combat.turn!.actorId });
+    t.run(steedCast('celestial', 3));
+    const steeds = t.get().creatures.filter((x) => x.summon);
+    expect(steeds).toHaveLength(1);
+    expect(steeds[0].name).toContain('Celestial');
   });
 });

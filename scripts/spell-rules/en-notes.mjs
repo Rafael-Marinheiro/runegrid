@@ -21,16 +21,16 @@ export default new Map([
     'The familiar cannot attack and disappears at 0 hit points; cast the spell again to call it back.',
   ],
   [
-    'A montaria é um espírito celestial, feérico ou ínfero; some ao chegar a 0 PV e volta ao conjurar de novo.',
-    'The steed is a celestial, fey or fiend spirit; it disappears at 0 hit points and returns when you cast the spell again.',
+    'A montaria é um espírito celestial, feérico ou corruptor; se a Inteligência for 5 ou menos, passa a 6 e ela entende um idioma que você fale. Some a 0 PV e volta ao conjurar de novo.',
+    'The steed is a celestial, fey or fiend spirit; if its Intelligence is 5 or lower it becomes 6 and it understands a language you speak. It disappears at 0 hit points and returns when you cast the spell again.',
   ],
   [
     'O familiar é celestial, feérico ou ínfero; some ao chegar a 0 PV; conjure a magia de novo para chamá-lo.',
     'The familiar is a celestial, fey or fiend; it disappears at 0 hit points; cast the spell again to call it back.',
   ],
   [
-    'O 2024 usa o bloco Otherworldly Steed (Celestial, Feérico ou Ínfero); aqui entra a ficha de um cavalo como aproximação. Substitui a montaria anterior.',
-    'The 2024 spell uses the Otherworldly Steed stat block (Celestial, Fey or Fiend); a horse stat block stands in as an approximation. It replaces the previous steed.',
+    'Corcel de Outro Mundo: Grande, CA 10 + nível, PV 5 + 10 por nível, 60 ft (voo 60 ft com espaço de 4º nível ou mais), pancada com o seu ataque de magia. Vínculo Vital: ao recuperar PV de uma magia de 1º nível ou mais, o corcel recupera o mesmo valor se estiver a até 1,5 m (o Mestre aplica). Substitui o corcel anterior; some a 0 PV ou se você morrer.',
+    'Otherworldly Steed: Large, AC 10 + level, HP 5 + 10 per level, 60 ft (fly 60 ft with a level 4+ slot), slam uses your spell attack. Life Bond: when you regain HP from a level 1+ spell, the steed regains the same amount if within 5 ft (the DM applies it). It replaces the previous steed; it disappears at 0 HP or if you die.',
   ],
   [
     'Se o alvo for morto-vivo, ele tem desvantagem nos ataques contra você até o fim do seu próximo turno.',

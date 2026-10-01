@@ -131,7 +131,7 @@ export default {
     }),
     {
       manual:
-        'A montaria é um espírito celestial, feérico ou ínfero; some ao chegar a 0 PV e volta ao conjurar de novo.',
+        'A montaria é um espírito celestial, feérico ou corruptor; se a Inteligência for 5 ou menos, passa a 6 e ela entende um idioma que você fale. Some a 0 PV e volta ao conjurar de novo.',
     },
   ),
 };

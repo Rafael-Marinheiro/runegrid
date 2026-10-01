@@ -24,13 +24,21 @@ export default {
     replace: true,
     target: point,
     resolution: auto,
-    options: creatureOptions(
-      sheets(RS, named(['warhorse', 'riding-horse', 'draft-horse'])),
-      { permanent: true, unique: 'steed' },
-      () => 1,
-    ),
+    // Corcel de Outro Mundo (SRD 5.2): a ficha é montada na hora conforme o espaço e o tipo escolhido
+    options: [
+      ['celestial', 'Celestial', 'Celestial'],
+      ['fey', 'Feérico', 'Fey'],
+      ['fiend', 'Corruptor', 'Fiend'],
+    ].map(([id, pt, en]) => ({
+      id,
+      label: `Corcel ${pt}`,
+      labelEn: `${en} steed`,
+      patch: {
+        summon: { custom: 'otherworldly-steed', srd: id, n: 1, permanent: true, unique: 'steed' },
+      },
+    })),
     manual:
-      'O 2024 usa o bloco Otherworldly Steed (Celestial, Feérico ou Ínfero); aqui entra a ficha de um cavalo como aproximação. Substitui a montaria anterior.',
+      'Corcel de Outro Mundo: Grande, CA 10 + nível, PV 5 + 10 por nível, 60 ft (voo 60 ft com espaço de 4º nível ou mais), pancada com o seu ataque de magia. Vínculo Vital: ao recuperar PV de uma magia de 1º nível ou mais, o corcel recupera o mesmo valor se estiver a até 1,5 m (o Mestre aplica). Substitui o corcel anterior; some a 0 PV ou se você morrer.',
     vfx: vfx('burst', 'holy', { radius: 5 }),
   },
 };

@@ -439,7 +439,10 @@ export function resolveSpell(
   const level = caster.kind === 'monster' ? Math.max(1, Math.ceil(caster.cr ?? 1)) : caster.level;
   const source = dcFrom ?? caster;
   const ability = source.spellcasting?.ability ?? 'int';
-  const dc = spell.ability?.dc ?? (source.spellcasting ? spellSaveDc(source, ability) : 8);
+  const dc =
+    spell.ability?.dc ??
+    source.summon?.dc ??
+    (source.spellcasting ? spellSaveDc(source, ability) : 8);
   const t = spell.target;
   const pointOrigin = (t.kind === 'sphere' || t.kind === 'cube') && !t.self;
   const origin = pointOrigin ? cmd.point : tokenOf(s, caster.id)?.pos;

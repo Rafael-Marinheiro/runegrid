@@ -6,6 +6,7 @@ import { Creature } from '../../models/creature';
 import { EffectMods } from '../../models/effect';
 import { Spell } from '../../models/spell';
 import { registerSpellNameEn } from '../srd/names-pt';
+import { customEntry } from './custom';
 
 export type MonsterRuleset = '2014' | '2024';
 
@@ -64,11 +65,19 @@ export function registerMonsterAbilities(
 }
 
 /** Habilidade (ou rider) pelo id. */
-export const getMonsterAbility = (id: string): Spell | undefined => byId.get(id);
+export function getMonsterAbility(id: string): Spell | undefined {
+  const known = byId.get(id);
+  if (known) return known;
+  // fichas montadas na hora (Corcel de Outro Mundo): mon24/<monstro>/<habilidade>
+  const [, monster] = id.split('/');
+  return customEntry(monster ?? '')?.abilities.find((a) => a.id === id);
+}
 
 export function monsterEntry(srdId: string | undefined): MonsterEntry | undefined {
   if (!srdId) return undefined;
-  return tables[rulesetOfMonster(srdId)].get(baseMonsterId(srdId));
+  return (
+    tables[rulesetOfMonster(srdId)].get(baseMonsterId(srdId)) ?? customEntry(baseMonsterId(srdId))
+  );
 }
 
 /** Habilidades ativas do monstro (vazio se não vieram do SRD ou as regras ainda não foram carregadas). */

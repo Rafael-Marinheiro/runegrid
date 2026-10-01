@@ -2,7 +2,8 @@ import { Creature } from '../../models/creature';
 import { EncounterState } from '../../models/encounter';
 import { Pos, SIZE_CELLS } from '../../models/grid';
 import { Spell, SummonSpec } from '../../models/spell';
-import { allMods, RuleError } from '../creature';
+import { allMods, RuleError, spellSaveDc } from '../creature';
+import { otherworldlySteed, SteedKind } from '../monsters/custom';
 import { canStand, footprint, key } from '../grid/movement';
 import { roll } from '../dice';
 import { T, spellName } from '../i18n';
@@ -22,6 +23,22 @@ export const registerSummonSource = (fn: SummonSource): void => {
   source = fn;
 };
 export const summonTemplate: SummonSource = (id, ruleset) => source(id, ruleset);
+
+/** Ficha de um bloco que escala com o espaço (Corcel de Outro Mundo). */
+function customTemplate(
+  kind: 'otherworldly-steed',
+  variant: string,
+  slot: number,
+  caster: Creature,
+) {
+  const v = variant as SteedKind;
+  return kind === 'otherworldly-steed'
+    ? otherworldlySteed(caster, Math.max(2, slot), v)
+    : undefined;
+}
+
+const casterDc = (caster: Creature): number =>
+  spellSaveDc(caster, caster.spellcasting?.ability ?? 'wis');
 
 /** Células livres mais próximas de `point` onde uma criatura do tamanho dado cabe. */
 function freeSpots(
@@ -105,7 +122,9 @@ export function summonCreatures(
     srd = spec.pick.find((x) => (r -= x.weight ?? 1) < 0)?.srd ?? spec.pick[0].srd;
   }
   if (!srd) throw new RuleError(T('Escolha o que invocar.', 'Choose what to summon.'));
-  const template = summonTemplate(srd, ruleset);
+  const template = spec.custom
+    ? customTemplate(spec.custom, srd, slot, caster)
+    : summonTemplate(srd, ruleset);
   if (!template)
     throw new RuleError(
       T(
@@ -183,6 +202,7 @@ export function summonCreatures(
         ...(spec.onBreak ? { onBreak: spec.onBreak } : {}),
         ...(spec.corpse ? { corpse: true } : {}),
         ...(spec.unique ? { unique: spec.unique } : {}),
+        ...(spec.custom ? { dc: casterDc(caster) } : {}),
       },
     };
   });

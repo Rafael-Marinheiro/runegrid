@@ -212,6 +212,8 @@ export interface Creature {
     corpse?: boolean;
     /** Chave de invocação única (Familiar, Montaria). */
     unique?: string;
+    /** CD de magia de quem invocou, para as habilidades da criatura que pedem salvaguarda. */
+    dc?: number;
   };
   /** Ícone do token (ver `token-icons`); se ausente, deduzido do nome. */
   icon?: string;

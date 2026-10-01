@@ -1,6 +1,14 @@
 // Versão em inglês das notas `manual` e `note` das magias (chave = texto em pt-BR). O build exige uma entrada para cada nota.
 export default new Map([
   [
+    'O alvo assume os PV da fera; ao voltar tem os PV de antes (o excesso de dano a 0 PV o Mestre passa à forma normal). Não fala nem conjura; o equipamento se funde e não pode ser usado. Quem muda de forma passa automaticamente na salvaguarda.',
+    "The target takes the beast's HP; when it reverts it has the HP it had before (the DM carries excess damage at 0 HP over to the normal form). It cannot speak or cast; its gear melds in and cannot be used. A shapechanger automatically succeeds on the save.",
+  ],
+  [
+    'O alvo mantém os PV e ganha os da fera como PV temporários; a magia acaba nele se eles zerarem. Não fala nem conjura; o equipamento se funde e não pode ser usado.',
+    "The target keeps its HP and gains the beast's HP as temporary HP; the spell ends on it if they run out. It cannot speak or cast; its gear melds in and cannot be used.",
+  ],
+  [
     'Invisível para todos menos você e impossível de ferir. No início de cada turno seu morde uma criatura hostil a até 1,5 m (bônus = seu modificador + proficiência; 4d8 perfurante). Late se uma criatura Pequena ou maior chegar a 9 m sem dizer a senha (o Mestre avisa). Some se você se afastar mais de 30 m.',
     'Invisible to all but you and cannot be harmed. At the start of each of your turns it bites a hostile creature within 5 ft (bonus = your modifier + proficiency; 4d8 piercing). It barks if a Small or larger creature comes within 30 ft without the password (the DM announces it). It vanishes if you move more than 100 ft away.',
   ],

@@ -31,6 +31,7 @@ export function shapeShift(
   id: string,
   spec: FormSpec,
   ruleset: '2014' | '2024' = '2014',
+  by?: { id: string; spell: string },
 ): EncounterState {
   const c = creatureOf(state, id);
   if (spec.revert) {
@@ -44,6 +45,16 @@ export function shapeShift(
   }
   const base = c.form ? restore(c) : c;
   const model = spec.srd ? summonTemplate(spec.srd, ruleset) : undefined;
+  if (spec.capByTarget && model) {
+    const cap = c.cr ?? c.level;
+    if ((model.cr ?? 0) > cap)
+      throw new RuleError(
+        T(
+          `${model.name} passa do ND permitido (${cap}).`,
+          `${model.name} is above the allowed CR (${cap}).`,
+        ),
+      );
+  }
   if (spec.srd && !model)
     throw new RuleError(
       T(
@@ -59,7 +70,11 @@ export function shapeShift(
       labelEn: spec.labelEn,
       keys: spec.keys ?? [],
       ...(spec.noActions ? { noActions: true } : {}),
+      ...(spec.noSpells ? { noSpells: true } : {}),
+      ...(spec.hp ? { hp: spec.hp } : {}),
+      ...(by ? { by } : {}),
       original: c.form?.original ?? {
+        hp: c.hp,
         size: c.size,
         speed: c.speed,
         ac: c.ac,
@@ -79,6 +94,10 @@ export function shapeShift(
     ...(spec.resistAll ? { resistances: [...DAMAGE_TYPES] } : {}),
   };
   if (model) next = takeFrom(next, model, spec);
+  if (model && spec.hp === 'replace')
+    next = { ...next, hp: { max: model.hp.max, current: model.hp.max, temp: c.hp.temp } };
+  if (model && spec.hp === 'temp')
+    next = { ...next, hp: { ...c.hp, temp: c.hp.temp + model.hp.max } };
   return addLog(
     withCreature(state, next),
     T(`${c.name} assume a forma: ${spec.label}.`, `${c.name} takes the form: ${spec.labelEn}.`),
@@ -100,7 +119,7 @@ function takeFrom(c: Creature, model: Creature, spec: FormSpec): Creature {
     out.vulnerabilities = model.vulnerabilities;
   }
   const abilities = { ...c.abilities };
-  for (const k of ['str', 'dex', 'con'] as const)
+  for (const k of ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const)
     if (take.has(k)) abilities[k] = model.abilities[k];
   out.abilities = abilities;
   if (take.has('attacks')) {
@@ -123,14 +142,38 @@ function takeFrom(c: Creature, model: Creature, spec: FormSpec): Creature {
 function restore(c: Creature): Creature {
   if (!c.form) return c;
   const { form, ...rest } = c;
-  return { ...rest, ...form.original };
+  const { hp, ...stats } = form.original;
+  // PV: trocados voltam aos de antes; PV temporários da forma somem
+  const back = form.hp === 'replace' ? hp : form.hp === 'temp' ? { ...c.hp, temp: hp.temp } : c.hp;
+  return { ...rest, ...stats, hp: back };
 }
 
-/** Quem morre volta à forma verdadeira (Mudar de Forma: "reverte se morrer"). */
+/**
+ * A forma acaba: ao morrer (Mudar de Forma: "reverte se morrer"), quando os PV da forma zeram
+ * (Metamorfose) ou quando quem a sustenta perde a concentração.
+ */
 export function syncForms(state: EncounterState): EncounterState {
   let s = state;
-  for (const c of state.creatures)
-    if (c.form && c.status === 'dead')
+  for (const c of state.creatures) {
+    const f = c.form;
+    if (!f) continue;
+    const spent = (f.hp === 'replace' && c.hp.current <= 0) || (f.hp === 'temp' && c.hp.temp <= 0);
+    const holder = f.by ? state.creatures.find((x) => x.id === f.by!.id) : undefined;
+    const lost = !!f.by && holder?.concentration !== f.by.spell;
+    if (spent || lost) {
+      const base = restore(creatureOf(s, c.id));
+      s = addLog(
+        withCreature(s, {
+          ...base,
+          status: 'alive',
+          deathSaves: { successes: 0, failures: 0 },
+        }),
+        T(`${c.name} volta à forma verdadeira.`, `${c.name} returns to its true form.`),
+        [c.id],
+      );
+      continue;
+    }
+    if (c.status === 'dead')
       s = addLog(
         withCreature(s, restore(creatureOf(s, c.id))),
         T(
@@ -139,6 +182,7 @@ export function syncForms(state: EncounterState): EncounterState {
         ),
         [c.id],
       );
+  }
   return s;
 }
 

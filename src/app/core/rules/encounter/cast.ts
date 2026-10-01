@@ -201,6 +201,13 @@ export function cast(state: EncounterState, cmd: CastCmd, ctx: Context): Encount
       ),
     );
 
+  if (actor0Form(state, cmd.actorId)?.noSpells && !spell.ability)
+    throw new RuleError(
+      T(
+        'Na forma atual não dá para conjurar magias.',
+        'You cannot cast spells in your current form.',
+      ),
+    );
   const long = !sustain && spell.castTime === 'long';
   if (long && state.combat.phase === 'running')
     throw new RuleError(
@@ -379,7 +386,8 @@ export function finishCast(state: EncounterState, cmd: CastCmd, ctx: Context): E
     sustain ? 'sustain' : 'cast',
     dcFrom,
   );
-  if (use.form && !sustain) done = shapeShift(done, caster.id, use.form, cmd.ruleset ?? '2014');
+  if (use.form && !use.form.onTarget && !sustain)
+    done = shapeShift(done, caster.id, use.form, cmd.ruleset ?? '2014');
   if (use.plane && !sustain) done = togglePlane(done, caster.id);
   if (use.summon && !sustain)
     done = summonCreatures(done, caster, use, slotLevel, cmd.point, cmd.ruleset ?? '2014', ctx);
@@ -420,6 +428,9 @@ export function withOption(spell: Spell, option?: string): Spell {
   const o = spell.options?.find((x) => x.id === option) ?? spell.options?.[0];
   return o ? { ...spell, ...o.patch } : spell;
 }
+
+const actor0Form = (state: EncounterState, id: string) =>
+  state.creatures.find((c) => c.id === id)?.form;
 
 const narrativeNote = (spell: Spell): string =>
   T(
@@ -467,7 +478,8 @@ export function resolveSpell(
       spell.revive ||
       spell.kill ||
       spell.table ||
-      spell.push
+      spell.push ||
+      spell.form?.onTarget
     ) {
       // Palavra de Poder: só quem tem PV de menos é afetado
       let list = targets;

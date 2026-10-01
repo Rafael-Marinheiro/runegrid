@@ -236,7 +236,7 @@ function itemsOf(m) {
 /** Regras automáticas de um monstro (traços por nome, riders de ataque, ações lidas do texto). */
 function autoEntry(m) {
   const entry = { abilities: {}, traits: autoTraits(m, ptName) };
-  const attackNames = new Set(m.attacks.map((a) => a.name.toLowerCase()));
+  const attackNames = new Set(m.attacks.map((a) => plainName(a.name)));
   const legendNarrative = [];
   for (const { item, kind } of itemsOf(m)) {
     if (isSkipped(item.name)) continue;
@@ -260,6 +260,20 @@ function autoEntry(m) {
         },
         ...fields,
         target: { kind: 'creature' },
+      };
+      continue;
+    }
+    // ação lendária com o nome de um ataque ("Unarmed Strike"): faz esse ataque
+    if (kind === 'legendary' && attackNames.has(plainName(item.name))) {
+      const atk = m.attacks.find((x) => plainName(x.name) === plainName(item.name));
+      entry.abilities[`${key}-legendary`] = {
+        pt: ptName(item.name),
+        en: cleanName(item.name),
+        desc: item.desc,
+        auto: true,
+        ability: { cost: 'legendary', attack: atk.name },
+        target: { kind: 'creature' },
+        range: atk.range,
       };
       continue;
     }

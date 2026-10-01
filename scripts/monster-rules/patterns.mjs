@@ -356,6 +356,100 @@ function negativeEnergy(a) {
   });
 }
 
+/** Saltos e deslocamentos de ação bônus (Salto, Investida, Espreita, Passo por Árvores): salto ao ponto, sem checar o caminho. */
+function hop(a, m) {
+  const d = a.desc;
+  const jump = num(/jumps up to (\d+) feet/i, d);
+  const move = /moves up to (half )?its Speed/i.exec(d);
+  const tree = /second Large or bigger tree that is within (\d+) feet/i.exec(d);
+  const range =
+    jump ??
+    (tree
+      ? Number(tree[1])
+      : move && m.speed
+        ? move[1]
+          ? Math.floor(m.speed / 2)
+          : m.speed
+        : undefined);
+  if (!range) return a;
+  return flat(a, {
+    target: { kind: 'point' },
+    range,
+    teleport: true,
+    manual: jump
+      ? 'Gasta 3 m do seu deslocamento (o Mestre desconta); o motor leva o monstro direto ao ponto, sem checar o caminho.'
+      : tree
+        ? 'Precisa estar a até 1,5 m de uma árvore Grande ou maior e chegar a até 1,5 m de outra a até 18 m (o Mestre confere).'
+        : 'Anda sem checar o caminho, em linha reta rumo ao inimigo se o texto pedir; o motor leva o monstro direto ao ponto e o Mestre confere.',
+    manualEn: jump
+      ? 'Costs 10 ft of its movement (the DM deducts it); the engine takes the monster straight to the point without checking the path.'
+      : tree
+        ? 'Must be within 5 ft of a Large or bigger tree and arrive within 5 ft of another within 60 ft (the DM checks).'
+        : 'Moves without a path check, in a straight line toward the enemy if the text says so; the engine takes the monster straight to the point and the DM checks.',
+    vfx: { kind: 'glow', color: 'arcane' },
+  });
+}
+
+/** Acender-se (Magmin): fica em chamas e ilumina; só uma nota por enquanto. */
+function ignite(a) {
+  return flat(a, {
+    target: { kind: 'self' },
+    range: 0,
+    resolution: { kind: 'auto' },
+    effect: {
+      rounds: 600,
+      to: 'self',
+      mods: {
+        note: 'Em chamas: luz plena num raio de 3 m e penumbra por mais 3 m; usar de novo apaga.',
+        noteEn:
+          'Ablaze: bright light in a 10 ft radius and dim light for another 10 ft; use again to put it out.',
+      },
+    },
+    vfx: { kind: 'glow', color: 'fire' },
+  });
+}
+
+/** Consumir Vida (Fogo-fátuo): quem está a 0 PV falha na Constituição e morre (a cura do fogo-fátuo o Mestre aplica). */
+function consumeLife(a) {
+  const dc = num(/DC (\d+)/i, a.desc);
+  if (!dc || !/dies/i.test(a.desc)) return a;
+  a.ability = { ...a.ability, dc };
+  return flat(a, {
+    target: { kind: 'creature' },
+    range: 5,
+    resolution: { kind: 'save', ability: 'con', onSave: 'none' },
+    kill: true,
+    ifHpAtMost: 0,
+    manual: 'Só vale em criatura viva a 0 PV; o fogo-fátuo recupera 3d6 PV (o Mestre aplica).',
+    manualEn:
+      'Only works on a living creature at 0 HP; the wisp regains 3d6 HP (the DM applies it).',
+    vfx: { kind: 'ray', color: 'shadow' },
+  });
+}
+
+/** Filhos da Noite (Vampiro 2014): 2d4 enxames de morcegos ou ratos, ou 3d6 lobos ao ar livre. */
+function childrenOfTheNight(a, ruleset) {
+  const kinds = [
+    ['swarm-of-bats', '2d4'],
+    ['swarm-of-rats', '2d4'],
+    ['wolf', '3d6'],
+  ];
+  const options = kinds.flatMap(([id, dice]) => {
+    const o = summonOption(ruleset, id, dice, { rounds: 600 });
+    return o ? [o] : [];
+  });
+  if (!options.length) return a;
+  return flat(a, {
+    ...FIELDS,
+    options,
+    manual:
+      'Só se o sol não estiver a pino; os lobos só ao ar livre. Chegam em 1d4 rodadas (o Mestre atrasa) e ficam 1 hora, até o vampiro morrer ou ele os dispensar com uma ação bônus.',
+    manualEn:
+      "Only if the sun isn't up; wolves only outdoors. They arrive in 1d4 rounds (the DM delays them) and stay 1 hour, until the vampire dies or dismisses them as a bonus action.",
+    vfx: { kind: 'burst', color: 'shadow', radius: 5 },
+  });
+}
+
 /** Liderança (Cavaleiro): aliados escolhidos somam 1d4 em ataques e salvaguardas por 1 minuto (como a Bênção). */
 function leadership(a) {
   const dice = /add a (d\d+)/i.exec(a.desc)?.[1];
@@ -479,6 +573,17 @@ export function applyPattern(a, m, ruleset = '2014') {
       return whirlwind(a);
     case 'Channel Negative Energy':
       return negativeEnergy(a);
+    case 'Leap':
+    case 'Charge':
+    case 'Prowl':
+    case 'Tree Stride':
+      return hop(a, m);
+    case 'Ignited Illumination':
+      return ignite(a);
+    case 'Consume Life':
+      return consumeLife(a);
+    case 'Children of the Night':
+      return childrenOfTheNight(a, ruleset);
     case 'Leadership':
       return leadership(a);
     case 'Move':

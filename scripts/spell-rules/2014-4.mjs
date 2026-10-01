@@ -161,10 +161,36 @@ export default {
       'No início de cada turno o alvo faz salvaguarda de Sabedoria (aqui, no fim): se passar, a magia acaba.',
     vfx: vfx('glow', 'psychic'),
   },
-  polymorph: narrative(vfx('glow', 'life'), {
+  polymorph: {
+    // vira uma fera do Bestiário (ND até o do alvo ou o nível): troca as estatísticas e os PV; acaba a 0 PV ou sem concentração
+    target: creature(),
+    resolution: save('wis'),
+    formFrom: {
+      types: ['beast'],
+      maxCr: 30,
+      take: [
+        'size',
+        'speed',
+        'ac',
+        'str',
+        'dex',
+        'con',
+        'int',
+        'wis',
+        'cha',
+        'attacks',
+        'resist',
+        'senses',
+      ],
+      hp: 'replace',
+      capByTarget: true,
+      noSpells: true,
+      onTarget: true,
+    },
     manual:
-      'Transformação: troque as estatísticas do alvo pelas da fera escolhida (PV novos; ao voltar, o excesso de dano passa para a forma normal).',
-  }),
+      'O alvo assume os PV da fera; ao voltar tem os PV de antes (o excesso de dano a 0 PV o Mestre passa à forma normal). Não fala nem conjura; o equipamento se funde e não pode ser usado. Quem muda de forma passa automaticamente na salvaguarda.',
+    vfx: vfx('glow', 'life'),
+  },
   'private-sanctum': narrative(vfx('burst', 'arcane', { radius: 50 })),
   'resilient-sphere': {
     resolution: save('dex'),

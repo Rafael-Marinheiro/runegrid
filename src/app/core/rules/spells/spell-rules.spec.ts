@@ -15,6 +15,7 @@ import { dispatch, newEncounter } from '../encounter';
 import { buildSpells, mergeRules, SpellRules } from './build';
 import { allSpells, getSpell, registerSpells } from './registry';
 import { registerSummonSource } from '../encounter';
+import { expandFormOptions } from '../monsters/form-options';
 import { monsterToCreature } from '../srd/convert';
 import monsters2014 from '../../../../../public/data/monsters.json';
 import monsters2024 from '../../../../../public/data/monsters-2024.json';
@@ -162,6 +163,7 @@ function checkSpell(s: Spell) {
       s.summon ||
       s.plane ||
       s.form ||
+      s.formFrom ||
       s.options?.some((o) => o.patch.form) ||
       s.options?.some((o) => o.patch.summon) ||
       s.zone ||
@@ -244,7 +246,10 @@ describe('fumaça: conjurar cada magia mecanizada não quebra o motor', () => {
 
   for (const set of sets) {
     it(`SRD ${set.name}: todas as magias mecanizadas`, () => {
-      registerSpells(set.name, buildSpells(set.srd, set.rules));
+      registerSpells(
+        set.name,
+        expandFormOptions(buildSpells(set.srd, set.rules), [...sheets[set.name].values()]),
+      );
       const list = allSpells(set.name).filter(
         (sp) => !sp.narrative && sp.castTime !== 'long' && sp.castTime !== 'reaction',
       );

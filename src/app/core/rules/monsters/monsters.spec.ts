@@ -12,7 +12,7 @@ import { Command, dispatch, newEncounter } from '../encounter';
 import { attackFx } from '../encounter/fx';
 import { monsterToCreature } from '../srd/convert';
 import { buildMonsterAbilities, MonsterRules } from './build';
-import { abilitiesOf, registerMonsterAbilities } from './registry';
+import { abilitiesOf, registerMonsterAbilities, riderOf } from './registry';
 
 const srd = (id: string) => (monsters as unknown as SrdMonster[]).find((m) => m.id === id)!;
 const dm = { kind: 'dm' } as const;
@@ -533,5 +533,32 @@ describe('cobertura das regras de monstros (F13)', () => {
     const names = t.get().creatures[0].attacks.map((a) => a.name);
     expect(names.filter((n) => /bite/i.test(n)).length).toBeGreaterThanOrEqual(1);
     expect(names).not.toContain('Constrict');
+  });
+
+  it('Mordida do vampiro (nome com "Form Only") agora é rider: drena PV máximos; Filhos da Noite invoca enxames e lobos', () => {
+    const t = scene('vampire', () => 0.5);
+    const entry = [...abilitiesOf(t.get().creatures[0])];
+    const bite = t.get().creatures[0].attacks.find((a) => /^Bite/.test(a.name))!;
+    expect(riderOf(t.get().creatures[0], bite.name)).toBeDefined();
+    const kids = entry.find((a) => a.nameEn === 'Children of the Night')!;
+    expect(kids.options!.map((o) => o.id)).toEqual(['swarm-of-bats', 'swarm-of-rats', 'wolf']);
+    expect(kids.options![2].patch.summon).toMatchObject({
+      dice: '3d6',
+      rounds: 600,
+    });
+    const legend = entry.find((a) => a.id.endsWith('unarmed-strike-legendary'))!;
+    expect(legend.ability).toMatchObject({
+      cost: 'legendary',
+      attack: 'Unarmed Strike (Vampire Form Only)',
+    });
+  });
+
+  it('Consumir Vida (fogo-fátuo, 2024) só vale em criatura a 0 PV e mata ao falhar', () => {
+    const rules24 = buildMonsterAbilities('2024', monsterRules24 as unknown as MonsterRules);
+    const wisp = rules24.get('will-o-wisp')!.abilities.find((a) => a.nameEn === 'Consume Life')!;
+    expect(wisp).toMatchObject({ kill: true, ifHpAtMost: 0, range: 5 });
+    expect(wisp.resolution).toMatchObject({ kind: 'save', ability: 'con' });
+    const troll = rules24.get('troll')!.abilities.find((a) => a.nameEn === 'Charge')!;
+    expect(troll).toMatchObject({ teleport: true });
   });
 });

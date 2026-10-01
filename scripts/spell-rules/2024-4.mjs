@@ -116,8 +116,35 @@ export default {
     vfx: vfx('glow', 'psychic'),
   },
   polymorph: {
+    replace: true,
+    // 2024: mantém os PV e ganha os da fera como PV temporários; acaba se eles zerarem
+    target: creature(),
+    resolution: save('wis'),
+    formFrom: {
+      types: ['beast'],
+      maxCr: 30,
+      take: [
+        'size',
+        'speed',
+        'ac',
+        'str',
+        'dex',
+        'con',
+        'int',
+        'wis',
+        'cha',
+        'attacks',
+        'resist',
+        'senses',
+      ],
+      hp: 'temp',
+      capByTarget: true,
+      noSpells: true,
+      onTarget: true,
+    },
     manual:
-      'Transformação: o alvo ganha como PV temporários os PV da fera (e mantém os seus PV); a magia acaba nele se os PV temporários acabarem.',
+      'O alvo mantém os PV e ganha os da fera como PV temporários; a magia acaba nele se eles zerarem. Não fala nem conjura; o equipamento se funde e não pode ser usado.',
+    vfx: vfx('glow', 'life'),
   },
   'vitriolic-sphere': {
     target: sphere(20),

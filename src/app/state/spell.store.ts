@@ -6,6 +6,7 @@ import { monsterNamePt } from '@core/rules/srd/names-pt';
 import { buildSpells, mergeRules, SpellRules } from '@core/rules/spells/build';
 import { buildMonsterAbilities, MonsterRules } from '@core/rules/monsters/build';
 import { registerMonsterAbilities } from '@core/rules/monsters/registry';
+import { expandFormOptions } from '@core/rules/monsters/form-options';
 import { registerSpells } from '@core/rules/spells/registry';
 import { Ruleset, UiPrefs } from './ui-prefs';
 
@@ -57,7 +58,10 @@ export class SpellStore {
         ? monsterToCreature(m, this.ui.locale() === 'en' ? m.name : monsterNamePt(m.name))
         : undefined;
     });
-    registerSpells(ruleset, buildSpells(srd, is24 ? mergeRules(base, over) : base));
+    registerSpells(
+      ruleset,
+      expandFormOptions(buildSpells(srd, is24 ? mergeRules(base, over) : base), creatures),
+    );
     registerMonsterAbilities(ruleset, buildMonsterAbilities(ruleset, monsters, creatures));
     this.version.update((v) => v + 1);
   }

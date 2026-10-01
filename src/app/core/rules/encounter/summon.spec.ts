@@ -10,10 +10,12 @@ import { fullCasterSlots } from '../creature/rest';
 import { monsterToCreature } from '../srd/convert';
 import { buildSpells, mergeRules, SpellRules } from '../spells/build';
 import rules2024 from '../../../../../public/data/spell-rules-2024.json';
+import monsters24 from '../../../../../public/data/monsters-2024.json';
 import spells2024 from '../../../../../public/data/spells-2024.json';
 import { allSpells, getSpell, registerSpells } from '../spells/registry';
 import { Command, dispatch, newEncounter, project } from '../encounter';
 import { registerSummonSource, splitOnDamage } from './summon';
+import { expandFormOptions } from '../monsters/form-options';
 import { buildMonsterAbilities, MonsterRules } from '../monsters/build';
 import { abilitiesOf, registerMonsterAbilities } from '../monsters/registry';
 import monsterRules from '../../../../../public/data/monster-rules.json';
@@ -31,7 +33,10 @@ beforeAll(() => {
   );
   registerSpells(
     '2014',
-    buildSpells(spells2014 as unknown as SrdSpell[], rules2014 as unknown as SpellRules),
+    expandFormOptions(
+      buildSpells(spells2014 as unknown as SrdSpell[], rules2014 as unknown as SpellRules),
+      [...sheet.values()],
+    ),
   );
   registerSummonSource((id) => {
     const m = sheet.get(id);
@@ -591,5 +596,89 @@ describe('Animar Correntes', () => {
     expect(rider).toEqual([]);
     expect(chains[0].icon).toBe('chain');
     expect(chains[0].attacks[0]).toMatchObject({ name: 'Chain', range: 10, bonus: 8 });
+  });
+});
+
+describe('Metamorfose', () => {
+  const sheet24 = new Map(
+    (monsters24 as unknown as SrdMonster[]).map((m) => [m.id.replace(/^srd-2024_/, ''), m]),
+  );
+  beforeAll(() => {
+    registerSpells(
+      '2024',
+      expandFormOptions(
+        buildSpells(
+          spells2024 as unknown as SrdSpell[],
+          mergeRules(rules2014 as unknown as SpellRules, rules2024 as unknown as SpellRules),
+        ),
+        [...sheet24.values()],
+      ),
+    );
+  });
+  const poly = (ruleset: '2014' | '2024', option: string): CastCmd => ({
+    type: 'cast',
+    actorId: 'c',
+    spellId: getSpell('polymorph', ruleset)!.id,
+    slotLevel: 4,
+    option,
+    ruleset,
+    targetId: 'm',
+  });
+
+  it('2014: o alvo vira lobo (PV e estatísticas do lobo); ao zerar os PV da fera volta com os PV de antes', () => {
+    const t = scene(getSpell('polymorph', '2014')!.id);
+    t.run(poly('2014', 'wolf'));
+    const wolf = sheet.get('wolf')!;
+    const a = t.get().creatures.find((c) => c.id === 'm')!;
+    expect(a.form?.id).toBe('wolf');
+    expect(a.ac).toBe(wolf.ac);
+    expect(a.hp).toMatchObject({ current: wolf.hp, max: wolf.hp });
+    expect(a.abilities.int).toBe(wolf.abilities[3]);
+    expect(a.attacks.map((x) => x.name)).toEqual(wolf.attacks.map((x) => x.name));
+    // não conjura na forma de lobo
+    const dropped = {
+      ...t.get(),
+      creatures: t
+        .get()
+        .creatures.map((c) =>
+          c.id === 'm' ? { ...c, hp: { ...c.hp, current: 0 }, status: 'dead' as const } : c,
+        ),
+    };
+    const out = dispatch(dropped, { type: 'heal', targetId: 'c', amount: 0 }, { rng, role: dm });
+    const back = out.creatures.find((c) => c.id === 'm')!;
+    expect(back.form).toBeUndefined();
+    expect(back.status).toBe('alive');
+    expect(back.hp.current).toBe(90);
+    expect(back.hp.max).toBe(90);
+  });
+
+  it('recusa fera de ND acima do nível do alvo; perder a concentração desfaz a forma', () => {
+    const t = scene(getSpell('polymorph', '2014')!.id);
+    expect(() => t.run(poly('2014', 'giant-boar'))).toThrow(/ND/);
+    t.run(poly('2014', 'wolf'));
+    const lost = {
+      ...t.get(),
+      creatures: t
+        .get()
+        .creatures.map((c) => (c.id === 'c' ? { ...c, concentration: undefined } : c)),
+    };
+    const out = dispatch(lost, { type: 'heal', targetId: 'c', amount: 0 }, { rng, role: dm });
+    expect(out.creatures.find((c) => c.id === 'm')!.form).toBeUndefined();
+  });
+
+  it('2024: mantém os PV e ganha os da fera como PV temporários; sem eles a forma acaba', () => {
+    const t = scene(getSpell('polymorph', '2024')!.id);
+    t.run(poly('2024', 'wolf'));
+    const wolf = sheet24.get('wolf')!;
+    const a = t.get().creatures.find((c) => c.id === 'm')!;
+    expect(a.hp).toMatchObject({ current: 90, max: 90, temp: wolf.hp });
+    const spent = {
+      ...t.get(),
+      creatures: t
+        .get()
+        .creatures.map((c) => (c.id === 'm' ? { ...c, hp: { ...c.hp, temp: 0 } } : c)),
+    };
+    const out = dispatch(spent, { type: 'heal', targetId: 'c', amount: 0 }, { rng, role: dm });
+    expect(out.creatures.find((c) => c.id === 'm')!.form).toBeUndefined();
   });
 });

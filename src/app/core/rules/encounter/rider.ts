@@ -2,6 +2,7 @@ import { Ability, CONDITION_LABEL, Creature } from '../../models/creature';
 import { ActiveEffect } from '../../models/effect';
 import { EncounterState } from '../../models/encounter';
 import { Pos } from '../../models/grid';
+import { shapeShift } from './forms';
 import { Spell, SpellCondition } from '../../models/spell';
 import {
   abilityMod,
@@ -74,6 +75,14 @@ export function applyRiders(
   dealt = 0,
 ): EncounterState {
   let s = state;
+  if (spell.form?.onTarget)
+    s = shapeShift(
+      s,
+      targetId,
+      spell.form,
+      spell.id.startsWith('srd-2024_') ? '2024' : '2014',
+      spell.concentration ? { id: caster.id, spell: spell.name } : undefined,
+    );
   let t = creatureOf(s, targetId);
 
   for (const c of asList(spell.condition)) {

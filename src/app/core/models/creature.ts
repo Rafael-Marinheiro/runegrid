@@ -207,6 +207,12 @@ export interface Creature {
     labelEn: string;
     keys: string[];
     noActions?: boolean;
+    /** Não conjura (Metamorfose). */
+    noSpells?: boolean;
+    /** Como os PV da forma entram: troca ou PV temporários; a forma acaba se zerarem. */
+    hp?: 'replace' | 'temp';
+    /** Quem mantém a concentração que sustenta a forma. */
+    by?: { id: string; spell: string };
     original: Pick<
       Creature,
       | 'size'
@@ -219,6 +225,7 @@ export interface Creature {
       | 'darkvision'
       | 'abilities'
       | 'attacks'
+      | 'hp'
     >;
   };
   /** No plano Etéreo: só interage com quem também está nele; o token fica a 50% de opacidade. */

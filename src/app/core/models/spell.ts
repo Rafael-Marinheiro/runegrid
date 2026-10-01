@@ -211,6 +211,14 @@ export interface FormSpec {
   take?: FormTake[];
   /** Ataques do monstro que continuam se o modelo também tem um de mesmo nome (a Mordida do couatl). */
   keepAttacks?: string[];
+  /** Os PV: `replace` troca pelos do modelo (Metamorfose 2014); `temp` soma-os como PV temporários (2024). */
+  hp?: 'replace' | 'temp';
+  /** Só criaturas do modelo com ND até o do alvo (ou o nível, se não tem ND). */
+  capByTarget?: boolean;
+  /** Não fala nem conjura enquanto durar. */
+  noSpells?: boolean;
+  /** Vale no alvo da magia, não em quem conjura. */
+  onTarget?: boolean;
 }
 
 export type FormTake =
@@ -220,6 +228,9 @@ export type FormTake =
   | 'str'
   | 'dex'
   | 'con'
+  | 'int'
+  | 'wis'
+  | 'cha'
   /** Os ataques do modelo no lugar dos do monstro. */
   | 'attacks'
   /** Os ataques do modelo somados aos do monstro. */
@@ -235,6 +246,10 @@ export interface FormFrom {
   maxCr: number;
   take: FormTake[];
   keepAttacks?: string[];
+  hp?: 'replace' | 'temp';
+  capByTarget?: boolean;
+  noSpells?: boolean;
+  onTarget?: boolean;
 }
 
 /** Invocação: criaturas do SRD que aparecem no mapa (Conjurar Animais, Familiar, Convocar Demônio…). */

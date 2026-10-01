@@ -428,7 +428,8 @@ describe('cobertura das regras de monstros (F13)', () => {
     shift(t, 'Shapechanger', 'bat');
     const bat = t.get().creatures[0];
     expect(bat.size).toBe('tiny');
-    expect(bat.speed).toBe(30);
+    expect(bat.speed).toBe(5);
+    expect(bat.speeds?.fly).toBe(30);
     expect(bat.form?.id).toBe('bat');
     expect(attackAllowed(bat, 'Bite (Bat or Vampire Form Only)')).toBe(true);
     expect(attackAllowed(bat, 'Unarmed Strike (Vampire Form Only)')).toBe(false);
@@ -442,6 +443,7 @@ describe('cobertura das regras de monstros (F13)', () => {
     expect(back.form).toBeUndefined();
     expect(back.size).toBe(base.size);
     expect(back.speed).toBe(base.speed);
+    expect(back.speeds).toEqual(base.speeds);
   });
 
   it('Vampiro em névoa: resistente a tudo, sem ações; reverter não custa ação', () => {

@@ -5,6 +5,7 @@ import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseAbility, report } from './monster-rules/parse.mjs';
+import { applyPattern } from './monster-rules/patterns.mjs';
 import {
   autoAbility,
   autoInnate,
@@ -407,6 +408,7 @@ function write(file, rules, monsters) {
         a.desc = a.section ? sectionOf(hit.desc, a.section) : hit.desc;
       }
       if (!isTrait) {
+        if (!a.parse) applyPattern(a, m);
         let r = a;
         if (a.parse) {
           const { rule: p } = parseAbility(a.desc);

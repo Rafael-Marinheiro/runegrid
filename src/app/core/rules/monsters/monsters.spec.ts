@@ -1,4 +1,5 @@
 import monsterRules from '../../../../../public/data/monster-rules.json';
+import monsterRules24 from '../../../../../public/data/monster-rules-2024.json';
 import monsters from '../../../../../public/data/monsters.json';
 import { newCreature } from '../../models/creature-factory';
 import { mapFromAscii } from '../../models/grid';
@@ -291,5 +292,72 @@ describe('traços passivos de monstros', () => {
       ?.used;
     expect(used).toBe(3);
     expect(s.log.filter((e) => /Legendary Resistance/.test(e.en ?? '')).length).toBe(3);
+  });
+});
+
+const flatAll = (name: '2014' | '2024', rules: unknown) =>
+  [...buildMonsterAbilities(name, rules as MonsterRules).values()].flatMap((e) => [
+    ...e.abilities,
+    ...Object.values(e.riders),
+  ]);
+
+describe('cobertura das regras de monstros (F13)', () => {
+  const sets = [
+    { name: '2014' as const, rules: monsterRules },
+    { name: '2024' as const, rules: monsterRules24 },
+  ];
+  for (const set of sets) {
+    it(`SRD ${set.name}: toda habilidade tem mecânica real ou narrativa explícita`, () => {
+      const built = flatAll(set.name, set.rules);
+      expect(built.length).toBeGreaterThan(300);
+      const bad: string[] = [];
+      for (const sp of built) {
+        if (sp.narrative) {
+          if (!sp.description) bad.push(`${sp.id}: narrativa sem texto`);
+          continue;
+        }
+        const real =
+          sp.damage ||
+          sp.heal ||
+          sp.condition ||
+          sp.effect ||
+          sp.tempHp ||
+          sp.push ||
+          sp.cure ||
+          sp.teleport ||
+          sp.zone ||
+          sp.table ||
+          sp.react ||
+          sp.manual ||
+          sp.ability?.rider ||
+          sp.ability?.attack ||
+          sp.ability?.spell ||
+          sp.ability?.invoke;
+        if (!real) bad.push(`${sp.id}: sem mecânica nem narrativa`);
+        if (!sp.vfx && !sp.ability?.rider && !sp.ability?.attack && !sp.ability?.spell)
+          bad.push(`${sp.id}: sem efeito visual`);
+      }
+      expect(bad).toEqual([]);
+    });
+  }
+
+  it('Engolir: o agarrado fica cego, contido e sofre ácido no início do turno', () => {
+    const t = scene('behir', () => 0.5);
+    const swallow = abilitiesOf(t.get().creatures[0]).find((a) => a.nameEn === 'Swallow')!;
+    expect(swallow.ability?.needsGrappled).toBe(true);
+    expect(swallow.effect?.mods.dotStart?.type).toBe('acid');
+    expect(swallow.cure?.conditions).toContain('grappled');
+  });
+
+  it('sopros de controle: Sopro Lento corta reações e velocidade; Repulsão empurra', () => {
+    const slow = flatAll('2014', monsterRules).find(
+      (x) => x.id.startsWith('mon/adult-copper-dragon/') && x.nameEn === 'Slowing Breath',
+    )!;
+    expect(slow.effect?.mods.noReactions).toBe(true);
+    expect(slow.effect?.mods.speedMult).toBe(0.5);
+    const push = flatAll('2014', monsterRules).find(
+      (x) => x.id.startsWith('mon/adult-bronze-dragon/') && x.nameEn === 'Repulsion Breath',
+    )!;
+    expect(push.push?.ft).toBe(60);
   });
 });

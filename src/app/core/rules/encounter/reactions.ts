@@ -9,7 +9,7 @@ import { Spell } from '../../models/spell';
 import { canAct, hasNoReactions } from '../creature';
 import { distanceFt } from '../grid/movement';
 import { getSpell } from '../spells/data';
-import { addLog, creatureOf, sizeOf, tokenOf } from './state';
+import { addLog, creatureOf, sizeOf, teamOf, tokenOf } from './state';
 import { T, spellName } from '../i18n';
 import { abilitiesOf } from '../monsters/registry';
 import { abilitySpent } from './ability';
@@ -87,26 +87,69 @@ function addPending(
 export function offerHit(state: EncounterState, hit: HeldHit): EncounterState | null {
   if (hit.nat20) return null;
   const target = creatureOf(state, hit.targetId);
-  if (target.status !== 'alive' || !canReact(state, target)) return null;
-  const options = reactionSpells(target, 'hit').filter(
-    (o) =>
-      o.spell.react?.on === 'hit' &&
-      hit.total < hit.ac + o.spell.react.acBonus &&
-      (!o.spell.react.melee || hit.melee),
-  );
-  if (!options.length) return null;
+  if (target.status !== 'alive') return null;
   const attacker = creatureOf(state, hit.attackerId);
-  return addPending(
-    state,
-    target,
-    hit.attackerId,
-    { trigger: 'hit', hit },
-    T(
-      `${hit.head} — acerto! ${target.name} pode reagir com ${options.map((o) => o.spell.name).join(' ou ')} antes do dano (${attacker.name}).`,
-      `${hit.head} — hit! ${target.name} can react with ${options.map((o) => spellName(o.spell)).join(' or ')} before damage (${attacker.name}).`,
-    ),
-  );
+  const tt = tokenOf(state, target.id);
+  let s = state;
+  let offered = false;
+  for (const reactor of state.creatures) {
+    const own = reactor.id === target.id;
+    if (!own && (reactor.status !== 'alive' || teamOf(reactor) !== teamOf(target))) continue;
+    if (!canReact(s, reactor)) continue;
+    const rt = own ? tt : tokenOf(s, reactor.id);
+    if (!rt || !tt) continue;
+    const dist = distanceFt(rt.pos, sizeOf(reactor), tt.pos, sizeOf(target), state.rule);
+    const options = reactionSpells(reactor, 'hit').filter((o) => {
+      const r = o.spell.react;
+      if (r?.on !== 'hit') return false;
+      if (own ? r.ally !== undefined : r.ally === undefined || dist > r.ally) return false;
+      if (r.redirect) return redirectAllies(s, reactor).length > 0;
+      if (r.reduce) return !hit.melee && hit.parts.some((p) => p.amount > 0);
+      return hit.total < hit.ac + r.acBonus && (!r.melee || hit.melee);
+    });
+    if (!options.length) continue;
+    offered = true;
+    const names = options.map((o) => o.spell.name).join(' ou ');
+    const namesEn = options.map((o) => spellName(o.spell)).join(' or ');
+    s = addPending(
+      s,
+      reactor,
+      hit.attackerId,
+      { trigger: 'hit', hit },
+      own
+        ? T(
+            `${hit.head} — acerto! ${reactor.name} pode reagir com ${names} antes do dano (${attacker.name}).`,
+            `${hit.head} — hit! ${reactor.name} can react with ${namesEn} before damage (${attacker.name}).`,
+          )
+        : T(
+            `${hit.head} — acerto em ${target.name}! ${reactor.name} pode reagir com ${names} antes do dano.`,
+            `${hit.head} — hit on ${target.name}! ${reactor.name} can react with ${namesEn} before damage.`,
+          ),
+    );
+  }
+  return offered ? s : null;
 }
+
+/** Aliados Pequenos ou Médios a até 1,5 m (Redirecionar Ataque): quem pode tomar o lugar do golpeado. */
+export function redirectAllies(state: EncounterState, reactor: Creature): Creature[] {
+  const rt = tokenOf(state, reactor.id);
+  if (!rt) return [];
+  return state.creatures.filter((c) => {
+    const t = tokenOf(state, c.id);
+    return (
+      !!t &&
+      c.id !== reactor.id &&
+      c.status === 'alive' &&
+      teamOf(c) === teamOf(reactor) &&
+      ['tiny', 'small', 'medium'].includes(c.size) &&
+      distanceFt(rt.pos, sizeOf(reactor), t.pos, sizeOf(c), state.rule) <= 5
+    );
+  });
+}
+
+/** Duas consultas de reação são sobre o mesmo golpe? */
+export const sameHit = (a: HeldHit, b: HeldHit): boolean =>
+  a.attackerId === b.attackerId && a.targetId === b.targetId && a.head === b.head;
 
 /** Quem sofreu dano de `attackerId` pode responder (Repreensão Diabólica). */
 export function offerDamaged(

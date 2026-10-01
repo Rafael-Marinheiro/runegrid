@@ -1,4 +1,4 @@
-import { Ability, ConditionName, DamageType, Size } from './creature';
+import { Ability, ConditionName, DamageType, Size, Skill } from './creature';
 import { EffectMods } from './effect';
 import { SpellVfx } from './fx';
 
@@ -334,7 +334,15 @@ export interface Spell {
   trigger?: string;
   /** Reação que o motor sabe oferecer: ao ser atingido (`acBonus` = CA extra), ao sofrer dano, ou ao ver uma conjuração. */
   react?:
-    | { on: 'hit'; acBonus: number; melee?: boolean }
+    | {
+        on: 'hit';
+        acBonus: number;
+        melee?: boolean;
+        ally?: number;
+        redirect?: boolean;
+        ranged?: boolean;
+        reduce?: string;
+      }
     | { on: 'damaged' }
     | { on: 'cast'; save?: boolean };
   /** Alcance em pés (5 = toque, 0 = pessoal). */
@@ -408,6 +416,10 @@ export interface Spell {
   zone?: SpellZone;
   /** Efeito visual no mapa, escrito a partir da descrição desta magia. */
   vfx?: SpellVfx;
+  /** Teste de perícia do conjurador, rolado pelo motor (Detectar); revela quem está escondido e perde no teste. */
+  check?: { skill: Skill };
+  /** O destino do teletransporte tem de ficar a até tantos pés de um inimigo (Perseguição). */
+  teleportNear?: number;
   /** Anda pelo mapa até o ponto (ver `SpellMove`). */
   move?: SpellMove;
   /** Muda a forma de quem usa (ver `FormSpec`). */

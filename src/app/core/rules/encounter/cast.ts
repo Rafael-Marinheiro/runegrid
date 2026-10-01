@@ -57,6 +57,7 @@ import { distT } from '../units';
 import { isRaging } from './rage';
 import { summonCreatures } from './summon';
 import { moveByAbility } from './jump';
+import { skillCheckAbility } from './check';
 import { isShapechanger, planeError, samePlane, shapeShift, togglePlane } from './forms';
 
 const LEVEL = (n: number) => (n === 0 ? T('truque', 'cantrip') : T(`${n}º nível`, `level ${n}`));
@@ -464,9 +465,10 @@ export function resolveSpell(
   const pointOrigin = (t.kind === 'sphere' || t.kind === 'cube') && !t.self;
   const origin = pointOrigin ? cmd.point : tokenOf(s, caster.id)?.pos;
 
+  if (spell.check) return skillCheckAbility(s, caster, spell, ctx.rng);
   if (spell.narrative) return s;
   if (mode !== 'cast' || !spell.noInitial) {
-    if (spell.teleport) s = teleport(s, caster, cmd.point);
+    if (spell.teleport) s = teleport(s, caster, cmd.point, spell.teleportNear);
     else if (spell.move) s = moveByAbility(s, caster, spell.move, cmd.point, ctx);
     else if (
       spell.damage ||
@@ -582,12 +584,34 @@ export function resolveSpell(
   return s;
 }
 
-function teleport(state: EncounterState, caster: Creature, point?: Pos): EncounterState {
+function teleport(
+  state: EncounterState,
+  caster: Creature,
+  point?: Pos,
+  near?: number,
+): EncounterState {
   const tok = tokenOf(state, caster.id);
   if (!tok || !point) throw new RuleError(T('Escolha o destino.', 'Choose the destination.'));
   const blocked = occupiedCells(state, (c) => c.id !== caster.id);
   if (!canStand(state.map, point, sizeOf(caster), blocked))
     throw new RuleError(T('Destino ocupado ou bloqueado.', 'Destination is occupied or blocked.'));
+  if (near !== undefined) {
+    const close = state.tokens.some((t) => {
+      const o = creatureOf(state, t.creatureId);
+      return (
+        teamOf(o) !== teamOf(caster) &&
+        o.status !== 'dead' &&
+        distanceFt(point, sizeOf(caster), t.pos, sizeOf(o), state.rule) <= near
+      );
+    });
+    if (!close)
+      throw new RuleError(
+        T(
+          `O destino tem de ficar a até ${distT(near)} de um inimigo.`,
+          `The destination must be within ${distT(near)} of a foe.`,
+        ),
+      );
+  }
   const moved = {
     ...state,
     tokens: state.tokens.map((t) => (t.creatureId === caster.id ? { ...t, pos: point } : t)),

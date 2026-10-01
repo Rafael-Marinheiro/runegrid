@@ -230,7 +230,7 @@ function combatBlock(s: EncounterState, lab: Map<string, string>): string[] {
     const other = creatureOf(s, p.targetId).name;
     L.push(
       p.kind === 'spell'
-        ? `⚠ PENDING REACTION (${p.spell?.trigger}): ${who} may react to ${other} with a reaction spell — act {actor:"${who}", action:"reaction", use:true, spell:"Shield"|"Counterspell"|"Hellish Rebuke", slot_level?} or use:false. Everything waits for the decision.`
+        ? `⚠ PENDING REACTION (${p.spell?.trigger}): ${who} may react to ${other} ${p.spell?.trigger === 'hit' && p.spell.hit.targetId !== p.reactorId ? `(the attack on ${creatureOf(s, p.spell.hit.targetId).name} hit) ` : ''}with a reaction spell or ability — act {actor:"${who}", action:"reaction", use:true, spell:"Shield"|"Counterspell"|"Hellish Rebuke"|<the creature's reaction ability>, slot_level?, target? (Redirect Attack: the ally to swap with)} or use:false. Everything waits for the decision.`
         : `⚠ PENDING REACTION: ${who} may make an opportunity attack on ${other} — act {actor:"${who}", action:"reaction", use:true|false} before end_turn.`,
     );
   }

@@ -564,6 +564,78 @@ function animateTrees(a, ruleset) {
   });
 }
 
+/** Detectar (ação lendária): teste de Sabedoria (Percepção) rolado pelo motor. */
+function detect(a) {
+  return flat(a, {
+    target: { kind: 'self' },
+    range: 0,
+    resolution: { kind: 'auto' },
+    check: { skill: 'perception' },
+  });
+}
+
+const REACT = {
+  castTime: 'reaction',
+  range: 0,
+  target: { kind: 'self' },
+  resolution: { kind: 'auto' },
+};
+
+/** Guardião Escudo: dá o bônus de CA ao portador do amuleto (um aliado a 1,5 m) contra o golpe. */
+function guardianShield(a) {
+  const n = Number(
+    /\+(\d+) bonus to (?:the wearer's|AC)/i.exec(a.desc)?.[1] ??
+      /\+(\d+) bonus/i.exec(a.desc)?.[1] ??
+      2,
+  );
+  return flat(a, {
+    ...REACT,
+    range: 5,
+    react: { on: 'hit', acBonus: n, ally: 5 },
+    effect: { mods: { ac: n }, rounds: 1, to: 'targets' },
+    vfx: { kind: 'glow', color: 'steel' },
+  });
+}
+
+/** Redirecionar Ataque: troca de lugar com um aliado Pequeno ou Médio, que vira o alvo. */
+function redirectAttack(a) {
+  return flat(a, {
+    ...REACT,
+    react: { on: 'hit', acBonus: 0, redirect: true },
+    vfx: { kind: 'glow', color: 'arcane' },
+    manual:
+      'Indique o aliado (Pequeno ou Médio, a até 1,5 m): trocam de lugar e ele é o alvo do golpe.',
+    manualEn:
+      'Name the ally (Small or Medium, within 5 ft): they swap places and the ally is the target.',
+  });
+}
+
+/** Desviar Projétil: reduz o dano de um ataque à distância; o dano devolvido fica com o Mestre. */
+function deflectMissile(a) {
+  const dice = /\((\d+d\d+(?: \+ \d+)?)\)/.exec(a.desc)?.[1].replace(/\s/g, '') ?? '1d10+6';
+  return flat(a, {
+    ...REACT,
+    react: { on: 'hit', acBonus: 0, reduce: dice },
+    vfx: { kind: 'glow', color: 'steel' },
+    manual:
+      'Se o dano chegar a 0, o gigante pode devolver a força do ataque (salvaguarda de Destreza de uma criatura a até 18 m): o Mestre conduz.',
+    manualEn:
+      "If the damage drops to 0, the giant can redirect the attack's force (Dexterity save of one creature within 60 ft): the DM runs it.",
+  });
+}
+
+/** Perseguição: usa o Teleporte, mas só para perto de um inimigo. */
+function pursuit(a) {
+  return flat(a, {
+    castTime: 'reaction',
+    range: 120,
+    target: { kind: 'point' },
+    teleport: true,
+    teleportNear: 10,
+    vfx: { kind: 'glow', color: 'arcane' },
+  });
+}
+
 /** Corrige `a` no lugar quando o nome casa com um padrão conhecido. */
 export function applyPattern(a, m, ruleset = '2014') {
   if (a.ability?.rider) return a;
@@ -622,6 +694,17 @@ export function applyPattern(a, m, ruleset = '2014') {
       return animateChains(a, ruleset);
     case 'Animate Trees':
       return animateTrees(a, ruleset);
+    case 'Detect':
+      return /Perception/.test(a.desc) ? detect(a) : a;
+    case 'Redirect Attack':
+      return redirectAttack(a);
+    case 'Deflect Missile':
+      return deflectMissile(a);
+    case 'Pursuit':
+      return pursuit(a);
+    case 'Protection':
+    case 'Shield':
+      return /amulet/.test(a.desc) ? guardianShield(a) : a;
   }
   return a;
 }

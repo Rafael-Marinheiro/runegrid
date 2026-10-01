@@ -1,5 +1,5 @@
 import { Creature } from '../../models/creature';
-import { EncounterState, PendingReaction } from '../../models/encounter';
+import { EncounterState, HeldHit, PendingReaction } from '../../models/encounter';
 import { Spell } from '../../models/spell';
 import {
   abilityMod,
@@ -12,7 +12,7 @@ import {
   saveBonus,
   spendSlot,
 } from '../creature';
-import { rollD20 } from '../dice';
+import { roll, rollD20 } from '../dice';
 import { distanceFt } from '../grid/movement';
 import { getSpell } from '../spells/data';
 import { affectedBy, finishCast, resolveSpell } from './cast';
@@ -21,7 +21,7 @@ import { attachFx, spellFx } from './fx';
 import { Context } from './helpers';
 import { manualT, spellName, T } from '../i18n';
 import { applyHeldHit } from './hits';
-import { canReact, freeSlotFor } from './reactions';
+import { canReact, freeSlotFor, redirectAllies, sameHit } from './reactions';
 import { dropOnAttack } from './rolls';
 import { addLog, creatureOf, sizeOf, tokenOf, withCreature } from './state';
 import { distT } from '../units';
@@ -106,7 +106,14 @@ export function spellReaction(
     const s = addLog(rest, T(`${reactor.name} não reage.`, `${reactor.name} does not react.`), [
       reactor.id,
     ]);
-    if (info.trigger === 'hit') return applyHeldHit(s, info.hit, ctx.rng);
+    if (info.trigger === 'hit') {
+      // ainda há quem possa reagir a este golpe: o dano espera
+      const hit = info.hit;
+      const more = (s.combat.pending ?? []).some(
+        (x) => x.spell?.trigger === 'hit' && sameHit(x.spell.hit, hit),
+      );
+      return more ? s : applyHeldHit(s, hit, ctx.rng);
+    }
     if (info.trigger === 'cast') return resumeCast(s, info.command, ctx);
     return s;
   }
@@ -125,17 +132,59 @@ export function spellReaction(
   const who = paid.reactor;
 
   if (info.trigger === 'hit') {
-    const before = effectiveAc(who);
-    const fx = spellFx(s, spell, slot, who.id, [who.id]);
+    if (spell.react?.on === 'hit' && spell.react.redirect)
+      return redirectHit(s, who, cmd.targetId, info.hit, ctx);
+    if (spell.react?.on === 'hit' && spell.react.reduce) {
+      const cut = roll(spell.react.reduce, ctx.rng).total;
+      let left = cut;
+      const parts = info.hit.parts.map((p) => {
+        const d = Math.min(left, p.amount);
+        left -= d;
+        return { ...p, amount: p.amount - d };
+      });
+      s = {
+        ...s,
+        combat: {
+          ...s.combat,
+          pending: (s.combat.pending ?? []).filter(
+            (x) => !(x.spell?.trigger === 'hit' && sameHit(x.spell.hit, info.hit)),
+          ),
+        },
+      };
+      s = addLog(
+        s,
+        T(
+          `${who.name} reduz o dano em ${cut - left}.`,
+          `${who.name} reduces the damage by ${cut - left}.`,
+        ),
+        [who.id],
+      );
+      return applyHeldHit(s, { ...info.hit, parts }, ctx.rng);
+    }
+    // quem reage por outro (Guardião Escudo) dá o bônus ao alvo do golpe, não a si
+    const ally = spell.react?.on === 'hit' && spell.react.ally !== undefined;
+    const prot = ally ? creatureOf(s, info.hit.targetId) : who;
+    const before = effectiveAc(prot);
+    const fx = spellFx(s, spell, slot, who.id, [prot.id]);
     s = attachFx(state, s, fx);
-    s = resolveSpell(s, who, spell, slot, [who], 0, ctx, { ruleset: cmd.ruleset });
-    const newAc = info.hit.ac + (effectiveAc(creatureOf(s, who.id)) - before);
-    // habilidade de monstro: o bônus vale só contra este golpe
-    if (spell.ability)
+    s = resolveSpell(s, who, spell, slot, [prot], 0, ctx, { ruleset: cmd.ruleset });
+    const newAc = info.hit.ac + (effectiveAc(creatureOf(s, prot.id)) - before);
+    // habilidade de monstro: o bônus vale só contra este golpe (o do aliado dura até o turno do guardião)
+    if (spell.ability && !ally)
       s = withCreature(
         s,
         removeEffects(creatureOf(s, who.id), (e) => e.spell === spell.id),
       );
+    // as outras consultas deste mesmo golpe perdem o sentido: decidiu-se agora
+    s = {
+      ...s,
+      combat: {
+        ...s.combat,
+        pending: (s.combat.pending ?? []).filter(
+          (x) => !(x.spell?.trigger === 'hit' && sameHit(x.spell.hit, info.hit)),
+        ),
+      },
+    };
     if (info.hit.total >= newAc) return applyHeldHit(s, info.hit, ctx.rng);
     s = addLog(
       s,
@@ -143,7 +192,7 @@ export function spellReaction(
         `${info.hit.head} — erro (${spellName(spell)}).`,
         `${info.hit.head} — miss (${spellName(spell)}).`,
       ),
-      [info.hit.attackerId, who.id],
+      [info.hit.attackerId, prot.id],
     );
     return dropOnAttack(s, info.hit.attackerId);
   }
@@ -218,6 +267,54 @@ export function spellReaction(
     who.id,
   ]);
   return resumeCast(s, info.command, ctx);
+}
+
+/** Redirecionar Ataque: o reator troca de lugar com um aliado, que passa a ser o alvo do golpe. */
+function redirectHit(
+  state: EncounterState,
+  who: Creature,
+  allyId: string | undefined,
+  hit: HeldHit,
+  ctx: Context,
+): EncounterState {
+  const ally = redirectAllies(state, who).find((c) => c.id === allyId);
+  if (!ally)
+    throw new RuleError(
+      T(
+        'Escolha um aliado Pequeno ou Médio a até 1,5 m.',
+        'Choose a Small or Medium ally within 5 ft.',
+      ),
+    );
+  const a = tokenOf(state, who.id)!;
+  const b = tokenOf(state, ally.id)!;
+  let s: EncounterState = {
+    ...state,
+    tokens: state.tokens.map((t) =>
+      t === a ? { ...t, pos: b.pos } : t === b ? { ...t, pos: a.pos } : t,
+    ),
+    combat: {
+      ...state.combat,
+      pending: (state.combat.pending ?? []).filter(
+        (x) => !(x.spell?.trigger === 'hit' && sameHit(x.spell.hit, hit)),
+      ),
+    },
+  };
+  const next: HeldHit = { ...hit, targetId: ally.id, ac: effectiveAc(ally) };
+  s = addLog(
+    s,
+    T(
+      `${who.name} troca de lugar com ${ally.name}, que vira o alvo do golpe.`,
+      `${who.name} swaps places with ${ally.name}, who becomes the target.`,
+    ),
+    [who.id, ally.id],
+  );
+  if (next.total >= next.ac) return applyHeldHit(s, next, ctx.rng);
+  s = addLog(
+    s,
+    T(`${hit.head} — erro contra ${ally.name}.`, `${hit.head} — miss against ${ally.name}.`),
+    [hit.attackerId, ally.id],
+  );
+  return dropOnAttack(s, hit.attackerId);
 }
 
 /** A conjuração suspensa segue em frente quando ninguém mais pode anulá-la. */

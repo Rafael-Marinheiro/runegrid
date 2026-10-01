@@ -35,7 +35,7 @@ export function adjustCreature(
   targetId: string,
   changes: Adjustment,
   note: string,
-  secret = false,
+  secret = true,
 ): EncounterState {
   const why = note.trim();
   if (!why)

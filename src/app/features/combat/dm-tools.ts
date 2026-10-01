@@ -52,8 +52,8 @@ const ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
           <input name="note" required maxlength="500" autocomplete="off" />
         </label>
         <label class="toggle">
-          <input name="secret" type="checkbox" />
-          {{ ui.text('Registro secreto (só o Mestre vê)', 'Secret log entry (GM only)') }}
+          <input name="public" type="checkbox" />
+          {{ ui.text('Mostrar o ajuste aos jogadores', 'Show the adjustment to players') }}
         </label>
         <button type="submit" class="primary">
           {{ ui.text('Aplicar ajuste', 'Apply adjustment') }}
@@ -221,7 +221,7 @@ export class DmTools {
       targetId: this.c().id,
       note: String(data.get('note') ?? ''),
       changes,
-      secret: data.get('secret') === 'on',
+      secret: data.get('public') !== 'on',
     });
     if (ok) form.reset();
   }

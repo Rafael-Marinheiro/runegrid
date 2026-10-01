@@ -76,7 +76,10 @@ export type Command =
   | { type: 'heal'; targetId: string; amount: number }
   | { type: 'addCondition'; targetId: string; condition: ConditionName; rounds?: number }
   | { type: 'removeCondition'; targetId: string; condition: ConditionName }
-  /** Ajuste livre do Mestre: muda campos da criatura sem regras e registra o motivo (`note`, obrigatório). */
+  /**
+   * Ajuste livre do Mestre: muda campos da criatura sem regras e registra o motivo (`note`, obrigatório).
+   * O registro é secreto por padrão (mostra CA, PV e o motivo): `secret: false` o publica aos jogadores.
+   */
   | { type: 'adjust'; targetId: string; changes: Adjustment; note: string; secret?: boolean }
   // Ações de turno (jogador dono da criatura ou Mestre)
   | { type: 'move'; actorId: string; to: Pos; mode?: MoveKind }

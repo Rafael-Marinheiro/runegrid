@@ -98,6 +98,31 @@ describe('ajuste livre do Mestre', () => {
     ).toThrow(ForbiddenError);
   });
 
+  it('o registro do ajuste é secreto por padrão (a CA e o motivo não chegam ao jogador)', () => {
+    const base = started();
+    const hidden = run(base, {
+      type: 'adjust',
+      targetId: 'foe',
+      note: 'segredo',
+      changes: { ac: 4 },
+    });
+    expect(
+      project(hidden, { kind: 'player', owns: ['hero'] }).log.some((e) =>
+        e.text.includes('segredo'),
+      ),
+    ).toBe(false);
+    const shown = run(base, {
+      type: 'adjust',
+      targetId: 'foe',
+      note: 'aberto',
+      changes: { ac: 4 },
+      secret: false,
+    });
+    expect(
+      project(shown, { kind: 'player', owns: ['hero'] }).log.some((e) => e.text.includes('aberto')),
+    ).toBe(true);
+  });
+
   it('PV acima de zero reanima quem estava caído', () => {
     let s = started();
     s = run(s, { type: 'damage', targetId: 'foe', amount: 99 });

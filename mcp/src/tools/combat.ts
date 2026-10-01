@@ -279,6 +279,12 @@ Use it for traps you adjudicate, environmental damage, spells the engine does no
           .max(500)
           .optional()
           .describe('adjust: REQUIRED description of what was changed and why (goes in the log)'),
+        public: z
+          .boolean()
+          .optional()
+          .describe(
+            'adjust: true = players also see the entry (default: GM-only, it shows exact AC/HP)',
+          ),
         changes: z
           .object({
             ac: z.number().int().min(0).max(40).optional(),
@@ -351,6 +357,7 @@ Use it for traps you adjudicate, environmental damage, spells the engine does no
                   type: 'adjust',
                   targetId: t().id,
                   note: need(a.note, 'note', a.op),
+                  secret: a.public !== true,
                   changes: {
                     ...(c.ac !== undefined ? { ac: c.ac } : {}),
                     ...(c.speed !== undefined ? { speed: c.speed } : {}),

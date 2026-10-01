@@ -7,6 +7,7 @@ import { SrdMonster } from '../../models/srd';
 import { RuleError } from '../creature';
 import { sizeOf } from '../encounter/state';
 import { Command, dispatch, newEncounter } from '../encounter';
+import { attackFx } from '../encounter/fx';
 import { monsterToCreature } from '../srd/convert';
 import { buildMonsterAbilities, MonsterRules } from './build';
 import { abilitiesOf, registerMonsterAbilities } from './registry';
@@ -359,5 +360,23 @@ describe('cobertura das regras de monstros (F13)', () => {
       (x) => x.id.startsWith('mon/adult-bronze-dragon/') && x.nameEn === 'Repulsion Breath',
     )!;
     expect(push.push?.ft).toBe(60);
+  });
+
+  it('ação lendária de mesmo nome repete a ação (Tempestade de Raios do Kraken)', () => {
+    const k = flatAll('2014', monsterRules).filter((x) => x.id.startsWith('mon/kraken/'));
+    const act = k.find((x) => x.id.endsWith('/lightning-storm'))!;
+    const leg = k.find((x) => x.id.endsWith('/lightning-storm-legendary'))!;
+    expect(act.ability?.cost).toBe('action');
+    expect(leg.ability?.cost).toBe('legendary');
+    expect(leg.damage?.type).toBe('lightning');
+  });
+
+  it('o golpe ganha forma pelo nome do ataque (mordida, garra, pancada)', () => {
+    const t = scene('wolf', () => 0.5);
+    const fx = (name: string, type: 'piercing' | 'slashing' | 'bludgeoning') =>
+      attackFx(t.get(), 'mon', 'pc0', 5, type, name)[0];
+    expect(fx('Bite', 'piercing')).toMatchObject({ kind: 'slash', style: 'bite' });
+    expect(fx('Claw', 'slashing')).toMatchObject({ style: 'claw' });
+    expect(fx('Slam', 'bludgeoning')).toMatchObject({ style: 'bash' });
   });
 });

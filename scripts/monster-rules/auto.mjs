@@ -318,8 +318,13 @@ function repeatsAttack(desc, attackNames) {
     /makes? (?:a|an|one|two) ([\w' -]+?) attacks?\b(?: with (?:its )?([\w' -]+?)(?: or|\.|,|$))?/i.exec(
       desc,
     );
-  if (!m) return null;
-  const want = (m[2] ?? m[1]).toLowerCase();
+  const alt =
+    m && m[1].toLowerCase() !== 'one'
+      ? null
+      : /attack with (?:its |his |her )?([\w' -]+?)(?: or |\.|,|$)/i.exec(desc);
+  const named = alt ?? /^[\w' -]+? uses? (?:its |his |her )?([\w' -]+?)\.?$/i.exec(desc.trim());
+  if (!m && !named) return null;
+  const want = (named && (!m || alt) ? named[1] : (m[2] ?? m[1])).toLowerCase();
   return (
     attackNames.find(
       (n) =>

@@ -237,6 +237,7 @@ function itemsOf(m) {
 function autoEntry(m) {
   const entry = { abilities: {}, traits: autoTraits(m, ptName) };
   const attackNames = new Set(m.attacks.map((a) => a.name.toLowerCase()));
+  const legendNarrative = [];
   for (const { item, kind } of itemsOf(m)) {
     if (isSkipped(item.name)) continue;
     const key = slug(item.name);
@@ -282,7 +283,26 @@ function autoEntry(m) {
         const { suffix, ...rest } = sub;
         entry.abilities[`${key}-${suffix}`] = rest;
       }
-    else entry.abilities[key] = made;
+    else if (kind === 'legendary' && entry.abilities[key] && !entry.abilities[key].ability?.rider) {
+      // a ação lendária de mesmo nome só repete a ação (Tempestade de Raios do Kraken)
+      const { legendary: _l, ...own } = entry.abilities[key].ability ?? {};
+      entry.abilities[key].ability = { ...own, cost: 'action' };
+      made.ability = { ...(made.ability ?? {}), invoke: key };
+      entry.abilities[`${key}-legendary`] = made;
+    } else {
+      entry.abilities[key] = made;
+      if (kind === 'legendary' && made.narrative) legendNarrative.push(key);
+    }
+  }
+  // "The kraken uses Lightning Strike": a ação lendária repete a ação de outro nome
+  for (const key of legendNarrative) {
+    const a = entry.abilities[key];
+    const want = /\buses? (?:its )?([\w' -]+?)\.?$/i.exec(a.desc.trim())?.[1];
+    const hit = Object.entries(entry.abilities).find(
+      ([k, x]) =>
+        k !== key && want && x.en.toLowerCase() === want.toLowerCase() && !x.ability?.rider,
+    );
+    if (hit) a.ability = { ...(a.ability ?? {}), invoke: hit[0] };
   }
   Object.assign(entry.abilities, autoInnate(m, null, ptName));
   // Explosão de Morte / Estertor (traço): dispara quando o monstro morre

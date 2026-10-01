@@ -15,6 +15,7 @@ import {
 } from '@core/rules/encounter';
 import { canStand } from '@core/rules/grid/movement';
 import { RNG } from './rng.token';
+import { T } from '@core/rules/i18n';
 
 const KEY = 'runegrid.encounter.v2';
 const SESSION_FORMAT = 'runegrid-session';
@@ -253,7 +254,7 @@ export class EncounterStore {
       return true;
     } catch (e) {
       if (!(e instanceof RuleError)) throw e;
-      this.message.set(e.message);
+      this.message.set(e.marked);
       return false;
     }
   }
@@ -267,7 +268,10 @@ export class EncounterStore {
       this.state.set(next);
       return { ok: true };
     } catch (e) {
-      return { ok: false, error: e instanceof RuleError ? e.message : 'Comando inválido.' };
+      return {
+        ok: false,
+        error: e instanceof RuleError ? e.marked : T('Comando inválido.', 'Invalid command.'),
+      };
     }
   }
 

@@ -18,6 +18,7 @@ import { resolveSpell } from './cast';
 import { aftermath, checkOutcome, Context, dtype, notes } from './helpers';
 import { addLog, creatureOf, tokenOf, withCreature } from './state';
 import { zoneContains } from './zones';
+import { T, condT, spellT } from '../i18n';
 
 /**
  * Tudo que dura só enquanto o conjurador mantém a concentração some junto com ela: efeitos,
@@ -61,7 +62,8 @@ export function syncConcentration(state: EncounterState): EncounterState {
   let s: EncounterState = { ...state, creatures, ...(state.zones ? { zones } : {}) };
   for (const z of (state.zones ?? []).filter((x) => !zones.includes(x)))
     dropped.set(`${z.casterId}:${z.name}`, z.name);
-  for (const name of new Set(dropped.values())) s = addLog(s, `${name} termina.`);
+  for (const name of new Set(dropped.values()))
+    s = addLog(s, T(`${name} termina.`, `${spellT(name)} ends.`));
   return s;
 }
 
@@ -77,7 +79,11 @@ function triggerZone(
   if (!spell || !caster || caster.status === 'dead') return state;
   const target = creatureOf(state, creatureId);
   const tick = { ...spell, effect: spell.effect?.to === 'self' ? undefined : spell.effect };
-  const s = addLog(state, `${target.name} está em ${zone.name}.`, [creatureId]);
+  const s = addLog(
+    state,
+    T(`${target.name} está em ${zone.name}.`, `${target.name} is in ${spellT(zone.name)}.`),
+    [creatureId],
+  );
   return resolveSpell(
     s,
     caster,
@@ -97,18 +103,36 @@ export function beginUpkeep(state: EncounterState, actorId: string, ctx: Context
   const ex = startTurnExpiry(s.creatures, actorId);
   s = { ...s, creatures: ex.creatures };
   for (const { holder, effect } of ex.expired)
-    s = addLog(s, `${holder.name}: ${effect.name} termina.`, [holder.id]);
+    s = addLog(
+      s,
+      T(`${holder.name}: ${effect.name} termina.`, `${holder.name}: ${spellT(effect.name)} ends.`),
+      [holder.id],
+    );
 
   const actor = creatureOf(s, actorId);
   for (const e of actor.effects ?? []) {
     const m = e.mods;
     if (m.regen && actor.status === 'alive') {
       s = withCreature(s, heal(creatureOf(s, actorId), m.regen));
-      s = addLog(s, `${actor.name} recupera ${m.regen} PV (${e.name}).`, [actorId]);
+      s = addLog(
+        s,
+        T(
+          `${actor.name} recupera ${m.regen} PV (${e.name}).`,
+          `${actor.name} regains ${m.regen} HP (${spellT(e.name)}).`,
+        ),
+        [actorId],
+      );
     }
     if (m.tempPerTurn) {
       s = withCreature(s, addTempHp(creatureOf(s, actorId), m.tempPerTurn));
-      s = addLog(s, `${actor.name} ganha ${m.tempPerTurn} PV temporários (${e.name}).`, [actorId]);
+      s = addLog(
+        s,
+        T(
+          `${actor.name} ganha ${m.tempPerTurn} PV temporários (${e.name}).`,
+          `${actor.name} gains ${m.tempPerTurn} temporary HP (${spellT(e.name)}).`,
+        ),
+        [actorId],
+      );
     }
     if (m.dotStart) s = dealDot(s, actorId, m.dotStart, e.name, ctx);
   }
@@ -132,7 +156,10 @@ function dealDot(
   const r = applyDamage(c, Math.max(0, roll(dot.dice, ctx.rng).total), { type: dot.type });
   const s = addLog(
     withCreature(state, r.creature),
-    `${c.name} sofre ${r.dealt} de dano ${dtype(dot.type)} (${name})${notes(r)}.`,
+    T(
+      `${c.name} sofre ${r.dealt} de dano ${dtype(dot.type)} (${name})${notes(r)}.`,
+      `${c.name} takes ${r.dealt} ${dtype(dot.type)} damage (${spellT(name)})${notes(r)}.`,
+    ),
     [id],
   );
   return checkOutcome(aftermath(s, id, r.dealt, ctx.rng));
@@ -162,7 +189,10 @@ export function endUpkeep(state: EncounterState, actorId: string, ctx: Context):
       const ok = !auto && r.roll.total >= rs.dc;
       s = addLog(
         s,
-        `${cur.name}: salvaguarda de ${rs.ability.toUpperCase()} contra ${k.spell ?? CONDITION_LABEL[k.name]} — d20 ${r.natural} = ${r.roll.total} vs CD ${rs.dc}: ${ok ? 'passou, termina' : 'falhou'}.`,
+        T(
+          `${cur.name}: salvaguarda de ${rs.ability.toUpperCase()} contra ${k.spell ?? CONDITION_LABEL[k.name]} — d20 ${r.natural} = ${r.roll.total} vs CD ${rs.dc}: ${ok ? 'passou, termina' : 'falhou'}.`,
+          `${cur.name}: ${rs.ability.toUpperCase()} saving throw against ${k.spell ? spellT(k.spell) : condT(k.name)} — d20 ${r.natural} = ${r.roll.total} vs DC ${rs.dc}: ${ok ? 'passed, it ends' : 'failed'}.`,
+        ),
         [cur.id],
       );
       if (ok) {
@@ -182,7 +212,10 @@ export function endUpkeep(state: EncounterState, actorId: string, ctx: Context):
       const ok = r.roll.total >= rs.dc;
       s = addLog(
         s,
-        `${cur.name}: salvaguarda de ${rs.ability.toUpperCase()} contra ${e.name} — d20 ${r.natural} = ${r.roll.total} vs CD ${rs.dc}: ${ok ? 'passou, termina' : 'falhou'}.`,
+        T(
+          `${cur.name}: salvaguarda de ${rs.ability.toUpperCase()} contra ${e.name} — d20 ${r.natural} = ${r.roll.total} vs CD ${rs.dc}: ${ok ? 'passou, termina' : 'falhou'}.`,
+          `${cur.name}: ${rs.ability.toUpperCase()} saving throw against ${spellT(e.name)} — d20 ${r.natural} = ${r.roll.total} vs DC ${rs.dc}: ${ok ? 'passed, it ends' : 'failed'}.`,
+        ),
         [cur.id],
       );
       if (ok) {
@@ -202,12 +235,21 @@ export function endUpkeep(state: EncounterState, actorId: string, ctx: Context):
 
   const t = tickEffects(creatureOf(s, actorId));
   s = withCreature(s, t.creature);
-  for (const e of t.expired) s = addLog(s, `${actor.name}: ${e.name} termina.`, [actorId]);
+  for (const e of t.expired)
+    s = addLog(
+      s,
+      T(`${actor.name}: ${e.name} termina.`, `${actor.name}: ${spellT(e.name)} ends.`),
+      [actorId],
+    );
 
   const ce = endCasterExpiry(s.creatures, actorId);
   s = { ...s, creatures: ce.creatures };
   for (const { holder, effect } of ce.expired)
-    s = addLog(s, `${holder.name}: ${effect.name} termina.`, [holder.id]);
+    s = addLog(
+      s,
+      T(`${holder.name}: ${effect.name} termina.`, `${holder.name}: ${spellT(effect.name)} ends.`),
+      [holder.id],
+    );
 
   // magias mantidas sem concentração (Arma Espiritual) duram um número de rodadas
   const me = creatureOf(s, actorId);
@@ -222,7 +264,7 @@ export function endUpkeep(state: EncounterState, actorId: string, ctx: Context):
       return [{ ...x, rounds: x.rounds - 1 }];
     });
     s = withCreature(s, { ...me, sustained: sustained.length ? sustained : undefined });
-    for (const n of ended) s = addLog(s, `${n} termina.`, [actorId]);
+    for (const n of ended) s = addLog(s, T(`${n} termina.`, `${spellT(n)} ends.`), [actorId]);
   }
   return s;
 }
@@ -240,7 +282,7 @@ export function tickZones(state: EncounterState): EncounterState {
     return [{ ...z, rounds: z.rounds - 1 }];
   });
   let s: EncounterState = { ...state, zones };
-  for (const z of ended) s = addLog(s, `${z.name} termina.`);
+  for (const z of ended) s = addLog(s, T(`${z.name} termina.`, `${spellT(z.name)} ends.`));
   return s;
 }
 

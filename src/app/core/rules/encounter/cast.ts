@@ -48,8 +48,10 @@ import { applyRiders, makeEffect } from './rider';
 import { attackExtra, consumeAttacked, decoy, dropOnAttack, saveExtra } from './rolls';
 import { addLog, creatureOf, occupiedCells, sizeOf, teamOf, tokenOf, withCreature } from './state';
 import { createZone, inArea, zoneContains } from './zones';
+import { T, manualT, spellName, spellT } from '../i18n';
+import { distT } from '../units';
 
-const LEVEL = (n: number) => (n === 0 ? 'truque' : `${n}º nível`);
+const LEVEL = (n: number) => (n === 0 ? T('truque', 'cantrip') : T(`${n}º nível`, `level ${n}`));
 
 type CastCmd = Extract<Command, { type: 'cast' }>;
 
@@ -63,27 +65,42 @@ export function affectedBy(
   role: Context['role'],
 ) {
   const from = tokenOf(state, caster.id);
-  if (!from) throw new RuleError(`${caster.name} não está no mapa.`);
+  if (!from)
+    throw new RuleError(T(`${caster.name} não está no mapa.`, `${caster.name} is not on the map.`));
   const t = spell.target;
 
   if (t.kind === 'self') return { creatures: [caster], dist: 0 };
 
   if (t.kind === 'creature') {
     const ids = [...new Set(cmd.targetIds ?? (cmd.targetId ? [cmd.targetId] : []))];
-    if (!ids.length) throw new RuleError('Escolha um alvo.');
+    if (!ids.length) throw new RuleError(T('Escolha um alvo.', 'Choose a target.'));
     const max = (t.max ?? 1) + (t.perLevel ?? 0) * Math.max(0, slot - spell.level);
     if (ids.length > max)
-      throw new RuleError(`${spell.name} atinge no máximo ${max} alvo(s) com este espaço.`);
+      throw new RuleError(
+        T(
+          `${spell.name} atinge no máximo ${max} alvo(s) com este espaço.`,
+          `${spellName(spell)} hits at most ${max} target(s) with this slot.`,
+        ),
+      );
     const creatures = ids.map((id) => {
       const target = creatureOf(state, id);
       const at = tokenOf(state, target.id);
-      if (!at) throw new RuleError(`${target.name} não está no mapa.`);
-      if (role.kind === 'player' && at.hidden) throw new RuleError('Alvo não visível.');
+      if (!at)
+        throw new RuleError(
+          T(`${target.name} não está no mapa.`, `${target.name} is not on the map.`),
+        );
+      if (role.kind === 'player' && at.hidden)
+        throw new RuleError(T('Alvo não visível.', 'Target not visible.'));
       if (target.status === 'dead' && !spell.heal && !spell.revive)
-        throw new RuleError(`${target.name} já está morto.`);
+        throw new RuleError(T(`${target.name} já está morto.`, `${target.name} is already dead.`));
       const d = distanceFt(from.pos, sizeOf(caster), at.pos, sizeOf(target), state.rule);
       if (d > spell.range)
-        throw new RuleError(`Alvo fora de alcance (${d} ft; alcance ${spell.range} ft).`);
+        throw new RuleError(
+          T(
+            `Alvo fora de alcance (${distT(d)}; alcance ${distT(spell.range)}).`,
+            `Target out of range (${distT(d)}; range ${distT(spell.range)}).`,
+          ),
+        );
       return target;
     });
     const dist = distanceFt(
@@ -97,16 +114,22 @@ export function affectedBy(
   }
 
   const auraOnly = t.kind === 'sphere' && t.self;
-  if (!cmd.point && !auraOnly) throw new RuleError('Escolha um ponto no mapa.');
+  if (!cmd.point && !auraOnly)
+    throw new RuleError(T('Escolha um ponto no mapa.', 'Choose a point on the map.'));
   const point = cmd.point ?? from.pos;
   const inMap =
     point.x >= 0 && point.y >= 0 && point.x < state.map.width && point.y < state.map.height;
-  if (!inMap) throw new RuleError('Ponto fora do mapa.');
+  if (!inMap) throw new RuleError(T('Ponto fora do mapa.', 'Point is off the map.'));
 
   if (t.kind === 'point') {
     const d = distanceFt(from.pos, sizeOf(caster), point, 1, state.rule);
     if (d > spell.range)
-      throw new RuleError(`Ponto fora de alcance (${d} ft; alcance ${spell.range} ft).`);
+      throw new RuleError(
+        T(
+          `Ponto fora de alcance (${distT(d)}; alcance ${distT(spell.range)}).`,
+          `Point out of range (${distT(d)}; range ${distT(spell.range)}).`,
+        ),
+      );
     return { creatures: [], dist: 0 };
   }
 
@@ -121,7 +144,12 @@ export function affectedBy(
   if ((t.kind === 'sphere' || t.kind === 'cube') && !t.self) {
     const dist = distanceFt(from.pos, sizeOf(caster), point, 1, state.rule);
     if (dist > spell.range)
-      throw new RuleError(`Ponto fora de alcance (${dist} ft; alcance ${spell.range} ft).`);
+      throw new RuleError(
+        T(
+          `Ponto fora de alcance (${distT(dist)}; alcance ${distT(spell.range)}).`,
+          `Point out of range (${distT(dist)}; range ${distT(spell.range)}).`,
+        ),
+      );
   }
   return { creatures, dist: 0 };
 }
@@ -134,34 +162,65 @@ export function cast(state: EncounterState, cmd: CastCmd, ctx: Context): Encount
     return who.spellcasting?.spells.includes(id) || who.sustained?.some((x) => x.spellId === id);
   };
   if (!spell || !known(spell.id)) {
-    throw new RuleError(`${creatureOf(state, cmd.actorId).name} não conhece essa magia.`);
+    throw new RuleError(
+      T(
+        `${creatureOf(state, cmd.actorId).name} não conhece essa magia.`,
+        `${creatureOf(state, cmd.actorId).name} does not know that spell.`,
+      ),
+    );
   }
   const sustain = cmd.sustain === true;
-  if (sustain && !spell.sustain) throw new RuleError(`${spell.name} não se repete a cada turno.`);
+  if (sustain && !spell.sustain)
+    throw new RuleError(
+      T(
+        `${spell.name} não se repete a cada turno.`,
+        `${spellName(spell)} does not repeat each turn.`,
+      ),
+    );
   if (!sustain && spell.castTime === 'reaction')
-    throw new RuleError('Magia de reação: use-a como reação quando o gatilho acontecer.');
+    throw new RuleError(
+      T(
+        'Magia de reação: use-a como reação quando o gatilho acontecer.',
+        'Reaction spell: use it as a reaction when its trigger happens.',
+      ),
+    );
 
   const long = !sustain && spell.castTime === 'long';
   if (long && state.combat.phase === 'running')
-    throw new RuleError(`${spell.name} leva mais de uma ação para conjurar: fora do combate.`);
+    throw new RuleError(
+      T(
+        `${spell.name} leva mais de uma ação para conjurar: fora do combate.`,
+        `${spellName(spell)} takes more than one action to cast: outside combat.`,
+      ),
+    );
   const { actor, turn } = long
     ? { actor: creatureOf(state, cmd.actorId), turn: null }
     : actorTurn(state, cmd.actorId);
 
   const kept = actor.sustained?.find((x) => x.spellId === spell.id);
-  if (sustain && !kept) throw new RuleError(`${actor.name} não está mantendo ${spell.name}.`);
+  if (sustain && !kept)
+    throw new RuleError(
+      T(
+        `${actor.name} não está mantendo ${spell.name}.`,
+        `${actor.name} is not sustaining ${spellName(spell)}.`,
+      ),
+    );
   const slotLevel = sustain
     ? kept!.slotLevel
     : spell.level === 0
       ? 0
       : (cmd.slotLevel ?? spell.level);
-  if (slotLevel < spell.level || slotLevel > 9) throw new RuleError('Espaço de magia inválido.');
+  if (slotLevel < spell.level || slotLevel > 9)
+    throw new RuleError(T('Espaço de magia inválido.', 'Invalid spell slot.'));
 
   const cost = sustain ? spell.sustain!.cost : spell.castTime === 'bonus' ? 'bonus' : 'action';
   if (turn) {
-    if (cost === 'action' && !turn.action) throw new RuleError('Sem ação disponível neste turno.');
+    if (cost === 'action' && !turn.action)
+      throw new RuleError(T('Sem ação disponível neste turno.', 'No action left this turn.'));
     if (cost === 'bonus' && !turn.bonus)
-      throw new RuleError('Sem ação bônus disponível neste turno.');
+      throw new RuleError(
+        T('Sem ação bônus disponível neste turno.', 'No bonus action left this turn.'),
+      );
   }
 
   // na repetição, vale o que a magia muda (alvo, dano) sobre a conjuração original
@@ -179,9 +238,14 @@ export function cast(state: EncounterState, cmd: CastCmd, ctx: Context): Encount
   let s = state;
   if (!sustain && spell.concentration) {
     if (caster.concentration)
-      s = addLog(s, `${caster.name} deixa de se concentrar em ${caster.concentration}.`, [
-        caster.id,
-      ]);
+      s = addLog(
+        s,
+        T(
+          `${caster.name} deixa de se concentrar em ${caster.concentration}.`,
+          `${caster.name} stops concentrating on ${spellT(caster.concentration)}.`,
+        ),
+        [caster.id],
+      );
     caster = { ...caster, concentration: spell.name };
   }
   if (!sustain && spell.sustain && !spell.grantSustain) {
@@ -206,13 +270,20 @@ export function cast(state: EncounterState, cmd: CastCmd, ctx: Context): Encount
       bonus: cost === 'bonus' ? false : turn.bonus,
     });
   }
-  const upcast = slotLevel > spell.level ? ` (${LEVEL(slotLevel)})` : '';
+  const upcast =
+    slotLevel > spell.level ? T(` (${LEVEL(slotLevel)})`, ` (${LEVEL(slotLevel)})`) : '';
   const before = s;
   s = addLog(
     s,
     sustain
-      ? `${caster.name} usa ${spell.name} de novo.`
-      : `${caster.name} conjura ${spell.name}${upcast}.`,
+      ? T(
+          `${caster.name} usa ${spell.name} de novo.`,
+          `${caster.name} uses ${spellName(spell)} again.`,
+        )
+      : T(
+          `${caster.name} conjura ${spell.name}${upcast}.`,
+          `${caster.name} casts ${spellName(spell)}${upcast}.`,
+        ),
     [caster.id],
   );
   s = attachFx(
@@ -228,7 +299,10 @@ export function cast(state: EncounterState, cmd: CastCmd, ctx: Context): Encount
     ),
   );
   if (spell.narrative) s = addLog(s, narrativeNote(spell), [caster.id]);
-  if (spell.manual) s = addLog(s, `${spell.name}: ${spell.manual}`, [caster.id]);
+  if (spell.manual)
+    s = addLog(s, T(`${spell.name}: ${spell.manual}`, `${spellName(spell)}: ${manualT(spell)}`), [
+      caster.id,
+    ]);
   if (moveOnly) return moveZone(s, caster, spell, cmd.point!, slotLevel, ctx, cmd.ruleset);
   // alguém pode reagir à conjuração (Contrafeitiço): a resolução espera a decisão
   if (!sustain) {
@@ -306,7 +380,11 @@ export function withOption(spell: Spell, option?: string): Spell {
   return o ? { ...spell, ...o.patch } : spell;
 }
 
-const narrativeNote = (spell: Spell): string => `${spell.name}: efeito narrativo, o Mestre conduz.`;
+const narrativeNote = (spell: Spell): string =>
+  T(
+    `${spell.name}: efeito narrativo, o Mestre conduz.`,
+    `${spellName(spell)}: narrative effect, the GM runs it.`,
+  );
 
 /** Aplica o efeito da magia (ataque, salvaguarda ou automático) aos alvos já escolhidos. */
 export function resolveSpell(
@@ -354,7 +432,10 @@ export function resolveSpell(
         for (const t of targets.filter((x) => !list.includes(x)))
           s = addLog(
             s,
-            `${t.name} tem PV demais (${t.hp.current} > ${spell.ifHpAtMost}): sem efeito.`,
+            T(
+              `${t.name} tem PV demais (${t.hp.current} > ${spell.ifHpAtMost}): sem efeito.`,
+              `${t.name} has too many HP (${t.hp.current} > ${spell.ifHpAtMost}): no effect.`,
+            ),
             [caster.id, t.id],
           );
       }
@@ -392,14 +473,20 @@ export function resolveSpell(
           if (!row) {
             s = addLog(
               s,
-              `${spell.name}: ${cur.name} não sofre efeito (${tb.by === 'hp' ? 'PV' : 'd' + tb.die} ${v}).`,
+              T(
+                `${spell.name}: ${cur.name} não sofre efeito (${tb.by === 'hp' ? 'PV' : 'd' + tb.die} ${v}).`,
+                `${spellName(spell)}: ${cur.name} is unaffected (${tb.by === 'hp' ? 'HP' : 'd' + tb.die} ${v}).`,
+              ),
               [caster.id, cur.id],
             );
             continue;
           }
           s = addLog(
             s,
-            `${spell.name}: ${cur.name} (${tb.by === 'hp' ? 'PV' : 'd' + tb.die} ${v}).`,
+            T(
+              `${spell.name}: ${cur.name} (${tb.by === 'hp' ? 'PV' : 'd' + tb.die} ${v}).`,
+              `${spellName(spell)}: ${cur.name} (${tb.by === 'hp' ? 'HP' : 'd' + tb.die} ${v}).`,
+            ),
             [caster.id, cur.id],
           );
           s = run([cur], { ...spell, table: undefined, ...row.patch });
@@ -411,7 +498,9 @@ export function resolveSpell(
       targets.length === 0 &&
       spell.target.kind !== 'point'
     ) {
-      s = addLog(s, `${spell.name} não atinge ninguém.`, [caster.id]);
+      s = addLog(s, T(`${spell.name} não atinge ninguém.`, `${spellName(spell)} hits no one.`), [
+        caster.id,
+      ]);
     }
   }
 
@@ -437,15 +526,22 @@ export function resolveSpell(
 
 function teleport(state: EncounterState, caster: Creature, point?: Pos): EncounterState {
   const tok = tokenOf(state, caster.id);
-  if (!tok || !point) throw new RuleError('Escolha o destino.');
+  if (!tok || !point) throw new RuleError(T('Escolha o destino.', 'Choose the destination.'));
   const blocked = occupiedCells(state, (c) => c.id !== caster.id);
   if (!canStand(state.map, point, sizeOf(caster), blocked))
-    throw new RuleError('Destino ocupado ou bloqueado.');
+    throw new RuleError(T('Destino ocupado ou bloqueado.', 'Destination is occupied or blocked.'));
   const moved = {
     ...state,
     tokens: state.tokens.map((t) => (t.creatureId === caster.id ? { ...t, pos: point } : t)),
   };
-  return addLog(moved, `${caster.name} reaparece em outro ponto do mapa.`, [caster.id]);
+  return addLog(
+    moved,
+    T(
+      `${caster.name} reaparece em outro ponto do mapa.`,
+      `${caster.name} reappears elsewhere on the map.`,
+    ),
+    [caster.id],
+  );
 }
 
 const adjacentFoe = (state: EncounterState, caster: Creature, pos: Pos): boolean =>
@@ -534,13 +630,18 @@ function spellAttack(
   const total = d20.roll.total + extra.bonus;
   const hit = d20.crit || (!d20.fumble && total >= ac);
   const crit = hit && (d20.crit || cond.autoCrit);
-  const label = ray ? `${spell.name} (raio ${ray})` : spell.name;
-  const head = `${label}: d20 ${d20.natural} ${fmt(bonus)}${extra.text} = ${total} vs CA ${ac}${cover ? ` (cobertura +${cover})` : ''}${mode === 'normal' ? '' : mode === 'advantage' ? ' (vantagem)' : ' (desvantagem)'}`;
+  const label = ray
+    ? T(`${spell.name} (raio ${ray})`, `${spellName(spell)} (ray ${ray})`)
+    : spellName(spell);
+  const head = T(
+    `${label}: d20 ${d20.natural} ${fmt(bonus)}${extra.text} = ${total} vs CA ${ac}${cover ? ` (cobertura +${cover})` : ''}${mode === 'normal' ? '' : mode === 'advantage' ? ' (vantagem)' : ' (desvantagem)'}`,
+    `${label}: d20 ${d20.natural} ${fmt(bonus)}${extra.text} = ${total} vs AC ${ac}${cover ? ` (cover +${cover})` : ''}${mode === 'normal' ? '' : mode === 'advantage' ? ' (advantage)' : ' (disadvantage)'}`,
+  );
   const mod = abilityMod(caster.abilities[ability]);
   const dec = decoy(state, target.id, total, rng, hit);
   if (dec) return dropOnAttack(dec, caster.id);
   if (!hit) {
-    const miss = addLog(state, `${head} — erro.`, [caster.id, target.id]);
+    const miss = addLog(state, T(`${head} — erro.`, `${head} — miss.`), [caster.id, target.id]);
     return spell.damage?.missHalf
       ? splash(miss, caster, target.id, spell, slot, level, mod, rng)
       : miss;
@@ -592,7 +693,12 @@ function spellSave(
   dc: number,
   point?: Pos,
 ): EncounterState {
-  if (targets.length === 0) return addLog(state, `${spell.name} não atinge ninguém.`, [caster.id]);
+  if (targets.length === 0)
+    return addLog(
+      state,
+      T(`${spell.name} não atinge ninguém.`, `${spellName(spell)} hits no one.`),
+      [caster.id],
+    );
   const res = spell.resolution as Extract<Spell['resolution'], { kind: 'save' }>;
   // o dano é rolado uma vez para todos (um total por tipo de dano)
   const rolled = damageParts(spell).map((p) => ({
@@ -612,9 +718,14 @@ function spellSave(
     const r = rollD20(saveBonus(t, res.ability), sv.mode, rng);
     const total = r.roll.total + sv.bonus;
     const saved = !auto && total >= dc;
-    const modeTxt =
-      sv.mode === 'normal' ? '' : sv.mode === 'advantage' ? ' (vantagem)' : ' (desvantagem)';
-    const head = `${t.name}: salvaguarda de ${res.ability.toUpperCase()} ${auto ? 'falha automática' : `d20 ${r.natural}${sv.text} = ${total}`}${modeTxt} vs CD ${dc} — ${saved ? 'passou' : 'falhou'}`;
+    const modeTxt = T(
+      sv.mode === 'normal' ? '' : sv.mode === 'advantage' ? ' (vantagem)' : ' (desvantagem)',
+      sv.mode === 'normal' ? '' : sv.mode === 'advantage' ? ' (advantage)' : ' (disadvantage)',
+    );
+    const head = T(
+      `${t.name}: salvaguarda de ${res.ability.toUpperCase()} ${auto ? 'falha automática' : `d20 ${r.natural}${sv.text} = ${total}`}${modeTxt} vs CD ${dc} — ${saved ? 'passou' : 'falhou'}`,
+      `${t.name}: ${res.ability.toUpperCase()} saving throw ${auto ? 'automatic failure' : `d20 ${r.natural}${sv.text} = ${total}`}${modeTxt} vs DC ${dc} — ${saved ? 'passed' : 'failed'}`,
+    );
 
     if (rolled.length) {
       let cur = creatureOf(s, t.id);
@@ -625,7 +736,12 @@ function spellSave(
         const d = applyDamage(cur, amount, { type: p.type });
         cur = d.creature;
         dealtTotal += d.dealt;
-        lines.push(`${d.dealt} de dano ${dtype(p.type)}${notes(d)}`);
+        lines.push(
+          T(
+            `${d.dealt} de dano ${dtype(p.type)}${notes(d)}`,
+            `${d.dealt} ${dtype(p.type)} damage${notes(d)}`,
+          ),
+        );
       }
       s = withCreature(s, cur);
       s = addLog(s, `${head}: ${lines.join(' + ')}.`, [caster.id, t.id]);
@@ -675,7 +791,11 @@ function spellAuto(
         hp: { ...t.hp, current: back },
         deathSaves: { successes: 0, failures: 0 },
       });
-      s = addLog(s, `${t.name} volta à vida com ${back} PV.`, [caster.id, t.id]);
+      s = addLog(
+        s,
+        T(`${t.name} volta à vida com ${back} PV.`, `${t.name} returns to life with ${back} HP.`),
+        [caster.id, t.id],
+      );
       s = applyRiders(s, caster, t.id, spell, slot, dc, ability, rng, point);
       continue;
     }
@@ -691,10 +811,14 @@ function spellAuto(
       if (spell.heal.pool) pool -= amount;
       const healed = heal(t, amount);
       s = withCreature(s, healed);
-      s = addLog(s, `${t.name} recupera ${healed.hp.current - t.hp.current} PV.`, [
-        caster.id,
-        t.id,
-      ]);
+      s = addLog(
+        s,
+        T(
+          `${t.name} recupera ${healed.hp.current - t.hp.current} PV.`,
+          `${t.name} regains ${healed.hp.current - t.hp.current} HP.`,
+        ),
+        [caster.id, t.id],
+      );
     } else if (spell.damage) {
       const parts = darts ? [] : damageParts(spell);
       let cur = t;
@@ -714,10 +838,19 @@ function spellAuto(
         const d = applyDamage(cur, it.amount, { type: it.type });
         cur = d.creature;
         dealtTotal += d.dealt;
-        lines.push(`${d.dealt} de dano ${dtype(it.type)}${notes(d)}`);
+        lines.push(
+          T(
+            `${d.dealt} de dano ${dtype(it.type)}${notes(d)}`,
+            `${d.dealt} ${dtype(it.type)} damage${notes(d)}`,
+          ),
+        );
       }
       s = withCreature(s, cur);
-      s = addLog(s, `${t.name} sofre ${lines.join(' + ')}.`, [caster.id, t.id]);
+      s = addLog(
+        s,
+        T(`${t.name} sofre ${lines.join(' + ')}.`, `${t.name} takes ${lines.join(' + ')}.`),
+        [caster.id, t.id],
+      );
       s = aftermath(s, t.id, dealtTotal, rng);
     }
     s = applyRiders(s, caster, t.id, spell, slot, dc, ability, rng, point);
@@ -743,7 +876,11 @@ function spellPool(
       ? `${res.dice}+${scaleDice(res.perLevel, slot - spell.level)}`
       : res.dice;
   let pool = Math.max(0, roll(expr, rng).total);
-  let s = addLog(state, `${spell.name}: reserva de ${pool} PV.`, [caster.id]);
+  let s = addLog(
+    state,
+    T(`${spell.name}: reserva de ${pool} PV.`, `${spellName(spell)}: pool of ${pool} HP.`),
+    [caster.id],
+  );
   const order = targets
     .filter((t) => t.status === 'alive' && !t.conditions.some((c) => c.name === 'unconscious'))
     .sort((a, b) => a.hp.current - b.hp.current);
@@ -770,7 +907,9 @@ function moveZone(
     const fromCaster = z.aura || z.shape.kind === 'line' || z.shape.kind === 'cone';
     return fromCaster ? { ...z, toward: point } : { ...z, center: point };
   });
-  let s = addLog({ ...state, zones }, `${spell.name} se move.`, [caster.id]);
+  let s = addLog({ ...state, zones }, T(`${spell.name} se move.`, `${spellName(spell)} moves.`), [
+    caster.id,
+  ]);
   // Raio de Lua (2024): quem a área alcança ao se mover refaz a salvaguarda
   const zone = zones.find((z) => z.casterId === caster.id && z.spellId === spell.id);
   if (spell.zone?.onMove && zone) {
@@ -813,10 +952,22 @@ function splash(
     const r = applyDamage(cur, Math.floor(Math.max(0, total) / 2), { type: p.type });
     cur = r.creature;
     dealt += r.dealt;
-    lines.push(`${r.dealt} de dano ${dtype(p.type)}${notes(r)}`);
+    lines.push(
+      T(
+        `${r.dealt} de dano ${dtype(p.type)}${notes(r)}`,
+        `${r.dealt} ${dtype(p.type)} damage${notes(r)}`,
+      ),
+    );
   }
   let s = withCreature(state, cur);
-  s = addLog(s, `${spell.name} respinga no alvo: ${lines.join(' + ')}.`, [caster.id, targetId]);
+  s = addLog(
+    s,
+    T(
+      `${spell.name} respinga no alvo: ${lines.join(' + ')}.`,
+      `${spellName(spell)} splashes the target: ${lines.join(' + ')}.`,
+    ),
+    [caster.id, targetId],
+  );
   return checkOutcome(aftermath(s, targetId, dealt, rng));
 }
 

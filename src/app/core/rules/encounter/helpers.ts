@@ -1,4 +1,4 @@
-import { CONDITION_LABEL, Creature, DAMAGE_LABEL, DamageType } from '../../models/creature';
+import { Creature, DamageType } from '../../models/creature';
 import { EncounterState, Role, TurnState } from '../../models/encounter';
 import {
   BonusAction,
@@ -11,6 +11,7 @@ import {
 import { AdvMode, Rng } from '../dice';
 import { addLog, creatureOf, teamOf, withCreature } from './state';
 import { xpForCr } from '../srd/xp';
+import { condT, dmgT, spellT, T } from '../i18n';
 
 export interface Context {
   rng: Rng;
@@ -34,7 +35,7 @@ export function summarizeCombat(state: EncounterState) {
 }
 
 /** Tipo de dano em português, para o registro. */
-export const dtype = (t: DamageType): string => DAMAGE_LABEL[t].toLowerCase();
+export const dtype = (t: DamageType): string => dmgT(t);
 
 export const fmt = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
 
@@ -45,13 +46,13 @@ export const notes = (r: {
   dropped: boolean;
 }): string =>
   r.instantDeath
-    ? ' — morte instantânea'
+    ? T(' — morte instantânea', ' — instant death')
     : r.creature.status === 'dead'
-      ? ' — morreu'
+      ? T(' — morreu', ' — died')
       : r.creature.status === 'stable'
-        ? ' — nocauteado(a), inconsciente'
+        ? T(' — nocauteado(a), inconsciente', ' — knocked out, unconscious')
         : r.dropped
-          ? ' — caiu a 0 PV'
+          ? T(' — caiu a 0 PV', ' — dropped to 0 HP')
           : '';
 
 /** Termina o combate quando um dos lados não tem mais ninguém vivo. */
@@ -65,8 +66,8 @@ export function checkOutcome(state: EncounterState): EncounterState {
   return addLog(
     { ...state, combat: { ...state.combat, phase: 'ended', turn: null, outcome } },
     outcome === 'party'
-      ? 'Fim do combate: o grupo venceu.'
-      : 'Fim do combate: o grupo foi derrotado.',
+      ? T('Fim do combate: o grupo venceu.', 'Combat over: the party won.')
+      : T('Fim do combate: o grupo foi derrotado.', 'Combat over: the party was defeated.'),
   );
 }
 
@@ -79,16 +80,21 @@ export function actorTurn(
   const actor = creatureOf(state, actorId);
   const turn = state.combat.turn;
   if (state.combat.phase !== 'running' || !turn)
-    throw new RuleError('O combate não está em andamento.');
-  if (turn.actorId !== actorId) throw new RuleError(`Não é a vez de ${actor.name}.`);
+    throw new RuleError(T('O combate não está em andamento.', 'Combat is not in progress.'));
+  if (turn.actorId !== actorId)
+    throw new RuleError(T(`Não é a vez de ${actor.name}.`, `It is not ${actor.name}'s turn.`));
   const waiting = (state.combat.pending ?? []).find((p) => p.kind === 'spell');
   if (waiting)
     throw new RuleError(
-      `Aguardando a reação de ${creatureOf(state, waiting.reactorId).name}: use ou recuse.`,
+      T(
+        `Aguardando a reação de ${creatureOf(state, waiting.reactorId).name}: use ou recuse.`,
+        `Waiting for ${creatureOf(state, waiting.reactorId).name}'s reaction: use or decline it.`,
+      ),
     );
-  if (need === 'alive' && !canAct(actor)) throw new RuleError(`${actor.name} não pode agir agora.`);
+  if (need === 'alive' && !canAct(actor))
+    throw new RuleError(T(`${actor.name} não pode agir agora.`, `${actor.name} cannot act now.`));
   if (need === 'dying' && actor.status !== 'dying')
-    throw new RuleError(`${actor.name} não está morrendo.`);
+    throw new RuleError(T(`${actor.name} não está morrendo.`, `${actor.name} is not dying.`));
   return { actor, turn };
 }
 
@@ -112,13 +118,22 @@ export function spendCost(
     return 'action';
   }
   if (!bonusActionsOf(actor).includes(what))
-    throw new RuleError(`${actor.name} não pode fazer isso como ação bônus.`);
-  if (!turn.bonus) throw new RuleError('Sem ação bônus disponível neste turno.');
+    throw new RuleError(
+      T(
+        `${actor.name} não pode fazer isso como ação bônus.`,
+        `${actor.name} cannot do that as a bonus action.`,
+      ),
+    );
+  if (!turn.bonus)
+    throw new RuleError(
+      T('Sem ação bônus disponível neste turno.', 'No bonus action left this turn.'),
+    );
   return 'bonus';
 }
 
 export function spendAction(turn: TurnState): void {
-  if (!turn.action) throw new RuleError('Sem ação disponível neste turno.');
+  if (!turn.action)
+    throw new RuleError(T('Sem ação disponível neste turno.', 'No action left this turn.'));
 }
 
 /** Vantagem e desvantagem se anulam; não se acumulam. */
@@ -141,7 +156,10 @@ export function aftermath(
     t = { ...t, conditions: t.conditions.filter((c) => !c.endsOnDamage) };
     state = addLog(
       withCreature(state, t),
-      `${t.name} acorda: ${woke.map((c) => c.spell ?? CONDITION_LABEL[c.name]).join(', ')} termina.`,
+      T(
+        `${t.name} acorda: ${woke.map((c) => (c.spell ? spellT(c.spell) : condT(c.name))).join(', ')} termina.`,
+        `${t.name} wakes: ${woke.map((c) => (c.spell ? spellT(c.spell) : condT(c.name))).join(', ')} ends.`,
+      ),
       [t.id],
     );
   }
@@ -150,7 +168,10 @@ export function aftermath(
     t = removeEffects(t, (e) => woke.includes(e));
     state = addLog(
       withCreature(state, t),
-      `${t.name}: ${woke.map((e) => e.name).join(', ')} termina.`,
+      T(
+        `${t.name}: ${woke.map((e) => spellT(e.name)).join(', ')} termina.`,
+        `${t.name}: ${woke.map((e) => spellT(e.name)).join(', ')} ends.`,
+      ),
       [t.id],
     );
   }
@@ -158,12 +179,18 @@ export function aftermath(
   if (t.status !== 'alive') {
     return addLog(
       withCreature(state, { ...t, concentration: undefined }),
-      `${t.name} perde a concentração em ${t.concentration}.`,
+      T(
+        `${t.name} perde a concentração em ${spellT(t.concentration)}.`,
+        `${t.name} loses concentration on ${spellT(t.concentration)}.`,
+      ),
       [t.id],
     );
   }
   const chk = checkConcentration(t, dealt, rng);
   if (!chk) return state;
-  const text = `${t.name}: concentração em ${t.concentration} — d20 ${chk.roll} = ${chk.total} vs CD ${chk.dc}: ${chk.broken ? 'perdida' : 'mantida'}.`;
+  const text = T(
+    `${t.name}: concentração em ${spellT(t.concentration)} — d20 ${chk.roll} = ${chk.total} vs CD ${chk.dc}: ${chk.broken ? 'perdida' : 'mantida'}.`,
+    `${t.name}: concentration on ${spellT(t.concentration)} — d20 ${chk.roll} = ${chk.total} vs DC ${chk.dc}: ${chk.broken ? 'lost' : 'kept'}.`,
+  );
   return addLog(withCreature(state, chk.creature), text, [t.id]);
 }

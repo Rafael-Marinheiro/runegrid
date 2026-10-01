@@ -97,16 +97,20 @@ import {
   tokenOf,
   withCreature,
 } from './state';
+import { T, condT } from '../i18n';
+import { distT } from '../units';
 
 /** O jogador só age por criaturas suas; o Mestre pode tudo. */
 export function authorize(cmd: Command, role: Role): void {
   if (role.kind === 'dm') return;
   if (!PLAYER_COMMANDS.includes(cmd.type)) {
-    throw new ForbiddenError('Só o Mestre pode fazer isso.');
+    throw new ForbiddenError(T('Só o Mestre pode fazer isso.', 'Only the GM can do that.'));
   }
   const actorId = (cmd as { actorId: string }).actorId;
   if (!role.owns.includes(actorId))
-    throw new ForbiddenError('Você só controla os seus personagens.');
+    throw new ForbiddenError(
+      T('Você só controla os seus personagens.', 'You only control your own characters.'),
+    );
 }
 
 /** Aplica um comando e devolve o novo estado (o original nunca é alterado). Lança `RuleError` se for ilegal. */
@@ -135,7 +139,8 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       return placeToken(state, cmd.id, cmd.pos);
     case 'setHidden': {
       const c = creatureOf(state, cmd.id);
-      if (!tokenOf(state, cmd.id)) throw new RuleError(`${c.name} não está no mapa.`);
+      if (!tokenOf(state, cmd.id))
+        throw new RuleError(T(`${c.name} não está no mapa.`, `${c.name} is not on the map.`));
       return {
         ...state,
         tokens: state.tokens.map((t) =>
@@ -146,7 +151,8 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
     case 'setTokenArt': {
       const c = { ...creatureOf(state, cmd.id) };
       delete c.tokenArt;
-      if (cmd.art !== undefined && !isTokenArt(cmd.art)) throw new RuleError('Miniatura inválida.');
+      if (cmd.art !== undefined && !isTokenArt(cmd.art))
+        throw new RuleError(T('Miniatura inválida.', 'Invalid miniature.'));
       return withCreature(state, cmd.art ? { ...c, tokenArt: cmd.art } : c);
     }
     case 'setTerrain': {
@@ -161,7 +167,8 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
     case 'setTexture':
       return { ...state, map: { ...state.map, texture: cmd.texture } };
     case 'setMapBackground':
-      if (!isMapBackground(cmd.background)) throw new RuleError('Imagem de fundo inválida.');
+      if (!isMapBackground(cmd.background))
+        throw new RuleError(T('Imagem de fundo inválida.', 'Invalid background image.'));
       return { ...state, map: { ...state.map, background: cmd.background } };
     case 'setVision':
       return { ...state, map: { ...state.map, vision: cmd.vision } };
@@ -203,12 +210,16 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       return rollInitiative(state, ctx.rng);
     case 'secretRoll': {
       const r = roll(cmd.expr, ctx.rng);
-      const s = addLog(state, `Rolagem secreta ${cmd.expr}: ${r.total}`);
+      const s = addLog(
+        state,
+        T(`Rolagem secreta ${cmd.expr}: ${r.total}`, `Secret roll ${cmd.expr}: ${r.total}`),
+      );
       return { ...s, log: s.log.map((e) => (e.id === s.seq - 1 ? { ...e, secret: true } : e)) };
     }
     case 'setInitiative': {
       creatureOf(state, cmd.id);
-      if (state.combat.phase === 'running') throw new RuleError('O combate já começou.');
+      if (state.combat.phase === 'running')
+        throw new RuleError(T('O combate já começou.', 'Combat has already started.'));
       return {
         ...state,
         combat: {
@@ -222,21 +233,29 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
     case 'joinCombat':
       return joinCombat(state, cmd.id, ctx.rng);
     case 'endCombat': {
-      if (state.combat.phase !== 'running') throw new RuleError('O combate não está em andamento.');
+      if (state.combat.phase !== 'running')
+        throw new RuleError(T('O combate não está em andamento.', 'Combat is not in progress.'));
       return addLog(
         { ...state, combat: { ...state.combat, phase: 'ended', turn: null } },
-        'Combate encerrado pelo Mestre.',
+        T('Combate encerrado pelo Mestre.', 'Combat ended by the GM.'),
       );
     }
     case 'resetCombat':
-      if (state.combat.phase !== 'ended') throw new RuleError('O combate ainda não terminou.');
-      return addLog({ ...state, combat: emptyCombat() }, 'Novo combate em montagem.');
+      if (state.combat.phase !== 'ended')
+        throw new RuleError(T('O combate ainda não terminou.', 'Combat has not ended yet.'));
+      return addLog(
+        { ...state, combat: emptyCombat() },
+        T('Novo combate em montagem.', 'New combat being set up.'),
+      );
     case 'damage': {
       const target = creatureOf(state, cmd.targetId);
       const r = applyDamage(target, cmd.amount, { type: cmd.damageType });
       const s = addLog(
         withCreature(state, r.creature),
-        `${target.name} sofreu ${r.dealt} de dano${notes(r)}.`,
+        T(
+          `${target.name} sofreu ${r.dealt} de dano${notes(r)}.`,
+          `${target.name} took ${r.dealt} damage${notes(r)}.`,
+        ),
         [target.id],
       );
       return checkOutcome(aftermath(s, target.id, r.dealt, ctx.rng));
@@ -244,16 +263,26 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
     case 'addCondition': {
       const target = creatureOf(state, cmd.targetId);
       const s = withCreature(state, addCondition(target, cmd.condition, cmd.rounds));
-      const dur = cmd.rounds ? ` por ${cmd.rounds} rodada(s)` : '';
-      return addLog(s, `${target.name} ficou ${CONDITION_LABEL[cmd.condition]}${dur}.`, [
-        target.id,
-      ]);
+      const dur = cmd.rounds
+        ? T(` por ${cmd.rounds} rodada(s)`, ` for ${cmd.rounds} round(s)`)
+        : '';
+      return addLog(
+        s,
+        T(
+          `${target.name} ficou ${CONDITION_LABEL[cmd.condition]}${dur}.`,
+          `${target.name} is now ${condT(cmd.condition)}${dur}.`,
+        ),
+        [target.id],
+      );
     }
     case 'removeCondition': {
       const target = creatureOf(state, cmd.targetId);
       return addLog(
         withCreature(state, removeCondition(target, cmd.condition)),
-        `${target.name}: ${CONDITION_LABEL[cmd.condition]} removido.`,
+        T(
+          `${target.name}: ${CONDITION_LABEL[cmd.condition]} removido.`,
+          `${target.name}: ${condT(cmd.condition)} removed.`,
+        ),
         [target.id],
       );
     }
@@ -262,22 +291,27 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
     case 'standUp': {
       const { actor, turn } = actorTurn(state, cmd.actorId);
       if (!actor.conditions.some((c) => c.name === 'prone'))
-        throw new RuleError(`${actor.name} não está caído.`);
+        throw new RuleError(T(`${actor.name} não está caído.`, `${actor.name} is not prone.`));
       const cost = Math.floor(effectiveSpeed(actor) / 2);
       const remaining = effectiveSpeed(actor) * (turn.dashed ? 2 : 1) - turn.movedFt;
-      if (cost <= 0 || remaining < cost) throw new RuleError('Sem deslocamento para se levantar.');
+      if (cost <= 0 || remaining < cost)
+        throw new RuleError(
+          T('Sem deslocamento para se levantar.', 'Not enough movement to stand up.'),
+        );
       const s = withCreature(state, removeCondition(actor, 'prone'));
       return addLog(
         setTurn(s, { ...turn, movedFt: turn.movedFt + cost }),
-        `${actor.name} se levantou.`,
+        T(`${actor.name} se levantou.`, `${actor.name} stood up.`),
         [actor.id],
       );
     }
     case 'heal': {
       const target = creatureOf(state, cmd.targetId);
-      return addLog(withCreature(state, heal(target, cmd.amount)), `${target.name} foi curado.`, [
-        target.id,
-      ]);
+      return addLog(
+        withCreature(state, heal(target, cmd.amount)),
+        T(`${target.name} foi curado.`, `${target.name} was healed.`),
+        [target.id],
+      );
     }
     case 'move':
       return move(state, cmd.actorId, cmd.to, ctx);
@@ -288,7 +322,10 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       const paid = spendCost(actor, turn, 'dash', cmd.bonus);
       return addLog(
         setTurn(state, { ...turn, [paid]: false, dashed: true }),
-        `${actor.name} correu (Disparada${paid === 'bonus' ? ', ação bônus' : ''}).`,
+        T(
+          `${actor.name} correu (Disparada${paid === 'bonus' ? ', ação bônus' : ''}).`,
+          `${actor.name} dashed (Dash${paid === 'bonus' ? ', bonus action' : ''}).`,
+        ),
         [actor.id],
       );
     }
@@ -298,7 +335,7 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       const s = setTurn(state, { ...turn, action: false });
       return addLog(
         { ...s, combat: { ...s.combat, dodging: [...s.combat.dodging, actor.id] } },
-        `${actor.name} está em Esquiva.`,
+        T(`${actor.name} está em Esquiva.`, `${actor.name} is dodging.`),
         [actor.id],
       );
     }
@@ -307,15 +344,19 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       const paid = spendCost(actor, turn, 'disengage', cmd.bonus);
       return addLog(
         setTurn(state, { ...turn, [paid]: false, disengaged: true }),
-        `${actor.name} se desengajou${paid === 'bonus' ? ' (ação bônus)' : ''}.`,
+        T(
+          `${actor.name} se desengajou${paid === 'bonus' ? ' (ação bônus)' : ''}.`,
+          `${actor.name} disengaged${paid === 'bonus' ? ' (bonus action)' : ''}.`,
+        ),
         [actor.id],
       );
     }
     case 'hide': {
       const { actor, turn } = actorTurn(state, cmd.actorId);
       const token = tokenOf(state, actor.id);
-      if (!token) throw new RuleError('Criatura fora do mapa.');
-      if (token.hidden) throw new RuleError(`${actor.name} já está oculto.`);
+      if (!token) throw new RuleError(T('Criatura fora do mapa.', 'Creature is off the map.'));
+      if (token.hidden)
+        throw new RuleError(T(`${actor.name} já está oculto.`, `${actor.name} is already hidden.`));
       const observers = state.tokens
         .map((other) => ({ token: other, creature: creatureOf(state, other.creatureId) }))
         .filter(({ creature }) => teamOf(creature) !== teamOf(actor) && creature.status !== 'dead');
@@ -330,14 +371,23 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
           ),
         );
       });
-      if (seen) throw new RuleError('Saia da vista dos inimigos para se esconder.');
+      if (seen)
+        throw new RuleError(
+          T(
+            'Saia da vista dos inimigos para se esconder.',
+            "Get out of the enemies' sight to hide.",
+          ),
+        );
       const paid = spendCost(actor, turn, 'hide', cmd.bonus);
       const bonus = skillBonus(actor, 'stealth');
       const check = rollD20(bonus, 'normal', ctx.rng);
       const dc = Math.max(0, ...observers.map(({ creature }) => passivePerception(creature)));
       let next = addLog(
         setTurn(state, { ...turn, [paid]: false }),
-        `${actor.name} tentou se esconder: d20 ${check.natural} ${fmt(bonus)} = ${check.roll.total}.`,
+        T(
+          `${actor.name} tentou se esconder: d20 ${check.natural} ${fmt(bonus)} = ${check.roll.total}.`,
+          `${actor.name} tried to hide: d20 ${check.natural} ${fmt(bonus)} = ${check.roll.total}.`,
+        ),
         [actor.id],
       );
       if (check.roll.total >= dc)
@@ -353,18 +403,22 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       const { actor, turn } = actorTurn(state, cmd.actorId);
       const item = (actor.inventory ?? []).find((i) => i.id === cmd.itemId);
       const d = item && itemDef(item);
-      if (!d?.consume) throw new RuleError('Esse item não pode ser usado.');
+      if (!d?.consume)
+        throw new RuleError(T('Esse item não pode ser usado.', 'That item cannot be used.'));
       spendAction(turn);
       let c = consume(actor, cmd.itemId);
-      let msg = `${actor.name} usou ${d.name}`;
+      let msg = T(`${actor.name} usou ${d.name}`, `${actor.name} used ${d.name}`);
       if (d.consume.heal) {
         const n = Math.max(0, roll(d.consume.heal, ctx.rng).total);
         c = heal(c, n);
-        msg += ` e recuperou ${n} PV`;
+        msg += T(` e recuperou ${n} PV`, ` and regained ${n} HP`);
       }
       if (d.consume.cures) {
         c = removeCondition(c, d.consume.cures);
-        msg += ` e removeu ${CONDITION_LABEL[d.consume.cures]}`;
+        msg += T(
+          ` e removeu ${CONDITION_LABEL[d.consume.cures]}`,
+          ` and removed ${condT(d.consume.cures)}`,
+        );
       }
       return addLog(withCreature(setTurn(state, { ...turn, action: false }), c), `${msg}.`, [
         actor.id,
@@ -375,10 +429,12 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       const target = creatureOf(state, cmd.targetId);
       const from = tokenOf(state, actor.id);
       const at = tokenOf(state, target.id);
-      if (!from || !at) throw new RuleError('Criatura fora do mapa.');
-      if (teamOf(target) === teamOf(actor)) throw new RuleError('Ajude contra um inimigo.');
+      if (!from || !at)
+        throw new RuleError(T('Criatura fora do mapa.', 'Creature is off the map.'));
+      if (teamOf(target) === teamOf(actor))
+        throw new RuleError(T('Ajude contra um inimigo.', 'Help against an enemy.'));
       if (distanceFt(from.pos, sizeOf(actor), at.pos, sizeOf(target), state.rule) > 5)
-        throw new RuleError('O inimigo precisa estar adjacente.');
+        throw new RuleError(T('O inimigo precisa estar adjacente.', 'The enemy must be adjacent.'));
       spendAction(turn);
       const s = setTurn(state, { ...turn, action: false });
       return addLog(
@@ -389,7 +445,10 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
             helped: [...(s.combat.helped ?? []), { targetId: target.id, by: actor.id }],
           },
         },
-        `${actor.name} ajuda contra ${target.name}.`,
+        T(
+          `${actor.name} ajuda contra ${target.name}.`,
+          `${actor.name} helps against ${target.name}.`,
+        ),
         [actor.id, target.id],
       );
     }
@@ -398,7 +457,10 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       const r = rollDeathSave(actor, ctx.rng);
       return addLog(
         withCreature(state, r.creature),
-        `${actor.name}: salvaguarda contra a morte d20 ${r.roll} — ${r.outcome}.`,
+        T(
+          `${actor.name}: salvaguarda contra a morte d20 ${r.roll} — ${DEATH_OUTCOME[r.outcome][0]}.`,
+          `${actor.name}: death saving throw d20 ${r.roll} — ${DEATH_OUTCOME[r.outcome][1]}.`,
+        ),
         [actor.id],
       );
     }
@@ -411,17 +473,26 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
     case 'endTurn': {
       const { actor } = actorTurn(state, cmd.actorId, 'any');
       if ((state.combat.pending ?? []).length) {
-        throw new RuleError('Há reações pendentes: use ou recuse antes de encerrar o turno.');
+        throw new RuleError(
+          T(
+            'Há reações pendentes: use ou recuse antes de encerrar o turno.',
+            'Pending reactions: use or decline them before ending the turn.',
+          ),
+        );
       }
       const t = tickConditions(actor);
       let s = withCreature(state, t.creature);
       for (const n of t.expired)
-        s = addLog(s, `${actor.name}: ${CONDITION_LABEL[n]} terminou.`, [actor.id]);
+        s = addLog(
+          s,
+          T(`${actor.name}: ${CONDITION_LABEL[n]} terminou.`, `${actor.name}: ${condT(n)} ended.`),
+          [actor.id],
+        );
       return advanceTurn(endUpkeep(s, actor.id, ctx), ctx);
     }
     default:
       // mensagens malformadas de jogadores nunca chegam aqui (validação), mas o reducer não confia em ninguém
-      throw new RuleError('Comando desconhecido.');
+      throw new RuleError(T('Comando desconhecido.', 'Unknown command.'));
   }
 }
 
@@ -433,7 +504,9 @@ function addCreature(
 ): EncounterState {
   const c = cmd.creature;
   if (state.creatures.some((x) => x.id === c.id))
-    throw new RuleError('Essa criatura já está no encontro.');
+    throw new RuleError(
+      T('Essa criatura já está no encontro.', 'That creature is already in the encounter.'),
+    );
   let s: EncounterState = { ...state, creatures: [...state.creatures, c] };
   if (cmd.pos) {
     s = placeToken(s, c.id, cmd.pos);
@@ -444,7 +517,7 @@ function addCreature(
       };
   }
   // o registro é feito por último: se o token está oculto, a linha nasce secreta
-  return addLog(s, `${c.name} entrou no encontro.`, [c.id]);
+  return addLog(s, T(`${c.name} entrou no encontro.`, `${c.name} joined the encounter.`), [c.id]);
 }
 
 function removeCreature(state: EncounterState, id: string, ctx: Context): EncounterState {
@@ -463,7 +536,10 @@ function removeCreature(state: EncounterState, id: string, ctx: Context): Encoun
   const initiative = { ...combat.initiative };
   delete initiative[id];
   if (idx < 0)
-    return addLog({ ...s, combat: { ...combat, initiative } }, `${c.name} saiu do encontro.`);
+    return addLog(
+      { ...s, combat: { ...combat, initiative } },
+      T(`${c.name} saiu do encontro.`, `${c.name} left the encounter.`),
+    );
 
   const order = combat.order.filter((x) => x !== id);
   const wasCurrent = combat.phase === 'running' && idx === combat.turnIndex;
@@ -474,7 +550,7 @@ function removeCreature(state: EncounterState, id: string, ctx: Context): Encoun
     round++;
   }
   s = { ...s, combat: { ...combat, order, initiative, turnIndex, round } };
-  s = addLog(s, `${c.name} saiu do encontro.`);
+  s = addLog(s, T(`${c.name} saiu do encontro.`, `${c.name} left the encounter.`));
   if (combat.phase !== 'running') return s;
   if (order.length === 0) return { ...s, combat: emptyCombat() };
   const outcome = checkOutcome(s);
@@ -490,7 +566,12 @@ function placeToken(
   const c = creatureOf(state, id);
   const blocked = occupiedCells(state, (o) => o.id !== id);
   if (!canStand(state.map, pos, sizeOf(c), blocked))
-    throw new RuleError('Não cabe aí (parede, borda ou outra criatura).');
+    throw new RuleError(
+      T(
+        'Não cabe aí (parede, borda ou outra criatura).',
+        "It doesn't fit there (wall, edge or another creature).",
+      ),
+    );
   const existing = tokenOf(state, id);
   const tokens = existing
     ? state.tokens.map((t) => (t.creatureId === id ? { ...t, pos } : t))
@@ -499,7 +580,8 @@ function placeToken(
 }
 
 function rollInitiative(state: EncounterState, rng: Rng): EncounterState {
-  if (state.combat.phase === 'running') throw new RuleError('O combate já começou.');
+  if (state.combat.phase === 'running')
+    throw new RuleError(T('O combate já começou.', 'Combat has already started.'));
   const initiative: Record<string, number> = {};
   const parts: string[] = [];
   for (const c of state.creatures) {
@@ -508,17 +590,24 @@ function rollInitiative(state: EncounterState, rng: Rng): EncounterState {
     initiative[c.id] = r.roll.total;
     parts.push(`${c.name} ${r.roll.total}`);
   }
-  if (!parts.length) throw new RuleError('Coloque criaturas no mapa antes de rolar a iniciativa.');
+  if (!parts.length)
+    throw new RuleError(
+      T(
+        'Coloque criaturas no mapa antes de rolar a iniciativa.',
+        'Place creatures on the map before rolling initiative.',
+      ),
+    );
   return addLog(
     { ...state, combat: { ...state.combat, phase: 'setup', initiative } },
-    `Iniciativa: ${parts.join(', ')}.`,
+    T(`Iniciativa: ${parts.join(', ')}.`, `Initiative: ${parts.join(', ')}.`),
   );
 }
 
 // ---------- combate ----------
 
 function startCombat(state: EncounterState, ctx: Context): EncounterState {
-  if (state.combat.phase === 'running') throw new RuleError('O combate já começou.');
+  if (state.combat.phase === 'running')
+    throw new RuleError(T('O combate já começou.', 'Combat has already started.'));
   const order = state.creatures
     .filter((c) => state.combat.initiative[c.id] !== undefined && tokenOf(state, c.id))
     .map((c, i) => ({ c, i }))
@@ -529,7 +618,10 @@ function startCombat(state: EncounterState, ctx: Context): EncounterState {
         a.i - b.i,
     )
     .map((x) => x.c.id);
-  if (order.length === 0) throw new RuleError('Role a iniciativa antes de começar.');
+  if (order.length === 0)
+    throw new RuleError(
+      T('Role a iniciativa antes de começar.', 'Roll initiative before starting.'),
+    );
 
   let s: EncounterState = {
     ...state,
@@ -541,7 +633,7 @@ function startCombat(state: EncounterState, ctx: Context): EncounterState {
       initiative: state.combat.initiative,
     },
   };
-  s = addLog(s, 'O combate começou.');
+  s = addLog(s, T('O combate começou.', 'Combat started.'));
   // se o primeiro da ordem já está morto, pula para o próximo vivo
   return creatureOf(s, order[0]).status === 'dead' ? advanceTurn(s, ctx) : beginTurn(s, ctx);
 }
@@ -551,9 +643,15 @@ function joinCombat(state: EncounterState, id: string, rng: Rng): EncounterState
   const c = creatureOf(state, id);
   const { combat } = state;
   if (combat.phase !== 'running' || !combat.turn)
-    throw new RuleError('O combate não está em andamento.');
-  if (combat.order.includes(id)) throw new RuleError(`${c.name} já está na iniciativa.`);
-  if (!tokenOf(state, id)) throw new RuleError(`Coloque ${c.name} no mapa primeiro.`);
+    throw new RuleError(T('O combate não está em andamento.', 'Combat is not in progress.'));
+  if (combat.order.includes(id))
+    throw new RuleError(
+      T(`${c.name} já está na iniciativa.`, `${c.name} is already in the initiative.`),
+    );
+  if (!tokenOf(state, id))
+    throw new RuleError(
+      T(`Coloque ${c.name} no mapa primeiro.`, `Place ${c.name} on the map first.`),
+    );
 
   const r = rollD20(initiativeBonus(c), 'normal', rng);
   const initiative = { ...combat.initiative, [id]: r.roll.total };
@@ -572,8 +670,24 @@ function joinCombat(state: EncounterState, id: string, rng: Rng): EncounterState
     ...state,
     combat: { ...combat, initiative, order, turnIndex: order.indexOf(current) },
   };
-  return addLog(next, `${c.name} entra no combate com iniciativa ${r.roll.total}.`, [id]);
+  return addLog(
+    next,
+    T(
+      `${c.name} entra no combate com iniciativa ${r.roll.total}.`,
+      `${c.name} joins combat with initiative ${r.roll.total}.`,
+    ),
+    [id],
+  );
 }
+
+const DEATH_OUTCOME: Record<string, [string, string]> = {
+  success: ['sucesso', 'success'],
+  failure: ['falha', 'failure'],
+  'critical-failure': ['falha crítica', 'critical failure'],
+  revived: ['volta à consciência', 'regains consciousness'],
+  stable: ['estabilizou', 'stabilized'],
+  dead: ['morreu', 'died'],
+};
 
 function newTurn(actorId: string): TurnState {
   return {
@@ -602,7 +716,14 @@ function beginTurn(state: EncounterState, ctx: Context): EncounterState {
     },
   };
   return beginUpkeep(
-    addLog(s, `Turno de ${actor.name} (rodada ${s.combat.round}).`, [actor.id]),
+    addLog(
+      s,
+      T(
+        `Turno de ${actor.name} (rodada ${s.combat.round}).`,
+        `${actor.name}'s turn (round ${s.combat.round}).`,
+      ),
+      [actor.id],
+    ),
     actor.id,
     ctx,
   );
@@ -632,9 +753,10 @@ function advanceTurn(state: EncounterState, ctx: Context): EncounterState {
 export function moveQuery(state: EncounterState, actorId: string): MoveQuery {
   const { actor, turn } = actorTurn(state, actorId);
   const from = tokenOf(state, actorId);
-  if (!from) throw new RuleError(`${actor.name} não está no mapa.`);
+  if (!from)
+    throw new RuleError(T(`${actor.name} não está no mapa.`, `${actor.name} is not on the map.`));
   const remaining = effectiveSpeed(actor) * (turn.dashed ? 2 : 1) - turn.movedFt;
-  if (remaining <= 0) throw new RuleError('Sem deslocamento restante.');
+  if (remaining <= 0) throw new RuleError(T('Sem deslocamento restante.', 'No movement left.'));
   return {
     map: state.map,
     start: from.pos,
@@ -658,9 +780,9 @@ function move(
   // não pode terminar sobre ninguém
   const anyone = occupiedCells(state, (o) => o.id !== actorId);
   if (!canStand(state.map, to, q.size, anyone))
-    throw new RuleError('Destino bloqueado ou ocupado.');
+    throw new RuleError(T('Destino bloqueado ou ocupado.', 'Destination is blocked or occupied.'));
   const found = findPath(q, to);
-  if (!found) throw new RuleError('Fora do alcance de deslocamento.');
+  if (!found) throw new RuleError(T('Fora do alcance de deslocamento.', 'Out of movement range.'));
 
   // uma armadilha armada no caminho interrompe o movimento nela
   const hit = firstTrapOnPath(state, found.path, q.size);
@@ -673,7 +795,7 @@ function move(
   };
   const s = addLog(
     setTurn(moved, { ...turn, movedFt: turn.movedFt + cost }),
-    `${actor.name} se moveu ${cost} ft.`,
+    T(`${actor.name} se moveu ${distT(cost)}.`, `${actor.name} moved ${distT(cost)}.`),
     [actorId],
   );
   const queued = turn.disengaged ? s : queueOpportunities(s, actorId, q.start, stop);
@@ -715,7 +837,10 @@ function queueOpportunities(
   const names = added.map((p) => creatureOf(state, p.reactorId).name).join(', ');
   return addLog(
     { ...state, combat: { ...state.combat, pending } },
-    `${mover.name} saiu do alcance de ${names}: ataque de oportunidade possível.`,
+    T(
+      `${mover.name} saiu do alcance de ${names}: ataque de oportunidade possível.`,
+      `${mover.name} left ${names}'s reach: opportunity attack possible.`,
+    ),
     [moverId],
   );
 }
@@ -730,22 +855,43 @@ function reaction(
   const p = pending.find(
     (x: PendingReaction) => x.reactorId === reactorId && x.kind === 'opportunity',
   );
-  if (!p) throw new RuleError('Não há reação pendente para essa criatura.');
+  if (!p)
+    throw new RuleError(
+      T('Não há reação pendente para essa criatura.', 'No pending reaction for that creature.'),
+    );
   const rest = { ...state, combat: { ...state.combat, pending: pending.filter((x) => x !== p) } };
   const reactor = creatureOf(state, reactorId);
-  if (!use) return addLog(rest, `${reactor.name} recusa o ataque de oportunidade.`, [reactorId]);
+  if (!use)
+    return addLog(
+      rest,
+      T(
+        `${reactor.name} recusa o ataque de oportunidade.`,
+        `${reactor.name} declines the opportunity attack.`,
+      ),
+      [reactorId],
+    );
 
   const target = creatureOf(state, p.targetId);
-  if (!canAct(reactor)) throw new RuleError(`${reactor.name} não pode reagir agora.`);
+  if (!canAct(reactor))
+    throw new RuleError(
+      T(`${reactor.name} não pode reagir agora.`, `${reactor.name} cannot react now.`),
+    );
   if (target.status === 'dead')
-    return addLog(rest, `${reactor.name}: o alvo já está morto.`, [reactorId]);
+    return addLog(
+      rest,
+      T(`${reactor.name}: o alvo já está morto.`, `${reactor.name}: the target is already dead.`),
+      [reactorId],
+    );
   const used = {
     ...rest,
     combat: { ...rest.combat, reactionUsed: [...(rest.combat.reactionUsed ?? []), reactorId] },
   };
   const announced = addLog(
     used,
-    `${reactor.name} usa a reação: ataque de oportunidade contra ${target.name}.`,
+    T(
+      `${reactor.name} usa a reação: ataque de oportunidade contra ${target.name}.`,
+      `${reactor.name} uses a reaction: opportunity attack against ${target.name}.`,
+    ),
     [reactorId, target.id],
   );
   return strike(announced, reactor, target, p.attackIndex, p.reach, [], rng);
@@ -769,18 +915,26 @@ function resolveAttack(
 ): EncounterState {
   const { actor, turn } = actorTurn(state, cmd.actorId);
   const weapon = actor.attacks[cmd.attackIndex];
-  if (!weapon) throw new RuleError('Ataque inexistente.');
+  if (!weapon) throw new RuleError(T('Ataque inexistente.', 'No such attack.'));
   const target = creatureOf(state, cmd.targetId);
-  if (target.id === actor.id) throw new RuleError('Não é possível atacar a si mesmo.');
-  if (target.status === 'dead') throw new RuleError(`${target.name} já está morto.`);
+  if (target.id === actor.id)
+    throw new RuleError(T('Não é possível atacar a si mesmo.', 'You cannot attack yourself.'));
+  if (target.status === 'dead')
+    throw new RuleError(T(`${target.name} já está morto.`, `${target.name} is already dead.`));
 
   const from = tokenOf(state, actor.id);
   const at = tokenOf(state, target.id);
-  if (!from || !at) throw new RuleError('Criatura fora do mapa.');
-  if (ctx.role.kind === 'player' && at.hidden) throw new RuleError('Alvo não visível.');
+  if (!from || !at) throw new RuleError(T('Criatura fora do mapa.', 'Creature is off the map.'));
+  if (ctx.role.kind === 'player' && at.hidden)
+    throw new RuleError(T('Alvo não visível.', 'Target not visible.'));
   const dist = distanceFt(from.pos, sizeOf(actor), at.pos, sizeOf(target), state.rule);
   if (dist > weapon.range)
-    throw new RuleError(`Alvo fora de alcance (${dist} ft; alcance ${weapon.range} ft).`);
+    throw new RuleError(
+      T(
+        `Alvo fora de alcance (${distT(dist)}; alcance ${distT(weapon.range)}).`,
+        `Target out of range (${distT(dist)}; range ${distT(weapon.range)}).`,
+      ),
+    );
 
   // ação: o 1º ataque gasta a ação Atacar; Ataque Extra usa os restantes
   let attacksLeft = turn.attacksLeft;
@@ -789,7 +943,7 @@ function resolveAttack(
   else if (action) {
     action = false;
     attacksLeft = Math.max(0, actor.attacksPerAction - 1);
-  } else throw new RuleError('Sem ação disponível neste turno.');
+  } else throw new RuleError(T('Sem ação disponível neste turno.', 'No action left this turn.'));
 
   const extra: AdvMode[] = [cmd.mode ?? 'normal'];
   if (from.hidden) extra.push('advantage');
@@ -858,10 +1012,17 @@ function strike(
   const crit = hit && (d20.crit || cond.autoCrit);
   const decoyed = decoy(state, target.id, total, rng, hit);
   if (decoyed) return dropOnAttack(decoyed, actor.id);
-  const head =
+  const head = T(
     `${actor.name} atacou ${target.name} com ${weapon.name}: d20 ${d20.natural} ${fmt(weapon.bonus + magic)}${extraRoll.text} = ${total} vs CA ${ac}${cover ? ` (cobertura +${cover})` : ''}` +
-    (mode === 'normal' ? '' : mode === 'advantage' ? ' (vantagem)' : ' (desvantagem)');
-  if (!hit) return dropOnAttack(addLog(state, `${head} — erro.`, [actor.id, target.id]), actor.id);
+      (mode === 'normal' ? '' : mode === 'advantage' ? ' (vantagem)' : ' (desvantagem)'),
+    `${actor.name} attacked ${target.name} with ${weapon.name}: d20 ${d20.natural} ${fmt(weapon.bonus + magic)}${extraRoll.text} = ${total} vs AC ${ac}${cover ? ` (cover +${cover})` : ''}` +
+      (mode === 'normal' ? '' : mode === 'advantage' ? ' (advantage)' : ' (disadvantage)'),
+  );
+  if (!hit)
+    return dropOnAttack(
+      addLog(state, T(`${head} — erro.`, `${head} — miss.`), [actor.id, target.id]),
+      actor.id,
+    );
 
   const expr = parseDice(weapon.damage);
   const dmg = roll(crit ? criticalExpr(expr) : expr, rng);

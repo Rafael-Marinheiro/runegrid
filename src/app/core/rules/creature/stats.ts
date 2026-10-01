@@ -1,6 +1,17 @@
+import { expand } from '../i18n';
 import { Ability, Creature, Skill, SKILLS } from '../../models/creature';
 
-export class RuleError extends Error {}
+/**
+ * Regra violada. `message` fica em pt-BR; `marked` guarda o texto bilíngue (ver `rules/i18n`) para
+ * a interface escolher o idioma — é ele que atravessa a rede até o jogador.
+ */
+export class RuleError extends Error {
+  readonly marked: string;
+  constructor(message: string) {
+    super(expand(message, 'pt'));
+    this.marked = message;
+  }
+}
 
 export const abilityMod = (score: number): number => Math.floor((score - 10) / 2);
 

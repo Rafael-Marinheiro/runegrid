@@ -10,6 +10,7 @@ import { canAct, hasNoReactions } from '../creature';
 import { distanceFt } from '../grid/movement';
 import { getSpell } from '../spells/data';
 import { addLog, creatureOf, sizeOf, tokenOf } from './state';
+import { T, spellName } from '../i18n';
 
 /** Pode reagir agora: vivo, capaz, com a reação do turno ainda livre e sem efeito que a impeça. */
 export function canReact(state: EncounterState, c: Creature): boolean {
@@ -88,7 +89,10 @@ export function offerHit(state: EncounterState, hit: HeldHit): EncounterState | 
     target,
     hit.attackerId,
     { trigger: 'hit', hit },
-    `${hit.head} — acerto! ${target.name} pode reagir com ${options.map((o) => o.spell.name).join(' ou ')} antes do dano (${attacker.name}).`,
+    T(
+      `${hit.head} — acerto! ${target.name} pode reagir com ${options.map((o) => o.spell.name).join(' ou ')} antes do dano (${attacker.name}).`,
+      `${hit.head} — hit! ${target.name} can react with ${options.map((o) => spellName(o.spell)).join(' or ')} before damage (${attacker.name}).`,
+    ),
   );
 }
 
@@ -114,7 +118,10 @@ export function offerDamaged(
     target,
     attackerId,
     { trigger: 'damaged', attackerId },
-    `${target.name} pode reagir com ${options.map((o) => o.spell.name).join(' ou ')} contra ${attacker.name}.`,
+    T(
+      `${target.name} pode reagir com ${options.map((o) => o.spell.name).join(' ou ')} contra ${attacker.name}.`,
+      `${target.name} can react with ${options.map((o) => spellName(o.spell)).join(' or ')} against ${attacker.name}.`,
+    ),
   );
 }
 
@@ -147,7 +154,10 @@ export function offerCast(
       r,
       casterId,
       { trigger: 'cast', casterId, spellId: spell.id, slotLevel, command },
-      `${r.name} pode reagir com ${options.map((o) => o.spell.name).join(' ou ')} contra ${spell.name}.`,
+      T(
+        `${r.name} pode reagir com ${options.map((o) => o.spell.name).join(' ou ')} contra ${spell.name}.`,
+        `${r.name} can react with ${options.map((o) => spellName(o.spell)).join(' or ')} against ${spellName(spell)}.`,
+      ),
     );
   }
   return offered ? s : null;

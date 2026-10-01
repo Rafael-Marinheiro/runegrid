@@ -71,7 +71,7 @@
   </div>
 </div>
 
-<p class="message" role="status" aria-live="polite">{{ store.message() }}</p>
+<p class="message" role="status" aria-live="polite">{{ ui.tr(store.message()) }}</p>
 
 <div class="layout">
   <aside class="panel side" [attr.aria-label]="ui.text('Iniciativa', 'Initiative')">
@@ -395,7 +395,7 @@
             >
               <span [style.width.%]="b.max ? ((b.max - b.moved) / b.max) * 100 : 0"></span>
             </span>
-            {{ b.max - b.moved }} / {{ b.max }} ft
+            {{ ui.dist(b.max - b.moved) }} / {{ ui.dist(b.max) }}
           </span>
         </div>
 
@@ -621,7 +621,7 @@
           }
           <div>
             <dt>{{ ui.text('Desl.', 'Speed') }}</dt>
-            <dd>{{ c.speed }} ft</dd>
+            <dd>{{ ui.dist(c.speed) }}</dd>
           </div>
         </dl>
         @if (c.concentration) {
@@ -651,8 +651,12 @@
         @if (c.effects?.length) {
           <ul class="conds" [attr.aria-label]="ui.text('Efeitos de magias', 'Spell effects')">
             @for (e of c.effects; track e.id) {
-              <li class="chip cond" [attr.title]="e.mods.note ?? ''">
-                {{ e.name }}{{ e.rounds && e.rounds <= 100 ? ' · ' + e.rounds + 'r' : '' }}
+              <li
+                class="chip cond"
+                [attr.title]="ui.text(e.mods.note ?? '', e.mods.noteEn ?? e.mods.note ?? '')"
+              >
+                {{ ui.text(e.name, spellEn(e.name))
+                }}{{ e.rounds && e.rounds <= 100 ? ' · ' + e.rounds + 'r' : '' }}
               </li>
             }
           </ul>
@@ -760,7 +764,7 @@
       <div role="log">
         <ol>
           @for (e of logView(); track e.id) {
-            <li [class.secret]="e.secret">{{ e.text }}</li>
+            <li [class.secret]="e.secret">{{ ui.text(e.text, e.en ?? e.text) }}</li>
           } @empty {
             <li class="empty">
               {{ ui.text('Nada aconteceu ainda.', 'Nothing has happened yet.') }}

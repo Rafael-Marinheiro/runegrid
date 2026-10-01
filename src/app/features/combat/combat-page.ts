@@ -12,6 +12,7 @@ import { CONDITION_LABEL, CONDITIONS, ConditionName, Creature } from '@core/mode
 import { Pos } from '@core/models/grid';
 import { Spell } from '@core/models/spell';
 import { fmtBonus } from '@core/rules/creature';
+import { spellNameEn } from '@core/rules/srd/names-pt';
 import {
   moveQuery,
   occupiedCells,
@@ -82,6 +83,7 @@ export class CombatPage {
   protected readonly fmt = fmtBonus;
   protected readonly conditions = CONDITIONS;
   protected readonly condLabel = CONDITION_LABEL;
+  protected readonly spellEn = spellNameEn;
 
   constructor() {
     effect(() => void this.spellStore.ensure(this.ui.ruleset()));
@@ -449,7 +451,9 @@ export class CombatPage {
     try {
       const found = findPath(moveQuery(this.s(), a.id), h);
       const start = tokenOf(this.s(), a.id)?.pos;
-      return found && start ? { cells: [start, ...found.path], label: `${found.costFt} ft` } : null;
+      return found && start
+        ? { cells: [start, ...found.path], label: this.ui.dist(found.costFt) }
+        : null;
     } catch {
       return null;
     }
@@ -459,7 +463,7 @@ export class CombatPage {
     const a = this.rulerA();
     const b = this.rulerB();
     if (!a || !b) return null;
-    return { a, b, label: `${distanceFt(a, 1, b, 1, this.s().rule)} ft` };
+    return { a, b, label: this.ui.dist(distanceFt(a, 1, b, 1, this.s().rule)) };
   });
 
   /** Criaturas destacadas: alvos válidos do ataque/magia ou atingidas pela área em prévia. */

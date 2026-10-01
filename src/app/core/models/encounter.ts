@@ -141,6 +141,8 @@ export interface LogEntry {
   id: number;
   round: number;
   text: string;
+  /** Versão em inglês, quando a mensagem tem tradução (sem ela, vale `text`). */
+  en?: string;
   /** Envolve criatura oculta: só o Mestre vê. */
   secret?: boolean;
   /** Dados rolados pelo comando que gerou esta entrada. */

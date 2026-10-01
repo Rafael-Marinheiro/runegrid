@@ -3,6 +3,8 @@ import { Combat, EncounterState, LogEntry, Token } from '../../models/encounter'
 import { DiagonalRule, GridMap, SIZE_CELLS } from '../../models/grid';
 import { RuleError } from '../creature';
 import { footprint, key } from '../grid/movement';
+import { expand, isBilingual } from '../i18n';
+import { T } from '../i18n';
 
 export class ForbiddenError extends RuleError {}
 
@@ -43,7 +45,10 @@ export const teamOf = (c: Creature): 'party' | 'foes' => (c.kind === 'monster' ?
 
 export function creatureOf(state: EncounterState, id: string): Creature {
   const c = state.creatures.find((x) => x.id === id);
-  if (!c) throw new RuleError('Criatura não encontrada no encontro.');
+  if (!c)
+    throw new RuleError(
+      T('Criatura não encontrada no encontro.', 'Creature not found in the encounter.'),
+    );
   return c;
 }
 
@@ -80,7 +85,8 @@ export function addLog(
   const entry: LogEntry = {
     id: state.seq,
     round: state.combat.round,
-    text,
+    text: expand(text, 'pt'),
+    ...(isBilingual(text) ? { en: expand(text, 'en') } : {}),
     ...(secret ? { secret } : {}),
   };
   return { ...state, seq: state.seq + 1, log: [...state.log, entry].slice(-MAX_LOG) };

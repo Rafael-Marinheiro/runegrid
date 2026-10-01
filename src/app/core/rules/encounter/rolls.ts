@@ -3,6 +3,7 @@ import { EncounterState } from '../../models/encounter';
 import { attackDice, effectsOf, removeEffects, saveDice, saveFlat, saveModes } from '../creature';
 import { AdvMode, roll, Rng } from '../dice';
 import { addLog, creatureOf, withCreature } from './state';
+import { T, condT, spellT } from '../i18n';
 
 /** Rola `+1d4` / `-1d4`; devolve o valor com sinal. */
 function rollSigned(expr: string, rng: Rng): number {
@@ -91,9 +92,17 @@ export function dropOnAttack(state: EncounterState, actorId: string): EncounterS
       gone.includes(e),
     ),
   );
-  for (const e of gone) s = addLog(s, `${c.name}: ${e.name} termina.`, [c.id]);
+  for (const e of gone)
+    s = addLog(s, T(`${c.name}: ${e.name} termina.`, `${c.name}: ${spellT(e.name)} ends.`), [c.id]);
   for (const k of conds)
-    s = addLog(s, `${c.name}: ${k.spell ?? CONDITION_LABEL[k.name]} termina.`, [c.id]);
+    s = addLog(
+      s,
+      T(
+        `${c.name}: ${k.spell ?? CONDITION_LABEL[k.name]} termina.`,
+        `${c.name}: ${k.spell ? spellT(k.spell) : condT(k.name)} ends.`,
+      ),
+      [c.id],
+    );
   return s;
 }
 
@@ -126,14 +135,24 @@ export function decoy(
     if (r < (n >= 3 ? 6 : n === 2 ? 8 : 11)) return null;
     const ac = 10 + Math.floor((t.abilities.dex - 10) / 2);
     if (attackTotal < ac)
-      return addLog(state, `O ataque erra: mirou uma imagem de ${t.name}${text}.`, [t.id]);
+      return addLog(
+        state,
+        T(
+          `O ataque erra: mirou uma imagem de ${t.name}${text}.`,
+          `The attack misses: it hit an image of ${t.name}${text}.`,
+        ),
+        [t.id],
+      );
   }
   const left = n - 1;
   const others = effectsOf(t).filter((e) => e !== eff);
   const next = left > 0 ? [...others, { ...eff, mods: { ...eff.mods, images: left } }] : others;
   return addLog(
     withCreature(state, { ...t, effects: next.length ? next : undefined }),
-    `O ataque atinge uma imagem de ${t.name}${text}: ela se desfaz (restam ${left}).`,
+    T(
+      `O ataque atinge uma imagem de ${t.name}${text}: ela se desfaz (restam ${left}).`,
+      `The attack hits an image of ${t.name}${text}: it vanishes (${left} left).`,
+    ),
     [t.id],
   );
 }

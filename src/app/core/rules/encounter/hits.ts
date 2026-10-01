@@ -8,6 +8,7 @@ import { offerDamaged, offerHit } from './reactions';
 import { applyRiders } from './rider';
 import { dropOnAttack } from './rolls';
 import { addLog, creatureOf, withCreature } from './state';
+import { T, spellT } from '../i18n';
 
 /** Aplica o dano de um golpe que acertou (e, se for magia, as condições/efeitos que ela traz). */
 export function applyHeldHit(state: EncounterState, hit: HeldHit, rng: Rng): EncounterState {
@@ -23,10 +24,18 @@ export function applyHeldHit(state: EncounterState, hit: HeldHit, rng: Rng): Enc
     });
     cur = r.creature;
     dealtTotal += r.dealt;
-    lines.push(`${r.dealt} de dano ${dtype(p.type as DamageType)}${notes(r)}`);
+    lines.push(
+      T(
+        `${r.dealt} de dano ${dtype(p.type as DamageType)}${notes(r)}`,
+        `${r.dealt} ${dtype(p.type as DamageType)} damage${notes(r)}`,
+      ),
+    );
   });
   let s = withCreature(state, cur);
-  const what = `${hit.head} — ${hit.crit ? 'ACERTO CRÍTICO' : 'acerto'}`;
+  const what = T(
+    `${hit.head} — ${hit.crit ? 'ACERTO CRÍTICO' : 'acerto'}`,
+    `${hit.head} — ${hit.crit ? 'CRITICAL HIT' : 'hit'}`,
+  );
   s = addLog(s, lines.length ? `${what}: ${lines.join(' + ')}.` : `${what}.`, [
     hit.attackerId,
     hit.targetId,
@@ -41,7 +50,9 @@ export function applyHeldHit(state: EncounterState, hit: HeldHit, rng: Rng): Enc
       const who = creatureOf(s, hit.attackerId);
       if (back > 0) {
         s = withCreature(s, heal(who, back));
-        s = addLog(s, `${who.name} recupera ${back} PV.`, [who.id]);
+        s = addLog(s, T(`${who.name} recupera ${back} PV.`, `${who.name} regains ${back} HP.`), [
+          who.id,
+        ]);
       }
     }
     if (spell && creatureOf(s, hit.targetId).status !== 'dead')
@@ -86,7 +97,10 @@ function applyOnHit(
     const ok = !auto && r.roll.total >= (spec.dc ?? 10);
     s = addLog(
       s,
-      `${t.name}: salvaguarda de ${spec.save.toUpperCase()} contra ${o.spell} — d20 ${r.natural} = ${r.roll.total} vs CD ${spec.dc ?? 10}: ${ok ? 'passou' : 'falhou'}.`,
+      T(
+        `${t.name}: salvaguarda de ${spec.save.toUpperCase()} contra ${o.spell} — d20 ${r.natural} = ${r.roll.total} vs CD ${spec.dc ?? 10}: ${ok ? 'passou' : 'falhou'}.`,
+        `${t.name}: ${spec.save.toUpperCase()} saving throw against ${spellT(o.spell)} — d20 ${r.natural} = ${r.roll.total} vs DC ${spec.dc ?? 10}: ${ok ? 'passed' : 'failed'}.`,
+      ),
       [t.id],
     );
     if (ok) {
@@ -107,7 +121,14 @@ function applyOnHit(
         : {}),
     });
     s = withCreature(s, t);
-    s = addLog(s, `${t.name} ficou sob efeito de ${o.spell}.`, [t.id]);
+    s = addLog(
+      s,
+      T(
+        `${t.name} ficou sob efeito de ${o.spell}.`,
+        `${t.name} is under the effect of ${spellT(o.spell)}.`,
+      ),
+      [t.id],
+    );
   }
   if (spec.mods) {
     t = addEffect(creatureOf(s, t.id), {

@@ -19,19 +19,20 @@ import { parseDice, roll, rollD20, Rng } from '../dice';
 import { distanceFt, footprint, key } from '../grid/movement';
 import { actorTurn, aftermath, checkOutcome, dtype, notes } from './helpers';
 import { addLog, creatureOf, occupiedCells, sizeOf, tokenOf, withCreature } from './state';
+import { T } from '../i18n';
 
 const checkBounds = (map: GridMap, cells: Pos[]): void => {
-  if (cells.some((c) => !inBounds(map, c))) throw new RuleError('Fora do mapa.');
+  if (cells.some((c) => !inBounds(map, c))) throw new RuleError(T('Fora do mapa.', 'Off the map.'));
 };
 
 /** Pinta um conjunto de células com um terreno (um traço do pincel). */
 export function paint(state: EncounterState, cells: Pos[], terrain: Terrain): EncounterState {
   checkBounds(state.map, cells);
-  if (terrain === 'unknown') throw new RuleError('Terreno inválido.');
+  if (terrain === 'unknown') throw new RuleError(T('Terreno inválido.', 'Invalid terrain.'));
   if (IMPASSABLE.includes(terrain)) {
     const occupied = occupiedCells(state);
     if (cells.some((c) => occupied.has(key(c))))
-      throw new RuleError('Há uma criatura nessa célula.');
+      throw new RuleError(T('Há uma criatura nessa célula.', 'There is a creature in that cell.'));
     if (
       cells.some((cell) =>
         (state.map.objects ?? []).some(
@@ -39,7 +40,7 @@ export function paint(state: EncounterState, cells: Pos[], terrain: Terrain): En
         ),
       )
     )
-      throw new RuleError('Há um objeto nessa célula.');
+      throw new RuleError(T('Há um objeto nessa célula.', 'There is an object in that cell.'));
   }
   const next = [...state.map.cells];
   for (const c of cells) next[c.y * state.map.width + c.x] = terrain;
@@ -56,9 +57,14 @@ export function setFog(state: EncounterState, cells: Pos[], hidden: boolean): En
 /** Troca o mapa (só na montagem): criaturas que não cabem mais saem do mapa. */
 export function setMap(state: EncounterState, map: GridMap): EncounterState {
   if (state.combat.phase === 'running')
-    throw new RuleError('Não é possível trocar o mapa durante o combate.');
+    throw new RuleError(
+      T(
+        'Não é possível trocar o mapa durante o combate.',
+        'The map cannot be changed during combat.',
+      ),
+    );
   if (map.width < 1 || map.height < 1 || map.cells.length !== map.width * map.height) {
-    throw new RuleError('Mapa inválido.');
+    throw new RuleError(T('Mapa inválido.', 'Invalid map.'));
   }
   const next: EncounterState = { ...state, map, tokens: [] };
   let s = next;
@@ -70,7 +76,13 @@ export function setMap(state: EncounterState, map: GridMap): EncounterState {
     if (fits) s = { ...s, tokens: [...s.tokens, t] };
   }
   const dropped = state.tokens.length - s.tokens.length;
-  return addLog(s, `Mapa carregado${dropped ? ` (${dropped} criatura(s) saíram do mapa)` : ''}.`);
+  return addLog(
+    s,
+    T(
+      `Mapa carregado${dropped ? ` (${dropped} criatura(s) saíram do mapa)` : ''}.`,
+      `Map loaded${dropped ? ` (${dropped} creature(s) left the map)` : ''}.`,
+    ),
+  );
 }
 
 const roomOk = (map: GridMap, r: Room): void => {
@@ -80,7 +92,7 @@ const roomOk = (map: GridMap, r: Room): void => {
     !inBounds(map, { x: r.x, y: r.y }) ||
     !inBounds(map, { x: r.x + r.w - 1, y: r.y + r.h - 1 })
   ) {
-    throw new RuleError('A sala precisa caber no mapa.');
+    throw new RuleError(T('A sala precisa caber no mapa.', 'The room must fit on the map.'));
   }
 };
 
@@ -102,7 +114,7 @@ export function removeRoom(state: EncounterState, id: string): EncounterState {
 
 export function revealRoom(state: EncounterState, id: string, hidden = false): EncounterState {
   const room = (state.map.rooms ?? []).find((r) => r.id === id);
-  if (!room) throw new RuleError('Sala não encontrada.');
+  if (!room) throw new RuleError(T('Sala não encontrada.', 'Room not found.'));
   const cells: Pos[] = [];
   for (let y = room.y; y < room.y + room.h; y++)
     for (let x = room.x; x < room.x + room.w; x++) cells.push({ x, y });
@@ -117,11 +129,13 @@ export function revealRoom(state: EncounterState, id: string, hidden = false): E
 export function upsertTrap(state: EncounterState, trap: Trap): EncounterState {
   checkBounds(state.map, [trap.pos]);
   if (IMPASSABLE.includes(terrainAt(state.map, trap.pos)))
-    throw new RuleError('A armadilha precisa ficar num piso.');
+    throw new RuleError(
+      T('A armadilha precisa ficar num piso.', 'The trap must sit on a floor tile.'),
+    );
   try {
     parseDice(trap.damage);
   } catch {
-    throw new RuleError('Dado de dano da armadilha inválido.');
+    throw new RuleError(T('Dado de dano da armadilha inválido.', 'Invalid trap damage die.'));
   }
   const traps = state.map.traps ?? [];
   const next = traps.some((t) => t.id === trap.id)
@@ -140,9 +154,9 @@ export function removeTrap(state: EncounterState, id: string): EncounterState {
 export function upsertItem(state: EncounterState, item: PlacedItem): EncounterState {
   checkBounds(state.map, [item.pos]);
   if (!item.name.trim() || item.qty < 1 || !Number.isInteger(item.qty))
-    throw new RuleError('Item inválido.');
+    throw new RuleError(T('Item inválido.', 'Invalid item.'));
   if (IMPASSABLE.includes(terrainAt(state.map, item.pos)))
-    throw new RuleError('O item precisa ficar num piso.');
+    throw new RuleError(T('O item precisa ficar num piso.', 'The item must sit on a floor tile.'));
   const items = state.map.items ?? [];
   const next = items.some((placed) => placed.id === item.id)
     ? items.map((placed) => (placed.id === item.id ? item : placed))
@@ -172,11 +186,13 @@ export function upsertMapObject(state: EncounterState, object: MapObject): Encou
     normalized.rotation >= 360 ||
     normalized.rotation % 45 !== 0
   )
-    throw new RuleError('Objeto inválido.');
+    throw new RuleError(T('Objeto inválido.', 'Invalid object.'));
   if (IMPASSABLE.includes(terrainAt(state.map, normalized.pos)))
-    throw new RuleError('O objeto precisa ficar num piso.');
+    throw new RuleError(
+      T('O objeto precisa ficar num piso.', 'The object must sit on a floor tile.'),
+    );
   if (normalized.blocksMovement && occupiedCells(state).has(key(normalized.pos)))
-    throw new RuleError('Há uma criatura nessa célula.');
+    throw new RuleError(T('Há uma criatura nessa célula.', 'There is a creature in that cell.'));
   const objects = state.map.objects ?? [];
   if (
     objects.some(
@@ -186,7 +202,9 @@ export function upsertMapObject(state: EncounterState, object: MapObject): Encou
         placed.pos.y === normalized.pos.y,
     )
   )
-    throw new RuleError('Já existe um objeto nessa célula.');
+    throw new RuleError(
+      T('Já existe um objeto nessa célula.', 'There is already an object in that cell.'),
+    );
   const next = objects.some((placed) => placed.id === normalized.id)
     ? objects.map((placed) => (placed.id === normalized.id ? normalized : placed))
     : [...objects, normalized];
@@ -205,12 +223,14 @@ export function openDoor(state: EncounterState, actorId: string, pos: Pos): Enco
   const { actor } = actorTurn(state, actorId);
   checkBounds(state.map, [pos]);
   const from = tokenOf(state, actorId);
-  if (!from) throw new RuleError(`${actor.name} não está no mapa.`);
+  if (!from)
+    throw new RuleError(T(`${actor.name} não está no mapa.`, `${actor.name} is not on the map.`));
   if (distanceFt(from.pos, sizeOf(actor), pos, 1, state.rule) > 5)
-    throw new RuleError('A porta está longe demais.');
+    throw new RuleError(T('A porta está longe demais.', 'The door is too far away.'));
   const t = terrainAt(state.map, pos);
-  if (t === 'door-locked') throw new RuleError('A porta está trancada.');
-  if (t !== 'door-closed') throw new RuleError('Não há porta fechada aí.');
+  if (t === 'door-locked') throw new RuleError(T('A porta está trancada.', 'The door is locked.'));
+  if (t !== 'door-closed')
+    throw new RuleError(T('Não há porta fechada aí.', 'There is no closed door there.'));
   const s = paint(state, [pos], 'door');
   return addLog(s, `${actor.name} abre a porta.`, [actorId]);
 }
@@ -257,10 +277,15 @@ export function triggerTrap(
     },
   };
   s = withCreature(s, d.creature);
-  const save = auto ? 'falha automática' : `d20 ${r.natural} = ${r.roll.total}`;
+  const save = auto
+    ? T('falha automática', 'automatic failure')
+    : `d20 ${r.natural} = ${r.roll.total}`;
   s = addLog(
     s,
-    `${c.name} dispara ${trap.name}: salvaguarda de ${trap.ability.toUpperCase()} ${save} vs CD ${trap.dc} — ${saved ? 'passou' : 'falhou'}: ${d.dealt} de dano ${dtype(trap.damageType)}${notes(d)}.`,
+    T(
+      `${c.name} dispara ${trap.name}: salvaguarda de ${trap.ability.toUpperCase()} ${save} vs CD ${trap.dc} — ${saved ? 'passou' : 'falhou'}: ${d.dealt} de dano ${dtype(trap.damageType)}${notes(d)}.`,
+      `${c.name} triggers ${trap.name}: ${trap.ability.toUpperCase()} saving throw ${save} vs DC ${trap.dc} — ${saved ? 'passed' : 'failed'}: ${d.dealt} ${dtype(trap.damageType)} damage${notes(d)}.`,
+    ),
     [c.id],
   );
   return checkOutcome(aftermath(s, c.id, d.dealt, rng));

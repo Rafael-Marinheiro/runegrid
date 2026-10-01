@@ -83,25 +83,25 @@
           </select>
         </label>
         <label class="field">
-          {{ ui.text('Deslocamento (ft)', 'Speed (ft)') }}
+          {{ ui.text('Deslocamento (m)', 'Speed (ft)') }}
           <input
             #spd
             type="number"
             min="0"
-            step="5"
-            [value]="c.speed"
-            (change)="patch({ speed: num(spd.valueAsNumber, 0, 400) })"
+            [step]="ui.lenStep()"
+            [value]="ui.lenIn(c.speed)"
+            (change)="patch({ speed: num(ui.lenOut(spd.valueAsNumber), 0, 400) })"
           />
         </label>
         <label class="field">
-          {{ ui.text('Visão no escuro (ft)', 'Darkvision (ft)') }}
+          {{ ui.text('Visão no escuro (m)', 'Darkvision (ft)') }}
           <input
             #darkvision
             type="number"
             min="0"
-            step="5"
-            [value]="c.darkvision ?? 0"
-            (change)="patch({ darkvision: num(darkvision.valueAsNumber, 0, 1000) })"
+            [step]="ui.lenStep()"
+            [value]="ui.lenIn(c.darkvision ?? 0)"
+            (change)="patch({ darkvision: num(ui.lenOut(darkvision.valueAsNumber), 0, 1000) })"
           />
         </label>
         <label class="field">

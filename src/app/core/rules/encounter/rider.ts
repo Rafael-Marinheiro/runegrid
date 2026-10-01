@@ -17,6 +17,8 @@ import { allSpells, getSpell } from '../spells/data';
 import { flatTemp } from '../spells/scaling';
 import { aftermath } from './helpers';
 import { addLog, creatureOf, occupiedCells, sizeOf, tokenOf, withCreature } from './state';
+import { T, condT, spellName, spellT } from '../i18n';
+import { distT } from '../units';
 
 const asList = (c: Spell['condition']): SpellCondition[] => (!c ? [] : Array.isArray(c) ? c : [c]);
 
@@ -89,8 +91,14 @@ export function applyRiders(
     s = addLog(
       s,
       t === before
-        ? `${t.name} resiste a ${CONDITION_LABEL[c.name]} (${spell.name}).`
-        : `${t.name} ficou sob efeito de ${spell.name}.`,
+        ? T(
+            `${t.name} resiste a ${CONDITION_LABEL[c.name]} (${spell.name}).`,
+            `${t.name} resists ${condT(c.name)} (${spellName(spell)}).`,
+          )
+        : T(
+            `${t.name} ficou sob efeito de ${spell.name}.`,
+            `${t.name} is under the effect of ${spellName(spell)}.`,
+          ),
       [t.id],
     );
   }
@@ -99,7 +107,14 @@ export function applyRiders(
     const cur = creatureOf(s, t.id);
     if (cur.status !== 'dead') {
       s = withCreature(s, { ...cur, status: 'dead', hp: { ...cur.hp, current: 0 } });
-      s = addLog(s, `${cur.name} morre na hora (${spell.name}).`, [caster.id, cur.id]);
+      s = addLog(
+        s,
+        T(
+          `${cur.name} morre na hora (${spell.name}).`,
+          `${cur.name} dies outright (${spellName(spell)}).`,
+        ),
+        [caster.id, cur.id],
+      );
       s = aftermath(s, cur.id, 0, rng);
     }
   }
@@ -116,7 +131,14 @@ export function applyRiders(
     );
     if ((cur.effects ?? []).length + cur.conditions.length < before) {
       s = withCreature(s, cur);
-      s = addLog(s, `${cur.name}: ${names.join(', ')} termina.`, [caster.id, cur.id]);
+      s = addLog(
+        s,
+        T(
+          `${cur.name}: ${names.join(', ')} termina.`,
+          `${cur.name}: ${names.map((n) => spellT(n)).join(', ')} ends.`,
+        ),
+        [caster.id, cur.id],
+      );
     }
   }
 
@@ -127,10 +149,14 @@ export function applyRiders(
     for (const n of gone) cur = removeCondition(cur, n);
     if (gone.length) {
       s = withCreature(s, cur);
-      s = addLog(s, `${cur.name}: ${gone.map((n) => CONDITION_LABEL[n]).join(', ')} termina.`, [
-        caster.id,
-        cur.id,
-      ]);
+      s = addLog(
+        s,
+        T(
+          `${cur.name}: ${gone.map((n) => CONDITION_LABEL[n]).join(', ')} termina.`,
+          `${cur.name}: ${gone.map((n) => condT(n)).join(', ')} ends.`,
+        ),
+        [caster.id, cur.id],
+      );
     }
   }
 
@@ -139,7 +165,8 @@ export function applyRiders(
     if (eff) {
       t = addEffect(creatureOf(s, t.id), eff);
       s = withCreature(s, t);
-      if (!spell.condition) s = addLog(s, `${t.name}: ${spell.name}.`, [t.id]);
+      if (!spell.condition)
+        s = addLog(s, T(`${t.name}: ${spell.name}.`, `${t.name}: ${spellName(spell)}.`), [t.id]);
     }
   }
 
@@ -153,7 +180,11 @@ export function applyRiders(
     );
     t = addTempHp(creatureOf(s, t.id), amount);
     s = withCreature(s, t);
-    s = addLog(s, `${t.name} ganha ${amount} PV temporários.`, [caster.id, t.id]);
+    s = addLog(
+      s,
+      T(`${t.name} ganha ${amount} PV temporários.`, `${t.name} gains ${amount} temporary HP.`),
+      [caster.id, t.id],
+    );
   }
 
   if (spell.stabilize) {
@@ -164,7 +195,7 @@ export function applyRiders(
         status: 'stable',
         deathSaves: { successes: 0, failures: 0 },
       });
-      s = addLog(s, `${cur.name} está estável.`, [caster.id, cur.id]);
+      s = addLog(s, T(`${cur.name} está estável.`, `${cur.name} is stable.`), [caster.id, cur.id]);
     }
   }
 
@@ -206,7 +237,10 @@ export function forcedMove(
   };
   return addLog(
     moved,
-    `${t.name} é empurrado(a) ${Math.max(...[Math.abs(pos.x - tok.pos.x), Math.abs(pos.y - tok.pos.y)]) * 5} ft.`,
+    T(
+      `${t.name} é empurrado(a) ${distT(Math.max(Math.abs(pos.x - tok.pos.x), Math.abs(pos.y - tok.pos.y)) * 5)}.`,
+      `${t.name} is pushed ${distT(Math.max(Math.abs(pos.x - tok.pos.x), Math.abs(pos.y - tok.pos.y)) * 5)}.`,
+    ),
     [targetId],
   );
 }
@@ -234,7 +268,12 @@ function dispelOn(
     sources.set(e.name, { name: e.name, level: levelOf(e.name, e.spell) });
   for (const k of t.conditions)
     if (k.spell) sources.set(k.spell, { name: k.spell, level: levelOf(k.spell) });
-  if (!sources.size) return addLog(s, `${t.name}: nenhuma magia para dissipar.`, [caster.id, t.id]);
+  if (!sources.size)
+    return addLog(
+      s,
+      T(`${t.name}: nenhuma magia para dissipar.`, `${t.name}: no spell to dispel.`),
+      [caster.id, t.id],
+    );
   const mod = abilityMod(caster.abilities[ability]);
   const ended: string[] = [];
   for (const src of sources.values()) {
@@ -243,12 +282,19 @@ function dispelOn(
     if (!ok) {
       const r = rollD20(mod, 'normal', rng);
       ok = r.roll.total >= 10 + src.level;
-      txt = ` (teste d20 ${r.natural} ${mod >= 0 ? '+' : ''}${mod} = ${r.roll.total} vs CD ${10 + src.level})`;
+      txt = T(
+        ` (teste d20 ${r.natural} ${mod >= 0 ? '+' : ''}${mod} = ${r.roll.total} vs CD ${10 + src.level})`,
+        ` (check d20 ${r.natural} ${mod >= 0 ? '+' : ''}${mod} = ${r.roll.total} vs DC ${10 + src.level})`,
+      );
     }
-    s = addLog(s, `Dissipar Magia contra ${src.name}${txt}: ${ok ? 'termina' : 'resiste'}.`, [
-      caster.id,
-      t.id,
-    ]);
+    s = addLog(
+      s,
+      T(
+        `Dissipar Magia contra ${src.name}${txt}: ${ok ? 'termina' : 'resiste'}.`,
+        `Dispel Magic against ${spellT(src.name)}${txt}: ${ok ? 'ends' : 'resists'}.`,
+      ),
+      [caster.id, t.id],
+    );
     if (ok) ended.push(src.name);
   }
   if (!ended.length) return s;

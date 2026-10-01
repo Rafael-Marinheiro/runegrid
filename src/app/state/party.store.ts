@@ -199,7 +199,7 @@ export class PartyStore {
       return value;
     } catch (e) {
       if (!(e instanceof RuleError)) throw e;
-      this.message.set(e.message);
+      this.message.set(e.marked);
       return undefined;
     }
   }

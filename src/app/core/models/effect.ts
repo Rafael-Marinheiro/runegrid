@@ -83,6 +83,8 @@ export interface EffectMods {
   endsOnAttack?: boolean;
   /** Sem efeito no motor: só lembrete para o Mestre (testes de atributo, sentidos…). */
   note?: string;
+  /** `note` em inglês. */
+  noteEn?: string;
 }
 
 /** Efeito ativo numa criatura, vindo de uma magia. */

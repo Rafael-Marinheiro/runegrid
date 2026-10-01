@@ -2,10 +2,11 @@ import { Attack, Creature } from '../../models/creature';
 import { InventoryItem, ItemDef } from '../../models/item';
 import { abilityMod, proficiencyBonus, RuleError } from '../creature';
 import { getItem } from './catalog';
+import { T } from '../i18n';
 
 const def = (i: InventoryItem): ItemDef => {
   const d = getItem(i.ref);
-  if (!d) throw new RuleError(`Item desconhecido: ${i.ref}`);
+  if (!d) throw new RuleError(T(`Item desconhecido: ${i.ref}`, `Unknown item: ${i.ref}`));
   return d;
 };
 
@@ -68,8 +69,8 @@ function refresh(c: Creature): Creature {
 }
 
 export function addItem(c: Creature, ref: string, qty = 1): Creature {
-  if (!getItem(ref)) throw new RuleError('Item desconhecido.');
-  if (!(qty >= 1)) throw new RuleError('Quantidade inválida.');
+  if (!getItem(ref)) throw new RuleError(T('Item desconhecido.', 'Unknown item.'));
+  if (!(qty >= 1)) throw new RuleError(T('Quantidade inválida.', 'Invalid amount.'));
   const inventory = c.inventory ?? [];
   const stackable = getItem(ref)!.kind === 'consumable' || getItem(ref)!.kind === 'gear';
   const same = stackable ? inventory.find((i) => i.ref === ref) : undefined;
@@ -87,10 +88,10 @@ export function removeItem(c: Creature, itemId: string): Creature {
 export function toggleEquip(c: Creature, itemId: string): Creature {
   const inventory = c.inventory ?? [];
   const item = inventory.find((i) => i.id === itemId);
-  if (!item) throw new RuleError('Item não encontrado.');
+  if (!item) throw new RuleError(T('Item não encontrado.', 'Item not found.'));
   const d = def(item);
   if (d.kind !== 'weapon' && d.kind !== 'armor' && d.kind !== 'shield')
-    throw new RuleError(`${d.name} não se equipa.`);
+    throw new RuleError(T(`${d.name} não se equipa.`, `${d.name} cannot be equipped.`));
   const turnOn = !item.equipped;
   const next = inventory.map((i) => {
     if (i.id === itemId) return { ...i, equipped: turnOn };
@@ -106,7 +107,8 @@ export function toggleEquip(c: Creature, itemId: string): Creature {
 export function consume(c: Creature, itemId: string): Creature {
   const inventory = c.inventory ?? [];
   const item = inventory.find((i) => i.id === itemId);
-  if (!item || item.qty <= 0) throw new RuleError('Você não tem esse item.');
+  if (!item || item.qty <= 0)
+    throw new RuleError(T('Você não tem esse item.', "You don't have that item."));
   const next = inventory.flatMap((i) =>
     i.id !== itemId ? [i] : i.qty > 1 ? [{ ...i, qty: i.qty - 1 }] : [],
   );

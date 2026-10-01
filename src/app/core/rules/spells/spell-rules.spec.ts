@@ -57,6 +57,7 @@ const MODS = new Set([
   'bonusActions',
   'dotStart',
   'dotEnd',
+  'noteEn',
   'noReactions',
   'noHealing',
   'halfWeaponDamage',
@@ -225,6 +226,7 @@ describe('fumaça: conjurar cada magia mecanizada não quebra o motor', () => {
       );
       expect(list.length).toBeGreaterThan(10);
       const refused: string[] = [];
+      const untranslated: string[] = [];
       for (const sp of list) {
         const s = scene(sp);
         const cmd = {
@@ -244,7 +246,12 @@ describe('fumaça: conjurar cada magia mecanizada não quebra o motor', () => {
           point: sp.teleport ? { x: 5, y: 9 } : { x: 8, y: 5 },
         };
         try {
-          dispatch(s, cmd, { rng, role: dm });
+          const out = dispatch(s, cmd, { rng, role: dm });
+          for (const e of out.log.slice(s.log.length)) {
+            const en = e.en ?? e.text;
+            if (/[áéíóúãõç]|\b(dano|termina|salvaguarda|conjura|sofre|recupera)\b/i.test(en))
+              untranslated.push(`${sp.id}: ${en}`);
+          }
         } catch (e) {
           if (!(e instanceof RuleError)) throw new Error(`${sp.id}: ${String(e)}`, { cause: e });
           refused.push(`${sp.id}: ${e.message}`);
@@ -252,6 +259,14 @@ describe('fumaça: conjurar cada magia mecanizada não quebra o motor', () => {
       }
       // a cena de teste alcança todos os alvos: recusar uma magia é exceção (ex.: só toca em si)
       expect(refused).toEqual([]);
+      // o registro em inglês não deixa português para trás
+      expect([
+        ...new Set(
+          untranslated.map((x) =>
+            x.replace(/^[^:]+: /, '').replace(/Monstro \d|Aliado|Conjurador/g, 'X'),
+          ),
+        ),
+      ]).toEqual([]);
     });
   }
 });

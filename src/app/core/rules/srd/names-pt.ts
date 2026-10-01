@@ -732,3 +732,32 @@ export const monsterNamePt = (englishName: string): string =>
 /** Nome da magia em pt-BR se houver no glossário; senão cai no nome em inglês do SRD. */
 export const spellNamePt = (englishName: string): string =>
   SPELL_NAMES_PT[englishName] ?? englishName;
+
+/** Nomes das magias embutidas que diferem do glossário acima. */
+const BUILTIN_ALIASES: Readonly<Record<string, string>> = {
+  'Raio de Fogo': 'Fire Bolt',
+  'Raio de Gelo': 'Ray of Frost',
+  'Toque Chocante': 'Shocking Grasp',
+  'Chama Sagrada': 'Sacred Flame',
+  'Zombaria Viciosa': 'Vicious Mockery',
+  'Mísseis Mágicos': 'Magic Missile',
+  'Mãos Flamejantes': 'Burning Hands',
+  'Curar Ferimentos': 'Cure Wounds',
+  'Palavra Curativa': 'Healing Word',
+  'Raio Guia': 'Guiding Bolt',
+  'Infligir Ferimentos': 'Inflict Wounds',
+  'Imobilizar Pessoa': 'Hold Person',
+  Despedaçar: 'Shatter',
+  'Bola de Fogo': 'Fireball',
+};
+
+let spellReverse: Map<string, string> | undefined;
+
+/** Inverso de `spellNamePt`: o nome em inglês de uma magia guardada em pt-BR (sem entrada, devolve o próprio). */
+export const spellNameEn = (namePt: string): string => {
+  spellReverse ??= new Map([
+    ...Object.entries(SPELL_NAMES_PT).map(([en, pt]): [string, string] => [pt, en]),
+    ...Object.entries(BUILTIN_ALIASES),
+  ]);
+  return spellReverse.get(namePt) ?? namePt;
+};

@@ -4,10 +4,37 @@ import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import EN_NOTES from './spell-rules/en-notes.mjs';
+
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const dir = join(root, 'scripts', 'spell-rules');
 const srd = (f) => JSON.parse(readFileSync(join(root, 'public', 'data', f), 'utf8'));
 const base = (id) => id.replace(/^srd-2024_/, '');
+
+/** Pés/milhas do texto em pt-BR viram metros/km (mesma regra de `core/rules/units.ts`; a versão em inglês fica em ft). */
+function ptUnits(text) {
+  const dec = (n) => String(Math.round(n * 10) / 10).replace('.', ',');
+  return text
+    .replace(/(\d+(?:[.,]\d+)?)[- ]?(?:ft\.?|feet|foot)(?![a-z])/gi, (_, n) => `${dec(Number(n.replace(',', '.')) * 0.3)} m`)
+    .replace(/(\d+(?:[.,]\d+)?)[- ]?miles?/gi, (_, n) => `${dec(Number(n.replace(',', '.')) * 1.6)} km`);
+}
+
+/** Para cada nota `manual`/`note` em pt-BR acrescenta a versão `manualEn`/`noteEn` (do dicionário `en-notes.mjs`). */
+function withEnglish(node, where) {
+  if (Array.isArray(node)) return node.map((x) => withEnglish(x, where));
+  if (!node || typeof node !== 'object') return node;
+  const out = {};
+  for (const [k, v] of Object.entries(node)) {
+    out[k] = withEnglish(v, where);
+    if ((k === 'manual' || k === 'note') && typeof v === 'string') out[k] = ptUnits(v);
+    if ((k === 'manual' || k === 'note') && typeof v === 'string' && v) {
+      const en = EN_NOTES.get(v);
+      if (!en) throw new Error(`${where}: falta tradução em en-notes.mjs para: ${v}`);
+      out[k + 'En'] = en;
+    }
+  }
+  return out;
+}
 
 async function collect(prefix) {
   const files = readdirSync(dir)
@@ -18,7 +45,7 @@ async function collect(prefix) {
     const mod = (await import(pathToFileURL(join(dir, f)).href)).default;
     for (const [id, rule] of Object.entries(mod)) {
       if (id in out) throw new Error(`${f}: ${id} repetido`);
-      out[id] = rule;
+      out[id] = withEnglish(rule, `${f}:${id}`);
     }
   }
   return out;

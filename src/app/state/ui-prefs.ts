@@ -1,4 +1,6 @@
 import { effect, Injectable, signal } from '@angular/core';
+import { expand } from '@core/rules/i18n';
+import { distance, ptUnits } from '@core/rules/units';
 
 const KEY = 'runegrid.prefs.v1';
 export type Locale = 'pt-BR' | 'en';
@@ -41,6 +43,36 @@ export class UiPrefs {
 
   text(pt: string, en: string): string {
     return this.locale() === 'en' ? en : pt;
+  }
+
+  /** Distância (em pés, a unidade do motor) no idioma atual: `30 ft` ou `9 m`. */
+  dist(ft: number): string {
+    return distance(ft, this.locale() === 'en' ? 'en' : 'pt');
+  }
+
+  /** Texto de distância do SRD ("60 feet"): em pt-BR vira metros. */
+  units(text: string): string {
+    return this.locale() === 'en' ? text : ptUnits(text);
+  }
+
+  /** Valor de um campo de distância: pés em inglês, metros em pt-BR. */
+  lenIn(ft: number): number {
+    return this.locale() === 'en' ? ft : Math.round(ft * 3) / 10;
+  }
+
+  /** Inverso de `lenIn`: o que foi digitado volta para pés. */
+  lenOut(value: number): number {
+    return this.locale() === 'en' ? value : Math.round(value / 0.3);
+  }
+
+  /** Passo dos campos de distância (uma casa). */
+  lenStep(): number {
+    return this.locale() === 'en' ? 5 : 1.5;
+  }
+
+  /** Resolve texto bilíngue do motor (`T(pt, en)`) para o idioma atual. */
+  tr(text: string): string {
+    return expand(text, this.locale() === 'en' ? 'en' : 'pt');
   }
 }
 

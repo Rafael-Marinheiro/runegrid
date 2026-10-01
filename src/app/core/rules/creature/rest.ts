@@ -1,3 +1,4 @@
+import { T } from '../i18n';
 import { Creature } from '../../models/creature';
 import { RuleError } from './stats';
 
@@ -34,7 +35,9 @@ export function fullCasterSlots(level: number): Creature['spellSlots'] {
 export function spendSlot(c: Creature, level: number): Creature {
   const slot = c.spellSlots[level];
   if (!slot || slot.used >= slot.max) {
-    throw new RuleError(`Sem espaço de magia de ${level}º nível.`);
+    throw new RuleError(
+      T(`Sem espaço de magia de ${level}º nível.`, `No level ${level} spell slot left.`),
+    );
   }
   return { ...c, spellSlots: { ...c.spellSlots, [level]: { ...slot, used: slot.used + 1 } } };
 }
@@ -48,7 +51,8 @@ export function restoreSlot(c: Creature, level: number): Creature {
 
 export function spendResource(c: Creature, name: string): Creature {
   const res = c.resources.find((r) => r.name === name);
-  if (!res || res.used >= res.max) throw new RuleError(`Sem usos de ${name}.`);
+  if (!res || res.used >= res.max)
+    throw new RuleError(T(`Sem usos de ${name}.`, `No uses of ${name} left.`));
   return { ...c, resources: c.resources.map((r) => (r === res ? { ...r, used: r.used + 1 } : r)) };
 }
 

@@ -117,7 +117,10 @@ export interface SpellOption {
   id: string;
   label: string;
   patch: Partial<
-    Pick<Spell, 'effect' | 'condition' | 'damage' | 'extraDamage' | 'tempHp' | 'vfx' | 'manual'>
+    Pick<
+      Spell,
+      'effect' | 'condition' | 'damage' | 'extraDamage' | 'tempHp' | 'vfx' | 'manual' | 'manualEn'
+    >
   >;
 }
 
@@ -163,7 +166,10 @@ export interface Spell {
       from: number;
       to: number;
       patch: Partial<
-        Pick<Spell, 'damage' | 'extraDamage' | 'condition' | 'effect' | 'kill' | 'manual'>
+        Pick<
+          Spell,
+          'damage' | 'extraDamage' | 'condition' | 'effect' | 'kill' | 'manual' | 'manualEn'
+        >
       >;
     }[];
   };
@@ -204,6 +210,8 @@ export interface Spell {
   narrative?: boolean;
   /** Parte do efeito o Mestre resolve (texto dito ao conjurar); o que o motor faz está nos campos acima. */
   manual?: string;
+  /** `manual` em inglês. */
+  manualEn?: string;
   description: string;
 }
 

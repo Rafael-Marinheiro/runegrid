@@ -10,6 +10,7 @@ import {
 import { Creature } from '@core/models/creature';
 import { Spell } from '@core/models/spell';
 import { getSpell } from '@core/rules/spells/data';
+import { spellNameEn } from '@core/rules/srd/names-pt';
 import { SpellStore } from '@state/spell.store';
 import { UiPrefs } from '@state/ui-prefs';
 
@@ -29,7 +30,7 @@ import { UiPrefs } from '@state/ui-prefs';
           [attr.title]="sp.description"
           (click)="pick(sp)"
         >
-          <span class="name">{{ sp.name }}</span>
+          <span class="name">{{ ui.text(sp.name, nameEn(sp.name)) }}</span>
           <span class="meta">{{
             sp.level === 0
               ? ui.text('Truque', 'Cantrip')
@@ -61,7 +62,7 @@ import { UiPrefs } from '@state/ui-prefs';
           [class.active]="picked()?.id === x.spell.id && sustainPick()"
           (click)="pickSustained(x.spell, x.slotLevel)"
         >
-          <span class="name">↻ {{ x.spell.name }}</span>
+          <span class="name">↻ {{ ui.text(x.spell.name, nameEn(x.spell.name)) }}</span>
           <span class="tag">{{
             x.spell.sustain?.cost === 'bonus'
               ? ui.text('bônus', 'bonus')
@@ -74,7 +75,7 @@ import { UiPrefs } from '@state/ui-prefs';
       <div class="detail">
         <p class="desc">{{ sp.description }}</p>
         @if (sp.manual) {
-          <p class="note">{{ sp.manual }}</p>
+          <p class="note">{{ ui.text(sp.manual, sp.manualEn ?? sp.manual) }}</p>
         }
         @if (sp.castTime === 'reaction') {
           <p class="note">
@@ -169,6 +170,7 @@ import { UiPrefs } from '@state/ui-prefs';
 })
 export class SpellPanel {
   protected readonly ui = inject(UiPrefs);
+  protected readonly nameEn = spellNameEn;
   readonly caster = input.required<Creature>();
   readonly picked = signal<Spell | null>(null);
   readonly slot = signal(0);

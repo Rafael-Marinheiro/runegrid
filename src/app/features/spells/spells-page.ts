@@ -100,6 +100,7 @@ export class SpellsPage implements OnInit {
 
   /** Parte que o Mestre resolve à mão, se a magia a declara. */
   protected manual(s: SrdSpell): string | undefined {
-    return getSpell(s.id, this.ui.ruleset())?.manual;
+    const spell = getSpell(s.id, this.ui.ruleset());
+    return this.ui.text(spell?.manual ?? '', spell?.manualEn ?? spell?.manual ?? '') || undefined;
   }
 }

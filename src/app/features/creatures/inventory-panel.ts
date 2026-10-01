@@ -99,7 +99,7 @@ const GROUPS: { kind: ItemKind; label: string }[] = [
           }
         </select>
       </label>
-      <p class="hint" role="status" aria-live="polite">{{ error() }}</p>
+      <p class="hint" role="status" aria-live="polite">{{ ui.tr(error()) }}</p>
     </section>
   `,
   styles: `
@@ -164,7 +164,7 @@ export class InventoryPanel {
       this.error.set('');
     } catch (e) {
       if (!(e instanceof RuleError)) throw e;
-      this.error.set(e.message);
+      this.error.set(e.marked);
     }
   }
 

@@ -1,5 +1,5 @@
 <h1>{{ ui.text('Criaturas', 'Creatures') }}</h1>
-<p class="message" role="status" aria-live="polite">{{ store.message() }}</p>
+<p class="message" role="status" aria-live="polite">{{ ui.tr(store.message()) }}</p>
 
 <div class="layout">
   <aside class="list panel" [attr.aria-label]="ui.text('Lista de criaturas', 'Creature list')">

@@ -2,6 +2,7 @@ import { Creature, DamageType } from '../../models/creature';
 import { Rng } from '../dice';
 import { cannotHeal, effectsOf, extraResist, removeEffects } from './effects';
 import { RuleError } from './stats';
+import { T } from '../i18n';
 
 export interface DamageResult {
   creature: Creature;
@@ -27,7 +28,8 @@ export interface DamageOptions {
 }
 
 const nonNeg = (n: number, what: string): number => {
-  if (!Number.isFinite(n) || n < 0) throw new RuleError(`${what} deve ser um número ≥ 0.`);
+  if (!Number.isFinite(n) || n < 0)
+    throw new RuleError(T(`${what} deve ser um número ≥ 0.`, `${what} must be a number ≥ 0.`));
   return Math.floor(n);
 };
 
@@ -43,7 +45,7 @@ function adjust(c: Creature, amount: number, type?: DamageType): number {
 }
 
 export function applyDamage(c: Creature, amount: number, opts: DamageOptions = {}): DamageResult {
-  const dealt = adjust(c, nonNeg(amount, 'Dano'), opts.type);
+  const dealt = adjust(c, nonNeg(amount, T('Dano', 'Damage')), opts.type);
   if (c.status === 'dead' || dealt === 0) {
     return {
       creature: c,
@@ -128,7 +130,7 @@ export function applyDamage(c: Creature, amount: number, opts: DamageOptions = {
 }
 
 export function heal(c: Creature, amount: number): Creature {
-  const n = nonNeg(amount, 'Cura');
+  const n = nonNeg(amount, T('Cura', 'Healing'));
   if (c.status === 'dead' || n === 0 || cannotHeal(c)) return c;
   const current = Math.min(c.hp.max, c.hp.current + n);
   return {
@@ -141,7 +143,7 @@ export function heal(c: Creature, amount: number): Creature {
 
 /** PV temporários não se acumulam: vale o maior valor. */
 export function addTempHp(c: Creature, amount: number): Creature {
-  const n = nonNeg(amount, 'PV temporário');
+  const n = nonNeg(amount, T('PV temporário', 'Temporary HP'));
   return n > c.hp.temp ? { ...c, hp: { ...c.hp, temp: n } } : c;
 }
 
@@ -154,7 +156,12 @@ export interface DeathSaveResult {
 /** Salvaguarda contra a morte: 10+ sucesso, 1 = 2 falhas, 20 = volta com 1 PV. */
 export function rollDeathSave(c: Creature, rng: Rng = Math.random): DeathSaveResult {
   if (c.status !== 'dying')
-    throw new RuleError('Só quem está morrendo faz salvaguarda contra a morte.');
+    throw new RuleError(
+      T(
+        'Só quem está morrendo faz salvaguarda contra a morte.',
+        'Only a dying creature makes death saving throws.',
+      ),
+    );
   const roll = 1 + Math.floor(rng() * 20);
   if (roll === 20) {
     return {

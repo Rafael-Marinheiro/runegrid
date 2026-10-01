@@ -32,7 +32,7 @@ export const SPELLS: Spell[] = [
     effect: { ends: 'casterStart', mods: { speed: -10 } },
     vfx: { kind: 'ray', color: 'frost' },
     description:
-      'Ataque de magia à distância. 1d8 de gelo e o deslocamento do alvo cai 10 ft até o início do seu próximo turno.',
+      'Ataque de magia à distância. 1d8 de gelo e o deslocamento do alvo cai 3 m até o início do seu próximo turno.',
   },
   {
     id: 'shocking-grasp',
@@ -104,7 +104,7 @@ export const SPELLS: Spell[] = [
     resolution: { kind: 'save', ability: 'dex', onSave: 'half' },
     damage: { dice: '3d6', type: 'fire', perLevel: '1d6' },
     vfx: { kind: 'cone', color: 'fire' },
-    description: 'Cone de 15 ft. Salvaguarda de Destreza; 3d6 de fogo (metade se passar).',
+    description: 'Cone de 4,5 m. Salvaguarda de Destreza; 3d6 de fogo (metade se passar).',
   },
   {
     id: 'cure-wounds',
@@ -187,7 +187,7 @@ export const SPELLS: Spell[] = [
     resolution: { kind: 'save', ability: 'con', onSave: 'half' },
     damage: { dice: '3d8', type: 'thunder', perLevel: '1d8' },
     vfx: { kind: 'burst', color: 'thunder' },
-    description: 'Esfera de 10 ft. Salvaguarda de Constituição; 3d8 trovejante (metade se passar).',
+    description: 'Esfera de 3 m. Salvaguarda de Constituição; 3d8 trovejante (metade se passar).',
   },
   {
     id: 'fireball',
@@ -200,6 +200,6 @@ export const SPELLS: Spell[] = [
     resolution: { kind: 'save', ability: 'dex', onSave: 'half' },
     damage: { dice: '8d6', type: 'fire', perLevel: '1d6' },
     vfx: { kind: 'burst', color: 'fire' },
-    description: 'Esfera de 20 ft. Salvaguarda de Destreza; 8d6 de fogo (metade se passar).',
+    description: 'Esfera de 6 m. Salvaguarda de Destreza; 8d6 de fogo (metade se passar).',
   },
 ];

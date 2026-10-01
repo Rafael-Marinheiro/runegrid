@@ -78,7 +78,9 @@ export function project(state: EncounterState, viewer: Role): EncounterState {
     creatures,
     tokens: state.tokens.filter((t) => known(t.creatureId)),
     floors: [],
-    log: state.log.filter((e) => !e.secret),
+    log: state.log.filter(
+      (e) => (!e.secret && !e.visibleTo) || e.visibleTo?.some((id) => role.owns.includes(id)),
+    ),
     map: {
       ...map,
       cells: map.cells.map((t, i) =>

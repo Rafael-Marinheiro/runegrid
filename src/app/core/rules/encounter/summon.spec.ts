@@ -533,13 +533,23 @@ describe('Cão Fiel', () => {
     untilCaster(t);
     expect(t.get().log.some((e) => /morde/.test(e.text))).toBe(true);
     expect(t.get().creatures.find((c) => c.id === 'm')!.hp.current).toBeLessThan(hp);
-    // o jogador vê só que algo invisível mordeu: sem o nome do cão e sem a animação que mostra de onde veio
-    const seen = project(t.get(), { kind: 'player', owns: ['c'] }).log;
+    // um jogador que não é o dono vê só que algo invisível mordeu: sem o nome do cão e sem a animação que mostra de onde veio
+    const seen = project(t.get(), { kind: 'player', owns: ['x'] }).log;
     expect(
       seen.some((e) => /Cão Fiel morde|Faithful Hound bites/.test(e.text + (e.en ?? ''))),
     ).toBe(false);
     expect(seen.some((e) => /invisível/.test(e.text))).toBe(true);
     expect(seen.every((e) => !e.fx?.some((f) => f.kind === 'slash'))).toBe(true);
+    // o dono vê o detalhe; outro jogador não
+    const owner = project(t.get(), { kind: 'player', owns: ['c'] }).log;
+    expect(
+      owner.some((e) => /^(Cão Fiel|Faithful Hound) (morde|bites)/.test(e.text + (e.en ?? ''))),
+    ).toBe(true);
+    expect(owner.some((e) => e.fx?.some((f) => f.kind === 'slash'))).toBe(true);
+    const other = project(t.get(), { kind: 'player', owns: ['x'] }).log;
+    expect(
+      other.some((e) => /^(Cão Fiel|Faithful Hound) (morde|bites)/.test(e.text + (e.en ?? ''))),
+    ).toBe(false);
   });
 
   it('o jogador dono do conjurador vê o cão; outro jogador não', () => {

@@ -1,5 +1,5 @@
 import { Creature } from '../../models/creature';
-import { EncounterState } from '../../models/encounter';
+import { EncounterState, LogEntry } from '../../models/encounter';
 import { Pos, SIZE_CELLS } from '../../models/grid';
 import { Spell, SummonSpec } from '../../models/spell';
 import { abilityMod, allMods, canAct, proficiencyBonus, RuleError, spellSaveDc } from '../creature';
@@ -504,6 +504,13 @@ export function guardBites(state: EncounterState, ownerId: string, ctx: Context)
     ]);
     s = resolveSpell(s, g, bite, 0, [foe], 5, ctx, { ruleset: '2014' });
     s = attachFx(before, s, attackFx(before, g.id, foe.id, 5, guard.type, 'Bite'));
+    // o detalhe (secreto por envolver o cão oculto) é do dono além do Mestre
+    s = {
+      ...s,
+      log: s.log.map((e) =>
+        e.id >= before.seq && e.secret ? { ...omitSecret(e), visibleTo: [ownerId] } : e,
+      ),
+    };
     s = addLog(
       s,
       T(
@@ -514,4 +521,11 @@ export function guardBites(state: EncounterState, ownerId: string, ctx: Context)
     );
   }
   return s;
+}
+
+/** A entrada sem a marca de secreta (o `visibleTo` passa a controlar quem a vê). */
+function omitSecret(e: LogEntry): LogEntry {
+  const rest = { ...e };
+  delete rest.secret;
+  return rest;
 }

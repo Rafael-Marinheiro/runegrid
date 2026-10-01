@@ -161,6 +161,8 @@ export interface LogEntry {
   en?: string;
   /** Envolve criatura oculta: só o Mestre vê. */
   secret?: boolean;
+  /** Entrada que só o Mestre e quem controla uma destas criaturas veem (o dono do Cão Fiel). */
+  visibleTo?: string[];
   /** Dados rolados pelo comando que gerou esta entrada. */
   dice?: RolledDie[];
   /** Efeitos visuais da ação (ver `models/fx`). */

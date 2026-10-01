@@ -195,7 +195,7 @@ export interface Creature {
   /** Estado das habilidades de monstro: usos gastos e recarga pendente, por id da habilidade. */
   abilityState?: Record<string, { used?: number; recharging?: boolean }>;
   /** Último dano sofrido (tipo e se foi crítico): Fortitude de Morto-vivo olha para ele. */
-  lastHit?: { type?: DamageType; crit?: boolean };
+  lastHit?: { type?: DamageType; crit?: boolean; reverted?: boolean };
   /** Regeneração suspensa até o início do próximo turno (dano de ácido/fogo no troll). */
   regenBlocked?: boolean;
   /** Ações lendárias: máximo por rodada e as que restam (volta ao começar o turno do monstro). */
@@ -209,6 +209,8 @@ export interface Creature {
     noActions?: boolean;
     /** Não conjura (Metamorfose). */
     noSpells?: boolean;
+    /** O equipamento se funde à forma e não pode ser usado (Metamorfose). */
+    meldsGear?: boolean;
     /** Como os PV da forma entram: troca ou PV temporários; a forma acaba se zerarem. */
     hp?: 'replace' | 'temp';
     /** Quem mantém a concentração que sustenta a forma. */

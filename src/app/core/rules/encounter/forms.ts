@@ -1,8 +1,9 @@
 import { Creature, DAMAGE_TYPES } from '../../models/creature';
 import { EncounterState } from '../../models/encounter';
 import { FormSpec } from '../../models/spell';
-import { RuleError } from '../creature';
+import { RuleError, revertForm } from '../creature';
 import { T } from '../i18n';
+import { abilitiesOf } from '../monsters/registry';
 import { summonTemplate } from './summon';
 import { addLog, creatureOf, withCreature } from './state';
 
@@ -71,6 +72,7 @@ export function shapeShift(
       keys: spec.keys ?? [],
       ...(spec.noActions ? { noActions: true } : {}),
       ...(spec.noSpells ? { noSpells: true } : {}),
+      ...(spec.meldsGear ? { meldsGear: true } : {}),
       ...(spec.hp ? { hp: spec.hp } : {}),
       ...(by ? { by } : {}),
       original: c.form?.original ?? {
@@ -139,14 +141,7 @@ function takeFrom(c: Creature, model: Creature, spec: FormSpec): Creature {
   return out;
 }
 
-function restore(c: Creature): Creature {
-  if (!c.form) return c;
-  const { form, ...rest } = c;
-  const { hp, ...stats } = form.original;
-  // PV: trocados voltam aos de antes; PV temporários da forma somem
-  const back = form.hp === 'replace' ? hp : form.hp === 'temp' ? { ...c.hp, temp: hp.temp } : c.hp;
-  return { ...rest, ...stats, hp: back };
-}
+const restore = revertForm;
 
 /**
  * A forma acaba: ao morrer (Mudar de Forma: "reverte se morrer"), quando os PV da forma zeram
@@ -212,3 +207,8 @@ export const planeError = (): RuleError =>
       'One is on the Ethereal Plane and the other on the Material Plane: they cannot reach each other.',
     ),
   );
+
+/** Quem muda de forma por natureza passa sozinho na salvaguarda da Metamorfose. */
+export function isShapechanger(c: Creature): boolean {
+  return abilitiesOf(c).some((a) => a.options?.some((o) => o.patch.form && !o.patch.form.onTarget));
+}

@@ -185,10 +185,11 @@ export default {
       hp: 'replace',
       capByTarget: true,
       noSpells: true,
+      meldsGear: true,
       onTarget: true,
     },
     manual:
-      'O alvo assume os PV da fera; ao voltar tem os PV de antes (o excesso de dano a 0 PV o Mestre passa à forma normal). Não fala nem conjura; o equipamento se funde e não pode ser usado. Quem muda de forma passa automaticamente na salvaguarda.',
+      'O alvo assume os PV da fera; ao voltar tem os PV de antes e o excesso de dano a 0 PV passa para a forma normal. Não fala nem conjura; o equipamento se funde e não pode ser usado. Quem muda de forma passa automaticamente na salvaguarda.',
     vfx: vfx('glow', 'life'),
   },
   'private-sanctum': narrative(vfx('burst', 'arcane', { radius: 50 })),

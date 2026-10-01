@@ -140,6 +140,7 @@ export default {
       hp: 'temp',
       capByTarget: true,
       noSpells: true,
+      meldsGear: true,
       onTarget: true,
     },
     manual:

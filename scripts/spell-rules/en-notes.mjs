@@ -1,8 +1,8 @@
 // Versão em inglês das notas `manual` e `note` das magias (chave = texto em pt-BR). O build exige uma entrada para cada nota.
 export default new Map([
   [
-    'O alvo assume os PV da fera; ao voltar tem os PV de antes (o excesso de dano a 0 PV o Mestre passa à forma normal). Não fala nem conjura; o equipamento se funde e não pode ser usado. Quem muda de forma passa automaticamente na salvaguarda.',
-    "The target takes the beast's HP; when it reverts it has the HP it had before (the DM carries excess damage at 0 HP over to the normal form). It cannot speak or cast; its gear melds in and cannot be used. A shapechanger automatically succeeds on the save.",
+    'O alvo assume os PV da fera; ao voltar tem os PV de antes e o excesso de dano a 0 PV passa para a forma normal. Não fala nem conjura; o equipamento se funde e não pode ser usado. Quem muda de forma passa automaticamente na salvaguarda.',
+    "The target takes the beast's HP; when it reverts it has the HP it had before and excess damage at 0 HP carries over to the normal form. It cannot speak or cast; its gear melds in and cannot be used. A shapechanger automatically succeeds on the save.",
   ],
   [
     'O alvo mantém os PV e ganha os da fera como PV temporários; a magia acaba nele se eles zerarem. Não fala nem conjura; o equipamento se funde e não pode ser usado.',

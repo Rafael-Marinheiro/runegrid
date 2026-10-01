@@ -155,6 +155,16 @@ export function aftermath(
   rng: Rng,
 ): EncounterState {
   if (dealt > 0) state = keepRage(state, targetId);
+  if (creatureOf(state, targetId).lastHit?.reverted) {
+    const c = creatureOf(state, targetId);
+    const { lastHit, ...rest } = c;
+    void lastHit;
+    state = addLog(
+      withCreature(state, rest),
+      T(`${c.name} volta à forma verdadeira.`, `${c.name} returns to its true form.`),
+      [c.id],
+    );
+  }
   state = undeadFortitude(state, targetId, dealt, rng);
   state = splitOnDamage(state, targetId, dealt);
   state = triggerDeath(state, targetId, rng);

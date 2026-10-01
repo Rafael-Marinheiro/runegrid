@@ -56,7 +56,7 @@ import { T, manualT, spellName, spellT } from '../i18n';
 import { distT } from '../units';
 import { isRaging } from './rage';
 import { summonCreatures } from './summon';
-import { planeError, samePlane, shapeShift, togglePlane } from './forms';
+import { isShapechanger, planeError, samePlane, shapeShift, togglePlane } from './forms';
 
 const LEVEL = (n: number) => (n === 0 ? T('truque', 'cantrip') : T(`${n}º nível`, `level ${n}`));
 
@@ -779,7 +779,8 @@ export function spellSave(
         : sv.mode;
     const r = rollD20(saveBonus(t, res.ability), smode, rng);
     const total = r.roll.total + sv.bonus;
-    let saved = !auto && total >= dc;
+    const shifter = !!spell.form?.onTarget && isShapechanger(t);
+    let saved = shifter || (!auto && total >= dc);
     const modeTxt = T(
       smode === 'normal' ? '' : smode === 'advantage' ? ' (vantagem)' : ' (desvantagem)',
       smode === 'normal' ? '' : smode === 'advantage' ? ' (advantage)' : ' (disadvantage)',

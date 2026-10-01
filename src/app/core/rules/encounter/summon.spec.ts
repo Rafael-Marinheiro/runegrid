@@ -6,6 +6,8 @@ import { newCreature } from '../../models/creature-factory';
 import { EncounterState, Role } from '../../models/encounter';
 import { mapFromAscii } from '../../models/grid';
 import { SrdMonster, SrdSpell } from '../../models/srd';
+import { applyDamage } from '../creature';
+import { isShapechanger } from './forms';
 import { fullCasterSlots } from '../creature/rest';
 import { monsterToCreature } from '../srd/convert';
 import { buildSpells, mergeRules, SpellRules } from '../spells/build';
@@ -680,5 +682,38 @@ describe('Metamorfose', () => {
     };
     const out = dispatch(spent, { type: 'heal', targetId: 'c', amount: 0 }, { rng, role: dm });
     expect(out.creatures.find((c) => c.id === 'm')!.form).toBeUndefined();
+  });
+
+  it('o excesso de dano ao zerar os PV da fera passa para a forma normal', () => {
+    const t = scene(getSpell('polymorph', '2014')!.id);
+    t.run(poly('2014', 'wolf'));
+    const wolfHp = sheet.get('wolf')!.hp;
+    // o alvo (Ogro) é atacado pelo conjurador? aplica-se dano direto pela regra de PV
+    const m = t.get().creatures.find((c) => c.id === 'm')!;
+    const r = applyDamage(m, wolfHp + 20, { type: 'slashing' });
+    expect(r.creature.form).toBeUndefined();
+    expect(r.creature.hp.current).toBe(90 - 20);
+    expect(r.creature.lastHit?.reverted).toBe(true);
+  });
+
+  it('quem muda de forma por natureza passa sozinho na salvaguarda; o equipamento fundido não se usa', () => {
+    expect(isShapechanger(monsterToCreature(sheet.get('vampire')!))).toBe(true);
+    expect(isShapechanger(monsterToCreature(sheet.get('wolf')!))).toBe(false);
+    const t = scene(getSpell('polymorph', '2014')!.id);
+    t.run(poly('2014', 'wolf'));
+    expect(t.get().creatures.find((c) => c.id === 'm')!.form?.meldsGear).toBe(true);
+    const items = {
+      ...t.get(),
+      creatures: t
+        .get()
+        .creatures.map((c) =>
+          c.id === 'm'
+            ? { ...c, inventory: [{ id: 'i1', ref: 'potion-of-healing', qty: 1, equipped: false }] }
+            : c,
+        ),
+    };
+    expect(() =>
+      dispatch(items, { type: 'useItem', actorId: 'm', itemId: 'i1' }, { rng, role: dm }),
+    ).toThrow(/fundido/);
   });
 });

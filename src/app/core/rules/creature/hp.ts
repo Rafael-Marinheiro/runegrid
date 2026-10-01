@@ -3,6 +3,7 @@ import { Rng } from '../dice';
 import { allMods, cannotHeal, effectsOf, extraResist, removeEffects } from './effects';
 import { RuleError } from './stats';
 import { T } from '../i18n';
+import { revertForm } from './form';
 
 export interface DamageResult {
   creature: Creature;
@@ -45,15 +46,31 @@ function adjust(c: Creature, amount: number, type?: DamageType): number {
 }
 
 export function applyDamage(c: Creature, amount: number, opts: DamageOptions = {}): DamageResult {
-  const r = damage(c, amount, opts);
+  let r = damage(c, amount, opts);
   if (r.dealt <= 0) return r;
+  // Metamorfose (2014): ao zerar os PV da fera volta à forma normal e o excesso de dano passa para ela
+  if (c.form?.hp === 'replace' && r.dropped) {
+    const excess = r.dealt - r.absorbedByTemp - r.hpLost;
+    const base = revertForm(c);
+    const carried = excess > 0 ? damage(base, excess, {}) : null;
+    r = {
+      ...r,
+      creature: { ...(carried?.creature ?? base), lastHit: { reverted: true } },
+      dropped: carried?.dropped ?? false,
+      instantDeath: carried?.instantDeath ?? false,
+    };
+  }
   // marcas para os traços dos monstros: último dano e Regeneração suspensa
   const stops = allMods(c).some((m) => opts.type && m.regenStops?.includes(opts.type));
   return {
     ...r,
     creature: {
       ...r.creature,
-      lastHit: { ...(opts.type ? { type: opts.type } : {}), ...(opts.crit ? { crit: true } : {}) },
+      lastHit: {
+        ...(opts.type ? { type: opts.type } : {}),
+        ...(opts.crit ? { crit: true } : {}),
+        ...(r.creature.lastHit?.reverted ? { reverted: true } : {}),
+      },
       ...(stops ? { regenBlocked: true } : {}),
     },
   };

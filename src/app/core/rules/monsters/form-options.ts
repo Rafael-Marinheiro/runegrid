@@ -34,6 +34,7 @@ export function formOptions(sp: Spell, self: string, sheets: SrdMonster[]): Spel
             ...(from.hp ? { hp: from.hp } : {}),
             ...(from.capByTarget ? { capByTarget: true } : {}),
             ...(from.noSpells ? { noSpells: true } : {}),
+            ...(from.meldsGear ? { meldsGear: true } : {}),
             ...(from.onTarget ? { onTarget: true } : {}),
           },
         },

@@ -424,6 +424,13 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       return next;
     }
     case 'useItem': {
+      if (creatureOf(state, cmd.actorId).form?.meldsGear)
+        throw new RuleError(
+          T(
+            'O equipamento está fundido à forma atual e não pode ser usado.',
+            'The gear is melded into the current form and cannot be used.',
+          ),
+        );
       const { actor, turn } = actorTurn(state, cmd.actorId);
       const item = (actor.inventory ?? []).find((i) => i.id === cmd.itemId);
       const d = item && itemDef(item);

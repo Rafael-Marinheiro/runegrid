@@ -217,6 +217,8 @@ export interface FormSpec {
   capByTarget?: boolean;
   /** Não fala nem conjura enquanto durar. */
   noSpells?: boolean;
+  /** O equipamento se funde à forma e não pode ser usado. */
+  meldsGear?: boolean;
   /** Vale no alvo da magia, não em quem conjura. */
   onTarget?: boolean;
 }
@@ -249,6 +251,7 @@ export interface FormFrom {
   hp?: 'replace' | 'temp';
   capByTarget?: boolean;
   noSpells?: boolean;
+  meldsGear?: boolean;
   onTarget?: boolean;
 }
 

@@ -50,6 +50,7 @@ import { addLog, creatureOf, occupiedCells, sizeOf, teamOf, tokenOf, withCreatur
 import { createZone, inArea, zoneContains } from './zones';
 import { T, manualT, spellName, spellT } from '../i18n';
 import { distT } from '../units';
+import { isRaging } from './rage';
 
 const LEVEL = (n: number) => (n === 0 ? T('truque', 'cantrip') : T(`${n}º nível`, `level ${n}`));
 
@@ -169,6 +170,10 @@ export function cast(state: EncounterState, cmd: CastCmd, ctx: Context): Encount
       ),
     );
   }
+  if (isRaging(creatureOf(state, cmd.actorId)))
+    throw new RuleError(
+      T('Não se conjura durante a fúria.', 'Spells cannot be cast while raging.'),
+    );
   const sustain = cmd.sustain === true;
   if (sustain && !spell.sustain)
     throw new RuleError(

@@ -32,6 +32,8 @@ import { AdvMode, criticalExpr, parseDice, roll, rollD20, Rng } from '../dice';
 import { canStand, distanceFt, findPath, footprint, MoveQuery } from '../grid/movement';
 import { hasLineOfSight } from '../grid/visibility';
 import { consume, itemDef } from '../inventory/inventory';
+import { markSneak, sneakAttack, useFeature } from './abilities';
+import { keepRage, meleeDamageBonus, rageEndOfTurn } from './rage';
 import { cast } from './cast';
 import { freeReaction, spellReaction } from './reaction-flow';
 import { holdOrApply } from './hits';
@@ -329,6 +331,8 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
         [actor.id],
       );
     }
+    case 'feature':
+      return useFeature(state, cmd, ctx.rng);
     case 'dodge': {
       const { actor, turn } = actorTurn(state, cmd.actorId);
       spendAction(turn);
@@ -480,8 +484,9 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
           ),
         );
       }
-      const t = tickConditions(actor);
-      let s = withCreature(state, t.creature);
+      const raged = rageEndOfTurn(state, actor.id);
+      const t = tickConditions(creatureOf(raged, actor.id));
+      let s = withCreature(raged, t.creature);
       for (const n of t.expired)
         s = addLog(
           s,
@@ -713,6 +718,7 @@ function beginTurn(state: EncounterState, ctx: Context): EncounterState {
       dodging: state.combat.dodging.filter((id) => id !== actor.id),
       helped: (state.combat.helped ?? []).filter((h) => h.by !== actor.id),
       reactionUsed: (state.combat.reactionUsed ?? []).filter((id) => id !== actor.id),
+      sneakUsed: [],
     },
   };
   return beginUpkeep(
@@ -1005,6 +1011,7 @@ function strike(
   const cover = coverBonus(state, from.pos, at.pos);
   const ac = effectiveAc(target) + cover;
   const magic = weaponBonus(actor);
+  state = keepRage(state, actor.id);
 
   const d20 = rollD20(weapon.bonus + magic, mode, rng);
   const total = d20.roll.total + extraRoll.bonus;
@@ -1012,7 +1019,7 @@ function strike(
   const crit = hit && (d20.crit || cond.autoCrit);
   const decoyed = decoy(state, target.id, total, rng, hit);
   if (decoyed) return dropOnAttack(decoyed, actor.id);
-  const head = T(
+  let head = T(
     `${actor.name} atacou ${target.name} com ${weapon.name}: d20 ${d20.natural} ${fmt(weapon.bonus + magic)}${extraRoll.text} = ${total} vs CA ${ac}${cover ? ` (cobertura +${cover})` : ''}` +
       (mode === 'normal' ? '' : mode === 'advantage' ? ' (vantagem)' : ' (desvantagem)'),
     `${actor.name} attacked ${target.name} with ${weapon.name}: d20 ${d20.natural} ${fmt(weapon.bonus + magic)}${extraRoll.text} = ${total} vs AC ${ac}${cover ? ` (cover +${cover})` : ''}` +
@@ -1030,7 +1037,18 @@ function strike(
   let amount = Math.max(0, dmg.total + magic + minus.total);
   if (weapon.range <= 5 && effectsOf(actor).some((e) => e.mods.halfWeaponDamage))
     amount = Math.floor(amount / 2);
+  if (weapon.range <= 5) amount += meleeDamageBonus(actor);
   const parts = [{ amount, type: weapon.type as string }];
+  const sneak = sneakAttack(state, actor, target, weapon, mode);
+  if (sneak) {
+    const sexpr = parseDice(sneak);
+    parts.push({
+      amount: Math.max(0, roll(crit ? criticalExpr(sexpr) : sexpr, rng).total),
+      type: weapon.type as string,
+    });
+    state = markSneak(state, actor.id);
+    head = T(`${head} (Ataque Furtivo ${sneak})`, `${head} (Sneak Attack ${sneak})`);
+  }
   for (const rider of weaponRiders(actor, target.id)) {
     const rexpr = parseDice(rider.dice);
     const extra = roll(crit ? criticalExpr(rexpr) : rexpr, rng);

@@ -1,7 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { SKILLS, type Creature } from '@core/models/creature';
+import { SKILLS, type Creature, type FeatureId } from '@core/models/creature';
 import { newCreature } from '@core/models/creature-factory';
-import { fullCasterSlots, rest } from '@core/rules/creature';
+import { FEATURE_IDS, fullCasterSlots, rest } from '@core/rules/creature';
 import { addItem, removeItem, toggleEquip } from '@core/rules/inventory/inventory';
 import { CATALOG, getItem } from '@core/rules/inventory/catalog';
 import { spendResource, spendSlot } from '@core/rules/creature';
@@ -119,6 +119,12 @@ Args: name, kind, level (1-20), abilities (scores), hp (max), plus optional spee
           )
           .optional(),
         attacks_per_action: z.number().int().min(1).max(6).optional(),
+        features: z
+          .array(z.enum(FEATURE_IDS as [string, ...string[]]))
+          .optional()
+          .describe(
+            'Class features the engine runs: cunning-action, nimble-escape, sneak-attack (automatic on hits), rage / second-wind / action-surge (actions of the same name; their uses come from the level)',
+          ),
         equipment: z.array(z.string()).optional(),
         spellcasting: z.object({ ability: AbilitySchema, spells: z.array(z.string()) }).optional(),
         full_caster: z.boolean().optional(),
@@ -155,6 +161,7 @@ Args: name, kind, level (1-20), abilities (scores), hp (max), plus optional spee
           hp: { max: a.hp, current: a.hp, temp: 0 },
           attacks: a.attacks ?? [],
           attacksPerAction: a.attacks_per_action ?? 1,
+          ...(a.features?.length ? { features: a.features as FeatureId[] } : {}),
           resistances: a.resistances ?? [],
           immunities: a.immunities ?? [],
           vulnerabilities: a.vulnerabilities ?? [],

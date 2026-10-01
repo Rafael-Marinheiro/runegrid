@@ -24,6 +24,7 @@ import { canReact, freeSlotFor } from './reactions';
 import { dropOnAttack } from './rolls';
 import { addLog, creatureOf, sizeOf, tokenOf, withCreature } from './state';
 import { distT } from '../units';
+import { isRaging } from './rage';
 
 type ReactionCmd = Extract<Command, { type: 'reaction' }>;
 
@@ -63,6 +64,10 @@ function pickSpell(reactor: Creature, cmd: ReactionCmd): { spell: Spell; slot: n
   if (spell.castTime !== 'reaction')
     throw new RuleError(
       T(`${spell.name} não é uma magia de reação.`, `${spellName(spell)} is not a reaction spell.`),
+    );
+  if (isRaging(reactor))
+    throw new RuleError(
+      T('Não se conjura durante a fúria.', 'Spells cannot be cast while raging.'),
     );
   const slot = cmd.slotLevel ?? freeSlotFor(reactor, spell.level);
   if (slot === null || slot === undefined || slot < spell.level || slot > 9)

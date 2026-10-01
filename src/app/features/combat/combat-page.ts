@@ -11,7 +11,7 @@ import {
 import { CONDITION_LABEL, CONDITIONS, ConditionName, Creature } from '@core/models/creature';
 import { Pos } from '@core/models/grid';
 import { Spell } from '@core/models/spell';
-import { fmtBonus } from '@core/rules/creature';
+import { FEATURE_RESOURCE, featureUses, fmtBonus, LimitedFeature } from '@core/rules/creature';
 import { spellNameEn } from '@core/rules/srd/names-pt';
 import {
   moveQuery,
@@ -731,6 +731,35 @@ export class CombatPage {
 
   /** Ações que o personagem ativo pode fazer como ação bônus (Ação Astuta, Fuga Ágil). */
   protected readonly bonusActions = computed(() => bonusActionsOf(this.active() ?? {}));
+
+  /** Habilidades de classe de uso ativo do personagem da vez (Retomar o Fôlego, Surto de Ação, Fúria). */
+  protected readonly classActions = computed(() => {
+    const a = this.active();
+    if (!a) return [];
+    const raging = !!a.effects?.some((e) => e.mods.rage);
+    const row = (id: LimitedFeature, pt: string, en: string, cost: 'bonus' | 'free') => {
+      const res = a.resources.find((r) => r.name === FEATURE_RESOURCE[id].name);
+      const left = res ? res.max - res.used : featureUses(id, a.level);
+      return { id, pt, en, cost, left, raging: id === 'rage' && raging };
+    };
+    const has = (id: LimitedFeature) => a.features?.includes(id);
+    return [
+      ...(has('second-wind')
+        ? [row('second-wind', 'Retomar o Fôlego', 'Second Wind', 'bonus')]
+        : []),
+      ...(has('action-surge')
+        ? [row('action-surge', 'Surto de Ação', 'Action Surge', 'free')]
+        : []),
+      ...(has('rage') ? [row('rage', 'Fúria', 'Rage', 'bonus')] : []),
+    ];
+  });
+
+  protected useFeature(feature: LimitedFeature): void {
+    const a = this.active();
+    if (!a) return;
+    this.store.send({ type: 'feature', actorId: a.id, feature });
+    this.resetMode();
+  }
 
   protected bonusAct(type: BonusAction): void {
     const a = this.active();

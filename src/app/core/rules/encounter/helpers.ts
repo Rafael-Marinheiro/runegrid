@@ -12,6 +12,7 @@ import { AdvMode, Rng } from '../dice';
 import { addLog, creatureOf, teamOf, withCreature } from './state';
 import { xpForCr } from '../srd/xp';
 import { condT, dmgT, spellT, T } from '../i18n';
+import { endRageIfDown, keepRage } from './rage';
 
 export interface Context {
   rng: Rng;
@@ -150,6 +151,8 @@ export function aftermath(
   dealt: number,
   rng: Rng,
 ): EncounterState {
+  if (dealt > 0) state = keepRage(state, targetId);
+  state = endRageIfDown(state, targetId);
   let t = creatureOf(state, targetId);
   if (dealt > 0 && t.conditions.some((c) => c.endsOnDamage)) {
     const woke = t.conditions.filter((c) => c.endsOnDamage);

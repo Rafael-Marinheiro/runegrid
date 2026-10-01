@@ -150,9 +150,12 @@ export interface Attack {
   type: DamageType;
   /** Alcance em pés: 5 corpo a corpo, mais para ataques à distância. */
   range: number;
+  /** Arma com acuidade (vale para o Ataque Furtivo, junto com as de distância). */
+  finesse?: boolean;
 }
 
-export type FeatureId = 'cunning-action' | 'nimble-escape';
+export type FeatureId =
+  'cunning-action' | 'nimble-escape' | 'sneak-attack' | 'rage' | 'second-wind' | 'action-surge';
 
 export interface Creature {
   id: string;

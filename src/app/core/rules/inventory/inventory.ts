@@ -46,6 +46,7 @@ export function weaponAttack(c: Creature, d: ItemDef): Attack {
     damage: mod === 0 ? dice : `${dice}${mod > 0 ? '+' : ''}${mod}`,
     type: w.type,
     range: w.range,
+    ...(w.finesse ? { finesse: true } : {}),
   };
 }
 

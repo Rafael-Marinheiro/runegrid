@@ -97,6 +97,8 @@ export type Command =
   | { type: 'standUp'; actorId: string }
   | { type: 'dash'; actorId: string; bonus?: boolean }
   | { type: 'dodge'; actorId: string }
+  /** Habilidade de classe de uso ativo: Retomar o Fôlego, Surto de Ação ou Fúria (de novo = encerra). */
+  | { type: 'feature'; actorId: string; feature: 'second-wind' | 'action-surge' | 'rage' }
   | { type: 'disengage'; actorId: string; bonus?: boolean }
   | { type: 'hide'; actorId: string; bonus?: boolean }
   /** Ajudar: o próximo ataque de um aliado contra o inimigo adjacente tem vantagem. */
@@ -130,6 +132,7 @@ export const PLAYER_COMMANDS: readonly CommandType[] = [
   'attack',
   'dash',
   'dodge',
+  'feature',
   'disengage',
   'hide',
   'help',

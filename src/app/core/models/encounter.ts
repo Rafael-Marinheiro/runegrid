@@ -29,6 +29,8 @@ export interface TurnState {
   disengaged: boolean;
   /** Ataques que ainda restam da ação Atacar já iniciada (Ataque Extra). */
   attacksLeft: number;
+  /** Surto de Ação já usado neste turno. */
+  surged?: boolean;
 }
 
 /** Uma reação à espera de decisão: ataque de oportunidade ou magia de reação (ver `encounter/reactions`). */
@@ -126,6 +128,8 @@ export interface Combat {
   pending?: PendingReaction[];
   /** Quem já usou a reação nesta rodada (volta ao começo do turno de cada um). */
   reactionUsed?: string[];
+  /** Quem já aplicou o Ataque Furtivo neste turno (limpo a cada novo turno). */
+  sneakUsed?: string[];
   /** Vencedor quando `phase === 'ended'`. */
   outcome?: 'party' | 'foes';
 }

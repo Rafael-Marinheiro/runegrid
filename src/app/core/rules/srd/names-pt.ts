@@ -748,6 +748,7 @@ const BUILTIN_ALIASES: Readonly<Record<string, string>> = {
   'Infligir Ferimentos': 'Inflict Wounds',
   'Imobilizar Pessoa': 'Hold Person',
   Despedaçar: 'Shatter',
+  Fúria: 'Rage',
   'Bola de Fogo': 'Fireball',
 };
 

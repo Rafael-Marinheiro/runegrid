@@ -81,6 +81,10 @@ export interface EffectMods {
   damageDie?: string;
   /** Termina quando quem carrega ataca ou conjura (Invisibilidade, Santuário). */
   endsOnAttack?: boolean;
+  /** Fúria: resistência a dano de arma, dano extra corpo a corpo e fim se não atacar nem sofrer dano. */
+  rage?: boolean;
+  /** Dano fixo somado aos golpes corpo a corpo de arma (Fúria). */
+  meleeDamage?: number;
   /** Sem efeito no motor: só lembrete para o Mestre (testes de atributo, sentidos…). */
   note?: string;
   /** `note` em inglês. */
@@ -107,5 +111,7 @@ export interface ActiveEffect {
   concentration?: boolean;
   /** Some quando quem carrega sofre dano (Padrão Hipnótico). */
   endsOnDamage?: boolean;
+  /** Fúria: já atacou ou sofreu dano neste turno (senão ela acaba no fim do turno). */
+  kept?: boolean;
   mods: EffectMods;
 }

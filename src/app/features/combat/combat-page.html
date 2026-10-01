@@ -474,6 +474,27 @@
                 }}
               </button>
             }
+            @for (f of classActions(); track f.id) {
+              <button
+                type="button"
+                [class.active]="f.raging"
+                [disabled]="
+                  a.status !== 'alive' ||
+                  (!f.raging && f.left <= 0) ||
+                  (f.cost === 'bonus' && !f.raging && !t.bonus)
+                "
+                (click)="useFeature(f.id)"
+              >
+                {{
+                  f.raging
+                    ? ui.text('Encerrar fúria', 'End rage')
+                    : ui.text(f.pt, f.en) +
+                      (f.cost === 'bonus' ? ui.text(' (bônus)', ' (bonus)') : '') +
+                      ' · ' +
+                      f.left
+                }}
+              </button>
+            }
             <button
               type="button"
               [class.active]="mode().kind === 'help'"

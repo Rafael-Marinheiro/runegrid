@@ -29,6 +29,9 @@ const ActionSchema = z.object({
     'cast',
     'dash',
     'dodge',
+    'second_wind',
+    'action_surge',
+    'rage',
     'disengage',
     'hide',
     'help',
@@ -145,7 +148,7 @@ The fight then runs: rg_game_status → rg_combat_act for the creature whose tur
     {
       title: 'Take combat actions for a creature',
       description: `Perform one or several actions for ONE creature, in order, through the rules engine: it checks that it is that creature's turn, range, action economy, movement cost/terrain/doors, opportunity attacks, cover, advantage/disadvantage from conditions, rolls the dice, applies damage/resistances/concentration/death saves and writes everything to the combat log. You never roll or compute damage yourself.
-Actions (one object each): move {to:{x,y}} or {adjacent_to:"Goblin 1"} · attack {target, attack?, mode?, knock_out?} · cast {spell, target? | at? | point?, slot_level?} · dash · dodge · disengage · hide · help {target} · use_item {item} · stand_up · open_door {point} · death_save · reaction {use:true|false, spell?, slot_level?} (the actor is then the REACTOR, see pending reactions in the status; Shield/Counterspell/Hellish Rebuke offer themselves as pending reactions) · end_turn.
+Actions (one object each): move {to:{x,y}} or {adjacent_to:"Goblin 1"} · attack {target, attack?, mode?, knock_out?} · cast {spell, target? | at? | point?, slot_level?} · dash · dodge · second_wind · action_surge · rage (again = end it; needs the feature on the sheet; sneak attack is automatic) · disengage · hide · help {target} · use_item {item} · stand_up · open_door {point} · death_save · reaction {use:true|false, spell?, slot_level?} (the actor is then the REACTOR, see pending reactions in the status; Shield/Counterspell/Hellish Rebuke offer themselves as pending reactions) · end_turn.
 Batch a whole turn in one call, e.g. actions:[{move adjacent_to "Thordak"},{attack target "Thordak"},{attack target "Thordak"},{end_turn}]. Execution stops at the first failing action (earlier ones stay applied) and reports why; fix and call again.
 Always end a turn with end_turn (also when dying, after death_save). If a move provoked an opportunity attack the turn cannot end until each pending reaction is answered with reaction use:true|false.
 Args: actor (creature name); actions (1–8).`,

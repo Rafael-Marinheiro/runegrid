@@ -58,6 +58,8 @@ const MODS = new Set([
   'dotStart',
   'dotEnd',
   'noteEn',
+  'rage',
+  'meleeDamage',
   'noReactions',
   'noHealing',
   'halfWeaponDamage',

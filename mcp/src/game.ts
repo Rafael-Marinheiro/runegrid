@@ -322,6 +322,12 @@ export function toCommand(g: Game, actorRef: string, a: Act): Command {
       return { type: 'deathSave', actorId };
     case 'end_turn':
       return { type: 'endTurn', actorId };
+    case 'second_wind':
+      return { type: 'feature', actorId, feature: 'second-wind' };
+    case 'action_surge':
+      return { type: 'feature', actorId, feature: 'action-surge' };
+    case 'rage':
+      return { type: 'feature', actorId, feature: 'rage' };
     case 'dash':
     case 'dodge':
     case 'disengage':

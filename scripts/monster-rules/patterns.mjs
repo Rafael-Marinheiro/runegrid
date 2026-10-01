@@ -313,6 +313,35 @@ function shapeShift(a, m, ruleset) {
   });
 }
 
+/** Redemoinho de Areia (2014): vira areia, anda até 18 m e volta ao normal (aproximado por um salto ao ponto). */
+function whirlwind(a) {
+  const ft = num(/moves up to (\d+) feet/i, a.desc);
+  if (!ft || /_Trigger:_/.test(a.desc)) return a;
+  return flat(a, {
+    target: { kind: 'point' },
+    range: ft,
+    teleport: true,
+    manual:
+      'Enquanto é redemoinho é imune a todo dano e não pode ser agarrado, petrificado, derrubado, contido ou atordoado; como o movimento é instantâneo, isso só importa se o Mestre o interromper. O motor leva o monstro direto ao ponto.',
+    manualEn:
+      'While a whirlwind it is immune to all damage and cannot be grappled, petrified, knocked prone, restrained or stunned; since the move is instant, this only matters if the DM interrupts it. The engine takes the monster straight to the point.',
+    vfx: { kind: 'glow', color: 'arcane' },
+  });
+}
+
+/** Canalizar Energia Negativa (Senhor das Múmias): ninguém na área recupera PV até o fim do próximo turno dele. */
+function negativeEnergy(a) {
+  const ft = num(/within (\d+) feet/i, a.desc);
+  if (!ft || !/can't regain hit points/i.test(a.desc)) return a;
+  return flat(a, {
+    target: { kind: 'sphere', radius: ft, self: true },
+    range: 0,
+    resolution: { kind: 'auto' },
+    effect: { rounds: 2, ends: 'casterEnd', mods: { noHealing: true } },
+    vfx: { kind: 'burst', color: 'shadow', radius: ft },
+  });
+}
+
 /** Liderança (Cavaleiro): aliados escolhidos somam 1d4 em ataques e salvaguardas por 1 minuto (como a Bênção). */
 function leadership(a) {
   const dice = /add a (d\d+)/i.exec(a.desc)?.[1];
@@ -432,6 +461,10 @@ export function applyPattern(a, m, ruleset = '2014') {
     case 'Change Shape':
     case 'Shape-Shift':
       return shapeShift(a, m, ruleset);
+    case 'Whirlwind of Sand':
+      return whirlwind(a);
+    case 'Channel Negative Energy':
+      return negativeEnergy(a);
     case 'Leadership':
       return leadership(a);
     case 'Move':

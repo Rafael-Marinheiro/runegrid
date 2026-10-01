@@ -194,6 +194,129 @@ function createSpecter(a, ruleset) {
   });
 }
 
+/** Nuvem de Tinta: área obscurecida em volta do polvo (esfera no 2014, cubo de 5/10 pés no 2024). */
+function inkCloud(a) {
+  const d = a.desc;
+  const radius = num(/(\d+)-foot-radius/i, d) ?? num(/(\d+)-foot Cube/i, d);
+  if (!radius || a.ability?.cost === 'legendary') return a;
+  const reactive = /takes damage/i.test(d);
+  if (/_Trigger:_/.test(d) && !reactive) return a;
+  return flat(a, {
+    target: { kind: 'sphere', radius, self: true },
+    range: 0,
+    resolution: { kind: 'auto' },
+    zone: { on: 'cast', obscures: true, color: 'shadow' },
+    rounds: 10,
+    ...(reactive ? { react: { on: 'damaged' } } : {}),
+    manual: reactive
+      ? "Só debaixo d'água; depois de soltar a tinta o polvo se move até a velocidade de natação (o Mestre move). A área fica muito obscurecida por 1 minuto, a não ser que uma corrente forte a disperse."
+      : "Só debaixo d'água; depois de soltar a tinta o polvo pode Correr como ação bônus. A área fica muito obscurecida por 1 minuto, a não ser que uma corrente forte a disperse.",
+    manualEn: reactive
+      ? 'Underwater only; after releasing the ink the octopus moves up to its swim speed (the DM moves it). The area is heavily obscured for 1 minute unless a strong current disperses it.'
+      : 'Underwater only; after releasing the ink the octopus can Dash as a bonus action. The area is heavily obscured for 1 minute unless a strong current disperses it.',
+    vfx: { kind: 'burst', color: 'shadow', radius },
+  });
+}
+
+/** Aura de Escuridão (Ocultador): escuridão mágica que acompanha o monstro enquanto ele se concentra. */
+function darknessAura(a) {
+  const radius = num(/(\d+)-foot/i, a.desc);
+  if (!radius) return a;
+  return flat(a, {
+    target: { kind: 'sphere', radius, self: true },
+    range: 0,
+    resolution: { kind: 'auto' },
+    zone: { aura: true, on: 'cast', obscures: true, color: 'shadow' },
+    concentration: true,
+    rounds: 100,
+    manual:
+      'Escuridão mágica: visão no escuro não a atravessa e nenhuma luz natural a ilumina; dissipa luzes de magias de 2º nível ou menos (o Mestre aplica).',
+    manualEn:
+      'Magical darkness: darkvision cannot see through it and no natural light lights it; it dispels light spells of level 2 or lower (the DM applies it).',
+    vfx: { kind: 'burst', color: 'shadow', radius },
+  });
+}
+
+/** Puxar (Roper, Ettercap): arrasta até 25–30 pés em direção ao monstro as criaturas agarradas ou presas. */
+function reel(a) {
+  const ft = num(/up to (\d+) f(?:ee|oo)?t/i, a.desc);
+  if (!ft) return a;
+  const grappled = /grappled/i.test(a.desc);
+  const many = /each creature/i.test(a.desc);
+  a.ability = { ...a.ability, ...(grappled ? { needsGrappled: true } : {}) };
+  return flat(a, {
+    target: { kind: 'creature', ...(many ? { max: 6 } : {}) },
+    range: 50,
+    resolution: { kind: 'auto' },
+    push: { ft, dir: 'toward' },
+    ...(grappled
+      ? {}
+      : {
+          manual: 'Só vale contra criatura contida pelo Fio de Teia (o Mestre confere).',
+          manualEn: 'Only works on a creature Restrained by its Web Strand (the DM checks).',
+        }),
+    vfx: { kind: 'ray', color: 'steel' },
+  });
+}
+
+/** Fantasmas do Ocultador: três duplicatas ilusórias (aproximadas pela Imagem Espelhada). */
+function phantasms(a) {
+  return flat(a, {
+    target: { kind: 'self' },
+    range: 0,
+    resolution: { kind: 'auto' },
+    effect: {
+      rounds: 100,
+      to: 'self',
+      mods: {
+        images: 3,
+        note: 'Três duplicatas: ataques e magias podem mirar uma delas (sorteio) e a duplicata some ao ser atingida. Somem sob luz forte.',
+        noteEn:
+          'Three duplicates: attacks and spells may target one of them (random) and a duplicate vanishes when hit. They vanish in bright light.',
+      },
+    },
+    vfx: { kind: 'glow', color: 'arcane' },
+  });
+}
+
+/** Liderança (Cavaleiro): aliados escolhidos somam 1d4 em ataques e salvaguardas por 1 minuto (como a Bênção). */
+function leadership(a) {
+  const dice = /add a (d\d+)/i.exec(a.desc)?.[1];
+  const ft = num(/within (\d+) ft/i, a.desc);
+  if (!dice || !ft) return a;
+  return flat(a, {
+    target: { kind: 'creature', max: 8 },
+    range: ft,
+    resolution: { kind: 'auto' },
+    effect: {
+      rounds: 10,
+      mods: {
+        attackDie: `1${dice}`,
+        saveDie: `1${dice}`,
+        note: `+1${dice} em ataques e salvaguardas, só se ouvir e entender o cavaleiro; acaba se ele ficar incapacitado.`,
+        noteEn: `+1${dice} on attacks and saves, only if it can hear and understand the knight; ends if the knight is incapacitated.`,
+      },
+    },
+    vfx: { kind: 'glow', color: 'holy' },
+  });
+}
+
+/** Mover (ação lendária): vai até a velocidade sem provocar ataques de oportunidade (aproximado por um salto ao ponto). */
+function legendaryMove(a, m) {
+  const mv = /moves up to (half )?its speed/i.exec(a.desc);
+  if (!mv || !m.speed) return a;
+  return flat(a, {
+    target: { kind: 'point' },
+    range: mv[1] ? Math.floor(m.speed / 2) : m.speed,
+    teleport: true,
+    manual:
+      'Move-se até a velocidade (ou metade dela, como diz o texto) sem provocar ataques de oportunidade; o Mestre confere o caminho (o motor leva direto ao ponto).',
+    manualEn:
+      'Moves up to its speed (or half of it, as the text says) without provoking opportunity attacks; the DM checks the path (the engine takes it straight to the point).',
+    vfx: { kind: 'glow', color: 'arcane' },
+  });
+}
+
 /** Animar Correntes (2014): até quatro correntes viram objetos que atacam junto com o diabo. */
 function animateChains(a, ruleset) {
   if (ruleset !== '2014') return a;
@@ -259,6 +382,18 @@ export function applyPattern(a, m, ruleset = '2014') {
       return summonChance(a, m, ruleset);
     case 'Create Specter':
       return createSpecter(a, ruleset);
+    case 'Ink Cloud':
+      return inkCloud(a);
+    case 'Darkness Aura':
+      return darknessAura(a);
+    case 'Reel':
+      return reel(a);
+    case 'Phantasms':
+      return phantasms(a);
+    case 'Leadership':
+      return leadership(a);
+    case 'Move':
+      return legendaryMove(a, m);
     case 'Animate Chains':
       return animateChains(a, ruleset);
     case 'Animate Trees':

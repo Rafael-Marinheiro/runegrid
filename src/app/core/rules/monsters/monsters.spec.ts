@@ -379,4 +379,30 @@ describe('cobertura das regras de monstros (F13)', () => {
     expect(fx('Claw', 'slashing')).toMatchObject({ style: 'claw' });
     expect(fx('Slam', 'bludgeoning')).toMatchObject({ style: 'bash' });
   });
+
+  it('Nuvem de Tinta cria uma zona obscurecida; Aura de Escuridão acompanha o monstro e pede concentração', () => {
+    const o = scene('octopus', () => 0.5);
+    const ink = abilitiesOf(o.get().creatures[0]).find((a) => a.nameEn === 'Ink Cloud')!;
+    expect(ink.zone).toMatchObject({ obscures: true });
+    o.run({ type: 'cast', actorId: 'mon', spellId: ink.id });
+    expect(o.get().zones).toHaveLength(1);
+    const d = scene('darkmantle', () => 0.5);
+    const dark = abilitiesOf(d.get().creatures[0]).find((a) => a.nameEn === 'Darkness Aura')!;
+    expect(dark.concentration).toBe(true);
+    expect(dark.zone?.aura).toBe(true);
+  });
+
+  it('Puxar do Roper arrasta o agarrado em direção a ele', () => {
+    const t = scene('roper', () => 0.5);
+    const reel = abilitiesOf(t.get().creatures[0]).find((a) => a.nameEn === 'Reel')!;
+    expect(reel.push).toEqual({ ft: 25, dir: 'toward' });
+    expect(reel.ability?.needsGrappled).toBe(true);
+  });
+
+  it('Mover (ação lendária) leva o vampiro até o ponto sem ataque de oportunidade', () => {
+    const t = scene('vampire', () => 0.5);
+    const mv = abilitiesOf(t.get().creatures[0]).find((a) => a.nameEn === 'Move')!;
+    expect(mv).toMatchObject({ teleport: true, range: 30 });
+    expect(mv.ability?.cost).toBe('legendary');
+  });
 });

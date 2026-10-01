@@ -51,7 +51,7 @@ function toSpell(ruleset: MonsterRuleset, monster: string, slug: string, r: Abil
       level: ability.spell.level ?? 0,
       school: 'Habilidade',
       castTime: rule.castTime ?? CAST_TIME[ability.cost],
-      concentration: false,
+      concentration: rule.concentration ?? false,
       ability,
       description: desc,
     } as Spell;
@@ -66,7 +66,7 @@ function toSpell(ruleset: MonsterRuleset, monster: string, slug: string, r: Abil
     school: 'Habilidade',
     castTime: rule.castTime ?? CAST_TIME[ability.cost],
     range,
-    concentration: false,
+    concentration: rule.concentration ?? false,
     target: rule.target ?? (range === 0 ? { kind: 'self' } : { kind: 'creature' }),
     resolution: rule.resolution ?? { kind: 'auto' },
     ability,

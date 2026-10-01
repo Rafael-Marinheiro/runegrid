@@ -357,6 +357,19 @@
                     {{ o.spell.name }} → {{ ally.name }}
                   </button>
                 }
+              } @else if (needsPoint(o.spell)) {
+                <button
+                  type="button"
+                  class="primary"
+                  [class.active]="reactionMove()?.reactorId === r.reactorId"
+                  (click)="reactionMove.set({ reactorId: r.reactorId, spellId: o.spell.id })"
+                >
+                  {{ o.spell.name }} —
+                  {{ ui.text('escolher destino no mapa', 'pick destination on map') }}
+                </button>
+                <button type="button" (click)="react(r.reactorId, true, o.spell.id, o.slot)">
+                  {{ o.spell.name }} ({{ ui.text('sem mover', 'no move') }})
+                </button>
               } @else {
                 <button
                   type="button"
@@ -866,16 +879,28 @@
           <div class="legend-row">
             <strong>{{ l.c.name }}</strong> ({{ l.left }}/{{ l.max }})
             @for (sp of l.acts; track sp.id) {
-              <button
-                type="button"
-                [class.active]="legendActorId() === l.c.id && mode().kind === 'cast'"
-                (click)="pickLegendary(l.c, sp)"
-              >
-                {{ ui.text(sp.name, sp.nameEn ?? sp.name) }}
-                @if ((sp.ability?.legendary ?? 1) > 1) {
-                  ({{ sp.ability?.legendary }})
-                }
-              </button>
+              @if (sp.ability?.legendaryCast) {
+                <label class="field legend-cast">
+                  <span>{{ ui.text(sp.name, sp.nameEn ?? sp.name) }}</span>
+                  <select #pick (change)="castLegendary(l.c, pick.value); pick.value = ''">
+                    <option value="">{{ ui.text('Escolher magia…', 'Choose spell…') }}</option>
+                    @for (s of legendarySpells(l.c, sp); track s.id) {
+                      <option [value]="s.id">{{ ui.text(s.name, s.nameEn ?? s.name) }}</option>
+                    }
+                  </select>
+                </label>
+              } @else {
+                <button
+                  type="button"
+                  [class.active]="legendActorId() === l.c.id && mode().kind === 'cast'"
+                  (click)="pickLegendary(l.c, sp)"
+                >
+                  {{ ui.text(sp.name, sp.nameEn ?? sp.name) }}
+                  @if ((sp.ability?.legendary ?? 1) > 1) {
+                    ({{ sp.ability?.legendary }})
+                  }
+                </button>
+              }
             }
           </div>
         }

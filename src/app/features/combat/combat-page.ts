@@ -28,6 +28,7 @@ import {
 import { inArea } from '@core/rules/encounter/zones';
 import { attackAllowed } from '@core/rules/encounter/forms';
 import { reactionSpells, redirectAllies } from '@core/rules/encounter/reactions';
+import { getSpell } from '@core/rules/spells/data';
 import { canStand, distanceFt, findPath, reachable } from '@core/rules/grid/movement';
 import { DiceTray3d } from '@features/dice/dice-3d/dice-tray-3d';
 import type { StageDie } from '@features/dice/dice-3d/dice-stage';
@@ -680,7 +681,41 @@ export class CombatPage {
     });
   }
 
+  /** Reação com deslocamento (Tinta do Polvo): o próximo clique no mapa é o destino da natação. */
+  protected readonly reactionMove = signal<{ reactorId: string; spellId: string } | null>(null);
+
+  protected needsPoint(spell: Spell): boolean {
+    return spell.moveAfter === 'swim';
+  }
+
+  /** Magias que a criatura pode lançar como ação lendária (Lançar Magia: qualquer; Truque: nível 0). */
+  protected legendarySpells(c: Creature, sp: Spell): Spell[] {
+    const only0 = sp.ability?.legendaryCast === 'cantrip';
+    return (c.spellcasting?.spells ?? []).flatMap((id) => {
+      const s = getSpell(id, this.ui.ruleset());
+      return s && s.castTime !== 'reaction' && (!only0 || s.level === 0) ? [s] : [];
+    });
+  }
+
+  protected castLegendary(c: Creature, spellId: string): void {
+    const s = getSpell(spellId, this.ui.ruleset());
+    if (s) this.pickLegendary(c, s);
+  }
+
   protected onCell(pos: Pos): void {
+    const rm = this.reactionMove();
+    if (rm) {
+      this.store.send({
+        type: 'reaction',
+        actorId: rm.reactorId,
+        use: true,
+        spellId: rm.spellId,
+        point: pos,
+        ruleset: this.ui.ruleset(),
+      });
+      this.reactionMove.set(null);
+      return;
+    }
     const moving = this.movingSummon();
     const actor = this.active();
     if (moving && actor) {

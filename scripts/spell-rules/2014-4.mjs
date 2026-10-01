@@ -87,10 +87,22 @@ export default {
     vfx: vfx('glow', 'psychic'),
   },
   fabricate: narrative(vfx('glow', 'arcane')),
-  'faithful-hound': narrative(vfx('glow', 'force'), {
+  'faithful-hound': {
+    // cão fantasma: token oculto para todos menos para quem conjurou; morde quem chega perto no início do seu turno
+    target: point,
+    resolution: auto,
+    summon: {
+      custom: 'faithful-hound',
+      srd: 'hound',
+      n: 1,
+      hidden: true,
+      leashFt: 100,
+      unique: 'faithful-hound',
+    },
     manual:
-      'No início de cada turno seu, o cão morde uma criatura hostil a até 5 ft (bônus = seu modificador + proficiência; 4d8 perfurante): aplique à mão.',
-  }),
+      'Invisível para todos menos você e impossível de ferir. No início de cada turno seu morde uma criatura hostil a até 1,5 m (bônus = seu modificador + proficiência; 4d8 perfurante). Late se uma criatura Pequena ou maior chegar a 9 m sem dizer a senha (o Mestre avisa). Some se você se afastar mais de 30 m.',
+    vfx: vfx('burst', 'force', { radius: 5 }),
+  },
   'fire-shield': {
     target: self,
     resolution: auto,

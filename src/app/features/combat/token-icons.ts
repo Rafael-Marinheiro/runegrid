@@ -19,6 +19,8 @@ export const ICON_IDS = [
   'fang',
   'eye',
   'humanoid',
+  'hound',
+  'chain',
 ] as const;
 export type IconId = (typeof ICON_IDS)[number];
 
@@ -37,6 +39,8 @@ export const ICON_LABEL: Record<IconId, string> = {
   fang: 'Presas (monstro)',
   eye: 'Olho (aberração)',
   humanoid: 'Humanoide',
+  hound: 'Cão (sentinela)',
+  chain: 'Corrente',
 };
 
 export const ICON_PATH: Record<IconId, string> = {
@@ -55,10 +59,18 @@ export const ICON_PATH: Record<IconId, string> = {
   fang: 'M4 8c3 2 5 2 8 2s5 0 8-2M7 10l2 8 2-8M13 10l2 8 2-8',
   eye: 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 100 6 3 3 0 000-6z',
   humanoid: 'M12 4a3 3 0 100 6 3 3 0 000-6zM5 21c0-4 3-7 7-7s7 3 7 7',
+  // cabeça de cão geométrica: orelhas em ponta, focinho largo, olhos e nariz
+  hound:
+    'M6 3l4 5h4l4-5 1 8-3 7-4 3-4-3-3-7zM9 11h.01M15 11h.01M10.5 15.5h3l-1.5 1.5zM12 12v3.5M8 8l1 2M16 8l-1 2',
+  // três elos de corrente em diagonal
+  chain:
+    'M5 7a2.5 2.5 0 013.5-3.5l2 2A2.5 2.5 0 017 9zM17 15a2.5 2.5 0 013.5 3.5l-2 2A2.5 2.5 0 0115 17zM9.5 9.5l5 5M12 6l2-2 4 4-2 2M12 18l-2 2-4-4 2-2',
 };
 
 /** Palavras do nome (em inglês, como no SRD, ou em português) → ícone. */
 const BY_NAME: [RegExp, IconId][] = [
+  [/animated chain|corrente animada/i, 'chain'],
+  [/faithful hound|cão fiel|cao fiel|watchdog/i, 'hound'],
   [/skeleton|zombie|ghoul|ghast|wight|mummy|vampire|lich|esqueleto|zumbi|múmia|carniçal/i, 'skull'],
   [/ghost|specter|wraith|shadow|will-o|fantasma|espectro/i, 'ghost'],
   [/dragon|wyvern|drake|dragão|dragao|kobold/i, 'dragon'],

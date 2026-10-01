@@ -3,7 +3,7 @@
  * Mundo; Espírito Dracônico). Não estão na lista de monstros: a ficha é montada na hora (`customCreature`) e as
  * habilidades, a partir do id (`otherworldly-steed-<tipo>-<nível>`), sem precisar de registro.
  */
-import { Ability, Creature, DamageType } from '../../models/creature';
+import { Ability, Creature, DAMAGE_TYPES, DamageType } from '../../models/creature';
 import { newCreature } from '../../models/creature-factory';
 import { abilityMod, proficiencyBonus } from '../creature/stats';
 import { buildMonsterAbilities, MonsterRules } from './build';
@@ -184,6 +184,14 @@ const cache = new Map<string, MonsterEntry>();
 
 /** Habilidades do corcel pelo id (sem o prefixo do SRD 2024), ou `undefined` se não for um. */
 export function customEntry(baseId: string): MonsterEntry | undefined {
+  if (baseId === 'animated-chain') {
+    let c = cache.get(baseId);
+    if (!c) {
+      c = buildMonsterAbilities('2014', chainRules()).get(baseId);
+      if (c) cache.set(baseId, c);
+    }
+    return c;
+  }
   const steed = STEED_ID.exec(baseId);
   const dragon = DRAGON_ID.exec(baseId);
   if (!steed && !dragon) return undefined;
@@ -199,3 +207,61 @@ export function customEntry(baseId: string): MonsterEntry | undefined {
 }
 
 export const steedKinds = KIND;
+
+/**
+ * Cão Fiel: um cão fantasma invisível para todos menos para quem o conjurou (o token fica oculto) e
+ * que não pode ser ferido. Quem o conjura o vê como um token de runa com um cão desenhado.
+ */
+export function faithfulHound(caster: Creature, ruleset: '2014' | '2024', en = true): Creature {
+  return newCreature('npc', {
+    name: en ? 'Faithful Hound' : 'Cão Fiel',
+    icon: 'hound',
+    size: 'medium',
+    // 2014: fica onde foi conjurado; 2024: você o move com a ação Magia (o Mestre confere)
+    speed: ruleset === '2024' ? 30 : 0,
+    ac: 10,
+    abilities: { str: 10, dex: 10, con: 10, int: 3, wis: 12, cha: 6 },
+    hp: { max: 1, current: 1, temp: 0 },
+    immunities: [...DAMAGE_TYPES],
+    level: caster.level,
+  });
+}
+
+/** Corrente animada do Diabo de Correntes (SRD 2014): um objeto com CA 20 e 20 PV que ataca com alcance de 3 m. */
+export function animatedChain(en = true): Creature {
+  return newCreature('monster', {
+    name: en ? 'Animated Chain' : 'Corrente Animada',
+    icon: 'chain',
+    size: 'small',
+    speed: 0,
+    ac: 20,
+    abilities: { str: 18, dex: 10, con: 10, int: 1, wis: 1, cha: 1 },
+    hp: { max: 20, current: 20, temp: 0 },
+    resistances: ['piercing'],
+    immunities: ['psychic', 'thunder'],
+    attacks: [{ name: 'Chain', bonus: 8, damage: '2d6+4', type: 'slashing', range: 10 }],
+    srdId: 'animated-chain',
+  });
+}
+
+const chainRules = (): MonsterRules => ({
+  'animated-chain': {
+    abilities: {
+      'rider-chain': {
+        pt: 'Corrente',
+        en: 'Chain',
+        desc: "Melee Weapon Attack: +8 to hit, reach 10 ft., one target. Hit: 11 (2d6 + 4) slashing damage. The target is grappled (escape DC 14) if the devil isn't already grappling a creature. Until this grapple ends, the target is restrained and takes 7 (2d6) piercing damage at the start of each of its turns.",
+        ability: { cost: 'free', rider: 'Chain', dc: 14 },
+        condition: [
+          { name: 'grappled', rounds: 0 },
+          { name: 'restrained', rounds: 0 },
+        ],
+        manual:
+          'Agarrado: escapa com Força (Atletismo) ou Destreza (Acrobacia) CD 14; no início de cada turno do agarrado, 2d6 perfurante (o Mestre aplica). Uma corrente que agarra não ataca.',
+        manualEn:
+          'Grappled: escapes with Strength (Athletics) or Dexterity (Acrobatics) DC 14; at the start of each of its turns the target takes 2d6 piercing (the DM applies it). A grappling chain cannot attack.',
+        target: { kind: 'creature' },
+      },
+    },
+  },
+});

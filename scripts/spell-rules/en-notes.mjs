@@ -1,6 +1,14 @@
 // Versão em inglês das notas `manual` e `note` das magias (chave = texto em pt-BR). O build exige uma entrada para cada nota.
 export default new Map([
   [
+    'Invisível para todos menos você e impossível de ferir. No início de cada turno seu morde uma criatura hostil a até 1,5 m (bônus = seu modificador + proficiência; 4d8 perfurante). Late se uma criatura Pequena ou maior chegar a 9 m sem dizer a senha (o Mestre avisa). Some se você se afastar mais de 30 m.',
+    'Invisible to all but you and cannot be harmed. At the start of each of your turns it bites a hostile creature within 5 ft (bonus = your modifier + proficiency; 4d8 piercing). It barks if a Small or larger creature comes within 30 ft without the password (the DM announces it). It vanishes if you move more than 100 ft away.',
+  ],
+  [
+    'Invisível, intangível e invulnerável. No início de cada turno seu morde um inimigo a até 1,5 m (salvaguarda de Destreza ou 4d8 de energia). Nos turnos seguintes você o move até 9 m com a ação Magia (o Mestre confere). Late se uma criatura Pequena ou maior chegar a 9 m sem a senha. Some se vocês ficarem a mais de 90 m um do outro.',
+    'Invisible, intangible and invulnerable. At the start of each of your turns it bites an enemy within 5 ft (Dexterity save or 4d8 force). On later turns you move it up to 30 ft with the Magic action (the DM checks). It barks if a Small or larger creature comes within 30 ft without the password. It vanishes if you are more than 300 ft apart.',
+  ],
+  [
     'Espírito Dracônico: Grande, CA 14 + nível, PV 50 + 10 por nível acima de 5, imune a enfeitiçado, amedrontado e envenenado (o Mestre aplica), visão às cegas 9 m. Você tem resistência ao tipo escolhido enquanto a magia durar. Faz Rend (metade do nível, arredondada para baixo) e usa o Sopro no mesmo turno, logo depois do seu.',
     'Draconic Spirit: Large, AC 14 + level, HP 50 + 10 per level above 5, immune to charmed, frightened and poisoned (the DM applies it), blindsight 30 ft. You have resistance to the chosen damage type while the spell lasts. It makes Rend attacks (half the level, rounded down) and uses Breath Weapon on the same turn, right after yours.',
   ],

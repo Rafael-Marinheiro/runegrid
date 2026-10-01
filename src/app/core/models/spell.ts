@@ -189,7 +189,11 @@ export interface SummonSpec {
   /** Quantas aparecem com o espaço base. */
   n?: number;
   /** Ficha montada na hora, escalando com o espaço (Corcel de Outro Mundo); `srd` é o tipo (celestial|fey|fiend; acid|cold|fire|lightning|poison). */
-  custom?: 'otherworldly-steed' | 'draconic-spirit';
+  custom?: 'otherworldly-steed' | 'draconic-spirit' | 'faithful-hound' | 'animated-chain';
+  /** O token fica oculto para quem não o invocou (Cão Fiel: invisível para todos menos você). */
+  hidden?: boolean;
+  /** Some se a distância até quem invocou passar disto, em pés (Cão Fiel: 100 ft no 2014, 300 ft no 2024). */
+  leashFt?: number;
   /** Em vez de `n` fixo, quantas aparecem é rolado ("1d8 vrocks"). */
   dice?: string;
   /** No máximo tantas criaturas suas deste tipo ao mesmo tempo (Criar Espectro: sete). */

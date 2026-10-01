@@ -1,5 +1,17 @@
 // SRD 5.2 (2024) — 4º nível. Lido a partir de public/data/spells-2024.json; o que não aparece é igual ao 2014.
-import { auto, cond, creature, dmg, effect, ladder, opt, save, sphere, vfx } from './helpers.mjs';
+import {
+  auto,
+  cond,
+  creature,
+  dmg,
+  effect,
+  ladder,
+  opt,
+  point,
+  save,
+  sphere,
+  vfx,
+} from './helpers.mjs';
 
 const ELEMENTS = [
   ['acid', 'Ácido', 'acid'],
@@ -72,8 +84,20 @@ export default {
     vfx: vfx('burst', 'life'),
   },
   'faithful-hound': {
+    replace: true,
+    target: point,
+    resolution: auto,
+    summon: {
+      custom: 'faithful-hound',
+      srd: 'hound',
+      n: 1,
+      hidden: true,
+      leashFt: 300,
+      unique: 'faithful-hound',
+    },
     manual:
-      'No início de cada turno seu o cão morde um inimigo a até 5 ft (Destreza ou 4d8 de energia); com uma ação nos turnos seguintes você o move até 30 ft.',
+      'Invisível, intangível e invulnerável. No início de cada turno seu morde um inimigo a até 1,5 m (salvaguarda de Destreza ou 4d8 de energia). Nos turnos seguintes você o move até 9 m com a ação Magia (o Mestre confere). Late se uma criatura Pequena ou maior chegar a 9 m sem a senha. Some se vocês ficarem a mais de 90 m um do outro.',
+    vfx: vfx('burst', 'force', { radius: 5 }),
   },
   'freedom-of-movement': { target: creature(1, 1) },
   'ice-storm': { damage: dmg('2d10', 'bludgeoning', { perLevel: '1d10' }) },

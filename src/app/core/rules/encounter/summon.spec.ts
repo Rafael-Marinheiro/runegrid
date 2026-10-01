@@ -487,3 +487,109 @@ describe('Espírito Dracônico (SRD 5.2)', () => {
     expect(out.creatures.filter((c) => c.summon)).toHaveLength(0);
   });
 });
+
+describe('Cão Fiel', () => {
+  const setup = (ruleset: '2014' | '2024') => {
+    const id = getSpell('faithful-hound', ruleset)!.id;
+    const t = scene(id);
+    t.run({
+      type: 'cast',
+      actorId: 'c',
+      spellId: id,
+      slotLevel: 4,
+      ruleset,
+      point: { x: 7, y: 5 },
+    });
+    return t;
+  };
+  /** Passa os turnos até voltar ao conjurador. */
+  const untilCaster = (t: ReturnType<typeof scene>) => {
+    do t.run({ type: 'endTurn', actorId: t.get().combat.turn!.actorId });
+    while (t.get().combat.turn?.actorId !== 'c');
+  };
+
+  it('2014: aparece como token oculto de runa de cão, invulnerável, e morde quem chega perto no início do turno', () => {
+    const t = setup('2014');
+    const dog = t.get().creatures.find((c) => c.summon)!;
+    expect(dog.icon).toBe('hound');
+    expect(dog.immunities).toContain('piercing');
+    expect(t.get().tokens.find((k) => k.creatureId === dog.id)?.hidden).toBe(true);
+    expect(dog.summon).toMatchObject({
+      by: 'c',
+      leashFt: 100,
+      guard: { mode: 'attack', dice: '4d8', bonus: 8 },
+    });
+    // o ogro chega ao lado do cão; no início do próximo turno do conjurador ele é mordido
+    t.run({ type: 'placeToken', id: 'm', pos: { x: 8, y: 5 } });
+    const hp = t.get().creatures.find((c) => c.id === 'm')!.hp.current;
+    untilCaster(t);
+    expect(t.get().log.some((e) => /morde/.test(e.text))).toBe(true);
+    expect(t.get().creatures.find((c) => c.id === 'm')!.hp.current).toBeLessThan(hp);
+  });
+
+  it('o jogador dono do conjurador vê o cão; outro jogador não', () => {
+    const t = setup('2014');
+    const dog = t.get().creatures.find((c) => c.summon)!;
+    const mine = project(t.get(), { kind: 'player', owns: ['c'] });
+    const other = project(t.get(), { kind: 'player', owns: ['m'] });
+    expect(mine.tokens.some((k) => k.creatureId === dog.id)).toBe(true);
+    expect(other.tokens.some((k) => k.creatureId === dog.id)).toBe(false);
+  });
+
+  it('2024: salvaguarda de Destreza, 4d8 de energia; nada acontece sem inimigo adjacente', () => {
+    const t = setup('2024');
+    const dog = t.get().creatures.find((c) => c.summon)!;
+    expect(dog.summon?.guard).toMatchObject({ mode: 'save', type: 'force', dice: '4d8' });
+    expect(dog.summon?.leashFt).toBe(300);
+    untilCaster(t);
+    expect(
+      t
+        .get()
+        .log.filter((e) => /^Cão Fiel morde/.test(e.text))
+        .map((e) => e.text),
+    ).toEqual([]);
+  });
+});
+
+describe('Animar Correntes', () => {
+  it('o diabo anima correntes: objetos CA 20 / 20 PV na iniciativa dele, que agarram com a corrente', () => {
+    let s = newEncounter(map);
+    const run = (cmd: Command) => (s = dispatch(s, cmd, { rng, role: dm }));
+    run({
+      type: 'addCreature',
+      creature: { ...monsterToCreature(sheet.get('chain-devil')!), id: 'dev' },
+      pos: { x: 2, y: 2 },
+    });
+    run({ type: 'setInitiative', id: 'dev', value: 20 });
+    run({
+      type: 'addCreature',
+      creature: newCreature('pc', {
+        id: 'p',
+        name: 'Herói',
+        hp: { max: 90, current: 90, temp: 0 },
+      }),
+      pos: { x: 8, y: 2 },
+    });
+    run({ type: 'setInitiative', id: 'p', value: 5 });
+    run({ type: 'startCombat' });
+    const ab = abilitiesOf(s.creatures.find((c) => c.id === 'dev')!).find(
+      (a) => a.nameEn === 'Animate Chains',
+    )!;
+    run({
+      type: 'cast',
+      actorId: 'dev',
+      spellId: ab.id,
+      option: 'chains-4',
+      point: { x: 5, y: 2 },
+      ruleset: '2014',
+    });
+    const chains = s.creatures.filter((c) => c.summon);
+    expect(chains).toHaveLength(4);
+    expect(chains.every((c) => c.ac === 20 && c.hp.max === 20 && c.kind === 'monster')).toBe(true);
+    expect(s.combat.order.slice(0, 5)).toEqual(['dev', ...chains.map((c) => c.id)]);
+    const rider = abilitiesOf(chains[0]);
+    expect(rider).toEqual([]);
+    expect(chains[0].icon).toBe('chain');
+    expect(chains[0].attacks[0]).toMatchObject({ name: 'Chain', range: 10, bonus: 8 });
+  });
+});

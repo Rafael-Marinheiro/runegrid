@@ -212,6 +212,10 @@ export interface Creature {
     corpse?: boolean;
     /** Chave de invocação única (Familiar, Montaria). */
     unique?: string;
+    /** Some se ficar mais longe de quem invocou do que isto, em pés. */
+    leashFt?: number;
+    /** Guarda: no início de cada turno de quem invocou, ataca um inimigo a até 5 ft (Cão Fiel). */
+    guard?: { mode: 'attack' | 'save'; dice: string; type: DamageType; bonus?: number };
     /** CD de magia de quem invocou, para as habilidades da criatura que pedem salvaguarda. */
     dc?: number;
   };

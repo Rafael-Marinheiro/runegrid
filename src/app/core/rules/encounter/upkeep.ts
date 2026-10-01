@@ -21,7 +21,7 @@ import { zoneContains } from './zones';
 import { abilitiesAtTurnStart } from './ability';
 import { abilitiesOf, monsterEntry } from '../monsters/registry';
 import { T, condT, spellT } from '../i18n';
-import { tickSummons } from './summon';
+import { guardBites, tickSummons } from './summon';
 
 /**
  * Tudo que dura só enquanto o conjurador mantém a concentração some junto com ela: efeitos,
@@ -112,6 +112,7 @@ export function beginUpkeep(state: EncounterState, actorId: string, ctx: Context
       [holder.id],
     );
 
+  s = guardBites(s, actorId, ctx);
   const actor = creatureOf(s, actorId);
   // Regeneração dos monstros (traço): suspensa por certos tipos de dano até este turno
   for (const tr of monsterEntry(actor.srdId)?.traits ?? []) {

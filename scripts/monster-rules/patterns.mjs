@@ -194,6 +194,26 @@ function createSpecter(a, ruleset) {
   });
 }
 
+/** Animar Correntes (2014): até quatro correntes viram objetos que atacam junto com o diabo. */
+function animateChains(a, ruleset) {
+  if (ruleset !== '2014') return a;
+  const options = [4, 3, 2, 1].map((n) => ({
+    id: `chains-${n}`,
+    label: `${n} ${n > 1 ? 'correntes' : 'corrente'}`,
+    labelEn: `${n} chain${n > 1 ? 's' : ''}`,
+    patch: { summon: { custom: 'animated-chain', srd: 'chain', n, rounds: 600 } },
+  }));
+  return flat(a, {
+    ...FIELDS,
+    options,
+    vfx: { kind: 'burst', color: 'steel', radius: 5 },
+    manual:
+      'Cada corrente é um objeto (CA 20, 20 PV, resistência a perfurante, imune a psíquico e trovejante) com a iniciativa do diabo; ataca com alcance de 3 m. Voltam a ser correntes comuns se o diabo ficar incapacitado (o Mestre aplica) ou morrer.',
+    manualEn:
+      "Each chain is an object (AC 20, 20 HP, resistant to piercing, immune to psychic and thunder) that shares the devil's initiative and attacks with a 10 ft reach. They revert to ordinary chains if the devil is incapacitated (the DM applies it) or dies.",
+  });
+}
+
 /** Animar Árvores: uma ou duas árvores com a ficha do ent. */
 function animateTrees(a, ruleset) {
   const opts = [1, 2].flatMap((n) => {
@@ -239,6 +259,8 @@ export function applyPattern(a, m, ruleset = '2014') {
       return summonChance(a, m, ruleset);
     case 'Create Specter':
       return createSpecter(a, ruleset);
+    case 'Animate Chains':
+      return animateChains(a, ruleset);
     case 'Animate Trees':
       return animateTrees(a, ruleset);
   }

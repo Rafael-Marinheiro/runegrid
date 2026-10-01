@@ -2,17 +2,25 @@ import { Creature } from '../../models/creature';
 import { EncounterState } from '../../models/encounter';
 import { Pos, SIZE_CELLS } from '../../models/grid';
 import { Spell, SummonSpec } from '../../models/spell';
-import { allMods, RuleError, spellSaveDc } from '../creature';
-import { draconicSpirit, DragonType, otherworldlySteed, SteedKind } from '../monsters/custom';
-import { canStand, footprint, key } from '../grid/movement';
+import { abilityMod, allMods, proficiencyBonus, RuleError, spellSaveDc } from '../creature';
+import {
+  draconicSpirit,
+  DragonType,
+  faithfulHound,
+  animatedChain,
+  otherworldlySteed,
+  SteedKind,
+} from '../monsters/custom';
+import { canStand, distanceFt, footprint, key } from '../grid/movement';
 import { roll } from '../dice';
 import { T, spellName } from '../i18n';
 import { abilitiesOf } from '../monsters/registry';
 import { stateKey } from './ability';
 import { removeCreature } from './reduce';
 import { Context } from './helpers';
-import { addLog, creatureOf, occupiedCells, sizeOf, tokenOf, withCreature } from './state';
-import { attachFx, centerOf } from './fx';
+import { addLog, creatureOf, occupiedCells, sizeOf, teamOf, tokenOf, withCreature } from './state';
+import { attachFx, attackFx, centerOf } from './fx';
+import { resolveSpell } from './cast';
 import { Fx } from '../../models/fx';
 
 /** Quem fornece a ficha de uma criatura do SRD (a tela e o MCP registram o seu). */
@@ -32,14 +40,33 @@ export const summonTemplate: SummonSource = (id, ruleset) => source(id, ruleset)
 
 /** Ficha de um bloco que escala com o espaço (Corcel de Outro Mundo). */
 function customTemplate(
-  kind: 'otherworldly-steed' | 'draconic-spirit',
+  kind: 'otherworldly-steed' | 'draconic-spirit' | 'faithful-hound' | 'animated-chain',
   variant: string,
+  ruleset: '2014' | '2024',
   slot: number,
   caster: Creature,
 ): Creature {
+  if (kind === 'animated-chain') return animatedChain(nameLang() === 'en');
+  if (kind === 'faithful-hound') return faithfulHound(caster, ruleset, nameLang() === 'en');
   return kind === 'otherworldly-steed'
     ? otherworldlySteed(caster, Math.max(2, slot), variant as SteedKind, nameLang() === 'en')
     : draconicSpirit(caster, Math.max(5, slot), variant as DragonType, nameLang() === 'en');
+}
+
+/** Mordida do Cão Fiel: ataque de magia, 4d8 perfurante (2014) ou salvaguarda de Destreza, 4d8 de energia (2024). */
+function houndGuard(
+  caster: Creature,
+  ruleset: '2014' | '2024',
+): NonNullable<Creature['summon']>['guard'] {
+  const casting = caster.spellcasting?.ability ?? 'wis';
+  return ruleset === '2024'
+    ? { mode: 'save', dice: '4d8', type: 'force' }
+    : {
+        mode: 'attack',
+        dice: '4d8',
+        type: 'piercing',
+        bonus: proficiencyBonus(caster) + abilityMod(caster.abilities[casting]),
+      };
 }
 
 const casterDc = (caster: Creature): number =>
@@ -128,7 +155,7 @@ export function summonCreatures(
   }
   if (!srd) throw new RuleError(T('Escolha o que invocar.', 'Choose what to summon.'));
   const template = spec.custom
-    ? customTemplate(spec.custom, srd, slot, caster)
+    ? customTemplate(spec.custom, srd, ruleset, slot, caster)
     : summonTemplate(srd, ruleset);
   if (!template)
     throw new RuleError(
@@ -208,6 +235,8 @@ export function summonCreatures(
         ...(spec.corpse ? { corpse: true } : {}),
         ...(spec.unique ? { unique: spec.unique } : {}),
         ...(spec.custom ? { dc: casterDc(caster) } : {}),
+        ...(spec.leashFt ? { leashFt: spec.leashFt } : {}),
+        ...(spec.custom === 'faithful-hound' ? { guard: houndGuard(caster, ruleset) } : {}),
       },
     };
   });
@@ -216,7 +245,10 @@ export function summonCreatures(
     s = {
       ...s,
       creatures: [...s.creatures, c],
-      tokens: [...s.tokens, { creatureId: c.id, pos: spots[i] }],
+      tokens: [
+        ...s.tokens,
+        { creatureId: c.id, pos: spots[i], ...(spec.hidden ? { hidden: true } : {}) },
+      ],
     };
   });
   // entram na iniciativa de quem invocou, logo depois dele
@@ -271,6 +303,26 @@ export function syncSummons(state: EncounterState, ctx: Context): EncounterState
     const owner = s.creatures.find((x) => x.id === sm.by);
     const lost = !!sm.concentration && owner?.concentration !== sm.spell;
     const orphan = (!owner || owner.status === 'dead') && sm.rounds !== undefined;
+    const far =
+      !!sm.leashFt &&
+      !!owner &&
+      (() => {
+        const a = tokenOf(s, cur.id);
+        const b = tokenOf(s, owner.id);
+        return (
+          !!a && !!b && distanceFt(a.pos, sizeOf(cur), b.pos, sizeOf(owner), s.rule) > sm.leashFt!
+        );
+      })();
+    if (far) {
+      s = vanish(
+        s,
+        c.id,
+        ctx,
+        'desaparece (você se afastou demais)',
+        'disappears (you moved too far away)',
+      );
+      continue;
+    }
     if (lost && sm.onBreak === 'hostile' && owner && owner.status !== 'dead') {
       const { summon, ...rest } = cur;
       s = addLog(
@@ -379,4 +431,57 @@ export function splitOnDamage(state: EncounterState, id: string, dealt: number):
     ),
     [id],
   );
+}
+
+/**
+ * Guardas (Cão Fiel): no início de cada turno de quem as invocou, atacam um inimigo a até 5 ft.
+ * 2014: ataque de magia (4d8 perfurante); 2024: salvaguarda de Destreza (4d8 de energia).
+ */
+export function guardBites(state: EncounterState, ownerId: string, ctx: Context): EncounterState {
+  let s = state;
+  for (const g of state.creatures) {
+    const guard = g.summon?.guard;
+    if (g.summon?.by !== ownerId || !guard) continue;
+    const owner = s.creatures.find((x) => x.id === ownerId);
+    const at = tokenOf(s, g.id);
+    if (!owner || !at) continue;
+    const foe = s.tokens
+      .map((t) => ({ t, c: s.creatures.find((x) => x.id === t.creatureId)! }))
+      .find(
+        ({ t, c }) =>
+          c.id !== g.id &&
+          c.status !== 'dead' &&
+          teamOf(c) !== teamOf(owner) &&
+          !c.summon?.guard &&
+          distanceFt(at.pos, sizeOf(g), t.pos, sizeOf(c), s.rule) <= 5,
+      )?.c;
+    if (!foe) continue;
+    const bite: Spell = {
+      id: 'guard-bite',
+      name: 'Mordida do Cão Fiel',
+      nameEn: 'Faithful Hound bite',
+      level: 0,
+      school: 'Conjuração',
+      castTime: 'action',
+      range: 5,
+      concentration: false,
+      description: '',
+      target: { kind: 'creature' },
+      resolution:
+        guard.mode === 'attack'
+          ? { kind: 'attack' }
+          : { kind: 'save', ability: 'dex', onSave: 'none' },
+      damage: { dice: guard.dice, type: guard.type },
+      ability: {
+        cost: 'free',
+        ...(guard.bonus !== undefined ? { attackBonus: guard.bonus } : {}),
+        ...(g.summon?.dc ? { dc: g.summon.dc } : {}),
+      },
+    };
+    const before = s;
+    s = addLog(s, T(`${g.name} morde ${foe.name}.`, `${g.name} bites ${foe.name}.`), [foe.id]);
+    s = resolveSpell(s, g, bite, 0, [foe], 5, ctx, { ruleset: '2014' });
+    s = attachFx(before, s, attackFx(before, g.id, foe.id, 5, guard.type, 'Bite'));
+  }
+  return s;
 }

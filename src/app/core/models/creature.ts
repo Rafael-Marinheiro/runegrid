@@ -207,7 +207,19 @@ export interface Creature {
     labelEn: string;
     keys: string[];
     noActions?: boolean;
-    original: Pick<Creature, 'size' | 'speed' | 'ac' | 'attacksPerAction' | 'resistances'>;
+    original: Pick<
+      Creature,
+      | 'size'
+      | 'speed'
+      | 'ac'
+      | 'attacksPerAction'
+      | 'resistances'
+      | 'immunities'
+      | 'vulnerabilities'
+      | 'darkvision'
+      | 'abilities'
+      | 'attacks'
+    >;
   };
   /** No plano Etéreo: só interage com quem também está nele; o token fica a 50% de opacidade. */
   plane?: 'ethereal';

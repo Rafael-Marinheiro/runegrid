@@ -40,11 +40,11 @@ registerSpells(
 
 registerMonsterAbilities(
   '2014',
-  buildMonsterAbilities('2014', monsterRules2014 as unknown as MonsterRules),
+  buildMonsterAbilities('2014', monsterRules2014 as unknown as MonsterRules, monstersOf('2014')),
 );
 registerMonsterAbilities(
   '2024',
-  buildMonsterAbilities('2024', monsterRules2024 as unknown as MonsterRules),
+  buildMonsterAbilities('2024', monsterRules2024 as unknown as MonsterRules, monstersOf('2024')),
 );
 
 // Criaturas invocadas por magias e habilidades (Conjurar Animais, Convocar Demônio…).

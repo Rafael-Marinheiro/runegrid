@@ -299,6 +299,20 @@ function ethereal(a) {
 function shapeShift(a, m, ruleset) {
   const def = FORMS[ruleset]?.[m.id.replace(/^srd-2024_/, '')];
   if (!def) return a;
+  if (def.poly)
+    return flat(a, {
+      target: { kind: 'self' },
+      range: 0,
+      resolution: { kind: 'auto' },
+      formFrom: { ...def.poly, maxCr: m.cr },
+      options: def.forms.map((fm) => {
+        const { id, label, labelEn, ...rest } = fm;
+        return { id, label, labelEn, patch: { form: { id, label, labelEn, ...rest } } };
+      }),
+      manual: def.note,
+      manualEn: def.noteEn,
+      vfx: { kind: 'glow', color: 'arcane' },
+    });
   return flat(a, {
     target: { kind: 'self' },
     range: 0,

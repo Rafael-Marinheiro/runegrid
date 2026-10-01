@@ -58,7 +58,7 @@ export class SpellStore {
         : undefined;
     });
     registerSpells(ruleset, buildSpells(srd, is24 ? mergeRules(base, over) : base));
-    registerMonsterAbilities(ruleset, buildMonsterAbilities(ruleset, monsters));
+    registerMonsterAbilities(ruleset, buildMonsterAbilities(ruleset, monsters, creatures));
     this.version.update((v) => v + 1);
   }
 }

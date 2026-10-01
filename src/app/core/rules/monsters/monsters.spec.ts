@@ -7,6 +7,7 @@ import { SrdMonster } from '../../models/srd';
 import { RuleError } from '../creature';
 import { sizeOf } from '../encounter/state';
 import { attackAllowed } from '../encounter/forms';
+import { registerSummonSource } from '../encounter/summon';
 import { Command, dispatch, newEncounter } from '../encounter';
 import { attackFx } from '../encounter/fx';
 import { monsterToCreature } from '../srd/convert';
@@ -17,12 +18,20 @@ const srd = (id: string) => (monsters as unknown as SrdMonster[]).find((m) => m.
 const dm = { kind: 'dm' } as const;
 const map = mapFromAscii(Array.from({ length: 12 }, () => '....................'));
 
-beforeAll(() =>
+beforeAll(() => {
   registerMonsterAbilities(
     '2014',
-    buildMonsterAbilities('2014', monsterRules as unknown as MonsterRules),
-  ),
-);
+    buildMonsterAbilities(
+      '2014',
+      monsterRules as unknown as MonsterRules,
+      monsters as unknown as SrdMonster[],
+    ),
+  );
+  registerSummonSource((id) => {
+    const m = (monsters as unknown as SrdMonster[]).find((x) => x.id === id);
+    return m ? monsterToCreature(m) : undefined;
+  });
+});
 
 function scene(monsterId: string, rng: () => number) {
   let s = newEncounter(map);
@@ -489,5 +498,40 @@ describe('cobertura das regras de monstros (F13)', () => {
     expect(() =>
       t.run({ type: 'attack', actorId: 'mon', targetId: 'pc0', attackIndex: 0 }),
     ).toThrow(/Etéreo/);
+  });
+
+  it('Dragão de Ouro vira uma fera do Bestiário: toma CA, Força/Destreza/Constituição, ataques e tamanho; mantém os PV', () => {
+    const t = scene('adult-gold-dragon', () => 0.5);
+    const ab = abilitiesOf(t.get().creatures[0]).find((a) => a.nameEn === 'Change Shape')!;
+    expect(ab.options!.some((o) => o.id === 'wolf')).toBe(true);
+    // ND 17: nenhum bicho acima disso entra, e o próprio dragão não aparece
+    expect(ab.options!.some((o) => o.id === 'tarrasque')).toBe(false);
+    const hp = t.get().creatures[0].hp.current;
+    t.run({ type: 'cast', actorId: 'mon', spellId: ab.id, option: 'wolf', ruleset: '2014' });
+    const w = t.get().creatures[0];
+    expect(w.size).toBe('medium');
+    expect(w.ac).toBe(srd('wolf').ac);
+    expect(w.abilities.str).toBe(srd('wolf').abilities[0]);
+    expect(w.abilities.int).toBe(srd('adult-gold-dragon').abilities[3]);
+    expect(w.attacks.map((a) => a.name)).toEqual(srd('wolf').attacks.map((a) => a.name));
+    expect(w.hp.current).toBe(hp);
+    expect(w.form?.id).toBe('wolf');
+    t.run({ type: 'endTurn', actorId: 'mon' });
+    for (const id of ['pc0', 'pc1']) t.run({ type: 'endTurn', actorId: id });
+    t.run({ type: 'cast', actorId: 'mon', spellId: ab.id, option: 'true', ruleset: '2014' });
+    const back = t.get().creatures[0];
+    expect(back.attacks.map((a) => a.name)).toEqual(
+      srd('adult-gold-dragon').attacks.map((a) => a.name),
+    );
+    expect(back.size).toBe('huge');
+  });
+
+  it('Couatl mantém a Mordida se a nova forma também tem uma', () => {
+    const t = scene('couatl', () => 0.5);
+    const ab = abilitiesOf(t.get().creatures[0]).find((a) => a.nameEn === 'Change Shape')!;
+    t.run({ type: 'cast', actorId: 'mon', spellId: ab.id, option: 'wolf', ruleset: '2014' });
+    const names = t.get().creatures[0].attacks.map((a) => a.name);
+    expect(names.filter((n) => /bite/i.test(n)).length).toBeGreaterThanOrEqual(1);
+    expect(names).not.toContain('Constrict');
   });
 });

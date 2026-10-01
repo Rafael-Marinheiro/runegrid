@@ -3,7 +3,7 @@ import { EncounterState } from '../../models/encounter';
 import { FormSpec } from '../../models/spell';
 import { RuleError } from '../creature';
 import { T } from '../i18n';
-import { Context } from './helpers';
+import { summonTemplate } from './summon';
 import { addLog, creatureOf, withCreature } from './state';
 
 /** Palavras que marcam a forma verdadeira nas listas "(Vampire Form Only)", "(Humanoid Form Only)". */
@@ -30,9 +30,8 @@ export function shapeShift(
   state: EncounterState,
   id: string,
   spec: FormSpec,
-  ctx: Pick<Context, 'rng'>,
+  ruleset: '2014' | '2024' = '2014',
 ): EncounterState {
-  void ctx;
   const c = creatureOf(state, id);
   if (spec.revert) {
     if (!c.form)
@@ -44,7 +43,15 @@ export function shapeShift(
     );
   }
   const base = c.form ? restore(c) : c;
-  const next: Creature = {
+  const model = spec.srd ? summonTemplate(spec.srd, ruleset) : undefined;
+  if (spec.srd && !model)
+    throw new RuleError(
+      T(
+        'Os dados desta criatura ainda não carregaram; tente de novo em instantes.',
+        "This creature's data has not loaded yet; try again in a moment.",
+      ),
+    );
+  let next: Creature = {
     ...base,
     form: {
       id: spec.id,
@@ -58,6 +65,11 @@ export function shapeShift(
         ac: c.ac,
         attacksPerAction: c.attacksPerAction,
         resistances: c.resistances,
+        immunities: c.immunities,
+        vulnerabilities: c.vulnerabilities,
+        darkvision: c.darkvision,
+        abilities: c.abilities,
+        attacks: c.attacks,
       },
     },
     ...(spec.size ? { size: spec.size } : {}),
@@ -66,11 +78,46 @@ export function shapeShift(
     ...(spec.attacksPerAction !== undefined ? { attacksPerAction: spec.attacksPerAction } : {}),
     ...(spec.resistAll ? { resistances: [...DAMAGE_TYPES] } : {}),
   };
+  if (model) next = takeFrom(next, model, spec);
   return addLog(
     withCreature(state, next),
     T(`${c.name} assume a forma: ${spec.label}.`, `${c.name} takes the form: ${spec.labelEn}.`),
     [id],
   );
+}
+
+/** Passa para `c` o que a forma toma da ficha do modelo (tamanho, CA, Força/Destreza, ataques…). */
+function takeFrom(c: Creature, model: Creature, spec: FormSpec): Creature {
+  const take = new Set(spec.take ?? []);
+  const out: Creature = { ...c };
+  if (take.has('size')) out.size = model.size;
+  if (take.has('speed')) out.speed = model.speed;
+  if (take.has('ac')) out.ac = model.ac;
+  if (take.has('senses')) out.darkvision = model.darkvision;
+  if (take.has('resist')) {
+    out.resistances = model.resistances;
+    out.immunities = model.immunities;
+    out.vulnerabilities = model.vulnerabilities;
+  }
+  const abilities = { ...c.abilities };
+  for (const k of ['str', 'dex', 'con'] as const)
+    if (take.has(k)) abilities[k] = model.abilities[k];
+  out.abilities = abilities;
+  if (take.has('attacks')) {
+    const kept = c.attacks.filter(
+      (a) =>
+        (spec.keepAttacks ?? []).includes(a.name) &&
+        model.attacks.some((m) => m.name.toLowerCase().startsWith(a.name.toLowerCase())),
+    );
+    out.attacks = [...model.attacks, ...kept];
+    out.attacksPerAction = model.attacksPerAction;
+  } else if (take.has('attacksAdd')) {
+    out.attacks = [
+      ...c.attacks,
+      ...model.attacks.filter((m) => !c.attacks.some((a) => a.name === m.name)),
+    ];
+  }
+  return out;
 }
 
 function restore(c: Creature): Creature {

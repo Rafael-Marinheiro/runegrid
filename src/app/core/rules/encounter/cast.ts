@@ -379,7 +379,7 @@ export function finishCast(state: EncounterState, cmd: CastCmd, ctx: Context): E
     sustain ? 'sustain' : 'cast',
     dcFrom,
   );
-  if (use.form && !sustain) done = shapeShift(done, caster.id, use.form, ctx);
+  if (use.form && !sustain) done = shapeShift(done, caster.id, use.form, cmd.ruleset ?? '2014');
   if (use.plane && !sustain) done = togglePlane(done, caster.id);
   if (use.summon && !sustain)
     done = summonCreatures(done, caster, use, slotLevel, cmd.point, cmd.ruleset ?? '2014', ctx);

@@ -255,16 +255,36 @@ Object.assign(D[2024], {
   ),
 });
 
-// Dragões metálicos, couatl e deva (2014): humanoide ou fera de ND igual ou menor; CA, movimento, Força,
-// Destreza e as outras ações passam a ser os da nova forma (o Mestre aplica); mantém PV, fala e Resistência Lendária.
-const POLY = beast(
-  'Vira um humanoide (Médio aqui) ou uma fera de ND igual ou menor: CA, movimento, Força, Destreza e outras ações são os da nova forma e a ficha dela vem do Bestiário (o Mestre aplica); mantém os PV, a fala e a Resistência Lendária. Volta à forma verdadeira se morrer.',
-  'Becomes a humanoid (Medium here) or a beast of equal or lower CR: AC, movement, Strength, Dexterity and other actions are those of the new form, whose sheet is in the Bestiary (the DM applies it); it keeps its HP, speech and Legendary Resistance. Reverts to its true form if it dies.',
-  [f('humanoid', 'Humanoide', 'Humanoid', { size: 'medium', speed: 30, keys: ['humanoid'] })],
+// Dragões metálicos, couatl e deva (2014): "humanoide ou fera de ND igual ou menor": as opções saem do Bestiário ao
+// carregar (`formFrom`). O que a nova forma substitui muda por monstro (ver o texto de cada Change Shape).
+const poly = (take, keepAttacks, noteExtra, noteExtraEn) => ({
+  poly: { types: ['beast', 'humanoid'], take, ...(keepAttacks ? { keepAttacks } : {}) },
+  note: `Vira um humanoide ou uma fera de ND igual ou menor (escolha na lista). ${noteExtra} Volta à forma verdadeira se morrer.`,
+  noteEn: `Becomes a humanoid or a beast of equal or lower CR (pick from the list). ${noteExtraEn} Reverts to its true form if it dies.`,
+  forms: [back],
+});
+const DRAGON = poly(
+  ['size', 'speed', 'ac', 'str', 'dex', 'con', 'attacks', 'resist', 'senses'],
+  undefined,
+  'Mantém PV, Dados de Vida, alinhamento, fala, proficiências, Resistência Lendária e Inteligência, Sabedoria e Carisma; o resto passa a ser o da nova forma.',
+  'Keeps HP, Hit Dice, alignment, speech, proficiencies, Legendary Resistance and Intelligence, Wisdom and Charisma; everything else becomes the new form’s.',
 );
-for (const id of ['couatl', 'deva']) D[2014][id] = POLY;
+const COUATL = poly(
+  ['size', 'speed', 'ac', 'str', 'dex', 'attacks'],
+  ['Bite'],
+  'Mantém a ficha; CA, movimento, Força, Destreza e as outras ações passam a ser as da nova forma, e a Mordida continua se a forma também tiver uma.',
+  'Keeps its sheet; AC, movement, Strength, Dexterity and other actions become the new form’s, and its bite carries over if the form has one.',
+);
+const DEVA = poly(
+  ['size', 'speed', 'ac', 'str', 'dex', 'senses', 'attacksAdd'],
+  undefined,
+  'Mantém a ficha; CA, movimento, Força, Destreza e sentidos passam a ser os da nova forma, e ganha os ataques que a forma tiver.',
+  'Keeps its sheet; AC, movement, Strength, Dexterity and senses become the new form’s, and it gains the form’s attacks.',
+);
+D[2014].couatl = COUATL;
+D[2014].deva = DEVA;
 for (const kind of ['adult', 'ancient'])
   for (const metal of ['brass', 'bronze', 'copper', 'gold', 'silver'])
-    D[2014][`${kind}-${metal}-dragon`] = POLY;
+    D[2014][`${kind}-${metal}-dragon`] = DRAGON;
 
 export default D;

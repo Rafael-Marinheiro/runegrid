@@ -205,6 +205,36 @@ export interface FormSpec {
   noActions?: boolean;
   /** Volta à forma verdadeira. */
   revert?: boolean;
+  /** Criatura do SRD cuja ficha serve de modelo (Mudar de Forma dos dragões metálicos: fera ou humanoide). */
+  srd?: string;
+  /** O que da ficha do modelo substitui o do monstro. */
+  take?: FormTake[];
+  /** Ataques do monstro que continuam se o modelo também tem um de mesmo nome (a Mordida do couatl). */
+  keepAttacks?: string[];
+}
+
+export type FormTake =
+  | 'size'
+  | 'speed'
+  | 'ac'
+  | 'str'
+  | 'dex'
+  | 'con'
+  /** Os ataques do modelo no lugar dos do monstro. */
+  | 'attacks'
+  /** Os ataques do modelo somados aos do monstro. */
+  | 'attacksAdd'
+  /** Resistências, imunidades e vulnerabilidades. */
+  | 'resist'
+  /** Visão no escuro. */
+  | 'senses';
+
+/** Opções de forma geradas a partir do Bestiário: criaturas dos tipos dados com ND até `maxCr`. */
+export interface FormFrom {
+  types: string[];
+  maxCr: number;
+  take: FormTake[];
+  keepAttacks?: string[];
 }
 
 /** Invocação: criaturas do SRD que aparecem no mapa (Conjurar Animais, Familiar, Convocar Demônio…). */
@@ -340,6 +370,8 @@ export interface Spell {
   vfx?: SpellVfx;
   /** Muda a forma de quem usa (ver `FormSpec`). */
   form?: FormSpec;
+  /** Gera uma opção de forma por criatura do Bestiário (ver `FormFrom`); preenchido ao carregar. */
+  formFrom?: FormFrom;
   /** Alterna entre o plano Material e o Etéreo (Etereidade, Passo Etéreo). */
   plane?: 'toggle';
   /** Cria criaturas no mapa (ver `SummonSpec`). */

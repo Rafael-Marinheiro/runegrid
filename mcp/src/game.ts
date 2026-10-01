@@ -324,7 +324,16 @@ export function toCommand(g: Game, actorRef: string, a: Act): Command {
     case 'open_door':
       return { type: 'openDoor', actorId, pos: need(a.point ?? a.to, 'point', 'open_door') };
     case 'reaction': {
-      const spell = a.spell ? spellOf(a.spell) : undefined;
+      // reação de monstro (Aparar, Escudo do Guardião…) tem preferência sobre uma magia de mesmo nome
+      const wantedReaction = a.spell;
+      const ownReaction = wantedReaction
+        ? abilitiesOf(actor).find((x) =>
+            [x.nameEn, x.name, x.id.split('/').pop()].some(
+              (n) => plain(n ?? '') === plain(wantedReaction),
+            ),
+          )
+        : undefined;
+      const spell = ownReaction ?? (a.spell ? spellOf(a.spell) : undefined);
       const point = a.point ?? (a.at ? tokenOf(g.scene, who(g, a.at).id)?.pos : undefined);
       const targetIds = (a.targets ?? []).map((t) => who(g, t).id);
       return {

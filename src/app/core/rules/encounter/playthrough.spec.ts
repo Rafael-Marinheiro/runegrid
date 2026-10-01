@@ -342,3 +342,51 @@ describe('7. Duas reações aceitas ao mesmo tempo', () => {
     expect(g.get().combat.pending?.map((p) => p.reactorId) ?? []).not.toContain('kn');
   });
 });
+
+describe('8. Três reações ao mesmo golpe', () => {
+  it('Aparar + dois Guardiões: o golpe só erra com os três; qualquer ordem, qualquer recusa', () => {
+    const mk = () => {
+      const attacker = pc({
+        id: 'hero',
+        attacksPerAction: 2,
+        attacks: [{ name: 'Espada', bonus: 12, damage: '2d6', type: 'slashing', range: 5 }],
+      });
+      const g = game([
+        [attacker, 1, 2, 30],
+        [mon('knight', 'kn'), 2, 2, 20],
+        [mon('shield-guardian', 'sg1'), 3, 1, 10],
+        [mon('shield-guardian', 'sg2'), 2, 3, 9],
+      ]);
+      const sp = (id: string, n: string) => abilitiesOf(g.c(id)!).find((a) => a.nameEn === n)!;
+      return { g, parry: sp('kn', 'Parry'), shield: sp('sg1', 'Shield') };
+    };
+    // 11 + 12 = 23 contra CA 18: com +2 +2 +2 a CA é 24 e o golpe erra
+    const { g, parry, shield } = mk();
+    g.run({ type: 'attack', actorId: 'hero', targetId: 'kn', attackIndex: 0 });
+    expect(
+      g
+        .get()
+        .combat.pending?.map((p) => p.reactorId)
+        .sort(),
+    ).toEqual(['kn', 'sg1', 'sg2']);
+    const hp = g.c('kn')!.hp.current;
+    g.run({ type: 'reaction', actorId: 'sg2', use: true, spellId: shield.id, ruleset: '2014' });
+    g.run({ type: 'reaction', actorId: 'kn', use: true, spellId: parry.id, ruleset: '2014' });
+    expect(g.get().combat.pending?.map((p) => p.reactorId)).toEqual(['sg1']);
+    g.run({ type: 'reaction', actorId: 'sg1', use: true, spellId: shield.id, ruleset: '2014' });
+    expect(g.get().combat.pending).toEqual([]);
+    expect(g.c('kn')!.hp.current).toBe(hp);
+
+    // recusando o último, o golpe acerta (CA 22 < 23) uma única vez
+    const b = mk();
+    b.g.run({ type: 'attack', actorId: 'hero', targetId: 'kn', attackIndex: 0 });
+    const hp2 = b.g.c('kn')!.hp.current;
+    b.g.run({ type: 'reaction', actorId: 'kn', use: true, spellId: b.parry.id, ruleset: '2014' });
+    b.g.run({ type: 'reaction', actorId: 'sg1', use: true, spellId: b.shield.id, ruleset: '2014' });
+    b.g.run({ type: 'reaction', actorId: 'sg2', use: false });
+    expect(b.g.get().combat.pending).toEqual([]);
+    const lost = hp2 - b.g.c('kn')!.hp.current;
+    expect(lost).toBeGreaterThan(0);
+    expect(lost).toBeLessThanOrEqual(12);
+  });
+});

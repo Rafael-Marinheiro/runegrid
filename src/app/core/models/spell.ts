@@ -149,11 +149,19 @@ export interface AbilityMeta {
   moveFt?: number;
   /** Faz um ataque de arma comum do monstro (nome do ataque no SRD) em vez de um efeito próprio (ação lendária: Ataque de Cauda). */
   attack?: string;
+  /** Resolve como esta magia do SRD (Medo, Passo Nebuloso…), sem gastar espaço; `level` = a versão de nível mais alto citada no texto. */
+  spell?: { id: string; level?: number };
+  /** Só afeta quem está agarrado por este monstro (Engolir, Esmagar). */
+  needsGrappled?: boolean;
+  /** É a ação de mesmo efeito de outra habilidade do monstro (slug): ação lendária "usa Tempestade Relâmpago". */
+  invoke?: string;
 }
 
 /** Depois de um acerto: salvaguarda do alvo com dano e/ou condição (ataque com veneno, paralisia…). */
 export interface SpellOnHitSave {
   ability: Ability;
+  /** Quem falha tem os PV máximos reduzidos pelo dano que o golpe causou (até um descanso longo). */
+  drainMaxHp?: boolean;
   /** `negate`: passar anula tudo; `half`: metade do dano; `none`: sem dano mas a condição não vale. */
   onSave: 'half' | 'none';
   damage?: SpellDamage;
@@ -178,7 +186,10 @@ export interface Spell {
   /** Gatilho de uma reação, em texto do SRD. */
   trigger?: string;
   /** Reação que o motor sabe oferecer: ao ser atingido (`acBonus` = CA extra), ao sofrer dano, ou ao ver uma conjuração. */
-  react?: { on: 'hit'; acBonus: number } | { on: 'damaged' } | { on: 'cast'; save?: boolean };
+  react?:
+    | { on: 'hit'; acBonus: number; melee?: boolean }
+    | { on: 'damaged' }
+    | { on: 'cast'; save?: boolean };
   /** Alcance em pés (5 = toque, 0 = pessoal). */
   range: number;
   target: SpellTarget;

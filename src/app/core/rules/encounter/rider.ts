@@ -18,7 +18,7 @@ import { flatTemp } from '../spells/scaling';
 import { aftermath } from './helpers';
 import { spellSave } from './cast';
 import { addLog, creatureOf, occupiedCells, sizeOf, tokenOf, withCreature } from './state';
-import { T, condT, spellName, spellT } from '../i18n';
+import { T, condT, manualT, spellName, spellT } from '../i18n';
 import { distT } from '../units';
 
 const asList = (c: Spell['condition']): SpellCondition[] => (!c ? [] : Array.isArray(c) ? c : [c]);
@@ -71,6 +71,7 @@ export function applyRiders(
   ability: Ability,
   rng: Rng,
   casterPoint?: Pos,
+  dealt = 0,
 ): EncounterState {
   let s = state;
   let t = creatureOf(s, targetId);
@@ -200,6 +201,10 @@ export function applyRiders(
     }
   }
 
+  // consequência de ataque de monstro com anotação (agarrar: CD de fuga…)
+  if (spell.ability?.rider && spell.manual)
+    s = addLog(s, T(`${t.name}: ${spell.manual}`, `${t.name}: ${manualT(spell)}`), [t.id]);
+
   // monstros: o golpe que acertou ainda exige uma salvaguarda (veneno, paralisia…)
   const h = spell.onHitSave;
   if (h && creatureOf(s, t.id).status !== 'dead') {
@@ -209,7 +214,7 @@ export function applyRiders(
       damage: h.damage,
       extraDamage: h.extraDamage,
       condition: h.condition,
-      effect: h.effect,
+      effect: h.drainMaxHp && dealt > 0 ? { mods: { maxHp: -dealt }, to: 'targets' } : h.effect,
       push: undefined,
       resolution: { kind: 'save', ability: h.ability, onSave: h.onSave },
     };

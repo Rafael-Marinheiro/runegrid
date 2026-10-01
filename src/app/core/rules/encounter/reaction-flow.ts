@@ -6,6 +6,7 @@ import {
   canAct,
   effectiveAc,
   proficiencyBonus,
+  removeEffects,
   restoreSlot,
   RuleError,
   saveBonus,
@@ -24,6 +25,8 @@ import { canReact, freeSlotFor } from './reactions';
 import { dropOnAttack } from './rolls';
 import { addLog, creatureOf, sizeOf, tokenOf, withCreature } from './state';
 import { distT } from '../units';
+import { abilitiesOf } from '../monsters/registry';
+import { abilityReady, payAbility } from './ability';
 import { isRaging } from './rage';
 
 type ReactionCmd = Extract<Command, { type: 'reaction' }>;
@@ -38,7 +41,7 @@ function payReaction(
   slot: number,
 ): { state: EncounterState; reactor: Creature } {
   const paid = slot > 0 ? spendSlot(reactor, slot) : reactor;
-  let s = withCreature(state, paid);
+  let s = payAbility(withCreature(state, paid), reactor.id, spell);
   s = {
     ...s,
     combat: { ...s.combat, reactionUsed: [...(s.combat.reactionUsed ?? []), reactor.id] },
@@ -57,7 +60,8 @@ function payReaction(
 
 function pickSpell(reactor: Creature, cmd: ReactionCmd): { spell: Spell; slot: number } {
   const spell = cmd.spellId ? getSpell(cmd.spellId, cmd.ruleset) : undefined;
-  if (!spell || !reactor.spellcasting?.spells.includes(spell.id))
+  const mine = !!spell && abilitiesOf(reactor).some((a) => a.id === spell.id);
+  if (!spell || (!mine && !reactor.spellcasting?.spells.includes(spell.id)))
     throw new RuleError(
       T(`${reactor.name} não conhece essa magia.`, `${reactor.name} does not know that spell.`),
     );
@@ -69,6 +73,10 @@ function pickSpell(reactor: Creature, cmd: ReactionCmd): { spell: Spell; slot: n
     throw new RuleError(
       T('Não se conjura durante a fúria.', 'Spells cannot be cast while raging.'),
     );
+  if (mine) {
+    abilityReady(reactor, spell);
+    return { spell, slot: 0 };
+  }
   const slot = cmd.slotLevel ?? freeSlotFor(reactor, spell.level);
   if (slot === null || slot === undefined || slot < spell.level || slot > 9)
     throw new RuleError(T('Sem espaço de magia para reagir.', 'No spell slot to react with.'));
@@ -122,6 +130,12 @@ export function spellReaction(
     s = attachFx(state, s, fx);
     s = resolveSpell(s, who, spell, slot, [who], 0, ctx, { ruleset: cmd.ruleset });
     const newAc = info.hit.ac + (effectiveAc(creatureOf(s, who.id)) - before);
+    // habilidade de monstro: o bônus vale só contra este golpe
+    if (spell.ability)
+      s = withCreature(
+        s,
+        removeEffects(creatureOf(s, who.id), (e) => e.spell === spell.id),
+      );
     if (info.hit.total >= newAc) return applyHeldHit(s, info.hit, ctx.rng);
     s = addLog(
       s,

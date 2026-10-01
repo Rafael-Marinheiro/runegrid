@@ -70,6 +70,29 @@ const costOf = (name) => Number(/Costs (\d+) Actions/i.exec(name)?.[1] ?? 1);
       n++;
     }
   }
+  // ataques que o importador da API não reconheceu (dano fixo "1 Piercing damage", bônus com condição…)
+  const DAMAGE = ['acid', 'bludgeoning', 'cold', 'fire', 'force', 'lightning', 'necrotic', 'piercing', 'poison', 'psychic', 'radiant', 'slashing', 'thunder'];
+  const ATTACK = /^(?:Melee|Ranged)(?: or (?:Melee|Ranged))? Attack Roll: \+(\d+)[^,]*?, (?:reach (\d+) ?(?:ft|feet)\.?(?: or range (\d+)(?:\/\d+)? ?(?:ft|feet)\.?)?|range (\d+)(?:\/\d+)? ?(?:ft|feet)\.?)\s+(?:Hit: )?(\d+)(?: \(([^)]+)\))? (\w+) damage/i;
+  let added = 0;
+  for (const m of monsters) {
+    const strip = (n) => n.replace(/\s*\(.*\)\s*$/, '').trim().toLowerCase();
+    const have = new Set(m.attacks.map((a) => strip(a.name)));
+    for (const a of m.actions) {
+      const name = a.name.trim();
+      if (have.has(strip(name))) continue;
+      const x = ATTACK.exec(a.desc);
+      const type = x?.[7]?.toLowerCase();
+      if (!x || !DAMAGE.includes(type)) continue;
+      m.attacks.push({
+        name,
+        bonus: Number(x[1]),
+        damage: (x[6] ?? x[5]).replace(/\s+/g, ''),
+        type,
+        range: Number(x[2] ?? x[4] ?? 5),
+      });
+      added++;
+    }
+  }
   writeFileSync(dataFile('monsters-2024.json'), JSON.stringify(monsters));
-  console.log(`2024: ${n} ações anotadas com tipo/custo/usos`);
+  console.log(`2024: ${n} ações anotadas com tipo/custo/usos; ${added} ataques que faltavam`);
 }

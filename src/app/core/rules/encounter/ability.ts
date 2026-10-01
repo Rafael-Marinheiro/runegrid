@@ -35,6 +35,14 @@ export function legendaryGate(state: EncounterState, actor: Creature, spell: Spe
     );
 }
 
+/** Sem recarga ou sem usos: não dá para usar agora. */
+export function abilitySpent(actor: Creature, spell: Spell): boolean {
+  const ab = spell.ability;
+  if (!ab) return false;
+  const st = actor.abilityState?.[spell.id];
+  return (!!ab.recharge && !!st?.recharging) || (!!ab.uses && (st?.used ?? 0) >= ab.uses.n);
+}
+
 /** Recarga pendente ou usos esgotados impedem o uso. */
 export function abilityReady(actor: Creature, spell: Spell): void {
   const ab = spell.ability;

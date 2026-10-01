@@ -11,6 +11,8 @@ import { distanceFt } from '../grid/movement';
 import { getSpell } from '../spells/data';
 import { addLog, creatureOf, sizeOf, tokenOf } from './state';
 import { T, spellName } from '../i18n';
+import { abilitiesOf } from '../monsters/registry';
+import { abilitySpent } from './ability';
 
 /** Pode reagir agora: vivo, capaz, com a reação do turno ainda livre e sem efeito que a impeça. */
 export function canReact(state: EncounterState, c: Creature): boolean {
@@ -36,12 +38,19 @@ export function reactionSpells(
   c: Creature,
   on: NonNullable<Spell['react']>['on'],
 ): { spell: Spell; slot: number }[] {
-  return (c.spellcasting?.spells ?? []).flatMap((id) => {
+  const own = (c.spellcasting?.spells ?? []).flatMap((id) => {
     const spell = getSpell(id);
     if (!spell || spell.castTime !== 'reaction' || spell.react?.on !== on) return [];
     const slot = freeSlotFor(c, spell.level);
     return slot === null ? [] : [{ spell, slot }];
   });
+  // habilidades de monstro que respondem ao gatilho (Aparar, Proteção Mágica…): sem espaço, só recarga/usos
+  const abilities = abilitiesOf(c).flatMap((a) => {
+    const spell = getSpell(a.id);
+    if (!spell || spell.castTime !== 'reaction' || spell.react?.on !== on) return [];
+    return abilitySpent(c, a) ? [] : [{ spell, slot: 0 }];
+  });
+  return [...own, ...abilities];
 }
 
 function nextId(state: EncounterState): number {
@@ -80,7 +89,10 @@ export function offerHit(state: EncounterState, hit: HeldHit): EncounterState | 
   const target = creatureOf(state, hit.targetId);
   if (target.status !== 'alive' || !canReact(state, target)) return null;
   const options = reactionSpells(target, 'hit').filter(
-    (o) => o.spell.react?.on === 'hit' && hit.total < hit.ac + o.spell.react.acBonus,
+    (o) =>
+      o.spell.react?.on === 'hit' &&
+      hit.total < hit.ac + o.spell.react.acBonus &&
+      (!o.spell.react.melee || hit.melee),
   );
   if (!options.length) return null;
   const attacker = creatureOf(state, hit.attackerId);

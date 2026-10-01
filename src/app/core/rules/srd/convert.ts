@@ -2,6 +2,7 @@ import { Ability, Creature, Skill, SKILLS } from '../../models/creature';
 import { newCreature } from '../../models/creature-factory';
 import { SrdMonster } from '../../models/srd';
 import { FEATURE_BY_TRAIT } from '../creature/features';
+import { parseSpellcasting } from './spellcasting';
 
 const ABILITY_ORDER: Ability[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 
@@ -53,6 +54,7 @@ export function monsterToCreature(
     immunities: [...m.immunities],
     vulnerabilities: [...m.vulnerabilities],
     srdId: m.id,
+    ...casting(m),
     ...(features.length ? { features } : {}),
     ...(tokenArt ? { tokenArt } : {}),
   });
@@ -61,4 +63,12 @@ export function monsterToCreature(
 /** Rótulo do nível de desafio: 0.125 → "1/8". */
 export function crLabel(cr: number): string {
   return cr === 0.125 ? '1/8' : cr === 0.25 ? '1/4' : cr === 0.5 ? '1/2' : String(cr);
+}
+
+/** Conjuradores com espaços (Mago, Sacerdote, Lich): lista de magias e espaços lidos do texto do SRD 5.1. */
+function casting(
+  m: SrdMonster,
+): Pick<Creature, 'spellcasting' | 'spellSlots'> | Record<string, never> {
+  const c = parseSpellcasting(m);
+  return c ? { spellcasting: { ability: c.ability, spells: c.spells }, spellSlots: c.slots } : {};
 }

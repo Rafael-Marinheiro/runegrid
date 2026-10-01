@@ -74,6 +74,7 @@ export function applyHeldHit(state: EncounterState, hit: HeldHit, rng: Rng): Enc
         r.ability as Ability,
         rng,
         r.point,
+        dealtTotal,
       );
   }
   // Corpo Aquecido e afins: quem acerta o monstro (de perto) sofre dano

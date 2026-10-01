@@ -41,6 +41,21 @@ const CAST_TIME = {
 
 function toSpell(ruleset: MonsterRuleset, monster: string, slug: string, r: AbilityRule): Spell {
   const { pt, en, desc, ability, ...rule } = r;
+  if (ability.spell) {
+    // age como a magia do SRD (ver `spells/registry`): só o que a regra escreve de próprio fica aqui
+    return {
+      ...rule,
+      id: abilityId(ruleset, monster, slug),
+      name: pt,
+      nameEn: en,
+      level: ability.spell.level ?? 0,
+      school: 'Habilidade',
+      castTime: rule.castTime ?? CAST_TIME[ability.cost],
+      concentration: false,
+      ability,
+      description: desc,
+    } as Spell;
+  }
   const range = rule.range ?? 5;
   return {
     ...rule,
@@ -78,11 +93,34 @@ export function buildMonsterAbilities(
         ...(t.manual ? { manual: t.manual, manualEn: t.manualEn } : {}),
       })),
     };
+    const bySlug = new Map<string, Spell>();
     for (const [slug, r] of Object.entries(rule.abilities)) {
       const spell = toSpell(ruleset, monster, slug, r);
+      bySlug.set(slug, spell);
       if (r.ability.rider) entry.riders[r.ability.rider] = spell;
       else entry.abilities.push(spell);
     }
+    // "usa X": a ação lendária tem o efeito de outra habilidade, pagando o próprio custo
+    entry.abilities = entry.abilities.map((sp) => {
+      const target = sp.ability?.invoke ? bySlug.get(sp.ability.invoke) : undefined;
+      if (!target) return sp;
+      const rest = { ...target.ability! };
+      delete rest.recharge;
+      delete rest.uses;
+      delete rest.invoke;
+      return {
+        ...target,
+        id: sp.id,
+        name: sp.name,
+        nameEn: sp.nameEn,
+        description: sp.description,
+        ability: {
+          ...rest,
+          cost: sp.ability!.cost,
+          ...(sp.ability!.legendary ? { legendary: sp.ability!.legendary } : {}),
+        },
+      };
+    });
     out.set(monster, entry);
   }
   return out;

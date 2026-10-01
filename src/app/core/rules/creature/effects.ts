@@ -100,7 +100,7 @@ export function addEffect(c: Creature, effect: ActiveEffect): Creature {
   let next = c;
   const old = effectsOf(c).find((e) => e.id === effect.id);
   if (old?.mods.maxHp) next = shiftMaxHp(next, -old.mods.maxHp);
-  if (effect.mods.maxHp) next = shiftMaxHp(next, effect.mods.maxHp, true);
+  if (effect.mods.maxHp) next = shiftMaxHp(next, effect.mods.maxHp, effect.mods.maxHp > 0);
   return { ...next, effects: [...rest, effect] };
 }
 

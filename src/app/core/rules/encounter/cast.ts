@@ -255,9 +255,18 @@ export function cast(state: EncounterState, cmd: CastCmd, ctx: Context): Encount
   const moveOnly =
     sustain && !!spell.zone && !!cmd.point && !cmd.targetId && !cmd.targetIds?.length;
   const targets = moveOnly ? [] : affectedBy(state, use, actor, cmd, slotLevel, ctx.role).creatures;
+  if (spell.ability?.needsGrappled)
+    for (const t of targets)
+      if (!t.conditions.some((c) => c.name === 'grappled' && c.by === actor.id))
+        throw new RuleError(
+          T(
+            `${t.name} não está agarrado por ${actor.name}.`,
+            `${t.name} is not grappled by ${actor.name}.`,
+          ),
+        );
 
   // gasta espaço de magia e troca a concentração
-  let caster = slotLevel > 0 && !sustain ? spendSlot(actor, slotLevel) : actor;
+  let caster = slotLevel > 0 && !sustain && !spell.ability ? spendSlot(actor, slotLevel) : actor;
   let s = state;
   if (!sustain && spell.concentration) {
     if (caster.concentration)

@@ -180,10 +180,10 @@ describe('traços passivos de monstros', () => {
   it('Táticas de Matilha: vantagem só com aliado ao lado do alvo', () => {
     const alone = duel('wolf', () => 0.5);
     alone.run(hit('mon', 'pc0'));
-    expect(alone.log().at(-1)).not.toMatch(/advantage/);
+    expect(alone.log().some((l) => /attacked.*\(advantage\)/.test(l))).toBe(false);
     const pack = duel('wolf', () => 0.5, { allies: 1 });
     pack.run(hit('mon', 'pc0'));
-    expect(pack.log().at(-1)).toMatch(/advantage/);
+    expect(pack.log().some((l) => /attacked.*\(advantage\)/.test(l))).toBe(true);
   });
 
   it('Corpo Aquecido: quem acerta o azer corpo a corpo sofre 1d10 de fogo', () => {

@@ -642,6 +642,9 @@ describe('Espada Voadora do Solar', () => {
     // vez da espada: ataca o herói com dano cortante e radiante
     run({ type: 'attack', actorId: sword.id, targetId: 'p', attackIndex: 0 });
     expect(s.log.some((e) => /radiante|radiant/i.test(e.text))).toBe(true);
+    // o Solar a dispensa: a espada some
+    run({ type: 'dismissSummon', actorId: 'sol', summonId: sword.id });
+    expect(s.creatures.some((c) => c.id === sword.id)).toBe(false);
   });
 });
 

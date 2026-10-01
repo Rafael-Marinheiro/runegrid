@@ -210,14 +210,15 @@ function inkCloud(a) {
     zone: { on: 'cast', obscures: true, color: 'shadow' },
     rounds: 10,
     ...(reactive ? { react: { on: 'damaged' } } : {}),
+    ...(reactive || atEnd ? { moveAfter: 'swim' } : {}),
     ...(atEnd ? { castTime: 'reaction', react: { on: 'turnEnd', within: Number(atEnd[1]) } } : {}),
     manual:
       reactive || atEnd
-        ? "Só debaixo d'água; depois de soltar a tinta o polvo se move até a velocidade de natação (o Mestre move). A área fica muito obscurecida por 1 minuto, a não ser que uma corrente forte a disperse."
+        ? "Só debaixo d'água; depois de soltar a tinta o polvo se move até a velocidade de natação (informe o ponto ao usar a reação). A área fica muito obscurecida por 1 minuto, a não ser que uma corrente forte a disperse."
         : "Só debaixo d'água; depois de soltar a tinta o polvo pode Correr como ação bônus. A área fica muito obscurecida por 1 minuto, a não ser que uma corrente forte a disperse.",
     manualEn:
       reactive || atEnd
-        ? 'Underwater only; after releasing the ink the octopus moves up to its swim speed (the DM moves it). The area is heavily obscured for 1 minute unless a strong current disperses it.'
+        ? 'Underwater only; after releasing the ink the octopus moves up to its swim speed (give the point when using the reaction). The area is heavily obscured for 1 minute unless a strong current disperses it.'
         : 'Underwater only; after releasing the ink the octopus can Dash as a bonus action. The area is heavily obscured for 1 minute unless a strong current disperses it.',
     vfx: { kind: 'burst', color: 'shadow', radius },
   });
@@ -530,9 +531,9 @@ function flyingSword(a, ruleset) {
     ],
     vfx: { kind: 'glow', color: 'holy' },
     manual:
-      'A espada paira num espaço livre a até 1,5 m; com ação bônus o Solar a comanda: voa até 15 m e ataca (+15, 4d6 + 8 cortante e 6d8 radiante) ou volta às suas mãos (o Mestre a retira). Cai se o Solar morrer.',
+      'A espada paira num espaço livre a até 1,5 m; com ação bônus o Solar a comanda: voa até 15 m e ataca (+15, 4d6 + 8 cortante e 6d8 radiante) ou volta às suas mãos (dispense-a). Cai se o Solar morrer.',
     manualEn:
-      'The sword hovers in a free space within 5 ft; as a bonus action the solar commands it: it flies up to 50 ft and attacks (+15, 4d6 + 8 slashing plus 6d8 radiant) or returns to its hands (the DM removes it). It falls if the solar dies.',
+      'The sword hovers in a free space within 5 ft; as a bonus action the solar commands it: it flies up to 50 ft and attacks (+15, 4d6 + 8 slashing plus 6d8 radiant) or returns to its hands (dismiss it). It falls if the solar dies.',
   });
 }
 

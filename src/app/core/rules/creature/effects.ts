@@ -95,28 +95,22 @@ export const weaponRiders = (
   );
 
 /** Coloca o efeito (troca um de mesmo id); Ajuda e afins alteram os PV máximos. */
+const STACKED = ['ac', 'attackBonus', 'weaponBonus', 'save', 'speed'] as const;
+
 export function addEffect(c: Creature, effect: ActiveEffect): Creature {
   const rest = effectsOf(c).filter((e) => e.id !== effect.id);
   let next = c;
   const old = effectsOf(c).find((e) => e.id === effect.id);
   if (old?.mods.maxHp) next = shiftMaxHp(next, -old.mods.maxHp);
   if (effect.mods.maxHp) next = shiftMaxHp(next, effect.mods.maxHp, effect.mods.maxHp > 0);
-  if (effect.stack && old)
-    effect = {
-      ...effect,
-      mods: {
-        ...effect.mods,
-        ...(effect.mods.ac !== undefined || old.mods.ac !== undefined
-          ? { ac: (old.mods.ac ?? 0) + (effect.mods.ac ?? 0) }
-          : {}),
-        ...(effect.mods.attackBonus !== undefined || old.mods.attackBonus !== undefined
-          ? { attackBonus: (old.mods.attackBonus ?? 0) + (effect.mods.attackBonus ?? 0) }
-          : {}),
-        ...(effect.mods.weaponBonus !== undefined || old.mods.weaponBonus !== undefined
-          ? { weaponBonus: (old.mods.weaponBonus ?? 0) + (effect.mods.weaponBonus ?? 0) }
-          : {}),
-      },
-    };
+  if (effect.stack && old) {
+    const sum: EffectMods = { ...effect.mods };
+    for (const k of STACKED) {
+      const v = (old.mods[k] ?? 0) + (effect.mods[k] ?? 0);
+      if (old.mods[k] !== undefined || effect.mods[k] !== undefined) sum[k] = v;
+    }
+    effect = { ...effect, mods: sum };
+  }
   return { ...next, effects: [...rest, effect] };
 }
 

@@ -145,6 +145,8 @@ export interface AbilityMeta {
   cost: 'action' | 'bonus' | 'reaction' | 'legendary' | 'free' | 'death';
   /** Custo em ações lendárias (padrão 1). */
   legendary?: number;
+  /** Ação lendária "Conjurar uma Magia": gasta pontos e libera conjurar magias da lista fora do turno (só truques, ou qualquer uma). */
+  legendaryCast?: 'cantrip' | 'spell';
   /** Habilidades que dividem a mesma recarga/usos (as opções de "Sopros"): chave comum do estado. */
   group?: string;
   /** "Recharge 5-6": no início do turno do monstro, d6 maior ou igual a isto a devolve. */
@@ -345,6 +347,8 @@ export interface Spell {
         redirect?: boolean;
         ranged?: boolean;
         reduce?: string;
+        /** Pega o projétil: salvaguarda; se passar, o dano contundente de ataque à distância some (Pegar Pedra). */
+        catch?: { ability: Ability; dc: number };
         /** Se o dano chegar a 0, a força volta contra quem atacou (salvaguarda, dano). */
         reflect?: { ability: Ability; dc: number; dice: string; type: DamageType; range: number };
       }
@@ -424,6 +428,22 @@ export interface Spell {
   zone?: SpellZone;
   /** Efeito visual no mapa, escrito a partir da descrição desta magia. */
   vfx?: SpellVfx;
+  /** Depois de se mover, afeta quem está perto do destino (Salto Mortal, Movimento Abalador). */
+  landing?: {
+    /** Pés ao redor do destino. */
+    radius: number;
+    /** Só criaturas deste tamanho ou menores sofrem o efeito (quem é maior só perde a concentração). */
+    maxSize?: Size;
+    breakConcentration?: boolean;
+    /** O que muda na magia para a parte da área. */
+    patch: Partial<Spell>;
+  };
+  /** Ao terminar o movimento, solta quem estava agarrado por quem usa (Mergulho do Roc). */
+  dropGrappled?: boolean;
+  /** Quem passa na salvaguarda fica imune a esta habilidade por tantas rodadas (Olhar Inquietante: 24 h = 14400). */
+  immuneOnSave?: number;
+  /** Depois da reação, se o Mestre indicar um ponto, a criatura se move até a velocidade de natação (Tinta do Polvo). */
+  moveAfter?: 'swim';
   /** Concede ações ao turno de quem usa (Aceleração: Correr e Desengajar; Esconder). */
   grants?: ('dash' | 'disengage' | 'hide')[];
   /** Usar de novo encerra o efeito que a habilidade criou (Aparência Ilusória). */

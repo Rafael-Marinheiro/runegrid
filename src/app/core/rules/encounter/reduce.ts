@@ -269,6 +269,18 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
       const s = setTurn(state, { ...turn, action: false });
       return moveByAbility(s, dog, { ft: 30, noOpportunity: true, mode: 'fly' }, cmd.to, ctx);
     }
+    case 'dismissSummon': {
+      const owner = creatureOf(state, cmd.actorId);
+      const sum = creatureOf(state, cmd.summonId);
+      if (sum.summon?.by !== owner.id)
+        throw new RuleError(
+          T(
+            `${sum.name} não foi invocado por ${owner.name}.`,
+            `${sum.name} was not summoned by ${owner.name}.`,
+          ),
+        );
+      return removeCreature(state, sum.id, ctx);
+    }
     case 'revealRoom':
       return revealRoom(state, cmd.id, cmd.hidden);
     case 'upsertTrap':

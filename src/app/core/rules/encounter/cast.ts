@@ -1,6 +1,6 @@
 import { Ability, Creature } from '../../models/creature';
 import { EncounterState } from '../../models/encounter';
-import { Pos } from '../../models/grid';
+import { Pos, SIZE_CELLS } from '../../models/grid';
 import { Spell } from '../../models/spell';
 import { abilitiesOf } from '../monsters/registry';
 import { useLegendaryResistance } from './traits';
@@ -220,12 +220,31 @@ export function cast(state: EncounterState, cmd: CastCmd, ctx: Context): Encount
         `${spellName(spell)} takes more than one action to cast: outside combat.`,
       ),
     );
-  const legendary = spell.ability?.cost === 'legendary';
+  if (spell.ability?.legendaryCast)
+    throw new RuleError(
+      T(
+        'Conjure a magia da lista no turno de outra criatura: o motor cobra as ações lendárias.',
+        "Cast the spell from the list on another creature's turn: the engine charges the legendary actions.",
+      ),
+    );
+  // Conjurar uma Magia (ação lendária): magia comum lançada fora do próprio turno
+  const viaLegendary =
+    !spell.ability &&
+    !sustain &&
+    state.combat.phase === 'running' &&
+    state.combat.turn?.actorId !== cmd.actorId
+      ? abilitiesOf(creatureOf(state, cmd.actorId)).find(
+          (a) =>
+            a.ability?.legendaryCast === 'spell' ||
+            (a.ability?.legendaryCast === 'cantrip' && spell.level === 0),
+        )
+      : undefined;
+  const legendary = spell.ability?.cost === 'legendary' || !!viaLegendary;
   const { actor, turn } =
     long || legendary
       ? { actor: creatureOf(state, cmd.actorId), turn: null }
       : actorTurn(state, cmd.actorId);
-  if (legendary) legendaryGate(state, actor, spell);
+  if (legendary) legendaryGate(state, actor, viaLegendary ?? spell);
   abilityReady(actor, spell);
 
   const kept = actor.sustained?.find((x) => x.spellId === spell.id);
@@ -310,7 +329,7 @@ export function cast(state: EncounterState, cmd: CastCmd, ctx: Context): Encount
     };
   }
   s = withCreature(s, caster);
-  if (!sustain) s = payAbility(s, caster.id, spell);
+  if (!sustain) s = payAbility(s, caster.id, viaLegendary ?? spell);
   if (turn) {
     s = setTurn(s, {
       ...turn,
@@ -442,6 +461,72 @@ const narrativeNote = (spell: Spell): string =>
     `${spellName(spell)}: narrative effect, the GM runs it.`,
   );
 
+/** Solta quem `caster` agarrava (Mergulho do Roc). */
+function dropGrappled(state: EncounterState, caster: Creature): EncounterState {
+  let s = state;
+  for (const c of state.creatures) {
+    if (!c.conditions.some((k) => k.name === 'grappled' && k.by === caster.id)) continue;
+    s = withCreature(s, {
+      ...creatureOf(s, c.id),
+      conditions: creatureOf(s, c.id).conditions.filter(
+        (k) => !(k.name === 'grappled' && k.by === caster.id),
+      ),
+    });
+    s = addLog(s, T(`${caster.name} solta ${c.name}.`, `${caster.name} drops ${c.name}.`), [
+      caster.id,
+      c.id,
+    ]);
+  }
+  return s;
+}
+
+/** Depois do movimento: quem está perto do destino sofre a parte de área (Salto Mortal, Movimento Abalador). */
+function landOn(
+  state: EncounterState,
+  caster: Creature,
+  spell: Spell,
+  slot: number,
+  level: number,
+  ability: Ability,
+  dc: number,
+  ctx: Context,
+): EncounterState {
+  const land = spell.landing!;
+  const at = tokenOf(state, caster.id);
+  if (!at) return state;
+  let s = state;
+  const near = state.creatures.filter((c) => {
+    const t = tokenOf(state, c.id);
+    return (
+      c.id !== caster.id &&
+      c.status !== 'dead' &&
+      !!t &&
+      distanceFt(at.pos, sizeOf(caster), t.pos, sizeOf(c), state.rule) <= land.radius
+    );
+  });
+  if (land.breakConcentration)
+    for (const c of near)
+      if (c.concentration) {
+        s = withCreature(s, { ...creatureOf(s, c.id), concentration: undefined });
+        s = addLog(s, T(`${c.name} perde a concentração.`, `${c.name} loses concentration.`), [
+          caster.id,
+          c.id,
+        ]);
+      }
+  const maxCells = land.maxSize ? SIZE_CELLS[land.maxSize] : Infinity;
+  const hit = near.filter((c) => sizeOf(c) <= maxCells);
+  const sub: Spell = { ...spell, move: undefined, landing: undefined, ...land.patch };
+  if (!hit.length)
+    return addLog(
+      s,
+      T(`${spell.name}: ninguém é atingido.`, `${spellName(spell)}: no one is hit.`),
+      [caster.id],
+    );
+  return sub.resolution.kind === 'save'
+    ? spellSave(s, caster, hit, sub, slot, level, ctx.rng, ability, dc)
+    : spellAuto(s, caster, hit, sub, slot, level, ctx.rng, ability, dc);
+}
+
 /** Aceleração, Agilidade Imortal, Furtividade Sombria: Correr, Desengajar e Esconder sem gastar outra ação. */
 function grantActions(state: EncounterState, caster: Creature, spell: Spell): EncounterState {
   let s = state;
@@ -515,8 +600,12 @@ export function resolveSpell(
   if (spell.narrative) return s;
   if (mode !== 'cast' || !spell.noInitial) {
     if (spell.teleport) s = teleport(s, caster, cmd.point, spell.teleportNear);
-    else if (spell.move) s = moveByAbility(s, caster, spell.move, cmd.point, ctx);
-    else if (
+    else if (spell.move) {
+      s = moveByAbility(s, caster, spell.move, cmd.point, ctx);
+      if (spell.dropGrappled) s = dropGrappled(s, caster);
+      if (spell.landing)
+        s = landOn(s, creatureOf(s, caster.id), spell, slot, level, ability, dc, ctx);
+    } else if (
       spell.damage ||
       spell.heal ||
       spell.condition ||
@@ -841,6 +930,15 @@ export function spellSave(
   let s = state;
   for (const original of targets) {
     const t = creatureOf(s, original.id);
+    const immuneId = `${caster.id}:${spell.id}:immune`;
+    if (spell.immuneOnSave && effectsOf(t).some((e) => e.id === immuneId)) {
+      s = addLog(
+        s,
+        T(`${t.name} é imune a ${spell.name}.`, `${t.name} is immune to ${spellName(spell)}.`),
+        [caster.id, t.id],
+      );
+      continue;
+    }
     const auto = autoFailsSave(t, res.ability);
     const sv = saveExtra(s, t.id, res.ability, rng);
     s = sv.state;
@@ -896,6 +994,21 @@ export function spellSave(
     } else {
       s = addLog(s, `${head}.`, [caster.id, t.id]);
     }
+    if (saved && spell.immuneOnSave)
+      s = withCreature(
+        s,
+        addEffect(creatureOf(s, t.id), {
+          id: immuneId,
+          spell: `${spell.id}:immune`,
+          name: spell.name,
+          by: caster.id,
+          rounds: spell.immuneOnSave,
+          mods: {
+            note: `Imune a ${spell.name} de ${caster.name}.`,
+            noteEn: `Immune to ${spellName(spell)} from ${caster.name}.`,
+          },
+        }),
+      );
     if (!saved) s = applyRiders(s, caster, t.id, spell, slot, dc, ability, rng, point);
   }
   return checkOutcome(s);

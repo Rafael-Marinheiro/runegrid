@@ -37,7 +37,80 @@ const breath = (type, pt, en) => ({
   patch: { damage: { dice: '8d6', type } },
 });
 
+const weight = {
+  abilities: {
+    'weight-of-years': R(
+      'Weight of Years',
+      'Peso dos Anos',
+      'Weight of Years',
+      { cost: 'legendary', dc: 16 },
+      {
+        range: 120,
+        target: { kind: 'creature' },
+        resolution: { kind: 'save', ability: 'con', onSave: 'none' },
+        effect: { stack: true, mods: { attackBonus: -2, save: -2, speed: -5 } },
+        ...man(
+          'Cada nível de Exaustão: −2 em testes de d20 (ataques e salvaguardas) e −1,5 m de deslocamento, cumulativo; morre no 6º nível (o Mestre aplica). O alvo aparenta 3d10 anos mais velho.',
+          'Each level of Exhaustion: −2 to d20 Tests (attacks and saves) and −5 ft speed, cumulative; dies at level 6 (the DM applies it). The target looks 3d10 years older.',
+        ),
+        vfx: { kind: 'ray', color: 'shadow' },
+      },
+    ),
+  },
+};
+
 export default {
+  'sphinx-of-lore': weight,
+  'sphinx-of-valor': weight,
+  roc: {
+    abilities: {
+      swoop: R(
+        'Swoop',
+        'Mergulho',
+        'Swoop',
+        { cost: 'bonus', uses: { n: 1, per: 'rest' } },
+        {
+          range: 60,
+          target: { kind: 'point' },
+          resolution: { kind: 'auto' },
+          move: { ft: 60, mode: 'fly', noOpportunity: true },
+          dropGrappled: true,
+          ...man(
+            'Voa até metade do deslocamento de voo sem provocar ataques de oportunidade e solta quem estava agarrado; a queda do solto o Mestre aplica.',
+            'Flies up to half its Fly Speed without provoking opportunity attacks and drops the grappled creature; the fall damage is applied by the DM.',
+          ),
+          vfx: { kind: 'glow', color: 'arcane' },
+        },
+      ),
+    },
+  },
+  tarrasque: {
+    abilities: {
+      'world-shaking-movement': R(
+        'World-Shaking Movement',
+        'Movimento Abalador do Mundo',
+        'World-Shaking Movement',
+        { cost: 'legendary' },
+        {
+          range: 60,
+          target: { kind: 'point' },
+          resolution: { kind: 'auto' },
+          move: { ft: 60, mode: 'walk', noOpportunity: false },
+          landing: {
+            radius: 60,
+            maxSize: 'medium',
+            breakConcentration: true,
+            patch: { resolution: { kind: 'auto' }, condition: { name: 'prone', rounds: 0 } },
+          },
+          ...man(
+            'No fim do movimento, onda de choque de 18 m: todos perdem a concentração e quem é Médio ou menor cai. Não pode repetir até o início do próximo turno.',
+            'At the end of the move, an 60 ft shock wave: all lose Concentration and Medium or smaller creatures fall Prone. It cannot repeat until the start of its next turn.',
+          ),
+          vfx: { kind: 'burst', color: 'earth', radius: 60 },
+        },
+      ),
+    },
+  },
   'clay-golem': {
     abilities: {
       hasten: R(
@@ -145,9 +218,10 @@ export default {
           resolution: { kind: 'save', ability: 'wis', onSave: 'none' },
           react: { on: 'turnStart', within: 30, target: 'trigger' },
           condition: { name: 'frightened', rounds: 1 },
+          immuneOnSave: 14400,
           ...man(
-            'Quem passa na salvaguarda fica imune ao Olhar deste diabo por 24 horas (o Mestre anota).',
-            "A creature that succeeds is immune to this devil's Gaze for 24 hours (the DM tracks it).",
+            'Quem passa na salvaguarda fica imune ao Olhar deste diabo por 24 horas (o motor anota).',
+            "A creature that succeeds is immune to this devil's Gaze for 24 hours (the engine tracks it).",
           ),
           vfx: { kind: 'glow', color: 'shadow' },
         },

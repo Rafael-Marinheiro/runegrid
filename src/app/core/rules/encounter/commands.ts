@@ -55,6 +55,8 @@ export type Command =
   | { type: 'setResidence'; id: string; residence?: boolean; invite?: string; uninvite?: string }
   | { type: 'stake'; targetId: string; remove?: boolean }
   | { type: 'moveSummon'; actorId: string; summonId: string; to: Pos }
+  /** Quem invocou dispensa a criatura (a Espada Voadora volta às mãos do Solar); sem custo. */
+  | { type: 'dismissSummon'; actorId: string; summonId: string }
   | { type: 'upsertTrap'; trap: Trap }
   | { type: 'removeTrap'; id: string }
   | { type: 'upsertItem'; item: PlacedItem }
@@ -147,5 +149,6 @@ export const PLAYER_COMMANDS: readonly CommandType[] = [
   'deathSave',
   'reaction',
   'moveSummon',
+  'dismissSummon',
   'endTurn',
 ];

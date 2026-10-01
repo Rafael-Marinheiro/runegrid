@@ -16,10 +16,12 @@ import { effectiveAc } from '../creature';
 const dm: Role = { kind: 'dm' };
 const sheets = monsters24 as unknown as SrdMonster[];
 const old = monsters14 as unknown as SrdMonster[];
-const OLD = new Set(['aboleth', 'green-hag']);
+const OLD = new Set(['aboleth', 'green-hag', 'bulette', '14:stone-giant', 'androsphinx']);
 const mon = (id: string, as: string) => ({
   ...monsterToCreature(
-    OLD.has(id) ? old.find((m) => m.id === id)! : sheets.find((m) => m.id === `srd-2024_${id}`)!,
+    OLD.has(id)
+      ? old.find((m) => m.id === id.replace('14:', ''))!
+      : sheets.find((m) => m.id === `srd-2024_${id}`)!,
   ),
   id: as,
 });
@@ -41,6 +43,7 @@ function scene(
   bonus: number,
   range = 5,
   rng: () => number = () => 0.5,
+  dmgType: 'slashing' | 'bludgeoning' = 'slashing',
 ) {
   let s = newEncounter(mapFromAscii(Array.from({ length: 5 }, () => '..........')));
   const run = (cmd: Command) => (s = dispatch(s, cmd, { rng, role: dm }));
@@ -50,7 +53,7 @@ function scene(
       id: 'pc',
       name: 'Herói',
       hp: { max: 90, current: 90, temp: 0 },
-      attacks: [{ name: 'Golpe', bonus, damage: '2d6', type: 'slashing', range }],
+      attacks: [{ name: 'Golpe', bonus, damage: '2d6', type: dmgType, range }],
     }),
     pos: { x: 0, y: 2 },
   });
@@ -287,5 +290,66 @@ describe('habilidades que antes ficavam com o Mestre', () => {
     const t = scene([[mon('chain-devil', 'dev'), 3]], 5);
     // o turno do herói já começou ao iniciar o combate
     expect(t.get().combat.pending?.map((p) => p.reactorId)).toEqual(['dev']);
+  });
+});
+
+describe('últimas habilidades de monstros', () => {
+  it('Salto Mortal do bulette: salta e atinge quem fica ao lado do pouso', () => {
+    const t = scene([[mon('bulette', 'bul'), 6]], 5);
+    t.run({ type: 'endTurn', actorId: 'pc' });
+    const ab = abilitiesOf(t.get().creatures.find((c) => c.id === 'bul')!).find(
+      (a) => a.nameEn === 'Deadly Leap',
+    )!;
+    const hp = t.get().creatures.find((c) => c.id === 'pc')!.hp.current;
+    t.run({ type: 'cast', actorId: 'bul', spellId: ab.id, point: { x: 1, y: 2 }, ruleset: '2014' });
+    const pc = t.get().creatures.find((c) => c.id === 'pc')!;
+    expect(pc.hp.current).toBeLessThan(hp);
+    expect(pc.conditions.some((k) => k.name === 'prone')).toBe(true);
+  });
+
+  it('Pegar Pedra: o gigante pega o projétil contundente e não sofre dano', () => {
+    const t = scene([[mon('14:stone-giant', 'giant'), 3]], 20, 60, () => 0.5, 'bludgeoning');
+    const hp = t.get().creatures.find((c) => c.id === 'giant')!.hp.current;
+    t.run({ type: 'attack', actorId: 'pc', targetId: 'giant', attackIndex: 0 });
+    const spell = abilitiesOf(t.get().creatures.find((c) => c.id === 'giant')!).find(
+      (a) => a.nameEn === 'Rock Catching',
+    )!;
+    t.run({ type: 'reaction', actorId: 'giant', use: true, spellId: spell.id, ruleset: '2014' });
+    expect(t.get().creatures.find((c) => c.id === 'giant')!.hp.current).toBe(hp);
+  });
+
+  it('Peso dos Anos: a exaustão se acumula (−2 nos ataques e salvaguardas por nível)', () => {
+    const t = scene([[mon('sphinx-of-lore', 'sph'), 4]], 5);
+    const ab = abilitiesOf(t.get().creatures.find((c) => c.id === 'sph')!).find(
+      (a) => a.nameEn === 'Weight of Years',
+    )!;
+    const zap = () =>
+      t.run({ type: 'cast', actorId: 'sph', spellId: ab.id, targetId: 'pc', ruleset: '2024' });
+    zap();
+    zap();
+    const eff = t.get().creatures.find((c) => c.id === 'pc')!.effects ?? [];
+    expect(eff).toHaveLength(1);
+    expect(eff[0].mods).toMatchObject({ attackBonus: -4, save: -4, speed: -10 });
+  });
+
+  it('Olhar Inquietante: quem passa na salvaguarda fica imune ao olhar', () => {
+    const t = scene([[mon('chain-devil', 'dev'), 3]], 5, 5, () => 0.99);
+    const ab = abilitiesOf(t.get().creatures.find((c) => c.id === 'dev')!).find(
+      (a) => a.nameEn === 'Unnerving Gaze',
+    )!;
+    t.run({ type: 'reaction', actorId: 'dev', use: true, spellId: ab.id, ruleset: '2024' });
+    const pc = t.get().creatures.find((c) => c.id === 'pc')!;
+    expect(pc.effects?.some((e) => e.id.endsWith(':immune'))).toBe(true);
+  });
+
+  it('Lançar Magia das esfinges é cobrado nas ações lendárias, não conjurado direto', () => {
+    const t = scene([[mon('androsphinx', 'sph'), 4]], 5);
+    const ab = abilitiesOf(t.get().creatures.find((c) => c.id === 'sph')!).find(
+      (a) => a.nameEn === 'Cast a Spell',
+    )!;
+    expect(ab.ability?.legendaryCast).toBe('spell');
+    expect(() => t.run({ type: 'cast', actorId: 'sph', spellId: ab.id, ruleset: '2014' })).toThrow(
+      /lista|list/i,
+    );
   });
 });

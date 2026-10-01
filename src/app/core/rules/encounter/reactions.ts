@@ -104,6 +104,8 @@ export function offerHit(state: EncounterState, hit: HeldHit): EncounterState | 
       if (r?.on !== 'hit') return false;
       if (own ? r.ally !== undefined : r.ally === undefined || dist > r.ally) return false;
       if (r.redirect) return redirectAllies(s, reactor).length > 0;
+      if (r.catch)
+        return !hit.melee && hit.parts.some((p) => p.type === 'bludgeoning' && p.amount > 0);
       if (r.reduce) return !hit.melee && hit.parts.some((p) => p.amount > 0);
       return hit.total < hit.ac + r.acBonus && (!r.melee || hit.melee);
     });

@@ -33,7 +33,96 @@ const illusion = (who) => ({
   },
 });
 
+const castList = (n) =>
+  R(
+    'Cast a Spell',
+    'Lançar Magia',
+    'Cast a Spell',
+    { cost: 'legendary', legendary: n, legendaryCast: 'spell' },
+    {
+      range: 0,
+      target: { kind: 'self' },
+      resolution: { kind: 'auto' },
+      ...man(
+        'No turno de outra criatura, conjure uma magia da lista pelo comando de conjurar: o motor cobra as ações lendárias e o espaço de magia.',
+        "On another creature's turn, cast a spell from the list with the normal cast command: the engine charges the legendary actions and the spell slot.",
+      ),
+      vfx: arcane,
+    },
+  );
+
 export default {
+  androsphinx: { abilities: { 'cast-a-spell': castList(3) } },
+  gynosphinx: { abilities: { 'cast-a-spell': castList(3) } },
+  lich: {
+    abilities: {
+      cantrip: R(
+        'Cantrip',
+        'Truque',
+        'Cantrip',
+        { cost: 'legendary', legendaryCast: 'cantrip' },
+        {
+          range: 0,
+          target: { kind: 'self' },
+          resolution: { kind: 'auto' },
+          ...man(
+            'No turno de outra criatura, conjure um truque pelo comando de conjurar: o motor cobra a ação lendária.',
+            "On another creature's turn, cast a cantrip with the normal cast command: the engine charges the legendary action.",
+          ),
+          vfx: arcane,
+        },
+      ),
+    },
+  },
+  'stone-giant': {
+    abilities: {
+      'rock-catching': R(
+        'Rock Catching',
+        'Pegar Pedra',
+        'Rock Catching',
+        { cost: 'reaction' },
+        {
+          castTime: 'reaction',
+          range: 0,
+          target: { kind: 'self' },
+          resolution: { kind: 'auto' },
+          react: { on: 'hit', acBonus: 0, catch: { ability: 'dex', dc: 10 } },
+          vfx: { kind: 'glow', color: 'steel' },
+        },
+      ),
+    },
+  },
+  bulette: {
+    abilities: {
+      'deadly-leap': R(
+        'Deadly Leap',
+        'Salto Mortal',
+        'Deadly Leap',
+        { cost: 'action', dc: 16 },
+        {
+          range: 30,
+          target: { kind: 'point' },
+          resolution: { kind: 'auto' },
+          move: { ft: 30, mode: 'walk', noOpportunity: true },
+          landing: {
+            radius: 5,
+            patch: {
+              target: { kind: 'creature' },
+              resolution: { kind: 'save', ability: 'dex', onSave: 'half' },
+              damage: { dice: '3d6+4', type: 'bludgeoning' },
+              extraDamage: [{ dice: '3d6+4', type: 'slashing' }],
+              condition: { name: 'prone', rounds: 0 },
+            },
+          },
+          ...man(
+            'Só vale se o salto tiver pelo menos 4,5 m (o Mestre confere). A criatura que passa na salvaguarda escolhe Força ou Destreza (aqui, Destreza), não cai e é empurrada 1,5 m; o motor atinge as criaturas ao lado do ponto de pouso.',
+            'Only if the jump was at least 15 ft (the DM checks). A creature that succeeds chooses Strength or Dexterity (here, Dexterity), is not knocked prone and is pushed 5 ft; the engine hits the creatures next to the landing point.',
+          ),
+          vfx: { kind: 'burst', color: 'earth', radius: 5 },
+        },
+      ),
+    },
+  },
   'green-hag': illusion(20),
   'sea-hag': illusion(16),
   doppelganger: {

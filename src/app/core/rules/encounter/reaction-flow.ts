@@ -26,6 +26,7 @@ import { canReact, freeSlotFor, redirectAllies, sameHit } from './reactions';
 import { dropOnAttack } from './rolls';
 import { addLog, creatureOf, occupiedCells, sizeOf, tokenOf, withCreature } from './state';
 import { dealDot } from './upkeep';
+import { moveByAbility } from './jump';
 import { distT } from '../units';
 import { abilitiesOf } from '../monsters/registry';
 import { abilityReady, payAbility } from './ability';
@@ -136,6 +137,32 @@ export function spellReaction(
   if (info.trigger === 'hit') {
     if (spell.react?.on === 'hit' && spell.react.redirect)
       return redirectHit(s, who, cmd.targetId, info.hit, ctx);
+    if (spell.react?.on === 'hit' && spell.react.catch) {
+      const c = spell.react.catch;
+      const r = rollD20(saveBonus(who, c.ability), 'normal', ctx.rng);
+      const ok = r.roll.total >= c.dc;
+      s = {
+        ...s,
+        combat: {
+          ...s.combat,
+          pending: (s.combat.pending ?? []).filter(
+            (x) => !(x.spell?.trigger === 'hit' && sameHit(x.spell.hit, info.hit)),
+          ),
+        },
+      };
+      s = addLog(
+        s,
+        T(
+          `${who.name} tenta pegar o projétil: ${r.roll.total} vs CD ${c.dc} — ${ok ? 'pegou' : 'falhou'}.`,
+          `${who.name} tries to catch the missile: ${r.roll.total} vs DC ${c.dc} — ${ok ? 'caught' : 'failed'}.`,
+        ),
+        [who.id],
+      );
+      const parts = ok
+        ? info.hit.parts.map((p) => (p.type === 'bludgeoning' ? { ...p, amount: 0 } : p))
+        : info.hit.parts;
+      return applyHeldHit(s, { ...info.hit, parts }, ctx.rng);
+    }
     if (spell.react?.on === 'hit' && spell.react.reduce) {
       const cut = roll(spell.react.reduce, ctx.rng).total;
       let left = cut;
@@ -250,7 +277,8 @@ export function spellReaction(
         point,
       ),
     );
-    return resolveSpell(s, who, spell, slot, targets, 0, ctx, { point, ruleset: cmd.ruleset });
+    s = resolveSpell(s, who, spell, slot, targets, 0, ctx, { point, ruleset: cmd.ruleset });
+    return afterMove(s, who.id, spell, cmd.point, ctx);
   }
 
   if (info.trigger === 'damaged') {
@@ -268,7 +296,8 @@ export function spellReaction(
       );
     const before = s;
     s = attachFx(before, s, spellFx(s, spell, slot, who.id, [attacker.id]));
-    return resolveSpell(s, who, spell, slot, [attacker], dist, ctx, { ruleset: cmd.ruleset });
+    s = resolveSpell(s, who, spell, slot, [attacker], dist, ctx, { ruleset: cmd.ruleset });
+    return afterMove(s, who.id, spell, cmd.point, ctx);
   }
 
   // contrafeitiço: anula a magia de nível igual ou menor; senão, teste de atributo CD 10 + nível
@@ -323,6 +352,25 @@ export function spellReaction(
     who.id,
   ]);
   return resumeCast(s, info.command, ctx);
+}
+
+/** Tinta do Polvo: se o Mestre indicou um ponto, a criatura se move até a velocidade de natação. */
+function afterMove(
+  state: EncounterState,
+  id: string,
+  spell: Spell,
+  point: Pos | undefined,
+  ctx: Context,
+): EncounterState {
+  if (spell.moveAfter !== 'swim' || !point) return state;
+  const c = creatureOf(state, id);
+  return moveByAbility(
+    state,
+    c,
+    { ft: c.speeds?.swim ?? c.speed, spend: 0, noOpportunity: true, mode: 'swim' },
+    point,
+    ctx,
+  );
 }
 
 /** Primeira casa livre a até `ft` de `near` onde `who` cabe (destino padrão da Perseguição). */

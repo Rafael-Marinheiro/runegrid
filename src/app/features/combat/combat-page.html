@@ -347,24 +347,36 @@
           </span>
           <span class="react-btns">
             @for (o of reactionOptions(r); track o.spell.id) {
-              <button
-                type="button"
-                class="primary"
-                (click)="
-                  react(
-                    r.reactorId,
-                    true,
-                    o.spell.id,
-                    o.slot,
-                    o.spell.react?.on === 'hit' && !!o.spell.react.redirect
-                  )
-                "
-              >
-                {{ o.spell.name }}
-                @if (o.slot) {
-                  ({{ o.slot }}º)
+              @if (o.spell.react?.on === 'hit' && o.spell.react.redirect) {
+                @for (ally of redirectChoices(r.reactorId); track ally.id) {
+                  <button
+                    type="button"
+                    class="primary"
+                    (click)="redirectTo(r.reactorId, o.spell.id, ally.id)"
+                  >
+                    {{ o.spell.name }} → {{ ally.name }}
+                  </button>
                 }
-              </button>
+              } @else {
+                <button
+                  type="button"
+                  class="primary"
+                  (click)="
+                    react(
+                      r.reactorId,
+                      true,
+                      o.spell.id,
+                      o.slot,
+                      o.spell.react?.on === 'hit' && !!o.spell.react.redirect
+                    )
+                  "
+                >
+                  {{ o.spell.name }}
+                  @if (o.slot) {
+                    ({{ o.slot }}º)
+                  }
+                </button>
+              }
             }
             <button type="button" (click)="react(r.reactorId, false)">
               {{ ui.text('Recusar', 'Decline') }}
@@ -736,7 +748,15 @@
             }}
           </p>
         }
+        @if (!isDm() && canDismiss(c) && c.summon?.by === active()?.id) {
+          <div class="dm">
+            <button type="button" class="danger" (click)="dismissSummon(c)">
+              {{ ui.text('Dispensar invocação', 'Dismiss summon') }}
+            </button>
+          </div>
+        }
         @if (isDm()) {
+          <app-dm-tools [c]="c" />
           <div class="dm">
             <label class="field">
               {{ ui.text('Valor', 'Amount') }}
@@ -783,6 +803,31 @@
               {{ ui.text('Remover', 'Remove') }}
             </button>
           </div>
+        }
+      </section>
+    }
+
+    @if (movableSummons().length) {
+      <section class="panel" [attr.aria-label]="ui.text('Invocações', 'Summons')">
+        <h2>{{ ui.text('Invocações', 'Summons') }}</h2>
+        @for (m of movableSummons(); track m.id) {
+          <button
+            type="button"
+            [class.active]="movingSummon() === m.id"
+            (click)="movingSummon.set(movingSummon() === m.id ? null : m.id)"
+          >
+            {{ ui.text('Mover ', 'Move ') }}{{ m.name }}
+          </button>
+        }
+        @if (movingSummon()) {
+          <p class="hint">
+            {{
+              ui.text(
+                'Clique no mapa para o destino (gasta a ação).',
+                'Click the map for the destination (uses the action).'
+              )
+            }}
+          </p>
         }
       </section>
     }

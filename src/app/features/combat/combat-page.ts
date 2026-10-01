@@ -46,6 +46,7 @@ import { MiniatureQuery, queryFromCreature } from '@core/rules/srd/miniature';
 import { MiniaturePicker } from '@features/creatures/miniature-picker';
 import { iconFor, tokenImageFor } from './token-icons';
 import { SpellPanel } from './spell-panel';
+import { DmTools } from './dm-tools';
 
 type Mode =
   | { kind: 'move' }
@@ -62,7 +63,7 @@ type Mode =
 
 @Component({
   selector: 'app-combat-page',
-  imports: [MapView, MiniaturePicker, SpellPanel, DiceTray3d],
+  imports: [MapView, MiniaturePicker, SpellPanel, DiceTray3d, DmTools],
   templateUrl: './combat-page.html',
   styleUrl: './combat-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -642,7 +643,51 @@ export class CombatPage {
     this.rulerB.set(pos);
   }
 
+  /** Cão Fiel (2024): quem o conjurou o move com a ação Magia; o próximo clique no mapa é o destino. */
+  protected readonly movingSummon = signal<string | null>(null);
+
+  /** Invocações da criatura da vez que ela pode mover com a ação (Cão Fiel 2024). */
+  protected movableSummons = computed(() => {
+    const a = this.active();
+    return a && this.running()
+      ? this.s().creatures.filter((c) => c.summon?.by === a.id && c.summon.guard?.movable)
+      : [];
+  });
+
+  /** Quem pode dispensar: o Mestre, ou o dono da invocação. */
+  protected canDismiss(c: Creature): boolean {
+    return !!c.summon && (this.isDm() || this.store.role().kind === 'player');
+  }
+
+  protected dismissSummon(c: Creature): void {
+    if (c.summon) this.store.send({ type: 'dismissSummon', actorId: c.summon.by, summonId: c.id });
+  }
+
+  /** Aliados que podem tomar o lugar de quem usa Redirecionar Ataque. */
+  protected redirectChoices(reactorId: string): Creature[] {
+    const r = this.creature(reactorId);
+    return r ? redirectAllies(this.s(), r) : [];
+  }
+
+  protected redirectTo(reactorId: string, spellId: string, allyId: string): void {
+    this.store.send({
+      type: 'reaction',
+      actorId: reactorId,
+      use: true,
+      spellId,
+      targetId: allyId,
+      ruleset: this.ui.ruleset(),
+    });
+  }
+
   protected onCell(pos: Pos): void {
+    const moving = this.movingSummon();
+    const actor = this.active();
+    if (moving && actor) {
+      this.store.send({ type: 'moveSummon', actorId: actor.id, summonId: moving, to: pos });
+      this.movingSummon.set(null);
+      return;
+    }
     const m = this.mode();
     const a = this.castActor();
     if (m.kind === 'cast' && a && this.castTarget(m).kind !== 'creature' && !this.selfOnly(m)) {

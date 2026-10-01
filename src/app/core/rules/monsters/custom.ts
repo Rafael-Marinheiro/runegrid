@@ -246,6 +246,14 @@ export function animatedChain(en = true): Creature {
 
 const chainRules = (): MonsterRules => ({
   'animated-chain': {
+    traits: {
+      grapple: {
+        pt: 'Corrente Agarradora',
+        en: 'Chain Grapple',
+        desc: 'An animated chain can grapple one creature of its own but can’t make attacks while grappling.',
+        mods: { grappleLocks: true, grappleDamage: { dice: '2d6', type: 'piercing' } },
+      },
+    },
     abilities: {
       'rider-chain': {
         pt: 'Corrente',
@@ -257,9 +265,9 @@ const chainRules = (): MonsterRules => ({
           { name: 'restrained', rounds: 0 },
         ],
         manual:
-          'Agarrado: escapa com Força (Atletismo) ou Destreza (Acrobacia) CD 14; no início de cada turno do agarrado, 2d6 perfurante (o Mestre aplica). Uma corrente que agarra não ataca.',
+          'Agarrado: escapa com Força (Atletismo) ou Destreza (Acrobacia) CD 14; no início de cada turno do agarrado, 2d6 perfurante. Uma corrente que agarra não ataca.',
         manualEn:
-          'Grappled: escapes with Strength (Athletics) or Dexterity (Acrobatics) DC 14; at the start of each of its turns the target takes 2d6 piercing (the DM applies it). A grappling chain cannot attack.',
+          'Grappled: escapes with Strength (Athletics) or Dexterity (Acrobatics) DC 14; at the start of each of its turns the target takes 2d6 piercing. A grappling chain cannot attack.',
         target: { kind: 'creature' },
       },
     },

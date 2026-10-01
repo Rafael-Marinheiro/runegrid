@@ -299,6 +299,13 @@ export function toCommand(g: Game, actorRef: string, a: Act): Command {
         ...(a.option ? { option: a.option } : {}),
       };
     }
+    case 'move_summon':
+      return {
+        type: 'moveSummon',
+        actorId,
+        summonId: target(),
+        to: need(a.to, 'to', 'move_summon'),
+      };
     case 'help':
       return { type: 'help', actorId, targetId: target() };
     case 'use_item': {

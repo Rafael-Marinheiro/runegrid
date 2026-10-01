@@ -291,6 +291,8 @@ export interface SummonSpec {
   dice?: string;
   /** No máximo tantas criaturas suas deste tipo ao mesmo tempo (Criar Espectro: sete). */
   cap?: number;
+  /** Some se quem invocou ficar incapacitado (as correntes animadas voltam a ser correntes). */
+  endsIfOwnerIncapacitated?: boolean;
   /** As invocadas não repetem a invocação ("não pode invocar outros demônios"). */
   blockSelf?: boolean;
   /** Mais criaturas com espaços maiores (Conjurar Animais: o dobro no 5º, o triplo no 7º…). */

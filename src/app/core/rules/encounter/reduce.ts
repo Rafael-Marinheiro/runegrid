@@ -110,7 +110,9 @@ import {
 } from './state';
 import { T, condT, spellName } from '../i18n';
 import { syncSummons } from './summon';
+import { alertsAfterMove } from './alerts';
 import { sunPenalty } from './environment';
+import { moveByAbility } from './jump';
 import { attackAllowed, planeError, samePlane, syncForms } from './forms';
 import { distT } from '../units';
 
@@ -252,6 +254,20 @@ function apply(state: EncounterState, cmd: Command, ctx: Context): EncounterStat
     }
     case 'stake':
       return stake(state, cmd.targetId, cmd.remove === true);
+    case 'moveSummon': {
+      const { actor, turn } = actorTurn(state, cmd.actorId);
+      const dog = creatureOf(state, cmd.summonId);
+      if (dog.summon?.by !== actor.id || !dog.summon.guard?.movable)
+        throw new RuleError(
+          T(
+            'Só o cão que você conjurou (2024) se move com a ação Magia.',
+            'Only the hound you conjured (2024) moves with the Magic action.',
+          ),
+        );
+      spendAction(turn);
+      const s = setTurn(state, { ...turn, action: false });
+      return moveByAbility(s, dog, { ft: 30, noOpportunity: true, mode: 'fly' }, cmd.to, ctx);
+    }
     case 'revealRoom':
       return revealRoom(state, cmd.id, cmd.hidden);
     case 'upsertTrap':
@@ -886,6 +902,22 @@ export function moveQuery(state: EncounterState, actorId: string, requested?: Mo
   };
 }
 
+/** Quem tem `grappleLocks` não ataca enquanto mantém alguém agarrado. */
+function assertCanAttack(state: EncounterState, actor: Creature): void {
+  if (
+    allMods(actor).some((m) => m.grappleLocks) &&
+    state.creatures.some((c) =>
+      c.conditions.some((k) => k.name === 'grappled' && k.by === actor.id),
+    )
+  )
+    throw new RuleError(
+      T(
+        `${actor.name} não ataca enquanto mantém alguém agarrado.`,
+        `${actor.name} cannot attack while holding a grapple.`,
+      ),
+    );
+}
+
 /** Estaca no Coração: o vampiro incapacitado fica paralisado até tirarem a estaca; a cria de vampiro é destruída. */
 function stake(state: EncounterState, id: string, remove: boolean): EncounterState {
   const c = creatureOf(state, id);
@@ -984,7 +1016,12 @@ function move(
     [actorId],
   );
   const queued = turn.disengaged ? s : queueOpportunities(s, actorId, q.start, stop);
-  const entered = enterZones(queued, actorId, q.start, ctx);
+  const entered = alertsAfterMove(
+    enterZones(queued, actorId, q.start, ctx),
+    actorId,
+    q.start,
+    stop,
+  );
   return hit ? triggerTrap(entered, actorId, hit.trap.id, rng) : entered;
 }
 
@@ -1111,6 +1148,7 @@ function abilityStrike(
   if (target.status === 'dead')
     throw new RuleError(T(`${target.name} já está morto.`, `${target.name} is already dead.`));
   if (!samePlane(actor, target)) throw planeError();
+  assertCanAttack(state, actor);
   const from = tokenOf(state, actor.id);
   const at = tokenOf(state, target.id);
   if (!from || !at) throw new RuleError(T('Criatura fora do mapa.', 'Creature is off the map.'));
@@ -1178,6 +1216,7 @@ function resolveAttack(
     );
   const target = creatureOf(state, cmd.targetId);
   if (!samePlane(actor, target)) throw planeError();
+  assertCanAttack(state, actor);
   if (target.id === actor.id)
     throw new RuleError(T('Não é possível atacar a si mesmo.', 'You cannot attack yourself.'));
   if (target.status === 'dead')

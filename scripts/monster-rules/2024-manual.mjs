@@ -1,7 +1,13 @@
 // Habilidades de monstros do SRD 2024 que o leitor automático não entende (texto em public/data/monsters-2024.json).
-import { man } from './helpers.mjs';
+import { man, T } from './helpers.mjs';
 
 export default {
+  'shrieker-fungus': {
+    skip: ['shriek'],
+    traits: {
+      shriek: T('Grito', 'Shriek', { shriek: { ft: 30, minute: true } }, { from: 'Shriek' }),
+    },
+  },
   unicorn: {
     abilities: {
       'shimmering-shield': {

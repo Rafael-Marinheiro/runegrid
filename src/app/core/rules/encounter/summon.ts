@@ -2,7 +2,7 @@ import { Creature } from '../../models/creature';
 import { EncounterState } from '../../models/encounter';
 import { Pos, SIZE_CELLS } from '../../models/grid';
 import { Spell, SummonSpec } from '../../models/spell';
-import { abilityMod, allMods, proficiencyBonus, RuleError, spellSaveDc } from '../creature';
+import { abilityMod, allMods, canAct, proficiencyBonus, RuleError, spellSaveDc } from '../creature';
 import {
   draconicSpirit,
   DragonType,
@@ -60,7 +60,7 @@ function houndGuard(
 ): NonNullable<Creature['summon']>['guard'] {
   const casting = caster.spellcasting?.ability ?? 'wis';
   return ruleset === '2024'
-    ? { mode: 'save', dice: '4d8', type: 'force' }
+    ? { mode: 'save', dice: '4d8', type: 'force', movable: true }
     : {
         mode: 'attack',
         dice: '4d8',
@@ -232,10 +232,12 @@ export function summonCreatures(
         ...(!spec.permanent && rounds ? { rounds } : {}),
         ...(spell.concentration && !spec.permanent ? { concentration: true } : {}),
         ...(spec.onBreak ? { onBreak: spec.onBreak } : {}),
-        ...(spec.corpse ? { corpse: true } : {}),
+        // as invocações de monstros contam como derrotadas (dão XP): ficam como cadáver
+        ...(spec.corpse || kind === 'monster' ? { corpse: true } : {}),
         ...(spec.unique ? { unique: spec.unique } : {}),
         ...(spec.custom ? { dc: casterDc(caster) } : {}),
         ...(spec.leashFt ? { leashFt: spec.leashFt } : {}),
+        ...(spec.endsIfOwnerIncapacitated ? { endsIfOwnerIncapacitated: true } : {}),
         ...(spec.custom === 'faithful-hound' ? { guard: houndGuard(caster, ruleset) } : {}),
       },
     };
@@ -303,6 +305,7 @@ export function syncSummons(state: EncounterState, ctx: Context): EncounterState
     const owner = s.creatures.find((x) => x.id === sm.by);
     const lost = !!sm.concentration && owner?.concentration !== sm.spell;
     const orphan = (!owner || owner.status === 'dead') && sm.rounds !== undefined;
+    const disabled = !!sm.endsIfOwnerIncapacitated && !!owner && !canAct(owner);
     const far =
       !!sm.leashFt &&
       !!owner &&
@@ -337,7 +340,15 @@ export function syncSummons(state: EncounterState, ctx: Context): EncounterState
         ),
         [cur.id],
       );
-    } else if (lost || orphan)
+    } else if (disabled)
+      s = vanish(
+        s,
+        c.id,
+        ctx,
+        'volta a ser uma corrente comum (o dono está incapacitado)',
+        'reverts to an ordinary chain (its owner is incapacitated)',
+      );
+    else if (lost || orphan)
       s = vanish(s, c.id, ctx, 'desaparece (a magia acabou)', 'disappears (the spell ended)');
   }
   return s;

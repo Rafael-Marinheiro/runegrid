@@ -54,6 +54,7 @@ export type Command =
   | { type: 'revealRoom'; id: string; hidden?: boolean }
   | { type: 'setResidence'; id: string; residence?: boolean; invite?: string; uninvite?: string }
   | { type: 'stake'; targetId: string; remove?: boolean }
+  | { type: 'moveSummon'; actorId: string; summonId: string; to: Pos }
   | { type: 'upsertTrap'; trap: Trap }
   | { type: 'removeTrap'; id: string }
   | { type: 'upsertItem'; item: PlacedItem }
@@ -145,5 +146,6 @@ export const PLAYER_COMMANDS: readonly CommandType[] = [
   'useItem',
   'deathSave',
   'reaction',
+  'moveSummon',
   'endTurn',
 ];

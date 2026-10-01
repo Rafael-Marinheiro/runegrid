@@ -17,6 +17,7 @@ import spells2024 from '../../../../../public/data/spells-2024.json';
 import { allSpells, getSpell, registerSpells } from '../spells/registry';
 import { Command, dispatch, newEncounter, project } from '../encounter';
 import { registerSummonSource, splitOnDamage } from './summon';
+import { alertsAfterMove } from './alerts';
 import { expandFormOptions } from '../monsters/form-options';
 import { buildMonsterAbilities, MonsterRules } from '../monsters/build';
 import { abilitiesOf, registerMonsterAbilities } from '../monsters/registry';
@@ -715,5 +716,189 @@ describe('Metamorfose', () => {
     expect(() =>
       dispatch(items, { type: 'useItem', actorId: 'm', itemId: 'i1' }, { rng, role: dm }),
     ).toThrow(/fundido/);
+  });
+});
+
+describe('regras das invocações', () => {
+  it('o Cão Fiel late quando um inimigo chega a 9 m; no 2024 o dono o move com a Magia', () => {
+    const id = getSpell('faithful-hound', '2024')!.id;
+    const t = scene(id);
+    t.run({
+      type: 'cast',
+      actorId: 'c',
+      spellId: id,
+      slotLevel: 4,
+      ruleset: '2024',
+      point: { x: 7, y: 5 },
+    });
+    const dog = t.get().creatures.find((c) => c.summon)!;
+    // um inimigo que estava a mais de 9 m e agora está a 6 m
+    const moved = {
+      ...t.get(),
+      tokens: t
+        .get()
+        .tokens.map((k) => (k.creatureId === 'm' ? { ...k, pos: { x: 12, y: 5 } } : k)),
+    };
+    const out = alertsAfterMove(moved, 'm', { x: 20, y: 5 }, { x: 12, y: 5 });
+    expect(out.log.some((e) => /late alto/.test(e.text))).toBe(true);
+    // movimento do cão pela ação Magia do dono (turno seguinte)
+    do t.run({ type: 'endTurn', actorId: t.get().combat.turn!.actorId });
+    while (t.get().combat.turn?.actorId !== 'c');
+    t.run({ type: 'moveSummon', actorId: 'c', summonId: dog.id, to: { x: 9, y: 5 } });
+    expect(t.get().tokens.find((k) => k.creatureId === dog.id)?.pos).toEqual({ x: 9, y: 5 });
+    expect(t.get().combat.turn?.action).toBe(false);
+    // no 2014 o cão fica parado
+    const old = setupOld();
+    const dog14 = old.get().creatures.find((c) => c.summon)!;
+    expect(() =>
+      old.run({ type: 'moveSummon', actorId: 'c', summonId: dog14.id, to: { x: 9, y: 5 } }),
+    ).toThrow();
+  });
+
+  function setupOld() {
+    const id = getSpell('faithful-hound', '2014')!.id;
+    const t = scene(id);
+    t.run({
+      type: 'cast',
+      actorId: 'c',
+      spellId: id,
+      slotLevel: 4,
+      ruleset: '2014',
+      point: { x: 7, y: 5 },
+    });
+    do t.run({ type: 'endTurn', actorId: t.get().combat.turn!.actorId });
+    while (t.get().combat.turn?.actorId !== 'c');
+    return t;
+  }
+
+  it('Fungo Gritador: grita quando alguém chega perto e continua por 1d4 turnos depois', () => {
+    let s = newEncounter(map);
+    const run = (cmd: Command) => (s = dispatch(s, cmd, { rng, role: dm }));
+    run({
+      type: 'addCreature',
+      creature: { ...monsterToCreature(sheet.get('shrieker')!), id: 'fg' },
+      pos: { x: 2, y: 2 },
+    });
+    run({ type: 'setInitiative', id: 'fg', value: 5 });
+    run({
+      type: 'addCreature',
+      creature: newCreature('pc', {
+        id: 'p',
+        name: 'Herói',
+        hp: { max: 30, current: 30, temp: 0 },
+      }),
+      pos: { x: 12, y: 2 },
+    });
+    run({ type: 'setInitiative', id: 'p', value: 20 });
+    run({ type: 'startCombat' });
+    run({ type: 'move', actorId: 'p', to: { x: 6, y: 2 } });
+    expect(s.creatures.find((c) => c.id === 'fg')!.shrieking).toBe(-1);
+    expect(s.log.some((e) => /grita/.test(e.text))).toBe(true);
+    // o herói fica perto: no turno do fungo continua gritando
+    run({ type: 'endTurn', actorId: 'p' });
+    expect(s.creatures.find((c) => c.id === 'fg')!.shrieking).toBe(-1);
+  });
+
+  it('Animar Correntes: o agarrado sofre dano no turno dele; a corrente que agarra não ataca; sem o dono capaz elas voltam a ser correntes', () => {
+    let s = newEncounter(map);
+    const run = (cmd: Command) => (s = dispatch(s, cmd, { rng, role: dm }));
+    run({
+      type: 'addCreature',
+      creature: { ...monsterToCreature(sheet.get('chain-devil')!), id: 'dev' },
+      pos: { x: 2, y: 2 },
+    });
+    run({ type: 'setInitiative', id: 'dev', value: 20 });
+    run({
+      type: 'addCreature',
+      creature: newCreature('pc', {
+        id: 'p',
+        name: 'Herói',
+        hp: { max: 90, current: 90, temp: 0 },
+      }),
+      pos: { x: 6, y: 2 },
+    });
+    run({ type: 'setInitiative', id: 'p', value: 5 });
+    run({ type: 'startCombat' });
+    const ab = abilitiesOf(s.creatures.find((c) => c.id === 'dev')!).find(
+      (a) => a.nameEn === 'Animate Chains',
+    )!;
+    run({
+      type: 'cast',
+      actorId: 'dev',
+      spellId: ab.id,
+      option: 'chains-2',
+      point: { x: 5, y: 2 },
+      ruleset: '2014',
+    });
+    const chains = s.creatures.filter((c) => c.summon);
+    expect(chains).toHaveLength(2);
+    // a corrente 1 agarra o herói
+    s = {
+      ...s,
+      creatures: s.creatures.map((c) =>
+        c.id === 'p'
+          ? {
+              ...c,
+              conditions: [
+                ...c.conditions,
+                { name: 'grappled', by: chains[0].id, rounds: 0 } as never,
+              ],
+            }
+          : c,
+      ),
+    };
+    run({ type: 'endTurn', actorId: 'dev' });
+    expect(s.combat.turn?.actorId).toBe(chains[0].id);
+    expect(() =>
+      run({ type: 'attack', actorId: chains[0].id, targetId: 'p', attackIndex: 0 }),
+    ).toThrow(/agarrado|agarrar/);
+    // início do turno do herói: 2d6 perfurante (rng 0.5 = 7)
+    do run({ type: 'endTurn', actorId: s.combat.turn!.actorId });
+    while (s.combat.turn?.actorId !== 'p');
+    expect(s.creatures.find((c) => c.id === 'p')!.hp.current).toBeLessThan(90);
+    // o diabo fica incapacitado: as correntes voltam a ser correntes
+    run({ type: 'addCondition', targetId: 'dev', condition: 'incapacitated' });
+    expect(s.creatures.filter((c) => c.summon)).toHaveLength(0);
+  });
+
+  it('invocações de monstros ficam como cadáver (contam como derrotadas e dão XP)', () => {
+    let s = newEncounter(map);
+    const run = (cmd: Command) => (s = dispatch(s, cmd, { rng: () => 0.1, role: dm }));
+    run({
+      type: 'addCreature',
+      creature: { ...monsterToCreature(sheet.get('dust-mephit')!), id: 'mon' },
+      pos: { x: 2, y: 2 },
+    });
+    run({ type: 'setInitiative', id: 'mon', value: 20 });
+    run({
+      type: 'addCreature',
+      creature: newCreature('pc', {
+        id: 'p',
+        name: 'Herói',
+        hp: { max: 90, current: 90, temp: 0 },
+      }),
+      pos: { x: 8, y: 2 },
+    });
+    run({ type: 'setInitiative', id: 'p', value: 5 });
+    run({ type: 'startCombat' });
+    const ab = abilitiesOf(s.creatures.find((c) => c.id === 'mon')!).find(
+      (a) => a.nameEn === 'Summon Mephits',
+    )!;
+    run({
+      type: 'cast',
+      actorId: 'mon',
+      spellId: ab.id,
+      option: 'dust-mephit',
+      point: { x: 4, y: 2 },
+      ruleset: '2014',
+    });
+    const kid = s.creatures.find((c) => c.summon)!;
+    expect(kid.summon?.corpse).toBe(true);
+    s = {
+      ...s,
+      creatures: s.creatures.map((c) => (c.id === kid.id ? { ...c, status: 'dead' as const } : c)),
+    };
+    run({ type: 'heal', targetId: 'p', amount: 0 });
+    expect(s.creatures.some((c) => c.id === kid.id && c.status === 'dead')).toBe(true);
   });
 });

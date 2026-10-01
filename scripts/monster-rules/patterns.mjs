@@ -515,16 +515,24 @@ function animateChains(a, ruleset) {
     id: `chains-${n}`,
     label: `${n} ${n > 1 ? 'correntes' : 'corrente'}`,
     labelEn: `${n} chain${n > 1 ? 's' : ''}`,
-    patch: { summon: { custom: 'animated-chain', srd: 'chain', n, rounds: 600 } },
+    patch: {
+      summon: {
+        custom: 'animated-chain',
+        srd: 'chain',
+        n,
+        rounds: 600,
+        endsIfOwnerIncapacitated: true,
+      },
+    },
   }));
   return flat(a, {
     ...FIELDS,
     options,
     vfx: { kind: 'burst', color: 'steel', radius: 5 },
     manual:
-      'Cada corrente é um objeto (CA 20, 20 PV, resistência a perfurante, imune a psíquico e trovejante) com a iniciativa do diabo; ataca com alcance de 3 m. Voltam a ser correntes comuns se o diabo ficar incapacitado (o Mestre aplica) ou morrer.',
+      'Cada corrente é um objeto (CA 20, 20 PV, resistência a perfurante, imune a psíquico e trovejante) com a iniciativa do diabo; ataca com alcance de 3 m. Voltam a ser correntes comuns se o diabo ficar incapacitado ou morrer.',
     manualEn:
-      "Each chain is an object (AC 20, 20 HP, resistant to piercing, immune to psychic and thunder) that shares the devil's initiative and attacks with a 10 ft reach. They revert to ordinary chains if the devil is incapacitated (the DM applies it) or dies.",
+      "Each chain is an object (AC 20, 20 HP, resistant to piercing, immune to psychic and thunder) that shares the devil's initiative and attacks with a 10 ft reach. They revert to ordinary chains if the devil is incapacitated or dies.",
   });
 }
 

@@ -1,5 +1,5 @@
 // Habilidades de monstros do SRD 2014 que o leitor automático não entende (texto em public/data/monsters.json).
-import { man } from './helpers.mjs';
+import { man, T } from './helpers.mjs';
 import FORMS from './forms.mjs';
 
 // o SRD 2014 traz "Shapechanger" como traço; aqui vira uma habilidade usável (ver `patterns.mjs`)
@@ -42,6 +42,24 @@ const noteEffect = (rounds, note, noteEn, extra = {}) => ({
 
 export default {
   ...shapechangers(),
+  // Fungo Gritador: o grito é um traço automático (o motor avisa quando alguém chega a 9 m)
+  shrieker: {
+    skip: ['shriek'],
+    traits: {
+      shriek: T('Grito', 'Shriek', { shriek: { ft: 30 } }, { from: 'Shriek' }),
+    },
+  },
+  // o agarrão da corrente (Diabo de Correntes): 2d6 perfurante no início de cada turno do agarrado
+  'chain-devil': {
+    traits: {
+      'chain-grapple': T(
+        'Corrente Agarradora',
+        'Chain Grapple',
+        { grappleDamage: { dice: '2d6', type: 'piercing' } },
+        { from: 'Chain' },
+      ),
+    },
+  },
   'stone-golem': {
     abilities: {
       slow: {

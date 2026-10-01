@@ -235,6 +235,8 @@ export interface Creature {
       | 'speeds'
     >;
   };
+  /** Gritando (Fungo Gritador): rodadas que ainda faltam depois que o incômodo some; `-1` enquanto há alguém perto. */
+  shrieking?: number;
   /** No plano Etéreo: só interage com quem também está nele; o token fica a 50% de opacidade. */
   plane?: 'ethereal';
   /** Criatura invocada: quem a invocou, por qual magia e quanto tempo falta (ver `encounter/summon`). */
@@ -249,10 +251,19 @@ export interface Creature {
     corpse?: boolean;
     /** Chave de invocação única (Familiar, Montaria). */
     unique?: string;
+    /** Some se quem invocou ficar incapacitado. */
+    endsIfOwnerIncapacitated?: boolean;
     /** Some se ficar mais longe de quem invocou do que isto, em pés. */
     leashFt?: number;
     /** Guarda: no início de cada turno de quem invocou, ataca um inimigo a até 5 ft (Cão Fiel). */
-    guard?: { mode: 'attack' | 'save'; dice: string; type: DamageType; bonus?: number };
+    guard?: {
+      mode: 'attack' | 'save';
+      dice: string;
+      type: DamageType;
+      bonus?: number;
+      /** Quem invocou o move com a ação Magia (2024): ver o comando `moveSummon`. */
+      movable?: boolean;
+    };
     /** CD de magia de quem invocou, para as habilidades da criatura que pedem salvaguarda. */
     dc?: number;
   };

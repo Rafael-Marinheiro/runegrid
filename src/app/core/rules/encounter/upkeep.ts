@@ -24,6 +24,7 @@ import { abilitiesOf, monsterEntry } from '../monsters/registry';
 import { T, condT, spellT } from '../i18n';
 import { guardBites, tickSummons } from './summon';
 import { inRunningWater, isSunlit } from './environment';
+import { shriekTurn } from './alerts';
 
 /**
  * Tudo que dura só enquanto o conjurador mantém a concentração some junto com ela: efeitos,
@@ -115,6 +116,17 @@ export function beginUpkeep(state: EncounterState, actorId: string, ctx: Context
     );
 
   s = guardBites(s, actorId, ctx);
+  // quem está agarrado por uma corrente sofre dano no início do próprio turno
+  for (const k of creatureOf(s, actorId).conditions) {
+    if (k.name !== 'grappled' || !k.by) continue;
+    const holder = s.creatures.find((x) => x.id === k.by);
+    const dot =
+      holder &&
+      holder.status !== 'dead' &&
+      allMods(holder).find((m) => m.grappleDamage)?.grappleDamage;
+    if (dot) s = dealDot(s, actorId, dot, T('agarrão', 'grapple'), ctx);
+  }
+  s = shriekTurn(s, actorId, ctx);
   // luz do sol: Fraqueza do Vampiro (20 radiante no início do turno)
   for (const m of allMods(creatureOf(s, actorId))) {
     if (

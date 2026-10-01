@@ -109,6 +109,12 @@ export interface EffectMods {
   waterDamage?: { dice: string; type: DamageType };
   /** A Regeneração não funciona à luz do sol nem em água corrente. */
   regenNeedsShade?: boolean;
+  /** Quem este monstro agarra sofre dano no início de cada turno enquanto durar o agarrão (corrente do Diabo de Correntes). */
+  grappleDamage?: { dice: string; type: DamageType };
+  /** Não ataca enquanto mantém alguém agarrado (corrente animada). */
+  grappleLocks?: boolean;
+  /** Grita quando uma criatura ou luz chega perto (Fungo Gritador): raio em pés. */
+  shriek?: { ft: number; minute?: boolean };
   /** Proibição: não entra numa moradia sem convite. */
   forbiddance?: boolean;
   /** Estaca no Coração: paralisa (`paralyze`) ou destrói (`destroy`) quem está incapacitado. */

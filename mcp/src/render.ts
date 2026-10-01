@@ -1,7 +1,7 @@
 /** Text views of the scene for the LLM: an ASCII map (per role) and the game/combat status. */
 import { CONDITION_LABEL, DAMAGE_LABEL, type Creature } from '@core/models/creature';
 import type { EncounterState } from '@core/models/encounter';
-import { abilitiesOf } from '@core/rules/monsters/registry';
+import { abilitiesOf, legendaryActionsOf } from '@core/rules/monsters/registry';
 import { getSpell } from '@core/rules/spells/data';
 import { creatureOf, project, sizeOf, teamOf, tokenOf } from '@core/rules/encounter';
 import { attackAllowed } from '@core/rules/encounter/forms';
@@ -238,8 +238,11 @@ function combatBlock(s: EncounterState, lab: Map<string, string>): string[] {
   L.push('Initiative order:');
   combat.order.forEach((id, i) => {
     const c = creatureOf(s, id);
+    const max = legendaryActionsOf(c);
+    const legend =
+      max && c.status === 'alive' ? ` · legendary actions ${c.legendary?.left ?? max}/${max}` : '';
     L.push(
-      `${i === combat.turnIndex ? '▶' : ' '} ${combat.initiative[id] ?? '?'} ${line(s, lab, c)}`,
+      `${i === combat.turnIndex ? '▶' : ' '} ${combat.initiative[id] ?? '?'} ${line(s, lab, c)}${legend}`,
     );
   });
   const here = tokenOf(s, actor.id);

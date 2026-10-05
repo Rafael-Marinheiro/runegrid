@@ -449,6 +449,51 @@
           }
         </select>
       </label>
+      @if (objectKind() === 'art') {
+        <fieldset class="art-picker">
+          <legend>{{ ui.text('Arte do cenário', 'Scenery art') }}</legend>
+          <label class="field">
+            {{ ui.text('Grupo', 'Group') }}
+            <select
+              #artGroupSelect
+              [value]="artGroup()"
+              (change)="setArtGroup(artGroupSelect.value)"
+            >
+              <option value="architecture">{{ ui.text('Arquitetura', 'Architecture') }}</option>
+              <option value="furniture">{{ ui.text('Móveis', 'Furniture') }}</option>
+            </select>
+          </label>
+          <ul class="art-grid" role="listbox" [attr.aria-label]="ui.text('Imagens', 'Images')">
+            @for (e of artEntries(); track e.id) {
+              <li>
+                <button
+                  type="button"
+                  role="option"
+                  [attr.aria-selected]="artFile() === e.arquivo"
+                  [class.on]="artFile() === e.arquivo"
+                  [attr.title]="e.nome + ' (' + e.variante + ')'"
+                  (click)="artFile.set(e.arquivo)"
+                >
+                  <img
+                    [src]="artUrl(e.arquivo)"
+                    [alt]="e.nome + ' ' + e.variante"
+                    loading="lazy"
+                    width="44"
+                    height="44"
+                  />
+                </button>
+              </li>
+            }
+          </ul>
+          @if (!artFile()) {
+            <p class="hint">
+              {{
+                ui.text('Escolha uma imagem e clique no mapa.', 'Pick an image and click the map.')
+              }}
+            </p>
+          }
+        </fieldset>
+      }
       <div class="two">
         <label class="field">
           {{ ui.text('Material', 'Material') }}

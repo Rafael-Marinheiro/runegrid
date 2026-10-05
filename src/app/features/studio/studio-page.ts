@@ -84,6 +84,15 @@ const TOOLS: ToolButton[] = [
   { id: 'fog-off', label: 'Revelar', tool: { kind: 'fog', hidden: false } },
 ];
 
+/** Uma imagem do catálogo de objetos de cenário (`public/data/objeto-catalogo.json`). */
+interface ObjectArtEntry {
+  id: string;
+  nome: string;
+  variante: string;
+  grupo: 'architecture' | 'furniture';
+  arquivo: string;
+}
+
 @Component({
   selector: 'app-studio-page',
   imports: [MapView],
@@ -131,6 +140,14 @@ export class StudioPage implements OnInit {
   protected readonly itemRef = signal(CATALOG[0].id);
   protected readonly placementHidden = signal(true);
   protected readonly objectKind = signal<MapObjectKind>('table');
+  /** Catálogo de arte de cenário (carregado ao escolher "Arte do catálogo"). */
+  protected readonly artCatalog = signal<ObjectArtEntry[]>([]);
+  protected readonly artGroup = signal<'architecture' | 'furniture'>('architecture');
+  protected readonly artFile = signal<string>('');
+  protected readonly artEntries = computed(() =>
+    this.artCatalog().filter((e) => e.grupo === this.artGroup()),
+  );
+  protected readonly artUrl = (file: string): string => `data/${file}`;
   protected readonly objectTexture = signal<MapObjectTexture>('wood');
   protected readonly objectRotation = signal(0);
   protected readonly objectBlocksMovement = signal(true);
@@ -423,9 +440,25 @@ export class StudioPage implements OnInit {
     this.send({ type: 'upsertItem', item });
   }
 
+  protected setArtGroup(value: string): void {
+    this.artGroup.set(value === 'furniture' ? 'furniture' : 'architecture');
+    this.artFile.set('');
+  }
+
+  private async loadArtCatalog(): Promise<void> {
+    if (this.artCatalog().length) return;
+    try {
+      const res = await fetch(new URL('data/objeto-catalogo.json', document.baseURI));
+      if (res.ok) this.artCatalog.set((await res.json()) as ObjectArtEntry[]);
+    } catch {
+      /* sem catálogo: o seletor fica vazio */
+    }
+  }
+
   protected setObjectKind(value: string): void {
     if (!MAP_OBJECT_KINDS.includes(value as MapObjectKind)) return;
     const kind = value as MapObjectKind;
+    if (kind === 'art') void this.loadArtCatalog();
     const defaults = MAP_OBJECT_ART[kind].defaults;
     this.objectKind.set(kind);
     this.objectTexture.set(defaults.texture);
@@ -460,6 +493,7 @@ export class StudioPage implements OnInit {
     const object: MapObject = {
       id: crypto.randomUUID(),
       kind: this.objectKind(),
+      ...(this.objectKind() === 'art' && this.artFile() ? { art: this.artFile() } : {}),
       pos,
       rotation: this.objectRotation(),
       texture: this.objectTexture(),

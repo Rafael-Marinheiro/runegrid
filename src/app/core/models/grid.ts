@@ -91,6 +91,8 @@ export const MAP_OBJECT_KINDS = [
   'brazier',
   'weapon-rack',
   'cauldron',
+  /** Objeto desenhado por uma imagem do catálogo (`MapObject.art`). */
+  'art',
 ] as const;
 export type MapObjectKind = (typeof MAP_OBJECT_KINDS)[number];
 export const MAP_OBJECT_TEXTURES = [
@@ -113,7 +115,13 @@ export interface MapObject {
   texture: MapObjectTexture;
   blocksMovement: boolean;
   blocksSight: boolean;
+  /** Imagem do catálogo (`objetos/x.webp`, relativa a `data/`) que desenha o objeto no lugar do símbolo. */
+  art?: string;
 }
+
+/** Só caminhos estáticos do catálogo de objetos. */
+export const isObjectArt = (s: unknown): s is string =>
+  typeof s === 'string' && /^objetos\/[\w.-]+\.webp$/.test(s);
 
 export interface Pos {
   x: number;

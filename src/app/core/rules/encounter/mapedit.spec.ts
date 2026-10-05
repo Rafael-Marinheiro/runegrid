@@ -433,3 +433,40 @@ describe('imagem de fundo e visão', () => {
     ).toThrow(/inválida/);
   });
 });
+
+describe('objetos com arte do catálogo', () => {
+  const art = (over: Partial<MapObject> = {}): MapObject => ({
+    id: 'a1',
+    kind: 'art',
+    pos: { x: 1, y: 0 },
+    rotation: 0,
+    texture: 'stone',
+    blocksMovement: false,
+    blocksSight: false,
+    art: 'objetos/architecture.poco.a.webp',
+    ...over,
+  });
+
+  it('aceita um caminho do catálogo e rejeita qualquer outro', () => {
+    const s = run(scene(['.....']), { type: 'upsertMapObject', object: art() });
+    expect(s.map.objects?.[0].art).toBe('objetos/architecture.poco.a.webp');
+    for (const bad of [
+      'https://x/y.webp',
+      'objetos/../x.webp',
+      'objetos/x.png',
+      'data:image/png;base64,AA',
+    ])
+      expect(() =>
+        run(scene(['.....']), { type: 'upsertMapObject', object: art({ art: bad }) }),
+      ).toThrow(RuleError);
+  });
+
+  it('o catálogo aponta só para arquivos que existem', async () => {
+    const { existsSync } = await import('node:fs');
+    const cat = (await import('../../../../../public/data/objeto-catalogo.json')).default as {
+      arquivo: string;
+    }[];
+    expect(cat.length).toBe(136);
+    expect(cat.filter((e) => !existsSync(`public/data/${e.arquivo}`))).toEqual([]);
+  });
+});

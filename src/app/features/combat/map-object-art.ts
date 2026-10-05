@@ -10,6 +10,12 @@ interface MapObjectArt {
 }
 
 export const MAP_OBJECT_ART: Record<MapObjectKind, MapObjectArt> = {
+  art: {
+    label: ['Arte do catálogo', 'Catalog art'],
+    group: 'architecture',
+    icon: 'M4 4h16v16H4zM4 15l5-5 4 4 3-3 4 4',
+    defaults: { texture: 'stone', blocksMovement: false, blocksSight: false },
+  },
   table: {
     label: ['Mesa', 'Table'],
     group: 'furniture',

@@ -288,3 +288,37 @@
     order: -1;
   }
 }
+
+.art-picker {
+  margin: var(--space-2) 0;
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+
+  legend {
+    padding: 0 var(--space-1);
+    font-weight: 600;
+  }
+}
+
+.art-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+  gap: var(--space-1);
+  max-height: 220px;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+
+  button {
+    width: 100%;
+    min-height: 52px;
+    padding: 2px;
+
+    &.on {
+      border-color: var(--gold);
+      background: rgb(212 169 79 / 0.15);
+    }
+  }
+}

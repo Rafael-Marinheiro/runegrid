@@ -5,6 +5,7 @@ import {
   IMPASSABLE,
   inBounds,
   MapObject,
+  isObjectArt,
   MAP_OBJECT_KINDS,
   MAP_OBJECT_TEXTURES,
   PlacedItem,
@@ -181,6 +182,7 @@ export function upsertMapObject(state: EncounterState, object: MapObject): Encou
   if (
     !MAP_OBJECT_KINDS.includes(normalized.kind) ||
     !MAP_OBJECT_TEXTURES.includes(normalized.texture) ||
+    (normalized.art !== undefined && !isObjectArt(normalized.art)) ||
     !Number.isInteger(normalized.rotation) ||
     normalized.rotation < 0 ||
     normalized.rotation >= 360 ||

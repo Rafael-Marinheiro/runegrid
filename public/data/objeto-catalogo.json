@@ -1,0 +1,954 @@
+[
+  {
+    "id": "architecture.escada-em-l.gasto",
+    "nome": "Escada em L",
+    "variante": "gasto",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.escada-em-l.gasto.webp"
+  },
+  {
+    "id": "architecture.escada-em-l.arruinado",
+    "nome": "Escada em L",
+    "variante": "arruinado",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.escada-em-l.arruinado.webp"
+  },
+  {
+    "id": "architecture.escada-em-espiral.integro",
+    "nome": "Escada em espiral",
+    "variante": "integro",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.escada-em-espiral.integro.webp"
+  },
+  {
+    "id": "architecture.escada-em-espiral.gasto",
+    "nome": "Escada em espiral",
+    "variante": "gasto",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.escada-em-espiral.gasto.webp"
+  },
+  {
+    "id": "architecture.escada-em-espiral.arruinado",
+    "nome": "Escada em espiral",
+    "variante": "arruinado",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.escada-em-espiral.arruinado.webp"
+  },
+  {
+    "id": "architecture.escada-de-madeira.integro",
+    "nome": "Escada de madeira",
+    "variante": "integro",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.escada-de-madeira.integro.webp"
+  },
+  {
+    "id": "architecture.escada-de-madeira.gasto",
+    "nome": "Escada de madeira",
+    "variante": "gasto",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.escada-de-madeira.gasto.webp"
+  },
+  {
+    "id": "architecture.escada-de-madeira.arruinado",
+    "nome": "Escada de madeira",
+    "variante": "arruinado",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.escada-de-madeira.arruinado.webp"
+  },
+  {
+    "id": "architecture.escada-de-corda.integro",
+    "nome": "Escada de corda",
+    "variante": "integro",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.escada-de-corda.integro.webp"
+  },
+  {
+    "id": "architecture.escada-de-corda.gasto",
+    "nome": "Escada de corda",
+    "variante": "gasto",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.escada-de-corda.gasto.webp"
+  },
+  {
+    "id": "architecture.escada-de-corda.arruinado",
+    "nome": "Escada de corda",
+    "variante": "arruinado",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.escada-de-corda.arruinado.webp"
+  },
+  {
+    "id": "architecture.degraus-de-pedra.a",
+    "nome": "Degraus de pedra",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.degraus-de-pedra.a.webp"
+  },
+  {
+    "id": "architecture.degraus-de-pedra.b",
+    "nome": "Degraus de pedra",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.degraus-de-pedra.b.webp"
+  },
+  {
+    "id": "architecture.degraus-de-pedra.c",
+    "nome": "Degraus de pedra",
+    "variante": "c",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.degraus-de-pedra.c.webp"
+  },
+  {
+    "id": "architecture.rampa.a",
+    "nome": "Rampa",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.rampa.a.webp"
+  },
+  {
+    "id": "architecture.rampa.b",
+    "nome": "Rampa",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.rampa.b.webp"
+  },
+  {
+    "id": "architecture.passarela.a",
+    "nome": "Passarela",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.passarela.a.webp"
+  },
+  {
+    "id": "architecture.passarela.b",
+    "nome": "Passarela",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.passarela.b.webp"
+  },
+  {
+    "id": "architecture.ponte-de-madeira.integro",
+    "nome": "Ponte de madeira",
+    "variante": "integro",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.ponte-de-madeira.integro.webp"
+  },
+  {
+    "id": "architecture.ponte-de-madeira.gasto",
+    "nome": "Ponte de madeira",
+    "variante": "gasto",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.ponte-de-madeira.gasto.webp"
+  },
+  {
+    "id": "architecture.ponte-de-madeira.arruinado",
+    "nome": "Ponte de madeira",
+    "variante": "arruinado",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.ponte-de-madeira.arruinado.webp"
+  },
+  {
+    "id": "architecture.ponte-de-pedra.a",
+    "nome": "Ponte de pedra",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.ponte-de-pedra.a.webp"
+  },
+  {
+    "id": "architecture.ponte-de-pedra.b",
+    "nome": "Ponte de pedra",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.ponte-de-pedra.b.webp"
+  },
+  {
+    "id": "architecture.ponte-de-pedra.c",
+    "nome": "Ponte de pedra",
+    "variante": "c",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.ponte-de-pedra.c.webp"
+  },
+  {
+    "id": "architecture.ponte-quebrada.integro",
+    "nome": "Ponte quebrada",
+    "variante": "integro",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.ponte-quebrada.integro.webp"
+  },
+  {
+    "id": "architecture.ponte-quebrada.gasto",
+    "nome": "Ponte quebrada",
+    "variante": "gasto",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.ponte-quebrada.gasto.webp"
+  },
+  {
+    "id": "architecture.ponte-quebrada.arruinado",
+    "nome": "Ponte quebrada",
+    "variante": "arruinado",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.ponte-quebrada.arruinado.webp"
+  },
+  {
+    "id": "architecture.ponte-suspensa.integro",
+    "nome": "Ponte suspensa",
+    "variante": "integro",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.ponte-suspensa.integro.webp"
+  },
+  {
+    "id": "architecture.ponte-suspensa.gasto",
+    "nome": "Ponte suspensa",
+    "variante": "gasto",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.ponte-suspensa.gasto.webp"
+  },
+  {
+    "id": "architecture.ponte-suspensa.arruinado",
+    "nome": "Ponte suspensa",
+    "variante": "arruinado",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.ponte-suspensa.arruinado.webp"
+  },
+  {
+    "id": "architecture.plataforma.a",
+    "nome": "Plataforma",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.plataforma.a.webp"
+  },
+  {
+    "id": "architecture.plataforma.b",
+    "nome": "Plataforma",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.plataforma.b.webp"
+  },
+  {
+    "id": "architecture.andaime.a",
+    "nome": "Andaime",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.andaime.a.webp"
+  },
+  {
+    "id": "architecture.andaime.b",
+    "nome": "Andaime",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.andaime.b.webp"
+  },
+  {
+    "id": "architecture.torre.a",
+    "nome": "Torre",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.torre.a.webp"
+  },
+  {
+    "id": "architecture.torre.b",
+    "nome": "Torre",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.torre.b.webp"
+  },
+  {
+    "id": "architecture.torre-de-vigia.a",
+    "nome": "Torre de vigia",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.torre-de-vigia.a.webp"
+  },
+  {
+    "id": "architecture.torre-de-vigia.b",
+    "nome": "Torre de vigia",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.torre-de-vigia.b.webp"
+  },
+  {
+    "id": "architecture.guarita.a",
+    "nome": "Guarita",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.guarita.a.webp"
+  },
+  {
+    "id": "architecture.guarita.b",
+    "nome": "Guarita",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.guarita.b.webp"
+  },
+  {
+    "id": "architecture.portao.integro",
+    "nome": "Portão",
+    "variante": "integro",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.portao.integro.webp"
+  },
+  {
+    "id": "architecture.portao.gasto",
+    "nome": "Portão",
+    "variante": "gasto",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.portao.gasto.webp"
+  },
+  {
+    "id": "architecture.portao.arruinado",
+    "nome": "Portão",
+    "variante": "arruinado",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.portao.arruinado.webp"
+  },
+  {
+    "id": "architecture.portao-fortificado.integro",
+    "nome": "Portão fortificado",
+    "variante": "integro",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.portao-fortificado.integro.webp"
+  },
+  {
+    "id": "architecture.portao-fortificado.gasto",
+    "nome": "Portão fortificado",
+    "variante": "gasto",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.portao-fortificado.gasto.webp"
+  },
+  {
+    "id": "architecture.portao-fortificado.arruinado",
+    "nome": "Portão fortificado",
+    "variante": "arruinado",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.portao-fortificado.arruinado.webp"
+  },
+  {
+    "id": "architecture.portao-levadico.integro",
+    "nome": "Portão levadiço",
+    "variante": "integro",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.portao-levadico.integro.webp"
+  },
+  {
+    "id": "architecture.portao-levadico.gasto",
+    "nome": "Portão levadiço",
+    "variante": "gasto",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.portao-levadico.gasto.webp"
+  },
+  {
+    "id": "architecture.portao-levadico.arruinado",
+    "nome": "Portão levadiço",
+    "variante": "arruinado",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.portao-levadico.arruinado.webp"
+  },
+  {
+    "id": "architecture.grade-de-ferro.a",
+    "nome": "Grade de ferro",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.grade-de-ferro.a.webp"
+  },
+  {
+    "id": "architecture.grade-de-ferro.b",
+    "nome": "Grade de ferro",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.grade-de-ferro.b.webp"
+  },
+  {
+    "id": "architecture.porta-de-madeira.integro",
+    "nome": "Porta de madeira",
+    "variante": "integro",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.porta-de-madeira.integro.webp"
+  },
+  {
+    "id": "architecture.porta-de-madeira.gasto",
+    "nome": "Porta de madeira",
+    "variante": "gasto",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.porta-de-madeira.gasto.webp"
+  },
+  {
+    "id": "architecture.porta-de-madeira.arruinado",
+    "nome": "Porta de madeira",
+    "variante": "arruinado",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.porta-de-madeira.arruinado.webp"
+  },
+  {
+    "id": "architecture.porta-reforcada.integro",
+    "nome": "Porta reforçada",
+    "variante": "integro",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.porta-reforcada.integro.webp"
+  },
+  {
+    "id": "architecture.porta-reforcada.gasto",
+    "nome": "Porta reforçada",
+    "variante": "gasto",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.porta-reforcada.gasto.webp"
+  },
+  {
+    "id": "architecture.porta-reforcada.arruinado",
+    "nome": "Porta reforçada",
+    "variante": "arruinado",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.porta-reforcada.arruinado.webp"
+  },
+  {
+    "id": "architecture.porta-dupla.integro",
+    "nome": "Porta dupla",
+    "variante": "integro",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.porta-dupla.integro.webp"
+  },
+  {
+    "id": "architecture.porta-dupla.gasto",
+    "nome": "Porta dupla",
+    "variante": "gasto",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.porta-dupla.gasto.webp"
+  },
+  {
+    "id": "architecture.porta-dupla.arruinado",
+    "nome": "Porta dupla",
+    "variante": "arruinado",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.porta-dupla.arruinado.webp"
+  },
+  {
+    "id": "architecture.porta-de-pedra.a",
+    "nome": "Porta de pedra",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.porta-de-pedra.a.webp"
+  },
+  {
+    "id": "architecture.porta-de-pedra.b",
+    "nome": "Porta de pedra",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.porta-de-pedra.b.webp"
+  },
+  {
+    "id": "architecture.porta-de-pedra.c",
+    "nome": "Porta de pedra",
+    "variante": "c",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.porta-de-pedra.c.webp"
+  },
+  {
+    "id": "architecture.porta-secreta.integro",
+    "nome": "Porta secreta",
+    "variante": "integro",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.porta-secreta.integro.webp"
+  },
+  {
+    "id": "architecture.porta-secreta.gasto",
+    "nome": "Porta secreta",
+    "variante": "gasto",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.porta-secreta.gasto.webp"
+  },
+  {
+    "id": "architecture.porta-secreta.arruinado",
+    "nome": "Porta secreta",
+    "variante": "arruinado",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.porta-secreta.arruinado.webp"
+  },
+  {
+    "id": "architecture.alcapao.a",
+    "nome": "Alçapão",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.alcapao.a.webp"
+  },
+  {
+    "id": "architecture.alcapao.b",
+    "nome": "Alçapão",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.alcapao.b.webp"
+  },
+  {
+    "id": "architecture.janela.a",
+    "nome": "Janela",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.janela.a.webp"
+  },
+  {
+    "id": "architecture.janela.b",
+    "nome": "Janela",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.janela.b.webp"
+  },
+  {
+    "id": "architecture.janela-gradeada.a",
+    "nome": "Janela gradeada",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.janela-gradeada.a.webp"
+  },
+  {
+    "id": "architecture.janela-gradeada.b",
+    "nome": "Janela gradeada",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.janela-gradeada.b.webp"
+  },
+  {
+    "id": "architecture.vitral.a",
+    "nome": "Vitral",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.vitral.a.webp"
+  },
+  {
+    "id": "architecture.vitral.b",
+    "nome": "Vitral",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.vitral.b.webp"
+  },
+  {
+    "id": "architecture.claraboia.a",
+    "nome": "Claraboia",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.claraboia.a.webp"
+  },
+  {
+    "id": "architecture.claraboia.b",
+    "nome": "Claraboia",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.claraboia.b.webp"
+  },
+  {
+    "id": "architecture.chamine.a",
+    "nome": "Chaminé",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.chamine.a.webp"
+  },
+  {
+    "id": "architecture.chamine.b",
+    "nome": "Chaminé",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.chamine.b.webp"
+  },
+  {
+    "id": "architecture.lareira.aceso",
+    "nome": "Lareira",
+    "variante": "aceso",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.lareira.aceso.webp"
+  },
+  {
+    "id": "architecture.lareira.fraco",
+    "nome": "Lareira",
+    "variante": "fraco",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.lareira.fraco.webp"
+  },
+  {
+    "id": "architecture.lareira.apagado",
+    "nome": "Lareira",
+    "variante": "apagado",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.lareira.apagado.webp"
+  },
+  {
+    "id": "architecture.poco.a",
+    "nome": "Poço",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.poco.a.webp"
+  },
+  {
+    "id": "architecture.poco.b",
+    "nome": "Poço",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.poco.b.webp"
+  },
+  {
+    "id": "architecture.fonte.a",
+    "nome": "Fonte",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.fonte.a.webp"
+  },
+  {
+    "id": "architecture.fonte.b",
+    "nome": "Fonte",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.fonte.b.webp"
+  },
+  {
+    "id": "architecture.aqueduto.a",
+    "nome": "Aqueduto",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.aqueduto.a.webp"
+  },
+  {
+    "id": "architecture.aqueduto.b",
+    "nome": "Aqueduto",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.aqueduto.b.webp"
+  },
+  {
+    "id": "architecture.canal.a",
+    "nome": "Canal",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.canal.a.webp"
+  },
+  {
+    "id": "architecture.canal.b",
+    "nome": "Canal",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.canal.b.webp"
+  },
+  {
+    "id": "architecture.sarjeta.a",
+    "nome": "Sarjeta",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.sarjeta.a.webp"
+  },
+  {
+    "id": "architecture.sarjeta.b",
+    "nome": "Sarjeta",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.sarjeta.b.webp"
+  },
+  {
+    "id": "architecture.dreno.a",
+    "nome": "Dreno",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.dreno.a.webp"
+  },
+  {
+    "id": "architecture.dreno.b",
+    "nome": "Dreno",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.dreno.b.webp"
+  },
+  {
+    "id": "architecture.esgoto.a",
+    "nome": "Esgoto",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.esgoto.a.webp"
+  },
+  {
+    "id": "architecture.esgoto.b",
+    "nome": "Esgoto",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.esgoto.b.webp"
+  },
+  {
+    "id": "architecture.fosso.a",
+    "nome": "Fosso",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.fosso.a.webp"
+  },
+  {
+    "id": "architecture.fosso.b",
+    "nome": "Fosso",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.fosso.b.webp"
+  },
+  {
+    "id": "architecture.ruina-de-parede.integro",
+    "nome": "Ruína de parede",
+    "variante": "integro",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.ruina-de-parede.integro.webp"
+  },
+  {
+    "id": "architecture.ruina-de-parede.gasto",
+    "nome": "Ruína de parede",
+    "variante": "gasto",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.ruina-de-parede.gasto.webp"
+  },
+  {
+    "id": "architecture.ruina-de-parede.arruinado",
+    "nome": "Ruína de parede",
+    "variante": "arruinado",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.ruina-de-parede.arruinado.webp"
+  },
+  {
+    "id": "architecture.entulho-arquitetonico.a",
+    "nome": "Entulho arquitetônico",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.entulho-arquitetonico.a.webp"
+  },
+  {
+    "id": "architecture.entulho-arquitetonico.b",
+    "nome": "Entulho arquitetônico",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.entulho-arquitetonico.b.webp"
+  },
+  {
+    "id": "architecture.pedras-desabadas.a",
+    "nome": "Pedras desabadas",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.pedras-desabadas.a.webp"
+  },
+  {
+    "id": "architecture.pedras-desabadas.b",
+    "nome": "Pedras desabadas",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.pedras-desabadas.b.webp"
+  },
+  {
+    "id": "architecture.pedras-desabadas.c",
+    "nome": "Pedras desabadas",
+    "variante": "c",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.pedras-desabadas.c.webp"
+  },
+  {
+    "id": "architecture.piso-quebrado.a",
+    "nome": "Piso quebrado",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.piso-quebrado.a.webp"
+  },
+  {
+    "id": "architecture.piso-quebrado.b",
+    "nome": "Piso quebrado",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.piso-quebrado.b.webp"
+  },
+  {
+    "id": "architecture.buraco-no-piso.a",
+    "nome": "Buraco no piso",
+    "variante": "a",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.buraco-no-piso.a.webp"
+  },
+  {
+    "id": "architecture.buraco-no-piso.b",
+    "nome": "Buraco no piso",
+    "variante": "b",
+    "grupo": "architecture",
+    "arquivo": "objetos/architecture.buraco-no-piso.b.webp"
+  },
+  {
+    "id": "furniture.cadeira-simples.simples",
+    "nome": "Cadeira simples",
+    "variante": "simples",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.cadeira-simples.simples.webp"
+  },
+  {
+    "id": "furniture.cadeira-simples.ornamentado",
+    "nome": "Cadeira simples",
+    "variante": "ornamentado",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.cadeira-simples.ornamentado.webp"
+  },
+  {
+    "id": "furniture.cadeira-simples.gasto",
+    "nome": "Cadeira simples",
+    "variante": "gasto",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.cadeira-simples.gasto.webp"
+  },
+  {
+    "id": "furniture.cadeira-acolchoada.simples",
+    "nome": "Cadeira acolchoada",
+    "variante": "simples",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.cadeira-acolchoada.simples.webp"
+  },
+  {
+    "id": "furniture.cadeira-acolchoada.ornamentado",
+    "nome": "Cadeira acolchoada",
+    "variante": "ornamentado",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.cadeira-acolchoada.ornamentado.webp"
+  },
+  {
+    "id": "furniture.cadeira-acolchoada.gasto",
+    "nome": "Cadeira acolchoada",
+    "variante": "gasto",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.cadeira-acolchoada.gasto.webp"
+  },
+  {
+    "id": "furniture.cadeira-quebrada.simples",
+    "nome": "Cadeira quebrada",
+    "variante": "simples",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.cadeira-quebrada.simples.webp"
+  },
+  {
+    "id": "furniture.cadeira-quebrada.ornamentado",
+    "nome": "Cadeira quebrada",
+    "variante": "ornamentado",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.cadeira-quebrada.ornamentado.webp"
+  },
+  {
+    "id": "furniture.cadeira-quebrada.gasto",
+    "nome": "Cadeira quebrada",
+    "variante": "gasto",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.cadeira-quebrada.gasto.webp"
+  },
+  {
+    "id": "furniture.banqueta.a",
+    "nome": "Banqueta",
+    "variante": "a",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.banqueta.a.webp"
+  },
+  {
+    "id": "furniture.banqueta.b",
+    "nome": "Banqueta",
+    "variante": "b",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.banqueta.b.webp"
+  },
+  {
+    "id": "furniture.banco.simples",
+    "nome": "Banco",
+    "variante": "simples",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.banco.simples.webp"
+  },
+  {
+    "id": "furniture.banco.ornamentado",
+    "nome": "Banco",
+    "variante": "ornamentado",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.banco.ornamentado.webp"
+  },
+  {
+    "id": "furniture.banco.gasto",
+    "nome": "Banco",
+    "variante": "gasto",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.banco.gasto.webp"
+  },
+  {
+    "id": "furniture.banco-comprido.simples",
+    "nome": "Banco comprido",
+    "variante": "simples",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.banco-comprido.simples.webp"
+  },
+  {
+    "id": "furniture.banco-comprido.ornamentado",
+    "nome": "Banco comprido",
+    "variante": "ornamentado",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.banco-comprido.ornamentado.webp"
+  },
+  {
+    "id": "furniture.banco-comprido.gasto",
+    "nome": "Banco comprido",
+    "variante": "gasto",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.banco-comprido.gasto.webp"
+  },
+  {
+    "id": "furniture.poltrona.a",
+    "nome": "Poltrona",
+    "variante": "a",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.poltrona.a.webp"
+  },
+  {
+    "id": "furniture.poltrona.b",
+    "nome": "Poltrona",
+    "variante": "b",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.poltrona.b.webp"
+  },
+  {
+    "id": "furniture.trono.simples",
+    "nome": "Trono",
+    "variante": "simples",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.trono.simples.webp"
+  },
+  {
+    "id": "furniture.trono.ornamentado",
+    "nome": "Trono",
+    "variante": "ornamentado",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.trono.ornamentado.webp"
+  },
+  {
+    "id": "furniture.trono.gasto",
+    "nome": "Trono",
+    "variante": "gasto",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.trono.gasto.webp"
+  },
+  {
+    "id": "furniture.mesa-pequena.simples",
+    "nome": "Mesa pequena",
+    "variante": "simples",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.mesa-pequena.simples.webp"
+  },
+  {
+    "id": "furniture.mesa-pequena.ornamentado",
+    "nome": "Mesa pequena",
+    "variante": "ornamentado",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.mesa-pequena.ornamentado.webp"
+  },
+  {
+    "id": "furniture.mesa-pequena.gasto",
+    "nome": "Mesa pequena",
+    "variante": "gasto",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.mesa-pequena.gasto.webp"
+  },
+  {
+    "id": "furniture.mesa-redonda.simples",
+    "nome": "Mesa redonda",
+    "variante": "simples",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.mesa-redonda.simples.webp"
+  },
+  {
+    "id": "furniture.mesa-redonda.ornamentado",
+    "nome": "Mesa redonda",
+    "variante": "ornamentado",
+    "grupo": "furniture",
+    "arquivo": "objetos/furniture.mesa-redonda.ornamentado.webp"
+  }
+]

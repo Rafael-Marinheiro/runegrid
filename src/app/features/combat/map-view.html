@@ -330,20 +330,32 @@
         (keydown)="onObjectKey($event, object)"
       >
         <g [attr.transform]="'rotate(' + objectRotation(object) + ' 24 24)'">
-          <rect
-            class="object-body"
-            x="5"
-            y="5"
-            width="38"
-            height="38"
-            rx="6"
-            [attr.fill]="'url(#object-' + objectTexture(object) + ')'"
-          />
-          <path
-            class="object-icon"
-            [attr.d]="objectArt[object.kind].icon"
-            transform="translate(7 7) scale(1.42)"
-          />
+          @if (object.art) {
+            <image
+              class="object-art"
+              [attr.href]="'data/' + object.art"
+              x="1"
+              y="1"
+              width="46"
+              height="46"
+              preserveAspectRatio="xMidYMid meet"
+            />
+          } @else {
+            <rect
+              class="object-body"
+              x="5"
+              y="5"
+              width="38"
+              height="38"
+              rx="6"
+              [attr.fill]="'url(#object-' + objectTexture(object) + ')'"
+            />
+            <path
+              class="object-icon"
+              [attr.d]="objectArt[object.kind].icon"
+              transform="translate(7 7) scale(1.42)"
+            />
+          }
         </g>
       </g>
     }
